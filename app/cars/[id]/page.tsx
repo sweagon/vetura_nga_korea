@@ -83,7 +83,7 @@ export default async function CarDetailPage({ params }: PageProps) {
 
             <RecentlyViewedTracker car={car} />
 
-            <div className="min-h-screen bg-gradient-to-b from-secondary to-primary">
+            <div className="min-h-screen bg-linear-to-b from-secondary to-primary">
                 {/* Breadcrumb */}
                 <div className="border-b border-medium bg-surface/80 backdrop-blur-sm sticky top-20 z-40">
                     <div className="container-custom py-3">
@@ -96,7 +96,7 @@ export default async function CarDetailPage({ params }: PageProps) {
                             <ChevronRight size={14} className="mx-2 text-muted" />
                             <Link href={`/cars?make=${car.make}`} className="text-muted hover:text-ferrari-red transition">{car.make}</Link>
                             <ChevronRight size={14} className="mx-2 text-muted" />
-                            <span className="text-ferrari-red font-medium truncate max-w-[200px]">{car.full_name}</span>
+                            <span className="text-ferrari-red font-medium truncate max-w-50">{car.full_name}</span>
                         </div>
                     </div>
                 </div>
@@ -109,7 +109,7 @@ export default async function CarDetailPage({ params }: PageProps) {
                                 {/* Badges */}
                                 <div className="flex flex-wrap items-center gap-3 mb-3">
                                     {car.isFeatured && (
-                                        <span className="bg-gradient-to-r from-ferrari-red to-ferrari-dark text-white px-4 py-1.5 rounded-full text-xs font-semibold inline-flex items-center gap-1 shadow-md">
+                                        <span className="bg-linear-to-r from-ferrari-red to-ferrari-dark text-white px-4 py-1.5 rounded-full text-xs font-semibold inline-flex items-center gap-1 shadow-md">
                                             <Sparkles size={14} />
                                             E zgjedhur
                                         </span>
@@ -194,13 +194,13 @@ export default async function CarDetailPage({ params }: PageProps) {
                             {/* Warranty Showcase */}
                             {car.warranty && <WarrantyShowcase warranty={car.warranty} />}
 
-                            {/* Popularity Meter */}
-                            {(car.viewCount > 0 || car.subscriberCount > 0) && (
+                            {/* Popularity Meter - Fixed with null checks */}
+                            {(car.viewCount && car.viewCount > 0) || (car.subscriberCount && car.subscriberCount > 0) ? (
                                 <PopularityMeter
-                                    views={car.viewCount}
-                                    subscribers={car.subscriberCount}
+                                    views={car.viewCount ?? 0}
+                                    subscribers={car.subscriberCount ?? 0}
                                 />
-                            )}
+                            ) : null}
 
                             {/* Key Features */}
                             <div className="bg-surface rounded-2xl p-6 border border-medium shadow-sm">
@@ -271,7 +271,7 @@ export default async function CarDetailPage({ params }: PageProps) {
                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                         {car.features.map((feature: string, index: number) => (
                                             <div key={index} className="flex items-center gap-2 p-2">
-                                                <CheckCircle size={18} className="text-ferrari-red flex-shrink-0" />
+                                                <CheckCircle size={18} className="text-ferrari-red shrink-0" />
                                                 <span className="text-sm text-secondary">{feature}</span>
                                             </div>
                                         ))}
@@ -306,7 +306,7 @@ export default async function CarDetailPage({ params }: PageProps) {
                         <div className="lg:col-span-1">
                             <div className="sticky top-40 space-y-6">
                                 {/* Price Card */}
-                                <div className="bg-gradient-to-br from-surface to-secondary rounded-2xl p-6 border border-medium shadow-lg">
+                                <div className="bg-linear-to-br from-surface to-secondary rounded-2xl p-6 border border-medium shadow-lg">
                                     <div className="text-4xl font-bold text-ferrari-red mb-2">
                                         €{car.price?.toLocaleString()}
                                     </div>
