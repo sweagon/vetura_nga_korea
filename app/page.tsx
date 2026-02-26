@@ -6,7 +6,7 @@ import MatchmakerWidget from '@/components/matchmaker/MatchmakerWidget';
 import HowItWorks from '@/components/home/HowItWorks';
 import { fetchCars } from '@/lib/api';
 import RecentlyViewed from '@/components/cars/RecentlyViewed';
-import { CarCardSkeleton } from '@/components/ui/LoadingSkeleton';
+import { CarCardSkeleton, GridSkeleton } from '@/components/ui/LoadingSkeleton';
 
 export default async function Home() {
   // FIX: Fetch 100 cars, sorted by price descending to get luxury vehicles
@@ -24,19 +24,13 @@ export default async function Home() {
       </section>
       <section className="bg-secondary py-16">
         <div className="container-custom">
-          <Suspense fallback={
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => <CarCardSkeleton key={i} />)}
-            </div>
-          }>
-            {/* This will now receive the full dataset */}
-            <MatchmakerWidget cars={allCars} />
+          <Suspense fallback={<GridSkeleton />}>
           </Suspense>
         </div>
       </section>
       <section className="container-custom py-16">
         <HowItWorks />
       </section>
-    </main>
+    </main >
   );
 }

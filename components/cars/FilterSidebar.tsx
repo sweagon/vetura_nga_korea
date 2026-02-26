@@ -142,7 +142,7 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
     const router = useRouter();
     const searchParams = useSearchParams();
     const [isPending, setIsPending] = useState(false);
-    const updateTimeoutRef = useRef<NodeJS.Timeout>();
+    const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const lastUpdateRef = useRef<string>('');
 
     const [makes, setMakes] = useState<string[]>([]);
@@ -279,13 +279,13 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
         if (currentFilterString === lastUpdateRef.current) return;
 
         if (updateTimeoutRef.current) {
-            window.clearTimeout(updateTimeoutRef.current);
+            clearTimeout(updateTimeoutRef.current);
         }
 
         setIsPending(true);
         lastUpdateRef.current = currentFilterString;
 
-        updateTimeoutRef.current = window.setTimeout(() => {
+        updateTimeoutRef.current = setTimeout(() => {
             const params = new URLSearchParams();
 
             const searchQuery = searchParams.get('search');
@@ -322,7 +322,7 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
             }
 
             setIsPending(false);
-            updateTimeoutRef.current = undefined;
+            updateTimeoutRef.current = null;
         }, 600);
     }, [selectedMakes, selectedModel, selectedFuel, selectedTransmission, selectedBodyTypes, selectedColors, selectedFeatures, priceRange, yearRange, mileageRange, engineSize, powerRange, searchParams, router, onFilterChange, getFilterString]);
 
