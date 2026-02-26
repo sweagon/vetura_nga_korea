@@ -8,9 +8,26 @@ import CarCard from '@/components/cars/CarCard';
 import FilterSidebar from '@/components/cars/FilterSidebar';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+export interface Car {
+    id: number | string;
+    full_name?: string;
+    make?: string;
+    model?: string;
+    grade?: string;
+    year?: number;
+    price?: number;
+    mileage?: number;
+    fuelType?: string;
+    transmission?: string;
+    engineSize?: number;
+    displacement?: number;
+    images?: string[];
+    [key: string]: any; // Allow additional properties
+}
+
 export default function CarsContent() {
     const searchParams = useSearchParams();
-    const [cars, setCars] = useState([]);
+    const [cars, setCars] = useState<Car[]>([]);
     const [loading, setLoading] = useState(true);
     const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
 

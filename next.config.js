@@ -14,7 +14,19 @@ const nextConfig = {
     ];
   },
   images: {
-    domains: ['autokoreakosova.com', 'ferrari-export.com'],
+    domains: ['ferrari-export.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'autokoreakosova.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'ci.encar.com',
+        pathname: '/**',
+      },
+    ],
   },
 };
 
