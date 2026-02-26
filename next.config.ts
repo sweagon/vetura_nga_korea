@@ -1,22 +1,24 @@
 // next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {
-    domains: ['formula-export.com'],
-  },
-  // Optional: Redirect from old domain if you still own it
-  async redirects() {
+  async headers() {
     return [
       {
-        source: '/:path*',
-        has: [
-          {
-            type: 'host',
-            value: 'formula-export.com',
-          },
+        source: '/api/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Credentials', value: 'true' },
+          { key: 'Access-Control-Allow-Origin', value: 'https://ferrari-export.com' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT' },
+          { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version' },
         ],
-        destination: 'https://formula-export.com/:path*',
-        permanent: true,
+      },
+    ];
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/api/cars',
+        destination: 'https://autokoreakosova.com/api/cars',
       },
     ];
   },
