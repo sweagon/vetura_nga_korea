@@ -1,3 +1,4 @@
+// components/matchmaker/MatchmakerWidget.tsx
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
@@ -6,15 +7,16 @@ import { Sparkles, TrendingUp, RefreshCw } from 'lucide-react';
 import { UserPreferenceService } from '@/lib/matchmaker/UserPreferenceService';
 import { SupabaseMatchmakerService } from '@/lib/matchmaker/supabase-service';
 import CarCard from '../cars/CarCard';
+import { type Car } from '@/lib/api'; // ✅ Import Car type
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface MatchmakerWidgetProps {
-    cars: any[];
+    cars: Car[];
 }
 
 export default function MatchmakerWidget({ cars }: MatchmakerWidgetProps) {
     const { data: session, status } = useSession();
-    const [recommendations, setRecommendations] = useState<any[]>([]);
+    const [recommendations, setRecommendations] = useState<Car[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const preferenceServiceRef = useRef(new UserPreferenceService());
@@ -172,7 +174,7 @@ export default function MatchmakerWidget({ cars }: MatchmakerWidgetProps) {
         return (
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-bold">Rekomandime për ty</h2>
+                    <h2 className="text-2xl font-bold text-primary">Rekomandime për ty</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {[...Array(6)].map((_, i) => (
@@ -197,8 +199,8 @@ export default function MatchmakerWidget({ cars }: MatchmakerWidgetProps) {
         return (
             <div className="text-center py-12 bg-secondary rounded-lg">
                 <Sparkles className="mx-auto text-ferrari-red mb-4" size={48} />
-                <h3 className="text-xl font-semibold mb-2">Akoma pa preferenca</h3>
-                <p className="text-gray-600 mb-6">
+                <h3 className="text-xl font-semibold text-primary mb-2">Akoma pa preferenca</h3>
+                <p className="text-secondary mb-6">
                     Shfleto dhe ruaj disa makina për të marrë rekomandime të personalizuara
                 </p>
                 <button
@@ -221,8 +223,8 @@ export default function MatchmakerWidget({ cars }: MatchmakerWidgetProps) {
                         <TrendingUp className="text-ferrari-red" size={24} />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-bold">Rekomandime për ty</h2>
-                        <p className="text-gray-600">
+                        <h2 className="text-2xl font-bold text-primary">Rekomandime për ty</h2>
+                        <p className="text-secondary">
                             Bazuar në preferencat e tua, {recommendations.length} makina me përqindje të lartë
                         </p>
                     </div>
@@ -234,7 +236,7 @@ export default function MatchmakerWidget({ cars }: MatchmakerWidgetProps) {
                         className="p-2 hover:bg-secondary rounded-full transition"
                         title="Rifresko rekomandimet"
                     >
-                        <RefreshCw size={18} className={isRefreshing ? 'animate-spin' : ''} />
+                        <RefreshCw size={18} className={isRefreshing ? 'animate-spin text-ferrari-red' : 'text-muted'} />
                     </button>
                     <div className="bg-ferrari-red text-white px-4 py-2 rounded-full text-sm font-semibold">
                         Matchmaker aktiv
@@ -254,7 +256,7 @@ export default function MatchmakerWidget({ cars }: MatchmakerWidgetProps) {
                             className="relative"
                         >
                             <div className="absolute top-4 right-4 z-10 bg-ferrari-red text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
-                                {Math.min(Math.round(car.matchScore), 100)}% Match
+                                {Math.min(Math.round((car as any).matchScore || 0), 100)}% Match
                             </div>
                             <CarCard car={car} />
                         </motion.div>

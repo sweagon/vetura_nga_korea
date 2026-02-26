@@ -1,3 +1,4 @@
+// app/cars/[id]/page.tsx
 import { notFound } from 'next/navigation';
 import { fetchCarDetails } from '@/lib/api';
 import ImageGallery from '@/components/cars/ImageGallery';
@@ -73,7 +74,7 @@ export default async function CarDetailPage({ params }: PageProps) {
             <StructuredData
                 type="breadcrumb"
                 breadcrumbs={[
-                    { name: 'Formula Export', url: '/' },
+                    { name: 'Ferrari Export', url: '/' },
                     { name: 'Makina', url: '/cars' },
                     { name: car.make, url: `/cars?make=${car.make}` },
                     { name: `${car.make} ${car.model}`, url: `/cars/${car.id}` }
@@ -82,19 +83,19 @@ export default async function CarDetailPage({ params }: PageProps) {
 
             <RecentlyViewedTracker car={car} />
 
-            <div className="min-h-screen bg-gradient-to-b from-secondary to-surface">
+            <div className="min-h-screen bg-gradient-to-b from-secondary to-primary">
                 {/* Breadcrumb */}
-                <div className="border-b border-theme/60 bg-surface/80 backdrop-blur-sm sticky top-20 z-40">
+                <div className="border-b border-medium bg-surface/80 backdrop-blur-sm sticky top-20 z-40">
                     <div className="container-custom py-3">
                         <div className="flex items-center text-sm">
-                            <Link href="/" className="text-gray-500 hover:text-ferrari-red transition flex items-center gap-1">
-                                <span>Formula Export</span>
+                            <Link href="/" className="text-muted hover:text-ferrari-red transition flex items-center gap-1">
+                                <span>Ferrari Export</span>
                             </Link>
-                            <ChevronRight size={14} className="mx-2 text-gray-400" />
-                            <Link href="/cars" className="text-gray-500 hover:text-ferrari-red transition">Makina</Link>
-                            <ChevronRight size={14} className="mx-2 text-gray-400" />
-                            <Link href={`/cars?make=${car.make}`} className="text-gray-500 hover:text-ferrari-red transition">{car.make}</Link>
-                            <ChevronRight size={14} className="mx-2 text-gray-400" />
+                            <ChevronRight size={14} className="mx-2 text-muted" />
+                            <Link href="/cars" className="text-muted hover:text-ferrari-red transition">Makina</Link>
+                            <ChevronRight size={14} className="mx-2 text-muted" />
+                            <Link href={`/cars?make=${car.make}`} className="text-muted hover:text-ferrari-red transition">{car.make}</Link>
+                            <ChevronRight size={14} className="mx-2 text-muted" />
                             <span className="text-ferrari-red font-medium truncate max-w-[200px]">{car.full_name}</span>
                         </div>
                     </div>
@@ -114,28 +115,28 @@ export default async function CarDetailPage({ params }: PageProps) {
                                         </span>
                                     )}
                                     {car.sold ? (
-                                        <span className="bg-red-100 text-red-600 px-4 py-1.5 rounded-full text-xs font-semibold inline-flex items-center gap-1">
+                                        <span className="bg-error-bg text-error-text px-4 py-1.5 rounded-full text-xs font-semibold inline-flex items-center gap-1">
                                             <AlertCircle size={14} />
                                             E shitur
                                         </span>
                                     ) : (
-                                        <span className="bg-green-100 text-green-600 px-4 py-1.5 rounded-full text-xs font-semibold inline-flex items-center gap-1">
+                                        <span className="bg-success-bg text-success-text px-4 py-1.5 rounded-full text-xs font-semibold inline-flex items-center gap-1">
                                             <CheckCircle size={14} />
                                             Në dispozicion
                                         </span>
                                     )}
-                                    <span className="text-gray-400 text-xs px-4 py-1.5 bg-secondary rounded-full">
+                                    <span className="text-muted text-xs px-4 py-1.5 bg-secondary rounded-full">
                                         ID: {car.car_id || car.id}
                                     </span>
                                 </div>
 
                                 {/* Title */}
-                                <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                                <h1 className="text-3xl lg:text-4xl font-bold text-primary mb-2">
                                     {car.full_name}
                                 </h1>
 
                                 {/* Quick location */}
-                                <div className="flex items-center text-gray-500 text-sm">
+                                <div className="flex items-center text-muted text-sm">
                                     <MapPin size={16} className="mr-1" />
                                     <span>Makina në Kore • Gati për import</span>
                                 </div>
@@ -143,8 +144,8 @@ export default async function CarDetailPage({ params }: PageProps) {
 
                             {/* Action Buttons */}
                             <div className="flex items-center gap-3">
-                                <button className="p-3 bg-surface border border-theme rounded-xl hover:border-ferrari-red hover:text-ferrari-red transition-all group">
-                                    <Heart size={20} className="text-gray-600 group-hover:text-ferrari-red" />
+                                <button className="p-3 bg-surface border border-medium rounded-xl hover:border-ferrari-red hover:text-ferrari-red transition-all group">
+                                    <Heart size={20} className="text-muted group-hover:text-ferrari-red" />
                                 </button>
                                 <CompareButton car={{ id: car.id, make: car.make, model: car.model }} variant="icon" />
                                 <ShareButtons
@@ -162,38 +163,38 @@ export default async function CarDetailPage({ params }: PageProps) {
                         {/* Left Column - Images & Details */}
                         <div className="lg:col-span-2 space-y-8">
                             {/* Image Gallery */}
-                            <div className="bg-surface rounded-2xl shadow-sm overflow-hidden border border-theme">
+                            <div className="bg-surface rounded-2xl shadow-sm overflow-hidden border border-medium">
                                 <ImageGallery images={car.images} carName={car.full_name} />
                             </div>
 
                             {/* Quick Stats */}
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                <div className="bg-surface rounded-xl p-4 text-center border border-theme shadow-sm hover:shadow-md transition">
+                                <div className="bg-surface rounded-xl p-4 text-center border border-medium shadow-sm hover:shadow-md transition">
                                     <div className="text-2xl font-bold text-ferrari-red mb-1">
                                         €{car.price?.toLocaleString()}
                                     </div>
-                                    <div className="text-xs text-gray-500">Çmimi në Kore</div>
+                                    <div className="text-xs text-muted">Çmimi në Kore</div>
                                 </div>
-                                <div className="bg-surface rounded-xl p-4 text-center border border-theme shadow-sm hover:shadow-md transition">
-                                    <div className="text-2xl font-bold text-gray-800 mb-1">{car.year}</div>
-                                    <div className="text-xs text-gray-500">Viti</div>
+                                <div className="bg-surface rounded-xl p-4 text-center border border-medium shadow-sm hover:shadow-md transition">
+                                    <div className="text-2xl font-bold text-primary mb-1">{car.year}</div>
+                                    <div className="text-xs text-muted">Viti</div>
                                 </div>
-                                <div className="bg-surface rounded-xl p-4 text-center border border-theme shadow-sm hover:shadow-md transition">
-                                    <div className="text-2xl font-bold text-gray-800 mb-1">{car.mileage?.toLocaleString()} km</div>
-                                    <div className="text-xs text-gray-500">Kilometrazha</div>
+                                <div className="bg-surface rounded-xl p-4 text-center border border-medium shadow-sm hover:shadow-md transition">
+                                    <div className="text-2xl font-bold text-primary mb-1">{car.mileage?.toLocaleString()} km</div>
+                                    <div className="text-xs text-muted">Kilometrazha</div>
                                 </div>
-                                <div className="bg-surface rounded-xl p-4 text-center border border-theme shadow-sm hover:shadow-md transition">
-                                    <div className="text-2xl font-bold text-gray-800 mb-1">
+                                <div className="bg-surface rounded-xl p-4 text-center border border-medium shadow-sm hover:shadow-md transition">
+                                    <div className="text-2xl font-bold text-primary mb-1">
                                         {car.fuelType === 'Diesel' ? 'Naftë' : car.fuelType}
                                     </div>
-                                    <div className="text-xs text-gray-500">Karburanti</div>
+                                    <div className="text-xs text-muted">Karburanti</div>
                                 </div>
                             </div>
 
-                            {/* Warranty Showcase - NEW */}
+                            {/* Warranty Showcase */}
                             {car.warranty && <WarrantyShowcase warranty={car.warranty} />}
 
-                            {/* Popularity Meter - NEW */}
+                            {/* Popularity Meter */}
                             {(car.viewCount > 0 || car.subscriberCount > 0) && (
                                 <PopularityMeter
                                     views={car.viewCount}
@@ -202,49 +203,49 @@ export default async function CarDetailPage({ params }: PageProps) {
                             )}
 
                             {/* Key Features */}
-                            <div className="bg-surface rounded-2xl p-6 border border-theme shadow-sm">
-                                <h2 className="text-lg font-semibold mb-4">Karakteristikat kryesore</h2>
+                            <div className="bg-surface rounded-2xl p-6 border border-medium shadow-sm">
+                                <h2 className="text-lg font-semibold mb-4 text-primary">Karakteristikat kryesore</h2>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                     <div className="flex items-center gap-3 p-3 bg-secondary rounded-xl">
                                         <Calendar size={20} className="text-ferrari-red" />
                                         <div>
-                                            <p className="text-xs text-gray-500">Viti</p>
-                                            <p className="font-medium">{car.year}</p>
+                                            <p className="text-xs text-muted">Viti</p>
+                                            <p className="font-medium text-primary">{car.year}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3 p-3 bg-secondary rounded-xl">
                                         <Gauge size={20} className="text-ferrari-red" />
                                         <div>
-                                            <p className="text-xs text-gray-500">Kilometrazha</p>
-                                            <p className="font-medium">{car.mileage?.toLocaleString()} km</p>
+                                            <p className="text-xs text-muted">Kilometrazha</p>
+                                            <p className="font-medium text-primary">{car.mileage?.toLocaleString()} km</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3 p-3 bg-secondary rounded-xl">
                                         <Fuel size={20} className="text-ferrari-red" />
                                         <div>
-                                            <p className="text-xs text-gray-500">Karburanti</p>
-                                            <p className="font-medium">{car.fuelType === 'Diesel' ? 'Naftë' : car.fuelType}</p>
+                                            <p className="text-xs text-muted">Karburanti</p>
+                                            <p className="font-medium text-primary">{car.fuelType === 'Diesel' ? 'Naftë' : car.fuelType}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3 p-3 bg-secondary rounded-xl">
                                         <Settings size={20} className="text-ferrari-red" />
                                         <div>
-                                            <p className="text-xs text-gray-500">Transmisioni</p>
-                                            <p className="font-medium">{car.transmission === 'Automatic' ? 'Automatik' : 'Manuel'}</p>
+                                            <p className="text-xs text-muted">Transmisioni</p>
+                                            <p className="font-medium text-primary">{car.transmission === 'Automatic' ? 'Automatik' : 'Manuel'}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3 p-3 bg-secondary rounded-xl">
                                         <MapPin size={20} className="text-ferrari-red" />
                                         <div>
-                                            <p className="text-xs text-gray-500">Ngjyra</p>
-                                            <p className="font-medium">{car.exteriorColor || 'N/A'}</p>
+                                            <p className="text-xs text-muted">Ngjyra</p>
+                                            <p className="font-medium text-primary">{car.exteriorColor || 'N/A'}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3 p-3 bg-secondary rounded-xl">
                                         <Shield size={20} className="text-ferrari-red" />
                                         <div>
-                                            <p className="text-xs text-gray-500">Garancia</p>
-                                            <p className="font-medium">{car.warranty?.bodyMonth ? `${car.warranty.bodyMonth} muaj` : 'N/A'}</p>
+                                            <p className="text-xs text-muted">Garancia</p>
+                                            <p className="font-medium text-primary">{car.warranty?.bodyMonth ? `${car.warranty.bodyMonth} muaj` : 'N/A'}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -255,9 +256,9 @@ export default async function CarDetailPage({ params }: PageProps) {
 
                             {/* Description */}
                             {car.description && (
-                                <div className="bg-surface rounded-2xl p-6 border border-theme shadow-sm">
-                                    <h2 className="text-lg font-semibold mb-4">Përshkrimi i plotë</h2>
-                                    <div className="prose max-w-none text-gray-600 whitespace-pre-line leading-relaxed">
+                                <div className="bg-surface rounded-2xl p-6 border border-medium shadow-sm">
+                                    <h2 className="text-lg font-semibold mb-4 text-primary">Përshkrimi i plotë</h2>
+                                    <div className="prose max-w-none text-secondary whitespace-pre-line leading-relaxed">
                                         {car.description}
                                     </div>
                                 </div>
@@ -265,13 +266,13 @@ export default async function CarDetailPage({ params }: PageProps) {
 
                             {/* Features Grid */}
                             {car.features && car.features.length > 0 && (
-                                <div className="bg-surface rounded-2xl p-6 border border-theme shadow-sm">
-                                    <h2 className="text-lg font-semibold mb-4">Pajisjet dhe opsionet</h2>
+                                <div className="bg-surface rounded-2xl p-6 border border-medium shadow-sm">
+                                    <h2 className="text-lg font-semibold mb-4 text-primary">Pajisjet dhe opsionet</h2>
                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                         {car.features.map((feature: string, index: number) => (
                                             <div key={index} className="flex items-center gap-2 p-2">
                                                 <CheckCircle size={18} className="text-ferrari-red flex-shrink-0" />
-                                                <span className="text-sm text-gray-700">{feature}</span>
+                                                <span className="text-sm text-secondary">{feature}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -280,17 +281,17 @@ export default async function CarDetailPage({ params }: PageProps) {
 
                             {/* Vehicle History */}
                             {car.vin && (
-                                <div className="bg-surface rounded-2xl p-6 border border-theme shadow-sm">
-                                    <h2 className="text-lg font-semibold mb-4">Historiku i makinës</h2>
+                                <div className="bg-surface rounded-2xl p-6 border border-medium shadow-sm">
+                                    <h2 className="text-lg font-semibold mb-4 text-primary">Historiku i makinës</h2>
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between p-3 bg-secondary rounded-xl">
-                                            <span className="text-gray-600">VIN:</span>
-                                            <span className="font-mono font-medium">{car.vin}</span>
+                                            <span className="text-muted">VIN:</span>
+                                            <span className="font-mono font-medium text-primary">{car.vin}</span>
                                         </div>
                                         {car.inspection && (
                                             <div className="flex items-center justify-between p-3 bg-secondary rounded-xl">
-                                                <span className="text-gray-600">Inspektimi:</span>
-                                                <span className="text-green-600 font-medium flex items-center gap-1">
+                                                <span className="text-muted">Inspektimi:</span>
+                                                <span className="text-success-text font-medium flex items-center gap-1">
                                                     <CheckCircle size={16} />
                                                     I kryer
                                                 </span>
@@ -305,38 +306,38 @@ export default async function CarDetailPage({ params }: PageProps) {
                         <div className="lg:col-span-1">
                             <div className="sticky top-40 space-y-6">
                                 {/* Price Card */}
-                                <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 border border-theme shadow-lg">
+                                <div className="bg-gradient-to-br from-surface to-secondary rounded-2xl p-6 border border-medium shadow-lg">
                                     <div className="text-4xl font-bold text-ferrari-red mb-2">
                                         €{car.price?.toLocaleString()}
                                     </div>
-                                    <div className="text-sm text-gray-500 mb-6 flex items-center gap-1">
+                                    <div className="text-sm text-muted mb-6 flex items-center gap-1">
                                         <MapPin size={14} />
                                         Çmimi në Kore (pa shpenzime importi)
                                     </div>
 
-                                    {/* Quick Actions - NEW */}
+                                    {/* Quick Actions */}
                                     <QuickActions car={car} />
 
                                     {/* Trust Badges */}
-                                    <div className="mt-6 pt-6 border-t border-theme">
+                                    <div className="mt-6 pt-6 border-t border-medium">
                                         <div className="grid grid-cols-3 gap-2 text-center text-xs">
                                             <div className="flex flex-col items-center gap-1">
-                                                <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center">
-                                                    <Truck size={16} className="text-blue-600" />
+                                                <div className="w-8 h-8 bg-info-bg rounded-full flex items-center justify-center">
+                                                    <Truck size={16} className="text-info-text" />
                                                 </div>
-                                                <span className="text-gray-600">Import direkt</span>
+                                                <span className="text-muted">Import direkt</span>
                                             </div>
                                             <div className="flex flex-col items-center gap-1">
-                                                <div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center">
-                                                    <Shield size={16} className="text-green-600" />
+                                                <div className="w-8 h-8 bg-success-bg rounded-full flex items-center justify-center">
+                                                    <Shield size={16} className="text-success-text" />
                                                 </div>
-                                                <span className="text-gray-600">Inspektuar</span>
+                                                <span className="text-muted">Inspektuar</span>
                                             </div>
                                             <div className="flex flex-col items-center gap-1">
-                                                <div className="w-8 h-8 bg-purple-50 rounded-full flex items-center justify-center">
-                                                    <CheckCircle size={16} className="text-purple-600" />
+                                                <div className="w-8 h-8 bg-warning-bg rounded-full flex items-center justify-center">
+                                                    <CheckCircle size={16} className="text-warning-text" />
                                                 </div>
-                                                <span className="text-gray-600">Garanci</span>
+                                                <span className="text-muted">Garanci</span>
                                             </div>
                                         </div>
                                     </div>
@@ -345,12 +346,12 @@ export default async function CarDetailPage({ params }: PageProps) {
                                 {/* Cost Calculator */}
                                 <CostCalculator carPrice={car.price} />
 
-                                {/* Dealer Badge - NEW */}
+                                {/* Dealer Badge */}
                                 {car.dealer && <DealerBadge dealer={car.dealer} />}
 
                                 {/* Seller Info */}
-                                <div className="bg-surface rounded-2xl p-6 border border-theme shadow-sm">
-                                    <h3 className="font-semibold mb-4 flex items-center gap-2">
+                                <div className="bg-surface rounded-2xl p-6 border border-medium shadow-sm">
+                                    <h3 className="font-semibold mb-4 flex items-center gap-2 text-primary">
                                         <Building2 size={18} className="text-ferrari-red" />
                                         Shitësi
                                     </h3>
@@ -369,8 +370,8 @@ export default async function CarDetailPage({ params }: PageProps) {
                                 )}
 
                                 {/* Contact Form */}
-                                <div className="bg-surface rounded-2xl p-6 border border-theme shadow-sm">
-                                    <h3 className="font-semibold mb-4 flex items-center gap-2">
+                                <div className="bg-surface rounded-2xl p-6 border border-medium shadow-sm">
+                                    <h3 className="font-semibold mb-4 flex items-center gap-2 text-primary">
                                         <Mail size={18} className="text-ferrari-red" />
                                         Pyet për këtë makinë
                                     </h3>
@@ -382,7 +383,7 @@ export default async function CarDetailPage({ params }: PageProps) {
 
                                 {/* Report */}
                                 <div className="text-center">
-                                    <button className="text-xs text-gray-400 hover:text-ferrari-red transition">
+                                    <button className="text-xs text-muted hover:text-ferrari-red transition">
                                         📢 Raporto këtë makinë
                                     </button>
                                 </div>

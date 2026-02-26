@@ -1,26 +1,11 @@
+// components/home/FeaturedCars.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
 import CarCard from '@/components/cars/CarCard';
-import { fetchCars } from '@/lib/api';
+import { fetchCars, type Car } from '@/lib/api'; // ✅ Import Car type
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-
-// Define Car type
-interface Car {
-    id: number;
-    make: string;
-    model: string;
-    full_name?: string;
-    year: number;
-    price: number;
-    mileage: number;
-    fuelType: string;
-    transmission: string;
-    images?: string[];
-    score?: number;
-    [key: string]: any;
-}
 
 export default function FeaturedCars() {
     const router = useRouter();
@@ -247,7 +232,7 @@ export default function FeaturedCars() {
         return (
             <div>
                 <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-3xl font-bold">🚗 Makina të zgjedhura</h2>
+                    <h2 className="text-3xl font-bold text-primary">🚗 Makina të zgjedhura</h2>
                     <div className="h-6 w-24 bg-tertiary rounded animate-pulse"></div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -269,14 +254,14 @@ export default function FeaturedCars() {
         return (
             <div>
                 <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-3xl font-bold">🚗 Makina të zgjedhura</h2>
+                    <h2 className="text-3xl font-bold text-primary">🚗 Makina të zgjedhura</h2>
                     <Link href="/offers" className="text-ferrari-red hover:underline">
                         Shiko ofertat →
                     </Link>
                 </div>
                 <div className="bg-gradient-to-r from-ferrari-red/10 to-transparent rounded-lg p-8 text-center border border-ferrari-red/20">
-                    <p className="text-gray-700 mb-3">Për momentin nuk ka makina evropiane në stok.</p>
-                    <p className="text-sm text-gray-500 mb-4">
+                    <p className="text-secondary mb-3">Për momentin nuk ka makina evropiane në stok.</p>
+                    <p className="text-sm text-muted mb-4">
                         Por kemi shumë makina koreane të gatshme për import!
                     </p>
                     <Link href="/korea-import" className="btn-primary inline-block">
@@ -290,7 +275,7 @@ export default function FeaturedCars() {
     return (
         <div>
             <div className="flex items-center justify-between mb-4">
-                <h2 className="text-3xl font-bold">🚗 Makina të zgjedhura</h2>
+                <h2 className="text-3xl font-bold text-primary">🚗 Makina të zgjedhura</h2>
                 <button
                     onClick={handleSeeAll}
                     className="text-ferrari-red hover:underline cursor-pointer"
@@ -307,11 +292,11 @@ export default function FeaturedCars() {
                                 🔥 Top Choice
                             </div>
                         ) : car.fuelType === 'Diesel' ? (
-                            <div className="absolute top-2 left-2 z-10 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                            <div className="absolute top-2 left-2 z-10 bg-info-text text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
                                 ⛽ Diesel
                             </div>
                         ) : (
-                            <div className="absolute top-2 left-2 z-10 bg-green-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                            <div className="absolute top-2 left-2 z-10 bg-success-text text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
                                 🇪🇺 European
                             </div>
                         )}
@@ -322,7 +307,7 @@ export default function FeaturedCars() {
 
             {/* Show current filter info (optional) */}
             {Object.keys(currentFilters).length > 0 && (
-                <p className="text-xs text-gray-400 mt-2 text-right">
+                <p className="text-xs text-muted mt-2 text-right">
                     Duke shfaqur {cars.length} nga shumë të tjerë me të njëjtat filtra
                 </p>
             )}
