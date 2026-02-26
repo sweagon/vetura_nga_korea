@@ -1,21 +1,7 @@
 // next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
-  async headers() {
-    return [
-      {
-        source: '/api/:path*',
-        headers: [
-          { key: 'Access-Control-Allow-Origin', value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET, OPTIONS' },
-          { key: 'Access-Control-Allow-Headers', value: 'Content-Type' },
-        ],
-      },
-    ];
-  },
   images: {
-    domains: ['ferrari-export.com'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -27,8 +13,14 @@ const nextConfig = {
         hostname: 'ci.encar.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'ferrari-export.com',
+        pathname: '/**',
+      },
     ],
   },
+  // Remove any images.domains config if present
 };
 
 module.exports = nextConfig;
