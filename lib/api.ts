@@ -40,7 +40,8 @@ export interface FilterData {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api/proxy';
 
-// Helper function to get the full URL
+// lib/api.ts - Fixed getFullUrl function
+
 const getFullUrl = (path: string): string => {
     // If we're in the browser, a relative URL is perfect
     if (typeof window !== 'undefined') {
@@ -48,33 +49,20 @@ const getFullUrl = (path: string): string => {
     }
 
     // --- Server-side logic ---
-    // Determine the base URL based on the environment
-    let baseUrl: string;
-
-    if (process.env.NODE_ENV === 'development') {
-        // In development, use localhost
-        baseUrl = 'http://localhost:3000';
-    } else {
-        // In production, use the actual domain
-        baseUrl = process.env.NEXTAUTH_URL || 'https://ferrari-export.com';
-    }
-
-    // Remove trailing slash from baseUrl if present, and ensure path starts with one
-    const cleanBaseUrl = baseUrl.replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-
-    const absoluteUrl = `${cleanBaseUrl}${cleanPath}`;
-
-    // Optional: Validate the URL
-    try {
-        new URL(absoluteUrl);
-    } catch (error) {
-        console.error(`❌ Invalid URL constructed: ${absoluteUrl}`, error);
+    // In production, we should NOT use localhost
+    // Instead, use the relative path and let Next.js handle it internally
+    if (process.env.NODE_ENV === 'production') {
+        // For server-side fetching in production, return the path as-is
+        // The Next.js server can handle internal API routes without a full URL
         return path;
     }
 
-    console.log(`🌐 Server fetching from: ${absoluteUrl} (Environment: ${process.env.NODE_ENV})`);
-    return absoluteUrl;
+    // In development, use localhost
+    const baseUrl = 'http://localhost:3000';
+    const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+
+    return `${cleanBaseUrl}${cleanPath}`;
 };
 
 export async function fetchCars(params: Record<string, any> = {}): Promise<FetchCarsResponse> {
@@ -149,33 +137,42 @@ export async function fetchCars(params: Record<string, any> = {}): Promise<Fetch
     }
 }
 
+// lib/api.ts - Improved fetchCarDetails
 export async function fetchCarDetails(carId: string): Promise<Car | null> {
     try {
         // Extract numeric ID (remove any non-numeric characters)
         const cleanId = carId.toString().replace(/\D/g, '');
 
         if (!cleanId) {
-            throw new Error('Invalid car ID');
+            console.warn(`⚠️ Invalid car ID format: ${carId}`);
+            return null;
         }
 
         const path = `/api/proxy/cars/${cleanId}`;
         const url = getFullUrl(path);
 
-        console.log(`🔍 [${typeof window === 'undefined' ? 'SERVER' : 'CLIENT'}] Fetching car details from:`, url);
+        console.log(`🔍 [${typeof window === 'undefined' ? 'SERVER' : 'CLIENT'}] Fetching car details for ID: ${cleanId}`);
 
         const response = await fetch(url, {
-            ...(typeof window !== 'undefined' ? { next: { revalidate: 3600 } } : {}) // Cache for 1 hour on client
+            ...(typeof window !== 'undefined' ? { next: { revalidate: 3600 } } : {})
         });
 
+        if (response.status === 404) {
+            console.log(`📭 Car not found (404): ${cleanId} - This car may have been sold or removed`);
+            return null;
+        }
+
         if (!response.ok) {
-            if (response.status === 404) {
-                console.log('Car not found:', carId);
-                return null;
-            }
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
+
+        if (!data || Object.keys(data).length === 0) {
+            console.warn(`⚠️ Empty response for car ID: ${cleanId}`);
+            return null;
+        }
+
         return data;
     } catch (error) {
         console.error('❌ Error fetching car details:', error);

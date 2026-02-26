@@ -1,8 +1,21 @@
 // app/sitemap.ts
-import { MetadataRoute } from 'next'
+import { fetchCars } from '@/lib/api';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap() {
     const baseUrl = 'https://formula-export.com'
+
+    // Fetch only valid, in-stock cars
+    const { cars } = await fetchCars({
+        limit: 500,  // Adjust based on your total car count
+        inStock: true // Add this filter if your API supports it
+    });
+
+    const carUrls = cars.map((car) => ({
+        url: `${baseUrl}/cars/${car.id}`,
+        lastModified: new Date(),
+        changeFrequency: 'daily' as const,
+        priority: 0.8,
+    }));
 
     return [
         {
