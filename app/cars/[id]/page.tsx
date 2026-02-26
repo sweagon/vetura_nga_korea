@@ -45,10 +45,28 @@ interface PageProps {
 }
 
 export default async function CarDetailPage({ params }: PageProps) {
-    const { id } = await params;
-    const car = await fetchCarDetails(id);
+    console.log('🚀 CarDetailPage started');
+    console.log('📦 Environment:', process.env.NODE_ENV);
+    console.log('🔑 NEXTAUTH_URL:', process.env.NEXTAUTH_URL);
 
-    if (!car) {
+    const { id } = await params;
+    console.log('🔍 Looking for car with ID:', id);
+
+    console.log('📞 Calling fetchCarDetails...');
+    const car = await fetchCarDetails(id);
+    console.log('📥 fetchCarDetails returned:', car ? 'Car found' : 'Car not found');
+
+    if (car) {
+        console.log('✅ Car details:', {
+            id: car.id,
+            make: car.make,
+            model: car.model,
+            year: car.year,
+            price: car.price,
+            hasImages: car.images?.length || 0
+        });
+    } else {
+        console.log('❌ Car not found, calling notFound()');
         notFound();
     }
 

@@ -3,11 +3,11 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { Sparkles, TrendingUp, RefreshCw } from 'lucide-react';
+import { Sparkles, TrendingUp, RefreshCw, Car as CarIcon } from 'lucide-react';
 import { UserPreferenceService } from '@/lib/matchmaker/UserPreferenceService';
 import { SupabaseMatchmakerService } from '@/lib/matchmaker/supabase-service';
 import CarCard from '../cars/CarCard';
-import { type Car } from '@/lib/api'; // ✅ Import Car type
+import { type Car } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface MatchmakerWidgetProps {
@@ -24,13 +24,22 @@ export default function MatchmakerWidget({ cars }: MatchmakerWidgetProps) {
 
     // Update recommendations based on current cars and preferences
     const updateRecommendations = useCallback(() => {
-        if (!cars || cars.length === 0) return;
+        if (!cars || cars.length === 0) {
+            setRecommendations([]);
+            return;
+        }
 
-        const topCars = preferenceServiceRef.current.getTopRecommendations(cars, 6);
-        setRecommendations(topCars);
+        try {
+            const topCars = preferenceServiceRef.current.getTopRecommendations(cars, 6);
+            setRecommendations(topCars);
 
-        // Debug log
-        console.log('🎯 Updated recommendations:', topCars.length);
+            if (topCars.length > 0) {
+                console.log('🎯 Updated recommendations:', topCars.length);
+            }
+        } catch (error) {
+            console.error('Error updating recommendations:', error);
+            setRecommendations([]);
+        }
     }, [cars]);
 
     // Update supabase service when session changes
@@ -93,64 +102,55 @@ export default function MatchmakerWidget({ cars }: MatchmakerWidgetProps) {
         const handleCarView = (event: Event) => {
             const customEvent = event as CustomEvent;
             if (customEvent.detail) {
-                // Track in local service
-                preferenceServiceRef.current.trackCarView(customEvent.detail);
+                try {
+                    preferenceServiceRef.current.trackCarView(customEvent.detail);
 
-                // Track in Supabase if logged in (fire and forget)
-                if (session?.user?.id) {
-                    supabaseService.trackCarView({
-                        car_id: customEvent.detail.id,
-                        make: customEvent.detail.make,
-                        model: customEvent.detail.model,
-                        year: customEvent.detail.year,
-                        price: customEvent.detail.price,
-                        fuelType: customEvent.detail.fuelType,
-                        transmission: customEvent.detail.transmission,
-                    }).catch(error => console.error('Error tracking view:', error));
+                    if (session?.user?.id) {
+                        supabaseService.trackCarView({
+                            car_id: customEvent.detail.id,
+                            make: customEvent.detail.make,
+                            model: customEvent.detail.model,
+                            year: customEvent.detail.year,
+                            price: customEvent.detail.price,
+                            fuelType: customEvent.detail.fuelType,
+                            transmission: customEvent.detail.transmission,
+                        }).catch(error => console.error('Error tracking view:', error));
+                    }
+
+                    preferenceServiceRef.current.saveToStorage(session?.user?.id || 'guest');
+                    updateRecommendations();
+                } catch (error) {
+                    console.error('Error handling car view:', error);
                 }
-
-                // Save to localStorage
-                preferenceServiceRef.current.saveToStorage(session?.user?.id || 'guest');
-
-                // Update recommendations immediately
-                updateRecommendations();
             }
         };
 
         const handleCarSave = (event: Event) => {
             const customEvent = event as CustomEvent;
             if (customEvent.detail) {
-                // Track in local service (with higher weight)
-                preferenceServiceRef.current.trackCarSave(customEvent.detail);
-                preferenceServiceRef.current.saveToStorage(session?.user?.id || 'guest');
-
-                // Update recommendations immediately
-                updateRecommendations();
+                try {
+                    preferenceServiceRef.current.trackCarSave(customEvent.detail);
+                    preferenceServiceRef.current.saveToStorage(session?.user?.id || 'guest');
+                    updateRecommendations();
+                } catch (error) {
+                    console.error('Error handling car save:', error);
+                }
             }
         };
 
         const handleCarUnsave = (event: Event) => {
             const customEvent = event as CustomEvent;
             if (customEvent.detail) {
-                console.log('🗑️ Removing car from preferences:', customEvent.detail.make, customEvent.detail.model);
-
-                // Remove from preferences
-                preferenceServiceRef.current.removeCarPreference(customEvent.detail);
-
-                // Save to localStorage
-                preferenceServiceRef.current.saveToStorage(session?.user?.id || 'guest');
-
-                // Update recommendations immediately
-                updateRecommendations();
-
-                // Force a UI update
-                setTimeout(() => {
+                try {
+                    preferenceServiceRef.current.removeCarPreference(customEvent.detail);
+                    preferenceServiceRef.current.saveToStorage(session?.user?.id || 'guest');
                     updateRecommendations();
-                }, 100);
+                } catch (error) {
+                    console.error('Error handling car unsave:', error);
+                }
             }
         };
 
-        // Add event listeners
         window.addEventListener('carView', handleCarView);
         window.addEventListener('carSave', handleCarSave);
         window.addEventListener('carUnsave', handleCarUnsave);
@@ -162,12 +162,16 @@ export default function MatchmakerWidget({ cars }: MatchmakerWidgetProps) {
         };
     }, [session, supabaseService, updateRecommendations]);
 
-    // Manual refresh function
     const handleRefresh = () => {
         setIsRefreshing(true);
-        preferenceServiceRef.current.loadFromStorage(session?.user?.id || 'guest');
-        updateRecommendations();
-        setTimeout(() => setIsRefreshing(false), 500);
+        try {
+            preferenceServiceRef.current.loadFromStorage(session?.user?.id || 'guest');
+            updateRecommendations();
+        } catch (error) {
+            console.error('Error refreshing recommendations:', error);
+        } finally {
+            setTimeout(() => setIsRefreshing(false), 500);
+        }
     };
 
     if (isLoading) {
@@ -177,16 +181,12 @@ export default function MatchmakerWidget({ cars }: MatchmakerWidgetProps) {
                     <h2 className="text-2xl font-bold text-primary">Rekomandime për ty</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {[...Array(6)].map((_, i) => (
+                    {[...Array(4)].map((_, i) => (
                         <div key={i} className="animate-pulse">
                             <div className="bg-tertiary h-48 rounded-t-lg"></div>
                             <div className="bg-surface p-4 rounded-b-lg">
                                 <div className="h-4 bg-tertiary rounded w-3/4 mb-2"></div>
                                 <div className="h-4 bg-tertiary rounded w-1/2 mb-3"></div>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <div className="h-3 bg-tertiary rounded"></div>
-                                    <div className="h-3 bg-tertiary rounded"></div>
-                                </div>
                             </div>
                         </div>
                     ))}
@@ -198,9 +198,11 @@ export default function MatchmakerWidget({ cars }: MatchmakerWidgetProps) {
     if (!recommendations || recommendations.length === 0) {
         return (
             <div className="text-center py-12 bg-secondary rounded-lg">
-                <Sparkles className="mx-auto text-ferrari-red mb-4" size={48} />
+                <div className="w-20 h-20 bg-ferrari-red/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CarIcon size={32} className="text-ferrari-red" />
+                </div>
                 <h3 className="text-xl font-semibold text-primary mb-2">Akoma pa preferenca</h3>
-                <p className="text-secondary mb-6">
+                <p className="text-secondary mb-6 max-w-md mx-auto">
                     Shfleto dhe ruaj disa makina për të marrë rekomandime të personalizuara
                 </p>
                 <button

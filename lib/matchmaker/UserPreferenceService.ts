@@ -1,3 +1,4 @@
+// lib/matchmaker/UserPreferenceService.ts
 export interface UserPreference {
     makes: Map<string, number>;
     models: Map<string, number>;
@@ -36,29 +37,37 @@ export class UserPreferenceService {
 
     trackCarView(car: any) {
         if (!car) return;
-        this.updatePreference('makes', car.make, this.VIEW_WEIGHT);
-        this.updatePreference('models', `${car.make}:${car.model}`, this.VIEW_WEIGHT);
-        this.updateYearPreference(car.year, this.VIEW_WEIGHT);
-        this.updatePricePreference(car.price);
-        this.updatePreference('fuelTypes', car.fuelType, this.VIEW_WEIGHT);
-        this.updatePreference('transmissions', car.transmission, this.VIEW_WEIGHT);
+        try {
+            this.updatePreference('makes', car.make, this.VIEW_WEIGHT);
+            this.updatePreference('models', `${car.make}:${car.model}`, this.VIEW_WEIGHT);
+            this.updateYearPreference(car.year, this.VIEW_WEIGHT);
+            this.updatePricePreference(car.price);
+            this.updatePreference('fuelTypes', car.fuelType, this.VIEW_WEIGHT);
+            this.updatePreference('transmissions', car.transmission, this.VIEW_WEIGHT);
 
-        if (car.description) {
-            const features = this.extractFeatures(car.description);
-            features.forEach(feature =>
-                this.updatePreference('features', feature, this.VIEW_WEIGHT * 0.5)
-            );
+            if (car.description) {
+                const features = this.extractFeatures(car.description);
+                features.forEach(feature =>
+                    this.updatePreference('features', feature, this.VIEW_WEIGHT * 0.5)
+                );
+            }
+        } catch (error) {
+            console.error('Error tracking car view:', error);
         }
     }
 
     trackCarSave(car: any) {
         if (!car) return;
-        this.updatePreference('makes', car.make, this.SAVE_WEIGHT);
-        this.updatePreference('models', `${car.make}:${car.model}`, this.SAVE_WEIGHT);
-        this.updateYearPreference(car.year, this.SAVE_WEIGHT);
-        this.updatePricePreference(car.price);
-        this.updatePreference('fuelTypes', car.fuelType, this.SAVE_WEIGHT);
-        this.updatePreference('transmissions', car.transmission, this.SAVE_WEIGHT);
+        try {
+            this.updatePreference('makes', car.make, this.SAVE_WEIGHT);
+            this.updatePreference('models', `${car.make}:${car.model}`, this.SAVE_WEIGHT);
+            this.updateYearPreference(car.year, this.SAVE_WEIGHT);
+            this.updatePricePreference(car.price);
+            this.updatePreference('fuelTypes', car.fuelType, this.SAVE_WEIGHT);
+            this.updatePreference('transmissions', car.transmission, this.SAVE_WEIGHT);
+        } catch (error) {
+            console.error('Error tracking car save:', error);
+        }
     }
 
     private updatePreference(
@@ -103,18 +112,25 @@ export class UserPreferenceService {
 
     private applyDecay(map: Map<string, number>) {
         for (const [key, value] of map.entries()) {
-            map.set(key, value * this.DECAY_FACTOR);
+            const newValue = value * this.DECAY_FACTOR;
+            if (newValue < 0.1) {
+                map.delete(key);
+            } else {
+                map.set(key, newValue);
+            }
         }
     }
 
     private extractFeatures(description: string): string[] {
+        if (!description) return [];
+
         const commonFeatures = [
             'Panoramic roof', 'Leather seats', 'Navigation', 'Backup camera',
             'Heated seats', 'Bluetooth', 'Sunroof', 'Alloy wheels'
         ];
 
         return commonFeatures.filter(feature =>
-            description?.toLowerCase().includes(feature.toLowerCase())
+            description.toLowerCase().includes(feature.toLowerCase())
         );
     }
 
@@ -127,7 +143,6 @@ export class UserPreferenceService {
         // Make match (30% of score)
         const makeWeight = this.preferences.makes.get(car.make) || 0;
         if (makeWeight > 0) {
-            // Normalize to max 0.3
             score += Math.min(makeWeight / 10, 0.3);
             totalWeight += 0.3;
         }
@@ -174,7 +189,6 @@ export class UserPreferenceService {
         return totalWeight > 0 ? Math.min(Math.round((score / totalWeight) * 100), 100) : 0;
     }
 
-    // FIXED: Added null check for cars array
     getTopRecommendations(cars: any[], limit: number = 10): any[] {
         if (!Array.isArray(cars) || cars.length === 0) {
             return [];
@@ -182,9 +196,6 @@ export class UserPreferenceService {
 
         const scoredCars = cars.map(car => {
             const score = this.calculateMatchScore(car);
-            if (score > 50) { // Log only high matches
-                console.log(`📊 ${car.make} ${car.model}: ${Math.round(score)}% match`);
-            }
             return {
                 ...car,
                 matchScore: score
@@ -197,28 +208,35 @@ export class UserPreferenceService {
     }
 
     saveToStorage(userId: string) {
-        const data = {
-            makes: Array.from(this.preferences.makes.entries()),
-            models: Array.from(this.preferences.models.entries()),
-            years: {
-                min: this.preferences.years.min,
-                max: this.preferences.years.max,
-                weights: Array.from(this.preferences.years.weights.entries())
-            },
-            priceRange: this.preferences.priceRange,
-            fuelTypes: Array.from(this.preferences.fuelTypes.entries()),
-            transmissions: Array.from(this.preferences.transmissions.entries()),
-            features: Array.from(this.preferences.features.entries())
-        };
+        if (!userId) return;
 
-        console.log('💾 Saving preferences to localStorage:', data);
-        localStorage.setItem(`preferences_${userId}`, JSON.stringify(data));
+        try {
+            const data = {
+                makes: Array.from(this.preferences.makes.entries()),
+                models: Array.from(this.preferences.models.entries()),
+                years: {
+                    min: this.preferences.years.min,
+                    max: this.preferences.years.max,
+                    weights: Array.from(this.preferences.years.weights.entries())
+                },
+                priceRange: this.preferences.priceRange,
+                fuelTypes: Array.from(this.preferences.fuelTypes.entries()),
+                transmissions: Array.from(this.preferences.transmissions.entries()),
+                features: Array.from(this.preferences.features.entries())
+            };
+
+            localStorage.setItem(`preferences_${userId}`, JSON.stringify(data));
+        } catch (error) {
+            console.error('Error saving preferences:', error);
+        }
     }
 
     loadFromStorage(userId: string) {
-        const saved = localStorage.getItem(`preferences_${userId}`);
-        if (saved) {
-            try {
+        if (!userId) return;
+
+        try {
+            const saved = localStorage.getItem(`preferences_${userId}`);
+            if (saved) {
                 const data = JSON.parse(saved);
                 this.preferences = {
                     makes: new Map(data.makes || []),
@@ -233,93 +251,92 @@ export class UserPreferenceService {
                     transmissions: new Map(data.transmissions || []),
                     features: new Map(data.features || [])
                 };
-            } catch (e) {
-                console.error('Error loading preferences:', e);
             }
+        } catch (error) {
+            console.error('Error loading preferences:', error);
         }
     }
 
-    // Add this method to UserPreferenceService class
     removeCarPreference(car: any) {
         if (!car) return;
 
-        // Decrease weights instead of just removing
-        const currentMakeWeight = this.preferences.makes.get(car.make) || 0;
-        if (currentMakeWeight > 0) {
-            // Reduce by SAVE_WEIGHT (since it was saved)
-            const newWeight = Math.max(0, currentMakeWeight - this.SAVE_WEIGHT);
-            if (newWeight === 0) {
-                this.preferences.makes.delete(car.make);
-            } else {
-                this.preferences.makes.set(car.make, newWeight);
+        try {
+            // Decrease weights instead of just removing
+            const currentMakeWeight = this.preferences.makes.get(car.make) || 0;
+            if (currentMakeWeight > 0) {
+                const newWeight = Math.max(0, currentMakeWeight - this.SAVE_WEIGHT);
+                if (newWeight === 0) {
+                    this.preferences.makes.delete(car.make);
+                } else {
+                    this.preferences.makes.set(car.make, newWeight);
+                }
             }
-        }
 
-        // Remove model preference
-        const modelKey = `${car.make}:${car.model}`;
-        const currentModelWeight = this.preferences.models.get(modelKey) || 0;
-        if (currentModelWeight > 0) {
-            const newWeight = Math.max(0, currentModelWeight - this.SAVE_WEIGHT);
-            if (newWeight === 0) {
-                this.preferences.models.delete(modelKey);
-            } else {
-                this.preferences.models.set(modelKey, newWeight);
+            // Remove model preference
+            const modelKey = `${car.make}:${car.model}`;
+            const currentModelWeight = this.preferences.models.get(modelKey) || 0;
+            if (currentModelWeight > 0) {
+                const newWeight = Math.max(0, currentModelWeight - this.SAVE_WEIGHT);
+                if (newWeight === 0) {
+                    this.preferences.models.delete(modelKey);
+                } else {
+                    this.preferences.models.set(modelKey, newWeight);
+                }
             }
-        }
 
-        // Remove year preference
-        const currentYearWeight = this.preferences.years.weights.get(car.year) || 0;
-        if (currentYearWeight > 0) {
-            const newWeight = Math.max(0, currentYearWeight - this.SAVE_WEIGHT);
-            if (newWeight === 0) {
-                this.preferences.years.weights.delete(car.year);
-            } else {
-                this.preferences.years.weights.set(car.year, newWeight);
+            // Remove year preference
+            const currentYearWeight = this.preferences.years.weights.get(car.year) || 0;
+            if (currentYearWeight > 0) {
+                const newWeight = Math.max(0, currentYearWeight - this.SAVE_WEIGHT);
+                if (newWeight === 0) {
+                    this.preferences.years.weights.delete(car.year);
+                } else {
+                    this.preferences.years.weights.set(car.year, newWeight);
+                }
             }
-        }
 
-        // Update year min/max if needed
-        if (this.preferences.years.weights.size === 0) {
-            this.preferences.years.min = 0;
-            this.preferences.years.max = 0;
-        } else {
-            this.preferences.years.min = Math.min(...Array.from(this.preferences.years.weights.keys()));
-            this.preferences.years.max = Math.max(...Array.from(this.preferences.years.weights.keys()));
-        }
-
-        // Remove fuel type preference
-        const currentFuelWeight = this.preferences.fuelTypes.get(car.fuelType) || 0;
-        if (currentFuelWeight > 0) {
-            const newWeight = Math.max(0, currentFuelWeight - this.SAVE_WEIGHT);
-            if (newWeight === 0) {
-                this.preferences.fuelTypes.delete(car.fuelType);
+            // Update year min/max if needed
+            if (this.preferences.years.weights.size === 0) {
+                this.preferences.years.min = 0;
+                this.preferences.years.max = 0;
             } else {
-                this.preferences.fuelTypes.set(car.fuelType, newWeight);
+                this.preferences.years.min = Math.min(...Array.from(this.preferences.years.weights.keys()));
+                this.preferences.years.max = Math.max(...Array.from(this.preferences.years.weights.keys()));
             }
-        }
 
-        // Remove transmission preference
-        const currentTransWeight = this.preferences.transmissions.get(car.transmission) || 0;
-        if (currentTransWeight > 0) {
-            const newWeight = Math.max(0, currentTransWeight - this.SAVE_WEIGHT);
-            if (newWeight === 0) {
-                this.preferences.transmissions.delete(car.transmission);
-            } else {
-                this.preferences.transmissions.set(car.transmission, newWeight);
+            // Remove fuel type preference
+            const currentFuelWeight = this.preferences.fuelTypes.get(car.fuelType) || 0;
+            if (currentFuelWeight > 0) {
+                const newWeight = Math.max(0, currentFuelWeight - this.SAVE_WEIGHT);
+                if (newWeight === 0) {
+                    this.preferences.fuelTypes.delete(car.fuelType);
+                } else {
+                    this.preferences.fuelTypes.set(car.fuelType, newWeight);
+                }
             }
-        }
 
-        // Recalculate price range based on remaining saved cars
-        // This is more complex - for now, just reset if no makes left
-        if (this.preferences.makes.size === 0) {
-            this.preferences.priceRange = { min: Infinity, max: 0, preferredPrice: 0 };
-        }
+            // Remove transmission preference
+            const currentTransWeight = this.preferences.transmissions.get(car.transmission) || 0;
+            if (currentTransWeight > 0) {
+                const newWeight = Math.max(0, currentTransWeight - this.SAVE_WEIGHT);
+                if (newWeight === 0) {
+                    this.preferences.transmissions.delete(car.transmission);
+                } else {
+                    this.preferences.transmissions.set(car.transmission, newWeight);
+                }
+            }
 
-        // Apply decay to all preferences
-        this.applyDecayToAll();
+            // Reset price range if no makes left
+            if (this.preferences.makes.size === 0) {
+                this.preferences.priceRange = { min: Infinity, max: 0, preferredPrice: 0 };
+            }
+
+            this.applyDecayToAll();
+        } catch (error) {
+            console.error('Error removing car preference:', error);
+        }
     }
 
-    // Add method to apply decay to all maps
     private applyDecayToAll() {
         this.applyDecay(this.preferences.makes);
         this.applyDecay(this.preferences.models);
@@ -329,7 +346,12 @@ export class UserPreferenceService {
 
         // Apply decay to year weights
         for (const [year, weight] of this.preferences.years.weights.entries()) {
-            this.preferences.years.weights.set(year, weight * this.DECAY_FACTOR);
+            const newWeight = weight * this.DECAY_FACTOR;
+            if (newWeight < 0.1) {
+                this.preferences.years.weights.delete(year);
+            } else {
+                this.preferences.years.weights.set(year, newWeight);
+            }
         }
     }
 }

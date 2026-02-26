@@ -77,25 +77,28 @@ const getBaseUrl = (): string => {
     return 'http://localhost:3000';
 };
 
-// Helper to get full URL for server-side fetching
+// lib/api.ts - Fix getFullUrl
 const getFullUrl = (path: string): string => {
     // If we're in the browser, a relative URL is perfect
     if (typeof window !== 'undefined') {
         return path;
     }
 
-    // --- Server-side logic (Node.js environment) ---
-    // We ALWAYS need an absolute URL on the server
-    const baseUrl = getBaseUrl();
-    // Remove trailing slash from baseUrl if present, and ensure path starts with one
+    // --- Server-side logic ---
+    // In development, ALWAYS use localhost
+    if (process.env.NODE_ENV === 'development') {
+        const baseUrl = 'http://localhost:3000';
+        const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+        const cleanPath = path.startsWith('/') ? path : `/${path}`;
+        return `${cleanBaseUrl}${cleanPath}`;
+    }
+
+    // In production, use the actual domain
+    const baseUrl = process.env.NEXTAUTH_URL || 'https://ferrari-export.com';
     const cleanBaseUrl = baseUrl.replace(/\/$/, '');
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    const absoluteUrl = `${cleanBaseUrl}${cleanPath}`;
 
-    // Log for debugging (helpful for production)
-    console.log(`🌐 Server fetching from: ${absoluteUrl} (${process.env.NODE_ENV})`);
-
-    return absoluteUrl;
+    return `${cleanBaseUrl}${cleanPath}`;
 };
 
 // Utility for fetch with timeout

@@ -9,28 +9,36 @@ import RecentlyViewed from '@/components/cars/RecentlyViewed';
 import { CarCardSkeleton, GridSkeleton } from '@/components/ui/LoadingSkeleton';
 
 export default async function Home() {
-  // FIX: Fetch 100 cars, sorted by price descending to get luxury vehicles
+  // Fetch 100 cars for the matchmaker to analyze
   const data = await fetchCars({ limit: 100, sort: 'price_desc' });
   const allCars = data?.cars || [];
 
   return (
     <main>
       <Hero />
+
       <section className="container-custom py-16">
-        <FeaturedCars /> {/* This component fetches its own limited data - that's fine */}
+        <FeaturedCars />
       </section>
+
       <section className="container-custom py-8">
         <RecentlyViewed />
       </section>
-      <section className="bg-secondary py-16">
-        <div className="container-custom">
-          <Suspense fallback={<GridSkeleton />}>
-          </Suspense>
-        </div>
-      </section>
+
+      {/* Matchmaker Section - Only show if we have cars */}
+      {allCars.length > 0 && (
+        <section className="bg-secondary py-16">
+          <div className="container-custom">
+            <Suspense fallback={<GridSkeleton />}>
+              <MatchmakerWidget cars={allCars} />
+            </Suspense>
+          </div>
+        </section>
+      )}
+
       <section className="container-custom py-16">
         <HowItWorks />
       </section>
-    </main >
+    </main>
   );
 }

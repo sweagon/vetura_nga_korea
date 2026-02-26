@@ -1,6 +1,8 @@
+// lib/matchmaker/supabase-service.ts
 'use client';
 
 import { createClient } from '@/lib/supabase/client';
+import { type SupabaseClient } from '@supabase/supabase-js';
 
 export interface CarView {
     car_id: number;
@@ -13,8 +15,8 @@ export interface CarView {
 }
 
 export class SupabaseMatchmakerService {
-    public supabase; // Changed from private to public
-    public userId: string | null = null;
+    private supabase: SupabaseClient;
+    private userId: string | null = null;
 
     constructor(userId?: string) {
         this.supabase = createClient();
