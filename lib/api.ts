@@ -1,42 +1,88 @@
 // lib/api.ts
-// Use environment variable for flexibility
+export interface Car {
+    id: number;
+    full_name: string;
+    make: string;
+    model: string;
+    grade?: string;
+    year: number;
+    price: number;
+    mileage: number;
+    fuelType: string;
+    transmission: string;
+    engineSize?: number;
+    displacement?: number;
+    images: string[];
+    exteriorColor?: string;
+    interiorColor?: string;
+    description?: string;
+    [key: string]: any;
+}
+
+export interface FetchCarsResponse {
+    cars: Car[];
+    pagination: {
+        page: number;
+        totalPages: number;
+        total: number;
+    };
+}
+
+export interface FilterData {
+    makes: string[];
+    fuelTypes: string[];
+    transmissions: string[];
+    years: number[];
+    modelsByMake?: Record<string, string[]>;
+}
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api/proxy';
 
-// Helper to get full URL (important for server-side fetching)
-const getFullUrl = (path: string) => {
-    // If we're on the server and using a relative path, make it absolute
+// Helper for server-side fetching
+const getFullUrl = (path: string): string => {
     if (typeof window === 'undefined' && path.startsWith('/')) {
-        // Use localhost in development, actual domain in production
-        const baseUrl = process.env.NODE_ENV === 'development'
-            ? 'http://localhost:3000'
-            : (process.env.NEXTAUTH_URL || 'https://ferrari-export.com');
+        const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
         return `${baseUrl}${path}`;
     }
     return path;
 };
 
-export async function fetchCars(params: any = {}) {
+export async function fetchCars(params: Record<string, any> = {}): Promise<FetchCarsResponse> {
     try {
         const queryParams = new URLSearchParams();
 
         // Add all possible params
-        if (params.search) queryParams.append('search', params.search);
-        if (params.make) queryParams.append('make', params.make);
-        if (params.model) queryParams.append('model', params.model);
-        if (params.minPrice) queryParams.append('minPrice', params.minPrice);
-        if (params.maxPrice) queryParams.append('maxPrice', params.maxPrice);
-        if (params.minYear) queryParams.append('minYear', params.minYear);
-        if (params.maxYear) queryParams.append('maxYear', params.maxYear);
-        if (params.fuelType) queryParams.append('fuelType', params.fuelType);
-        if (params.transmission) queryParams.append('transmission', params.transmission);
-        if (params.sort) queryParams.append('sort', params.sort);
-        if (params.page) queryParams.append('page', params.page);
-        if (params.limit) queryParams.append('limit', params.limit || 12);
+        const paramMappings: Record<string, string> = {
+            search: 'search',
+            make: 'make',
+            model: 'model',
+            minPrice: 'minPrice',
+            maxPrice: 'maxPrice',
+            minYear: 'minYear',
+            maxYear: 'maxYear',
+            fuelType: 'fuelType',
+            transmission: 'transmission',
+            sort: 'sort',
+            page: 'page',
+            limit: 'limit'
+        };
+
+        Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+                const paramKey = paramMappings[key] || key;
+                queryParams.append(paramKey, String(value));
+            }
+        });
+
+        // Set defaults
+        if (!params.limit) queryParams.append('limit', '12');
+        if (!params.page) queryParams.append('page', '1');
+        if (!params.sort) queryParams.append('sort', 'price_desc');
 
         const path = `/api/proxy/cars${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
         const url = getFullUrl(path);
 
-        console.log('Fetching cars from:', url); // Debug log
+        console.log('Fetching cars from:', url);
 
         const response = await fetch(url, {
             next: { revalidate: 60 } // Cache for 60 seconds
@@ -48,20 +94,27 @@ export async function fetchCars(params: any = {}) {
 
         const data = await response.json();
 
-        return {
-            cars: data.cars || [],
-            pagination: data.pagination || { page: 1, totalPages: 1, total: 0 }
-        };
+        // Handle different API response structures
+        let cars: Car[] = [];
+        let pagination = { page: 1, totalPages: 1, total: 0 };
+
+        if (data.cars && Array.isArray(data.cars)) {
+            cars = data.cars;
+            pagination = data.pagination || pagination;
+        } else if (Array.isArray(data)) {
+            cars = data;
+        } else if (data.data && Array.isArray(data.data)) {
+            cars = data.data;
+        }
+
+        return { cars, pagination };
     } catch (error) {
         console.error('Error fetching cars:', error);
-        return {
-            cars: [],
-            pagination: { page: 1, totalPages: 1, total: 0 }
-        };
+        return { cars: [], pagination: { page: 1, totalPages: 1, total: 0 } };
     }
 }
 
-export async function fetchCarDetails(carId: string) {
+export async function fetchCarDetails(carId: string): Promise<Car | null> {
     try {
         const cleanId = carId.replace(/\D/g, '');
         const path = `/api/proxy/cars/${cleanId}`;
@@ -75,14 +128,15 @@ export async function fetchCarDetails(carId: string) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error fetching car details:', error);
         return null;
     }
 }
 
-export async function fetchFilterData() {
+export async function fetchFilterData(): Promise<FilterData> {
     try {
         const path = `/api/proxy/cars/meta/types`;
         const url = getFullUrl(path);
@@ -96,10 +150,16 @@ export async function fetchFilterData() {
         }
 
         const data = await response.json();
-        return data;
+
+        return {
+            makes: data.makes || [],
+            fuelTypes: data.fuelTypes || ['Diesel', 'Gasoline', 'Electric', 'Hybrid'],
+            transmissions: data.transmissions || ['Automatic', 'Manual'],
+            years: data.years || Array.from({ length: 10 }, (_, i) => 2026 - i),
+            modelsByMake: data.modelsByMake || {}
+        };
     } catch (error) {
         console.error('Error fetching filter data:', error);
-        // Return default data to prevent UI crashes
         return {
             makes: [],
             fuelTypes: ['Diesel', 'Gasoline', 'Electric', 'Hybrid'],
