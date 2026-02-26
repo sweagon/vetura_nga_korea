@@ -1,26 +1,427 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Ferrari accent colors - keep as is */
+  --color-ferrari-red: #FF2800;
+  --color-ferrari-dark: #CC2000;
+  --color-ferrari-light: #FF4D2E;
+  --color-ferrari-glow: #FF6B4A;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Light theme */
+    --bg-primary: #F8F9FC;
+    --bg-secondary: #FFFFFF;
+    --bg-tertiary: #F1F4F9;
+    --bg-elevated: #FFFFFF;
+    --bg-surface: #FFFFFF;
+    --bg-surface-2: #F8FAFE;
+    --bg-inset: #EFF2F6;
+
+    /* Borders */
+    --border-light: #E9ECF0;
+    --border-medium: #DCE1E8;
+    --border-strong: #C9D0D9;
+
+    /* Text colors */
+    --text-primary: #1A2634;
+    /* Primary text - dark blue-gray */
+    --text-secondary: #4A5568;
+    /* Secondary text - medium gray */
+    --text-tertiary: #6B7A8F;
+    /* Tertiary text - lighter gray */
+    --text-muted: #8F9EB0;
+    /* Muted text - very light */
+    --text-inverse: #FFFFFF;
+    /* Text on dark backgrounds */
+    --text-disabled: #BFC8D6;
+    /* Disabled state text */
+
+    /* Link colors */
+    --link-default: #1A2634;
+    --link-hover: #FF2800;
+    --link-active: #FF2800;
+    --link-visited: #4A5568;
+
+    /* Icon colors */
+    --icon-default: #4A5568;
+    --icon-hover: #FF2800;
+    --icon-active: #FF2800;
+    --icon-muted: #8F9EB0;
+
+    /* Status colors */
+    --success-bg: #E8F3E9;
+    --success-text: #1E7B4C;
+    --success-border: #A3D8A7;
+
+    --warning-bg: #FEF3E2;
+    --warning-text: #B45B0F;
+    --warning-border: #FFE4B8;
+
+    --error-bg: #FEF0F0;
+    --error-text: #C73B3B;
+    --error-border: #FFC9C9;
+
+    --info-bg: #E8F0FE;
+    --info-text: #1A5F9C;
+    --info-border: #BAC8E0;
+
+    /* Gradients */
+    --gradient-from: #F8F9FC;
+    --gradient-to: #FFFFFF;
+    --gradient-accent-from: rgba(255, 40, 0, 0.05);
+    --gradient-accent-to: rgba(255, 40, 0, 0);
+
+    /* Ferrari with opacity */
+    --ferrari-red-5: rgba(255, 40, 0, 0.05);
+    --ferrari-red-10: rgba(255, 40, 0, 0.1);
+    --ferrari-red-15: rgba(255, 40, 0, 0.15);
+    --ferrari-red-20: rgba(255, 40, 0, 0.2);
+    --ferrari-red-30: rgba(255, 40, 0, 0.3);
+    --ferrari-red-40: rgba(255, 40, 0, 0.4);
+    --ferrari-red-50: rgba(255, 40, 0, 0.5);
+    --ferrari-red-60: rgba(255, 40, 0, 0.6);
+    --ferrari-red-70: rgba(255, 40, 0, 0.7);
+    --ferrari-red-80: rgba(255, 40, 0, 0.8);
+    --ferrari-red-90: rgba(255, 40, 0, 0.9);
+  }
+
+  .dark {
+    /* Dark theme backgrounds */
+    --bg-primary: #0A0C10;
+    --bg-secondary: #14181F;
+    --bg-tertiary: #1E232B;
+    --bg-elevated: #2A2F3A;
+    --bg-surface: #1A1E26;
+    --bg-surface-2: #252B34;
+    --bg-inset: #0F1217;
+
+    /* Dark theme borders */
+    --border-light: #2A2F38;
+    --border-medium: #363D48;
+    --border-strong: #414A58;
+
+    /* Dark theme text */
+    --text-primary: #FFFFFF;
+    /* Pure white for primary */
+    --text-secondary: #CBD5E0;
+    /* Light gray for secondary */
+    --text-tertiary: #A0B3C9;
+    /* Muted blue-gray */
+    --text-muted: #7F8FA4;
+    /* Even more muted */
+    --text-inverse: #1A2634;
+    /* Dark text on light backgrounds */
+    --text-disabled: #4A5568;
+    /* Disabled state */
+
+    /* Dark theme links */
+    --link-default: #CBD5E0;
+    --link-hover: #FF2800;
+    --link-active: #FFFFFF;
+    --link-visited: #A0B3C9;
+
+    /* Dark theme icons */
+    --icon-default: #A0B3C9;
+    --icon-hover: #FF2800;
+    --icon-active: #FFFFFF;
+    --icon-muted: #4A5568;
+
+    /* Status colors - darker theme */
+    --success-bg: #1C2F23;
+    --success-text: #9AE6B4;
+    --success-border: #2F4A3A;
+
+    --warning-bg: #332A1C;
+    --warning-text: #FBD38D;
+    --warning-border: #5A4A2A;
+
+    --error-bg: #321F22;
+    --error-text: #FEB2B2;
+    --error-border: #5A2E33;
+
+    --info-bg: #1C2A3F;
+    --info-text: #90CDF4;
+    --info-border: #2A3F5A;
+
+    /* Dark theme gradients */
+    --gradient-from: #0A0C10;
+    --gradient-to: #14181F;
+    --gradient-accent-from: rgba(255, 40, 0, 0.15);
+    --gradient-accent-to: rgba(255, 40, 0, 0);
+
+    /* Ferrari with opacity - adjusted for dark */
+    --ferrari-red-5: rgba(255, 40, 0, 0.15);
+    --ferrari-red-10: rgba(255, 40, 0, 0.2);
+    --ferrari-red-15: rgba(255, 40, 0, 0.25);
+    --ferrari-red-20: rgba(255, 40, 0, 0.3);
+    --ferrari-red-30: rgba(255, 40, 0, 0.4);
+    --ferrari-red-40: rgba(255, 40, 0, 0.5);
+    --ferrari-red-50: rgba(255, 40, 0, 0.6);
+    --ferrari-red-60: rgba(255, 40, 0, 0.7);
+    --ferrari-red-70: rgba(255, 40, 0, 0.8);
+    --ferrari-red-80: rgba(255, 40, 0, 0.9);
+    --ferrari-red-90: rgba(255, 40, 0, 0.95);
+  }
+
+  body {
+    @apply antialiased;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+
+  /* Text utilities */
+  .text-primary {
+    color: var(--text-primary);
+  }
+
+  .text-secondary {
+    color: var(--text-secondary);
+  }
+
+  .text-tertiary {
+    color: var(--text-tertiary);
+  }
+
+  .text-muted {
+    color: var(--text-muted);
+  }
+
+  .text-inverse {
+    color: var(--text-inverse);
+  }
+
+  .text-disabled {
+    color: var(--text-disabled);
+  }
+
+  /* Link styles */
+  .link {
+    color: var(--link-default);
+    transition: color 0.2s ease;
+  }
+
+  .link:hover {
+    color: var(--link-hover);
+  }
+
+  .link:active {
+    color: var(--link-active);
+  }
+
+  .link-visited:visited {
+    color: var(--link-visited);
+  }
+
+  /* Icon styles */
+  .icon {
+    color: var(--icon-default);
+  }
+
+  .icon-hover:hover {
+    color: var(--icon-hover);
+  }
+
+  .icon-active {
+    color: var(--icon-active);
+  }
+
+  .icon-muted {
+    color: var(--icon-muted);
+  }
+
+  /* Background utilities */
+  .bg-primary {
+    background-color: var(--bg-primary);
+  }
+
+  .bg-secondary {
+    background-color: var(--bg-secondary);
+  }
+
+  .bg-tertiary {
+    background-color: var(--bg-tertiary);
+  }
+
+  .bg-elevated {
+    background-color: var(--bg-elevated);
+  }
+
+  .bg-surface {
+    background-color: var(--bg-surface);
+  }
+
+  .bg-surface-2 {
+    background-color: var(--bg-surface-2);
+  }
+
+  .bg-inset {
+    background-color: var(--bg-inset);
+  }
+
+  /* Border utilities */
+  .border-light {
+    border-color: var(--border-light);
+  }
+
+  .border-medium {
+    border-color: var(--border-medium);
+  }
+
+  .border-strong {
+    border-color: var(--border-strong);
+  }
+
+  /* Container */
+  .container-custom {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply bg-ferrari-red text-white px-6 py-3 rounded-lg font-semibold hover:bg-ferrari-dark transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5;
+  }
+
+  .btn-secondary {
+    @apply border-2 border-ferrari-red text-ferrari-red px-6 py-3 rounded-lg font-semibold hover:bg-ferrari-red hover:text-white transition-all duration-300;
+  }
+
+  /* Cards */
+  .card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    @apply rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300;
+  }
+
+  .card-elevated {
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-medium);
+    @apply rounded-xl shadow-md;
+  }
+
+  /* Inputs */
+  .input {
+    background-color: var(--bg-surface-2);
+    border: 1px solid var(--border-medium);
+    color: var(--text-primary);
+    @apply rounded-lg px-4 py-2 focus:border-ferrari-red focus:ring-2 focus:ring-ferrari-red/20 outline-none transition-all;
+  }
+
+  .input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .input-label {
+    color: var(--text-secondary);
+    @apply text-sm font-medium mb-1 block;
+  }
+
+  /* Navigation */
+  .nav-link {
+    color: var(--text-secondary);
+    transition: color 0.2s ease;
+  }
+
+  .nav-link:hover {
+    color: var(--link-hover);
+  }
+
+  .nav-link.active {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  /* Dividers */
+  .divider {
+    background: linear-gradient(to right,
+        transparent,
+        var(--border-medium),
+        transparent);
+    @apply h-px w-full;
+  }
+
+  .divider-vertical {
+    background: linear-gradient(to bottom,
+        transparent,
+        var(--border-medium),
+        transparent);
+    @apply w-px h-full;
+  }
+
+  /* Status badges */
+  .badge {
+    @apply px-2 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-success {
+    background-color: var(--success-bg);
+    color: var(--success-text);
+    border: 1px solid var(--success-border);
+  }
+
+  .badge-warning {
+    background-color: var(--warning-bg);
+    color: var(--warning-text);
+    border: 1px solid var(--warning-border);
+  }
+
+  .badge-error {
+    background-color: var(--error-bg);
+    color: var(--error-text);
+    border: 1px solid var(--error-border);
+  }
+
+  .badge-info {
+    background-color: var(--info-bg);
+    color: var(--info-text);
+    border: 1px solid var(--info-border);
+  }
+
+  /* Glass effect */
+  .glass {
+    background-color: color-mix(in srgb, var(--bg-surface) 70%, transparent);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-light);
+  }
+
+  /* Skeleton loading */
+  .skeleton {
+    background: linear-gradient(90deg,
+        var(--bg-tertiary) 25%,
+        var(--border-light) 50%,
+        var(--bg-tertiary) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.2s ease-out;
 }

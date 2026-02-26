@@ -1,0 +1,2617 @@
+==================================================
+COLOR CLASSES ANALYSIS - Thu, Feb 26, 2026  8:15:35 PM
+==================================================
+
+
+📌 BACKGROUND CLASSES
+-----------------------------------
+
+📁 .next/dev/server/chunks/ssr/_bedfd2ad._.js
+  Line 125: bg-gray ⚠️  (no mapping)
+  Line 126: bg-white → bg-surface
+  Line 127: bg-gray ⚠️  (no mapping)
+  Line 128: bg-gray ⚠️  (no mapping)
+
+📁 .next/dev/server/chunks/ssr/_d93f6e9f._.js
+  Line 149: bg-gray ⚠️  (no mapping)
+  Line 150: bg-white → bg-surface
+  Line 151: bg-gray ⚠️  (no mapping)
+  Line 152: bg-gray ⚠️  (no mapping)
+
+📁 .next/dev/static/chunks/_4add3a32._.js
+  Line 129: bg-gray ⚠️  (no mapping)
+  Line 130: bg-white → bg-surface
+  Line 131: bg-gray ⚠️  (no mapping)
+  Line 132: bg-gray ⚠️  (no mapping)
+
+📁 .next/dev/static/chunks/_dc253908._.js
+  Line 157: bg-gray ⚠️  (no mapping)
+  Line 158: bg-white → bg-surface
+  Line 159: bg-gray ⚠️  (no mapping)
+  Line 160: bg-gray ⚠️  (no mapping)
+
+📁 app/account/page.tsx
+  Line 24: bg-tertiary ⚠️  (no mapping)
+  Line 25: bg-tertiary ⚠️  (no mapping)
+  Line 36: bg-surface ⚠️  (no mapping)
+  Line 58: bg-surface ⚠️  (no mapping)
+  Line 62: bg-secondary ⚠️  (no mapping)
+  Line 70: bg-secondary ⚠️  (no mapping)
+  Line 78: bg-secondary ⚠️  (no mapping)
+  Line 91: bg-surface ⚠️  (no mapping)
+  Line 96: bg-secondary ⚠️  (no mapping)
+  Line 102: bg-secondary ⚠️  (no mapping)
+  Line 108: bg-secondary ⚠️  (no mapping)
+  Line 114: bg-red ⚠️  (no mapping)
+
+📁 app/auth/forgot-password/page.tsx
+  Line 46: bg-secondary ⚠️  (no mapping)
+  Line 57: bg-surface ⚠️  (no mapping)
+  Line 66: bg-red ⚠️  (no mapping)
+  Line 73: bg-green ⚠️  (no mapping)
+  Line 74: bg-green ⚠️  (no mapping)
+  Line 99: bg-secondary ⚠️  (no mapping)
+
+📁 app/auth/reset-password/page.tsx
+  Line 75: bg-secondary ⚠️  (no mapping)
+  Line 77: bg-surface ⚠️  (no mapping)
+  Line 78: bg-green ⚠️  (no mapping)
+  Line 98: bg-secondary ⚠️  (no mapping)
+  Line 100: bg-surface ⚠️  (no mapping)
+  Line 109: bg-red ⚠️  (no mapping)
+  Line 128: bg-secondary ⚠️  (no mapping)
+  Line 156: bg-secondary ⚠️  (no mapping)
+
+📁 app/auth/signin/page.tsx
+  Line 46: bg-secondary ⚠️  (no mapping)
+  Line 56: bg-surface ⚠️  (no mapping)
+  Line 66: bg-red ⚠️  (no mapping)
+  Line 77: bg-secondary ⚠️  (no mapping)
+  Line 105: bg-surface ⚠️  (no mapping)
+
+📁 app/auth/signup/page.tsx
+  Line 114: bg-secondary ⚠️  (no mapping)
+  Line 116: bg-surface ⚠️  (no mapping)
+  Line 117: bg-green ⚠️  (no mapping)
+  Line 139: bg-secondary ⚠️  (no mapping)
+  Line 149: bg-surface ⚠️  (no mapping)
+  Line 159: bg-red ⚠️  (no mapping)
+  Line 186: bg-secondary ⚠️  (no mapping)
+  Line 204: bg-secondary ⚠️  (no mapping)
+  Line 221: bg-secondary ⚠️  (no mapping)
+  Line 239: bg-secondary ⚠️  (no mapping)
+  Line 260: bg-secondary ⚠️  (no mapping)
+
+📁 app/brands/page.tsx
+  Line 18: bg-surface ⚠️  (no mapping)
+  Line 20: bg-ferrari ⚠️  (no mapping)
+
+📁 app/cars/page.tsx
+  Line 306: bg-ferrari ⚠️  (no mapping)
+  Line 345: bg-surface ⚠️  (no mapping)
+  Line 364: bg-secondary ⚠️  (no mapping)
+  Line 383: bg-tertiary ⚠️  (no mapping)
+  Line 384: bg-surface ⚠️  (no mapping)
+  Line 385: bg-tertiary ⚠️  (no mapping)
+  Line 386: bg-tertiary ⚠️  (no mapping)
+  Line 388: bg-tertiary ⚠️  (no mapping)
+  Line 389: bg-tertiary ⚠️  (no mapping)
+  Line 396: bg-surface ⚠️  (no mapping)
+  Line 397: bg-ferrari ⚠️  (no mapping)
+
+📁 app/cars/[id]/error.tsx
+  Line 20: bg-secondary ⚠️  (no mapping)
+  Line 25: bg-red ⚠️  (no mapping)
+  Line 28: bg-ferrari ⚠️  (no mapping)
+  Line 39: bg-surface ⚠️  (no mapping)
+  Line 46: bg-ferrari ⚠️  (no mapping)
+  Line 50: bg-ferrari ⚠️  (no mapping)
+  Line 54: bg-ferrari ⚠️  (no mapping)
+  Line 59: bg-red ⚠️  (no mapping)
+  Line 85: bg-secondary ⚠️  (no mapping)
+
+📁 app/cars/[id]/loading.tsx
+  Line 5: bg-secondary ⚠️  (no mapping)
+  Line 7: bg-surface ⚠️  (no mapping)
+  Line 10: bg-tertiary ⚠️  (no mapping)
+  Line 11: bg-tertiary ⚠️  (no mapping)
+  Line 12: bg-tertiary ⚠️  (no mapping)
+  Line 13: bg-tertiary ⚠️  (no mapping)
+  Line 14: bg-tertiary ⚠️  (no mapping)
+  Line 22: bg-tertiary ⚠️  (no mapping)
+  Line 24: bg-tertiary ⚠️  (no mapping)
+  Line 25: bg-tertiary ⚠️  (no mapping)
+  Line 34: bg-surface ⚠️  (no mapping)
+  Line 35: bg-tertiary ⚠️  (no mapping)
+  Line 38: bg-tertiary ⚠️  (no mapping)
+  Line 44: bg-surface ⚠️  (no mapping)
+  Line 48: bg-tertiary ⚠️  (no mapping)
+  Line 49: bg-tertiary ⚠️  (no mapping)
+  Line 56: bg-surface ⚠️  (no mapping)
+  Line 57: bg-tertiary ⚠️  (no mapping)
+  Line 60: bg-secondary ⚠️  (no mapping)
+  Line 61: bg-tertiary ⚠️  (no mapping)
+
+📁 app/cars/[id]/page.tsx
+  Line 85: bg-gradient ⚠️  (no mapping)
+  Line 87: bg-surface/80 ⚠️  (no mapping)
+  Line 111: bg-gradient ⚠️  (no mapping)
+  Line 117: bg-red ⚠️  (no mapping)
+  Line 122: bg-green ⚠️  (no mapping)
+  Line 127: bg-secondary ⚠️  (no mapping)
+  Line 146: bg-surface ⚠️  (no mapping)
+  Line 165: bg-surface ⚠️  (no mapping)
+  Line 171: bg-surface ⚠️  (no mapping)
+  Line 177: bg-surface ⚠️  (no mapping)
+  Line 181: bg-surface ⚠️  (no mapping)
+  Line 185: bg-surface ⚠️  (no mapping)
+  Line 205: bg-surface ⚠️  (no mapping)
+  Line 208: bg-secondary ⚠️  (no mapping)
+  Line 215: bg-secondary ⚠️  (no mapping)
+  Line 222: bg-secondary ⚠️  (no mapping)
+  Line 229: bg-secondary ⚠️  (no mapping)
+  Line 236: bg-secondary ⚠️  (no mapping)
+  Line 243: bg-secondary ⚠️  (no mapping)
+  Line 258: bg-surface ⚠️  (no mapping)
+
+📁 app/compare/page.tsx
+  Line 86: bg-tertiary ⚠️  (no mapping)
+  Line 87: bg-tertiary ⚠️  (no mapping)
+
+📁 app/contact/page.tsx
+  Line 66: bg-surface ⚠️  (no mapping)
+  Line 67: bg-green ⚠️  (no mapping)
+  Line 74: bg-secondary ⚠️  (no mapping)
+  Line 121: bg-surface ⚠️  (no mapping)
+  Line 122: bg-ferrari ⚠️  (no mapping)
+  Line 137: bg-surface ⚠️  (no mapping)
+  Line 138: bg-ferrari ⚠️  (no mapping)
+  Line 153: bg-surface ⚠️  (no mapping)
+  Line 154: bg-ferrari ⚠️  (no mapping)
+  Line 166: bg-surface ⚠️  (no mapping)
+  Line 167: bg-ferrari ⚠️  (no mapping)
+  Line 188: bg-gradient ⚠️  (no mapping)
+  Line 213: bg-surface ⚠️  (no mapping)
+  Line 301: bg-secondary ⚠️  (no mapping)
+
+📁 app/cookies/page.tsx
+  Line 51: bg-surface ⚠️  (no mapping)
+  Line 53: bg-secondary ⚠️  (no mapping)
+  Line 64: bg-green ⚠️  (no mapping)
+  Line 89: bg-ferrari ⚠️  (no mapping)
+  Line 89: bg-surface ⚠️  (no mapping)
+  Line 89: bg-tertiary ⚠️  (no mapping)
+  Line 113: bg-ferrari ⚠️  (no mapping)
+  Line 113: bg-surface ⚠️  (no mapping)
+  Line 113: bg-tertiary ⚠️  (no mapping)
+  Line 121: bg-secondary ⚠️  (no mapping)
+  Line 127: bg-ferrari ⚠️  (no mapping)
+
+📁 app/faq/page.tsx
+  Line 120: bg-gradient ⚠️  (no mapping)
+  Line 122: bg-gradient ⚠️  (no mapping)
+  Line 141: bg-surface ⚠️  (no mapping)
+  Line 153: bg-surface ⚠️  (no mapping)
+  Line 157: bg-secondary ⚠️  (no mapping)
+  Line 201: bg-surface ⚠️  (no mapping)
+  Line 216: bg-surface ⚠️  (no mapping)
+  Line 224: bg-ferrari ⚠️  (no mapping)
+  Line 224: bg-secondary ⚠️  (no mapping)
+  Line 234: bg-ferrari ⚠️  (no mapping)
+  Line 234: bg-secondary ⚠️  (no mapping)
+  Line 245: bg-ferrari ⚠️  (no mapping)
+  Line 245: bg-secondary ⚠️  (no mapping)
+  Line 257: bg-gradient ⚠️  (no mapping)
+
+📁 app/global-error.tsx
+  Line 21: bg-secondary ⚠️  (no mapping)
+  Line 26: bg-red ⚠️  (no mapping)
+
+📁 app/how-it-works/page.tsx
+  Line 53: bg-gradient ⚠️  (no mapping)
+  Line 70: bg-ferrari ⚠️  (no mapping)
+  Line 82: bg-secondary ⚠️  (no mapping)
+  Line 87: bg-surface ⚠️  (no mapping)
+  Line 103: bg-surface ⚠️  (no mapping)
+  Line 108: bg-surface ⚠️  (no mapping)
+  Line 113: bg-surface ⚠️  (no mapping)
+
+📁 app/not-found.tsx
+  Line 8: bg-ferrari ⚠️  (no mapping)
+
+📁 app/offers/page.tsx
+  Line 152: bg-blue ⚠️  (no mapping)
+  Line 158: bg-green ⚠️  (no mapping)
+  Line 164: bg-yellow ⚠️  (no mapping)
+  Line 170: bg-purple ⚠️  (no mapping)
+  Line 183: bg-primary ⚠️  (no mapping)
+  Line 194: bg-blue ⚠️  (no mapping)
+  Line 209: bg-ferrari ⚠️  (no mapping)
+  Line 226: bg-primary ⚠️  (no mapping)
+  Line 243: bg-green ⚠️  (no mapping)
+  Line 256: bg-gradient ⚠️  (no mapping)
+  Line 261: bg-secondary ⚠️  (no mapping)
+  Line 261: bg-surface ⚠️  (no mapping)
+  Line 264: bg-secondary ⚠️  (no mapping)
+  Line 264: bg-surface ⚠️  (no mapping)
+
+📁 app/page.tsx
+  Line 25: bg-secondary ⚠️  (no mapping)
+
+📁 app/privacy/page.tsx
+  Line 37: bg-gradient ⚠️  (no mapping)
+  Line 68: bg-surface ⚠️  (no mapping)
+  Line 93: bg-surface ⚠️  (no mapping)
+  Line 99: bg-secondary ⚠️  (no mapping)
+  Line 107: bg-secondary ⚠️  (no mapping)
+  Line 119: bg-surface ⚠️  (no mapping)
+  Line 128: bg-secondary ⚠️  (no mapping)
+  Line 135: bg-secondary ⚠️  (no mapping)
+  Line 142: bg-secondary ⚠️  (no mapping)
+  Line 162: bg-surface ⚠️  (no mapping)
+  Line 179: bg-surface ⚠️  (no mapping)
+  Line 205: bg-surface ⚠️  (no mapping)
+  Line 213: bg-secondary ⚠️  (no mapping)
+  Line 228: bg-yellow ⚠️  (no mapping)
+
+📁 app/profile/page.tsx
+  Line 140: bg-tertiary ⚠️  (no mapping)
+  Line 141: bg-surface ⚠️  (no mapping)
+  Line 142: bg-tertiary ⚠️  (no mapping)
+  Line 143: bg-tertiary ⚠️  (no mapping)
+  Line 164: bg-green ⚠️  (no mapping)
+  Line 171: bg-red ⚠️  (no mapping)
+  Line 180: bg-surface ⚠️  (no mapping)
+  Line 182: bg-gradient ⚠️  (no mapping)
+  Line 184: bg-surface/20 ⚠️  (no mapping)
+  Line 202: bg-secondary ⚠️  (no mapping)
+  Line 212: bg-secondary ⚠️  (no mapping)
+  Line 220: bg-secondary ⚠️  (no mapping)
+  Line 230: bg-secondary ⚠️  (no mapping)
+  Line 284: bg-ferrari ⚠️  (no mapping)
+  Line 301: bg-secondary ⚠️  (no mapping)
+  Line 315: bg-surface ⚠️  (no mapping)
+  Line 320: bg-secondary ⚠️  (no mapping)
+  Line 331: bg-secondary ⚠️  (no mapping)
+  Line 342: bg-secondary ⚠️  (no mapping)
+  Line 353: bg-red ⚠️  (no mapping)
+
+📁 app/profile/settings/page.tsx
+  Line 23: bg-tertiary ⚠️  (no mapping)
+  Line 43: bg-surface ⚠️  (no mapping)
+
+📁 app/recently-viewed/page.tsx
+  Line 32: bg-tertiary ⚠️  (no mapping)
+  Line 35: bg-tertiary ⚠️  (no mapping)
+  Line 50: bg-secondary ⚠️  (no mapping)
+  Line 64: bg-red ⚠️  (no mapping)
+  Line 77: bg-primary/50 ⚠️  (no mapping)
+  Line 96: bg-secondary ⚠️  (no mapping)
+
+📁 app/saved/page.tsx
+  Line 50: bg-tertiary ⚠️  (no mapping)
+  Line 64: bg-surface ⚠️  (no mapping)
+  Line 65: bg-ferrari ⚠️  (no mapping)
+  Line 117: bg-secondary ⚠️  (no mapping)
+  Line 117: bg-surface ⚠️  (no mapping)
+
+📁 app/terms/page.tsx
+  Line 37: bg-gradient ⚠️  (no mapping)
+  Line 52: bg-surface ⚠️  (no mapping)
+  Line 62: bg-secondary ⚠️  (no mapping)
+  Line 83: bg-surface ⚠️  (no mapping)
+  Line 99: bg-yellow ⚠️  (no mapping)
+  Line 112: bg-surface ⚠️  (no mapping)
+  Line 122: bg-ferrari ⚠️  (no mapping)
+  Line 128: bg-ferrari ⚠️  (no mapping)
+  Line 134: bg-ferrari ⚠️  (no mapping)
+  Line 142: bg-secondary ⚠️  (no mapping)
+  Line 155: bg-surface ⚠️  (no mapping)
+  Line 186: bg-surface ⚠️  (no mapping)
+  Line 201: bg-red ⚠️  (no mapping)
+  Line 214: bg-surface ⚠️  (no mapping)
+  Line 234: bg-surface ⚠️  (no mapping)
+  Line 246: bg-surface ⚠️  (no mapping)
+  Line 259: bg-surface ⚠️  (no mapping)
+  Line 267: bg-secondary ⚠️  (no mapping)
+  Line 282: bg-surface ⚠️  (no mapping)
+  Line 295: bg-yellow ⚠️  (no mapping)
+
+📁 app/test-matchmaker/page.tsx
+  Line 126: bg-ferrari ⚠️  (no mapping)
+  Line 133: bg-yellow ⚠️  (no mapping)
+
+📁 components/cars/CarCard.tsx
+  Line 48: bg-surface ⚠️  (no mapping)
+  Line 50: bg-secondary ⚠️  (no mapping)
+  Line 67: bg-secondary ⚠️  (no mapping)
+  Line 67: bg-surface ⚠️  (no mapping)
+  Line 78: bg-ferrari ⚠️  (no mapping)
+
+📁 components/cars/CarSpecs.tsx
+  Line 26: bg-surface ⚠️  (no mapping)
+  Line 31: bg-secondary ⚠️  (no mapping)
+
+📁 components/cars/CompareButton.tsx
+  Line 49: bg-secondary ⚠️  (no mapping)
+
+📁 components/cars/ComparisonTable.tsx
+  Line 145: bg-secondary ⚠️  (no mapping)
+  Line 154: bg-secondary ⚠️  (no mapping)
+  Line 188: bg-red ⚠️  (no mapping)
+  Line 188: bg-surface ⚠️  (no mapping)
+  Line 197: bg-surface ⚠️  (no mapping)
+  Line 204: bg-amber ⚠️  (no mapping)
+  Line 234: bg-green ⚠️  (no mapping)
+  Line 235: bg-green ⚠️  (no mapping)
+  Line 254: bg-surface ⚠️  (no mapping)
+  Line 256: bg-gradient ⚠️  (no mapping)
+  Line 272: bg-red ⚠️  (no mapping)
+  Line 287: bg-secondary ⚠️  (no mapping)
+  Line 303: bg-gradient ⚠️  (no mapping)
+
+📁 components/cars/CostCalculator.tsx
+  Line 25: bg-surface ⚠️  (no mapping)
+  Line 27: bg-ferrari ⚠️  (no mapping)
+  Line 43: bg-gradient ⚠️  (no mapping)
+  Line 98: bg-blue ⚠️  (no mapping)
+  Line 109: bg-secondary ⚠️  (no mapping)
+
+📁 components/cars/DealerBadge.tsx
+  Line 18: bg-blue ⚠️  (no mapping)
+
+📁 components/cars/FilterSidebar.tsx
+  Line 447: bg-surface ⚠️  (no mapping)
+  Line 449: bg-tertiary ⚠️  (no mapping)
+  Line 450: bg-tertiary ⚠️  (no mapping)
+  Line 451: bg-tertiary ⚠️  (no mapping)
+  Line 458: bg-surface ⚠️  (no mapping)
+  Line 460: bg-ferrari ⚠️  (no mapping)
+  Line 468: bg-white/20 ⚠️  (no mapping)
+  Line 474: bg-white/20 ⚠️  (no mapping)
+  Line 480: bg-white/20 ⚠️  (no mapping)
+  Line 503: bg-ferrari ⚠️  (no mapping)
+  Line 518: bg-ferrari ⚠️  (no mapping)
+  Line 535: bg-ferrari ⚠️  (no mapping)
+  Line 535: bg-secondary ⚠️  (no mapping)
+  Line 668: bg-secondary ⚠️  (no mapping)
+  Line 693: bg-secondary ⚠️  (no mapping)
+  Line 703: bg-secondary ⚠️  (no mapping)
+  Line 756: bg-ferrari ⚠️  (no mapping)
+  Line 793: bg-secondary ⚠️  (no mapping)
+  Line 800: bg-secondary ⚠️  (no mapping)
+  Line 884: bg-secondary/50 ⚠️  (no mapping)
+  Line 897: bg-ferrari ⚠️  (no mapping)
+
+📁 components/cars/ImageGallery.tsx
+  Line 17: bg-tertiary ⚠️  (no mapping)
+  Line 26: bg-surface ⚠️  (no mapping)
+  Line 28: bg-secondary ⚠️  (no mapping)
+  Line 40: bg-ferrari ⚠️  (no mapping)
+  Line 40: bg-primary/50 ⚠️  (no mapping)
+  Line 46: bg-ferrari ⚠️  (no mapping)
+  Line 46: bg-primary/50 ⚠️  (no mapping)
+  Line 56: bg-ferrari ⚠️  (no mapping)
+  Line 56: bg-primary/50 ⚠️  (no mapping)
+  Line 62: bg-primary/50 ⚠️  (no mapping)
+  Line 90: bg-primary/90 ⚠️  (no mapping)
+  Line 109: bg-ferrari ⚠️  (no mapping)
+  Line 109: bg-surface/20 ⚠️  (no mapping)
+  Line 115: bg-ferrari ⚠️  (no mapping)
+  Line 115: bg-surface/20 ⚠️  (no mapping)
+
+📁 components/cars/PopularityMeter.tsx
+  Line 12: bg-secondary ⚠️  (no mapping)
+  Line 21: bg-tertiary ⚠️  (no mapping)
+  Line 23: bg-ferrari ⚠️  (no mapping)
+
+📁 components/cars/QuickActions.tsx
+  Line 25: bg-secondary ⚠️  (no mapping)
+  Line 25: bg-tertiary ⚠️  (no mapping)
+  Line 34: bg-green ⚠️  (no mapping)
+
+📁 components/cars/RecentlyViewed.tsx
+  Line 39: bg-surface ⚠️  (no mapping)
+  Line 69: bg-secondary ⚠️  (no mapping)
+  Line 74: bg-secondary ⚠️  (no mapping)
+  Line 74: bg-surface ⚠️  (no mapping)
+  Line 80: bg-tertiary ⚠️  (no mapping)
+  Line 115: bg-primary/50 ⚠️  (no mapping)
+
+📁 components/cars/SellerInfo.tsx
+  Line 30: bg-surface ⚠️  (no mapping)
+  Line 74: bg-green ⚠️  (no mapping)
+
+📁 components/cars/SimilarCars.tsx
+  Line 45: bg-tertiary ⚠️  (no mapping)
+  Line 46: bg-surface ⚠️  (no mapping)
+  Line 47: bg-tertiary ⚠️  (no mapping)
+  Line 48: bg-tertiary ⚠️  (no mapping)
+
+📁 components/cars/WarrantyInfo.tsx
+  Line 20: bg-surface ⚠️  (no mapping)
+  Line 33: bg-surface ⚠️  (no mapping)
+  Line 42: bg-secondary ⚠️  (no mapping)
+  Line 64: bg-secondary ⚠️  (no mapping)
+
+📁 components/cars/WarrantyShowcase.tsx
+  Line 20: bg-gradient ⚠️  (no mapping)
+  Line 22: bg-green ⚠️  (no mapping)
+  Line 27: bg-surface ⚠️  (no mapping)
+  Line 38: bg-surface ⚠️  (no mapping)
+
+📁 components/forms/ContactForm.tsx
+  Line 62: bg-green ⚠️  (no mapping)
+  Line 78: bg-red ⚠️  (no mapping)
+
+📁 components/home/FeaturedCars.tsx
+  Line 251: bg-tertiary ⚠️  (no mapping)
+  Line 256: bg-tertiary ⚠️  (no mapping)
+  Line 257: bg-surface ⚠️  (no mapping)
+  Line 258: bg-tertiary ⚠️  (no mapping)
+  Line 259: bg-tertiary ⚠️  (no mapping)
+  Line 277: bg-gradient ⚠️  (no mapping)
+  Line 306: bg-ferrari ⚠️  (no mapping)
+  Line 310: bg-blue ⚠️  (no mapping)
+  Line 314: bg-green ⚠️  (no mapping)
+
+📁 components/home/Hero.tsx
+  Line 9: bg-center ⚠️  (no mapping)
+  Line 9: bg-cover ⚠️  (no mapping)
+  Line 9: bg-gradient ⚠️  (no mapping)
+  Line 11: bg-primary ⚠️  (no mapping)
+  Line 12: bg-ferrari ⚠️  (no mapping)
+  Line 13: bg-ferrari ⚠️  (no mapping)
+
+📁 components/home/HowItWorks.tsx
+  Line 42: bg-ferrari ⚠️  (no mapping)
+
+📁 components/kosovo/CustomsInfo.tsx
+  Line 5: bg-surface ⚠️  (no mapping)
+  Line 13: bg-secondary ⚠️  (no mapping)
+  Line 17: bg-secondary ⚠️  (no mapping)
+  Line 40: bg-yellow ⚠️  (no mapping)
+
+📁 components/kosovo/ShippingCalculator.tsx
+  Line 16: bg-surface ⚠️  (no mapping)
+  Line 36: bg-secondary ⚠️  (no mapping)
+  Line 47: bg-blue ⚠️  (no mapping)
+
+📁 components/layout/Footer.tsx
+  Line 24: bg-gradient ⚠️  (no mapping)
+  Line 31: bg-ferrari ⚠️  (no mapping)
+  Line 47: bg-surface/10 ⚠️  (no mapping)
+  Line 51: bg-surface/10 ⚠️  (no mapping)
+  Line 55: bg-surface/10 ⚠️  (no mapping)
+  Line 64: bg-ferrari ⚠️  (no mapping)
+  Line 75: bg-ferrari ⚠️  (no mapping)
+  Line 86: bg-ferrari ⚠️  (no mapping)
+  Line 101: bg-ferrari ⚠️  (no mapping)
+  Line 128: bg-ferrari ⚠️  (no mapping)
+  Line 133: bg-ferrari ⚠️  (no mapping)
+  Line 139: bg-ferrari ⚠️  (no mapping)
+  Line 145: bg-ferrari ⚠️  (no mapping)
+  Line 151: bg-ferrari ⚠️  (no mapping)
+  Line 172: bg-ferrari ⚠️  (no mapping)
+  Line 185: bg-gray ⚠️  (no mapping)
+  Line 197: bg-surface/5 ⚠️  (no mapping)
+  Line 198: bg-surface/5 ⚠️  (no mapping)
+  Line 199: bg-surface/5 ⚠️  (no mapping)
+
+📁 components/layout/Header.tsx
+  Line 41: bg-gradient ⚠️  (no mapping)
+  Line 59: bg-ferrari ⚠️  (no mapping)
+  Line 64: bg-ferrari ⚠️  (no mapping)
+  Line 72: bg-ferrari ⚠️  (no mapping)
+  Line 73: bg-gradient ⚠️  (no mapping)
+  Line 78: bg-elevated ⚠️  (no mapping)
+  Line 82: bg-ferrari ⚠️  (no mapping)
+  Line 88: bg-ferrari ⚠️  (no mapping)
+  Line 92: bg-ferrari ⚠️  (no mapping)
+  Line 99: bg-ferrari ⚠️  (no mapping)
+  Line 107: bg-error ⚠️  (no mapping)
+  Line 118: bg-ferrari ⚠️  (no mapping)
+  Line 124: bg-ferrari ⚠️  (no mapping)
+  Line 134: bg-ferrari ⚠️  (no mapping)
+  Line 138: bg-ferrari ⚠️  (no mapping)
+  Line 154: bg-surface ⚠️  (no mapping)
+  Line 162: bg-surface ⚠️  (no mapping)
+  Line 168: bg-ferrari ⚠️  (no mapping)
+  Line 176: bg-surface ⚠️  (no mapping)
+  Line 187: bg-surface ⚠️  (no mapping)
+
+📁 components/matchmaker/MatchmakerWidget.tsx
+  Line 180: bg-tertiary ⚠️  (no mapping)
+  Line 181: bg-surface ⚠️  (no mapping)
+  Line 182: bg-tertiary ⚠️  (no mapping)
+  Line 183: bg-tertiary ⚠️  (no mapping)
+  Line 185: bg-tertiary ⚠️  (no mapping)
+  Line 186: bg-tertiary ⚠️  (no mapping)
+  Line 198: bg-secondary ⚠️  (no mapping)
+  Line 220: bg-ferrari ⚠️  (no mapping)
+  Line 234: bg-secondary ⚠️  (no mapping)
+  Line 239: bg-ferrari ⚠️  (no mapping)
+  Line 256: bg-ferrari ⚠️  (no mapping)
+
+📁 components/search/SearchBar.tsx
+  Line 80: bg-surface ⚠️  (no mapping)
+  Line 102: bg-elevated ⚠️  (no mapping)
+  Line 107: bg-surface ⚠️  (no mapping)
+  Line 117: bg-error ⚠️  (no mapping)
+
+📁 components/ui/CookieBanner.tsx
+  Line 40: bg-primary/20 ⚠️  (no mapping)
+  Line 43: bg-surface ⚠️  (no mapping)
+  Line 56: bg-ferrari ⚠️  (no mapping)
+  Line 86: bg-secondary ⚠️  (no mapping)
+  Line 126: bg-ferrari ⚠️  (no mapping)
+  Line 132: bg-ferrari ⚠️  (no mapping)
+
+📁 components/ui/EmptyState.tsx
+  Line 27: bg-secondary ⚠️  (no mapping)
+  Line 28: bg-ferrari ⚠️  (no mapping)
+
+📁 components/ui/FloatingShareBar.tsx
+  Line 37: bg-surface ⚠️  (no mapping)
+  Line 42: bg-secondary ⚠️  (no mapping)
+  Line 57: bg-ferrari ⚠️  (no mapping)
+
+📁 components/ui/LoadingSkeleton.tsx
+  Line 6: bg-tertiary ⚠️  (no mapping)
+  Line 7: bg-surface ⚠️  (no mapping)
+  Line 8: bg-tertiary ⚠️  (no mapping)
+  Line 9: bg-tertiary ⚠️  (no mapping)
+  Line 11: bg-tertiary ⚠️  (no mapping)
+  Line 12: bg-tertiary ⚠️  (no mapping)
+  Line 20: bg-surface ⚠️  (no mapping)
+  Line 21: bg-tertiary ⚠️  (no mapping)
+  Line 22: bg-tertiary ⚠️  (no mapping)
+  Line 23: bg-tertiary ⚠️  (no mapping)
+  Line 24: bg-tertiary ⚠️  (no mapping)
+
+📁 components/ui/Newsletter.tsx
+  Line 44: bg-surface/5 ⚠️  (no mapping)
+  Line 51: bg-green ⚠️  (no mapping)
+  Line 60: bg-red ⚠️  (no mapping)
+  Line 70: bg-surface/10 ⚠️  (no mapping)
+  Line 78: bg-surface/10 ⚠️  (no mapping)
+  Line 85: bg-ferrari ⚠️  (no mapping)
+
+📁 components/ui/ScrollToTop.tsx
+  Line 38: bg-ferrari ⚠️  (no mapping)
+
+📁 components/ui/ShareButtons.tsx
+  Line 122: bg-gray ⚠️  (no mapping)
+  Line 134: bg-ferrari ⚠️  (no mapping)
+
+📁 components/ui/SocialLinks.tsx
+  Line 64: bg-ferrari ⚠️  (no mapping)
+  Line 64: bg-surface/10 ⚠️  (no mapping)
+  Line 70: bg-primary ⚠️  (no mapping)
+  Line 88: bg-surface ⚠️  (no mapping)
+  Line 97: bg-secondary ⚠️  (no mapping)
+  Line 100: bg-ferrari ⚠️  (no mapping)
+  Line 100: bg-secondary ⚠️  (no mapping)
+  Line 125: bg-secondary ⚠️  (no mapping)
+
+📁 components/ui/ThemeToggle.tsx
+  Line 23: bg-ferrari ⚠️  (no mapping)
+
+📁 components/ui/Toast.tsx
+  Line 38: bg-green ⚠️  (no mapping)
+
+📌 GRADIENT FROM CLASSES
+-----------------------------------
+
+📁 .next/dev/static/chunks/node_modules_next_dist_compiled_8ca6b690._.js
+  Line 3104: from-outside ⚠️  (no mapping)
+
+📁 .next/dev/static/chunks/node_modules_next_dist_compiled_next-devtools_index_1dd7fb59.js
+  Line 1644: from-outside ⚠️  (no mapping)
+
+📁 app/cars/[id]/page.tsx
+  Line 85: from-secondary ⚠️  (no mapping)
+  Line 111: from-ferrari ⚠️  (no mapping)
+  Line 308: from-white ⚠️  (no mapping)
+
+📁 app/contact/page.tsx
+  Line 188: from-ferrari ⚠️  (no mapping)
+
+📁 app/faq/page.tsx
+  Line 120: from-secondary ⚠️  (no mapping)
+  Line 122: from-ferrari ⚠️  (no mapping)
+  Line 257: from-ferrari ⚠️  (no mapping)
+
+📁 app/how-it-works/page.tsx
+  Line 53: from-gray ⚠️  (no mapping)
+
+📁 app/offers/page.tsx
+  Line 256: from-ferrari ⚠️  (no mapping)
+
+📁 app/privacy/page.tsx
+  Line 37: from-ferrari ⚠️  (no mapping)
+
+📁 app/profile/page.tsx
+  Line 182: from-ferrari ⚠️  (no mapping)
+  Line 364: from-ferrari ⚠️  (no mapping)
+
+📁 app/terms/page.tsx
+  Line 37: from-ferrari ⚠️  (no mapping)
+
+📁 components/cars/ComparisonTable.tsx
+  Line 256: from-secondary ⚠️  (no mapping)
+  Line 303: from-ferrari ⚠️  (no mapping)
+
+📁 components/cars/CostCalculator.tsx
+  Line 43: from-ferrari ⚠️  (no mapping)
+
+📁 components/cars/WarrantyShowcase.tsx
+  Line 20: from-green ⚠️  (no mapping)
+
+📁 components/home/FeaturedCars.tsx
+  Line 277: from-ferrari ⚠️  (no mapping)
+
+📁 components/home/Hero.tsx
+  Line 9: from-gray ⚠️  (no mapping)
+
+📁 components/layout/Footer.tsx
+  Line 24: from-gray ⚠️  (no mapping)
+
+📁 components/layout/Header.tsx
+  Line 41: from-transparent ⚠️  (no mapping)
+  Line 73: from-ferrari ⚠️  (no mapping)
+
+📁 components/search/SearchBar.tsx
+  Line 102: from-top ⚠️  (no mapping)
+
+📌 GRADIENT TO CLASSES
+-----------------------------------
+
+📁 app/cars/[id]/page.tsx
+  Line 85: to-b ⚠️  (no mapping)
+  Line 85: to-surface ⚠️  (no mapping)
+  Line 111: to-ferrari ⚠️  (no mapping)
+  Line 111: to-r ⚠️  (no mapping)
+  Line 308: to-br ⚠️  (no mapping)
+  Line 308: to-gray ⚠️  (no mapping)
+
+📁 app/contact/page.tsx
+  Line 188: to-br ⚠️  (no mapping)
+  Line 188: to-ferrari ⚠️  (no mapping)
+
+📁 app/faq/page.tsx
+  Line 120: to-b ⚠️  (no mapping)
+  Line 120: to-surface ⚠️  (no mapping)
+  Line 122: to-ferrari ⚠️  (no mapping)
+  Line 122: to-r ⚠️  (no mapping)
+  Line 257: to-br ⚠️  (no mapping)
+  Line 257: to-transparent ⚠️  (no mapping)
+
+📁 app/how-it-works/page.tsx
+  Line 53: to-br ⚠️  (no mapping)
+  Line 53: to-gray ⚠️  (no mapping)
+
+📁 app/offers/page.tsx
+  Line 256: to-ferrari ⚠️  (no mapping)
+  Line 256: to-r ⚠️  (no mapping)
+
+📁 app/privacy/page.tsx
+  Line 37: to-r ⚠️  (no mapping)
+  Line 37: to-transparent ⚠️  (no mapping)
+
+📁 app/profile/page.tsx
+  Line 182: to-ferrari ⚠️  (no mapping)
+  Line 182: to-r ⚠️  (no mapping)
+  Line 364: to-br ⚠️  (no mapping)
+  Line 364: to-ferrari ⚠️  (no mapping)
+
+📁 app/terms/page.tsx
+  Line 37: to-r ⚠️  (no mapping)
+  Line 37: to-transparent ⚠️  (no mapping)
+
+📁 components/cars/ComparisonTable.tsx
+  Line 256: to-r ⚠️  (no mapping)
+  Line 256: to-surface ⚠️  (no mapping)
+  Line 303: to-r ⚠️  (no mapping)
+  Line 303: to-transparent ⚠️  (no mapping)
+
+📁 components/cars/CostCalculator.tsx
+  Line 43: to-br ⚠️  (no mapping)
+  Line 43: to-transparent ⚠️  (no mapping)
+
+📁 components/cars/WarrantyShowcase.tsx
+  Line 20: to-emerald ⚠️  (no mapping)
+  Line 20: to-r ⚠️  (no mapping)
+
+📁 components/home/FeaturedCars.tsx
+  Line 277: to-r ⚠️  (no mapping)
+  Line 277: to-transparent ⚠️  (no mapping)
+
+📁 components/home/Hero.tsx
+  Line 9: to-120049 ⚠️  (no mapping)
+  Line 9: to-br ⚠️  (no mapping)
+  Line 9: to-gray ⚠️  (no mapping)
+
+📁 components/layout/Footer.tsx
+  Line 24: to-b ⚠️  (no mapping)
+  Line 24: to-gray ⚠️  (no mapping)
+
+📁 components/layout/Header.tsx
+  Line 41: to-r ⚠️  (no mapping)
+  Line 41: to-transparent ⚠️  (no mapping)
+  Line 73: to-br ⚠️  (no mapping)
+  Line 73: to-ferrari ⚠️  (no mapping)
+
+📌 GRADIENT VIA CLASSES
+-----------------------------------
+
+📁 components/layout/Header.tsx
+  Line 41: via-ferrari ⚠️  (no mapping)
+
+📌 TEXT CLASSES
+-----------------------------------
+
+📁 .next/dev/static/chunks/node_modules_next_dist_compiled_8ca6b690._.js
+  Line 3104: text-align ⚠️  (no mapping)
+  Line 3104: text-anchor ⚠️  (no mapping)
+  Line 3104: text-animation ⚠️  (no mapping)
+  Line 3104: text-animation] ⚠️  (no mapping)
+  Line 3104: text-blue ⚠️  (no mapping)
+  Line 3104: text-decoration ⚠️  (no mapping)
+  Line 3104: text-enter ⚠️  (no mapping)
+  Line 3104: text-enter] ⚠️  (no mapping)
+  Line 3104: text-fill ⚠️  (no mapping)
+  Line 3104: text-menu ⚠️  (no mapping)
+  Line 3104: text-overflow ⚠️  (no mapping)
+  Line 3104: text-red ⚠️  (no mapping)
+  Line 3104: text-rendering ⚠️  (no mapping)
+
+📁 .next/dev/static/chunks/node_modules_next_dist_compiled_next-devtools_index_1dd7fb59.js
+  Line 1644: text-align ⚠️  (no mapping)
+  Line 1644: text-anchor ⚠️  (no mapping)
+  Line 1644: text-animation ⚠️  (no mapping)
+  Line 1644: text-animation] ⚠️  (no mapping)
+  Line 1644: text-blue ⚠️  (no mapping)
+  Line 1644: text-decoration ⚠️  (no mapping)
+  Line 1644: text-enter ⚠️  (no mapping)
+  Line 1644: text-enter] ⚠️  (no mapping)
+  Line 1644: text-fill ⚠️  (no mapping)
+  Line 1644: text-menu ⚠️  (no mapping)
+  Line 1644: text-overflow ⚠️  (no mapping)
+  Line 1644: text-red ⚠️  (no mapping)
+  Line 1644: text-rendering ⚠️  (no mapping)
+
+📁 app/account/page.tsx
+  Line 35: text-center ⚠️  (no mapping)
+  Line 37: text-ferrari ⚠️  (no mapping)
+  Line 38: text-2xl ⚠️  (no mapping)
+  Line 39: text-gray ⚠️  (no mapping)
+  Line 53: text-3xl ⚠️  (no mapping)
+  Line 59: text-xl ⚠️  (no mapping)
+  Line 63: text-ferrari ⚠️  (no mapping)
+  Line 65: text-gray ⚠️  (no mapping)
+  Line 65: text-sm ⚠️  (no mapping)
+  Line 71: text-ferrari ⚠️  (no mapping)
+  Line 73: text-gray ⚠️  (no mapping)
+  Line 73: text-sm ⚠️  (no mapping)
+  Line 79: text-ferrari ⚠️  (no mapping)
+  Line 81: text-gray ⚠️  (no mapping)
+  Line 81: text-sm ⚠️  (no mapping)
+  Line 92: text-xl ⚠️  (no mapping)
+  Line 114: text-left ⚠️  (no mapping)
+  Line 114: text-red ⚠️  (no mapping)
+
+📁 app/auth/forgot-password/page.tsx
+  Line 51: text-ferrari ⚠️  (no mapping)
+  Line 51: text-gray ⚠️  (no mapping)
+  Line 51: text-sm ⚠️  (no mapping)
+  Line 58: text-center ⚠️  (no mapping)
+  Line 59: text-3xl ⚠️  (no mapping)
+  Line 60: text-gray ⚠️  (no mapping)
+  Line 67: text-red ⚠️  (no mapping)
+  Line 68: text-red ⚠️  (no mapping)
+  Line 68: text-sm ⚠️  (no mapping)
+  Line 73: text-center ⚠️  (no mapping)
+  Line 75: text-green ⚠️  (no mapping)
+  Line 77: text-xl ⚠️  (no mapping)
+  Line 78: text-gray ⚠️  (no mapping)
+  Line 81: text-gray ⚠️  (no mapping)
+  Line 81: text-sm ⚠️  (no mapping)
+  Line 88: text-sm ⚠️  (no mapping)
+  Line 89: text-ferrari ⚠️  (no mapping)
+  Line 92: text-gray ⚠️  (no mapping)
+  Line 122: text-center ⚠️  (no mapping)
+  Line 122: text-gray ⚠️  (no mapping)
+  Line 122: text-sm ⚠️  (no mapping)
+  Line 124: text-ferrari ⚠️  (no mapping)
+
+📁 app/auth/reset-password/page.tsx
+  Line 77: text-center ⚠️  (no mapping)
+  Line 79: text-green ⚠️  (no mapping)
+  Line 81: text-2xl ⚠️  (no mapping)
+  Line 82: text-gray ⚠️  (no mapping)
+  Line 85: text-gray ⚠️  (no mapping)
+  Line 85: text-sm ⚠️  (no mapping)
+  Line 101: text-center ⚠️  (no mapping)
+  Line 102: text-3xl ⚠️  (no mapping)
+  Line 103: text-gray ⚠️  (no mapping)
+  Line 110: text-red ⚠️  (no mapping)
+  Line 111: text-red ⚠️  (no mapping)
+  Line 111: text-sm ⚠️  (no mapping)
+  Line 117: text-sm ⚠️  (no mapping)
+  Line 118: text-ferrari ⚠️  (no mapping)
+  Line 121: text-gray ⚠️  (no mapping)
+  Line 134: text-gray ⚠️  (no mapping)
+  Line 139: text-gray ⚠️  (no mapping)
+  Line 139: text-xs ⚠️  (no mapping)
+  Line 145: text-sm ⚠️  (no mapping)
+  Line 146: text-ferrari ⚠️  (no mapping)
+  Line 149: text-gray ⚠️  (no mapping)
+  Line 162: text-gray ⚠️  (no mapping)
+
+📁 app/auth/signin/page.tsx
+  Line 49: text-gray ⚠️  (no mapping)
+  Line 49: text-sm ⚠️  (no mapping)
+  Line 50: text-ferrari ⚠️  (no mapping)
+  Line 52: text-ferrari ⚠️  (no mapping)
+  Line 57: text-center ⚠️  (no mapping)
+  Line 58: text-2xl ⚠️  (no mapping)
+  Line 59: text-gray ⚠️  (no mapping)
+  Line 67: text-red ⚠️  (no mapping)
+  Line 68: text-red ⚠️  (no mapping)
+  Line 68: text-sm ⚠️  (no mapping)
+  Line 104: text-sm ⚠️  (no mapping)
+  Line 105: text-gray ⚠️  (no mapping)
+  Line 112: text-sm ⚠️  (no mapping)
+  Line 116: text-gray ⚠️  (no mapping)
+  Line 129: text-sm ⚠️  (no mapping)
+  Line 133: text-gray ⚠️  (no mapping)
+  Line 147: text-ferrari ⚠️  (no mapping)
+  Line 148: text-gray ⚠️  (no mapping)
+  Line 148: text-sm ⚠️  (no mapping)
+  Line 152: text-ferrari ⚠️  (no mapping)
+  Line 152: text-sm ⚠️  (no mapping)
+  Line 167: text-center ⚠️  (no mapping)
+  Line 167: text-gray ⚠️  (no mapping)
+  Line 167: text-sm ⚠️  (no mapping)
+  Line 169: text-ferrari ⚠️  (no mapping)
+
+📁 app/auth/signup/page.tsx
+  Line 116: text-center ⚠️  (no mapping)
+  Line 118: text-green ⚠️  (no mapping)
+  Line 122: text-2xl ⚠️  (no mapping)
+  Line 123: text-gray ⚠️  (no mapping)
+  Line 126: text-gray ⚠️  (no mapping)
+  Line 126: text-sm ⚠️  (no mapping)
+  Line 142: text-gray ⚠️  (no mapping)
+  Line 142: text-sm ⚠️  (no mapping)
+  Line 143: text-ferrari ⚠️  (no mapping)
+  Line 145: text-ferrari ⚠️  (no mapping)
+  Line 150: text-center ⚠️  (no mapping)
+  Line 151: text-3xl ⚠️  (no mapping)
+  Line 152: text-gray ⚠️  (no mapping)
+  Line 160: text-red ⚠️  (no mapping)
+  Line 162: text-red ⚠️  (no mapping)
+  Line 162: text-sm ⚠️  (no mapping)
+  Line 164: text-red ⚠️  (no mapping)
+  Line 164: text-xs ⚠️  (no mapping)
+  Line 175: text-sm ⚠️  (no mapping)
+  Line 176: text-ferrari ⚠️  (no mapping)
+  Line 179: text-gray ⚠️  (no mapping)
+  Line 193: text-sm ⚠️  (no mapping)
+  Line 194: text-ferrari ⚠️  (no mapping)
+  Line 197: text-gray ⚠️  (no mapping)
+
+📁 app/brands/page.tsx
+  Line 10: text-3xl ⚠️  (no mapping)
+  Line 11: text-gray ⚠️  (no mapping)
+  Line 18: text-center ⚠️  (no mapping)
+  Line 21: text-ferrari ⚠️  (no mapping)
+  Line 21: text-xl ⚠️  (no mapping)
+
+📁 app/cars/page.tsx
+  Line 287: text-3xl ⚠️  (no mapping)
+  Line 288: text-gray ⚠️  (no mapping)
+  Line 293: text-gray ⚠️  (no mapping)
+  Line 293: text-sm ⚠️  (no mapping)
+  Line 298: text-ferrari ⚠️  (no mapping)
+  Line 298: text-sm ⚠️  (no mapping)
+  Line 308: text-ferrari ⚠️  (no mapping)
+  Line 320: text-ferrari ⚠️  (no mapping)
+  Line 320: text-sm ⚠️  (no mapping)
+  Line 348: text-secondary ⚠️  (no mapping)
+  Line 348: text-sm ⚠️  (no mapping)
+  Line 349: text-ferrari ⚠️  (no mapping)
+  Line 354: text-ferrari ⚠️  (no mapping)
+  Line 354: text-gray ⚠️  (no mapping)
+  Line 354: text-xs ⚠️  (no mapping)
+  Line 362: text-gray ⚠️  (no mapping)
+  Line 362: text-xs ⚠️  (no mapping)
+  Line 364: text-sm ⚠️  (no mapping)
+  Line 396: text-center ⚠️  (no mapping)
+  Line 398: text-ferrari ⚠️  (no mapping)
+  Line 400: text-xl ⚠️  (no mapping)
+  Line 401: text-secondary ⚠️  (no mapping)
+  Line 456: text-sm ⚠️  (no mapping)
+
+📁 app/cars/[id]/error.tsx
+  Line 22: text-center ⚠️  (no mapping)
+  Line 26: text-red ⚠️  (no mapping)
+  Line 28: text-sm ⚠️  (no mapping)
+  Line 28: text-white → text-primary
+  Line 34: text-3xl ⚠️  (no mapping)
+  Line 34: text-4xl ⚠️  (no mapping)
+  Line 40: text-gray ⚠️  (no mapping)
+  Line 44: text-left ⚠️  (no mapping)
+  Line 45: text-gray ⚠️  (no mapping)
+  Line 49: text-gray ⚠️  (no mapping)
+  Line 53: text-gray ⚠️  (no mapping)
+  Line 60: text-red ⚠️  (no mapping)
+  Line 60: text-sm ⚠️  (no mapping)
+  Line 94: text-gray ⚠️  (no mapping)
+  Line 94: text-xs ⚠️  (no mapping)
+  Line 101: text-gray ⚠️  (no mapping)
+  Line 101: text-sm ⚠️  (no mapping)
+  Line 103: text-ferrari ⚠️  (no mapping)
+
+📁 app/cars/[id]/loading.tsx
+  Line 47: text-center ⚠️  (no mapping)
+
+📁 app/cars/[id]/page.tsx
+  Line 89: text-sm ⚠️  (no mapping)
+  Line 90: text-ferrari ⚠️  (no mapping)
+  Line 90: text-gray ⚠️  (no mapping)
+  Line 93: text-gray ⚠️  (no mapping)
+  Line 94: text-ferrari ⚠️  (no mapping)
+  Line 94: text-gray ⚠️  (no mapping)
+  Line 95: text-gray ⚠️  (no mapping)
+  Line 96: text-ferrari ⚠️  (no mapping)
+  Line 96: text-gray ⚠️  (no mapping)
+  Line 97: text-gray ⚠️  (no mapping)
+  Line 98: text-ferrari ⚠️  (no mapping)
+  Line 111: text-white → text-primary
+  Line 111: text-xs ⚠️  (no mapping)
+  Line 117: text-red ⚠️  (no mapping)
+  Line 117: text-xs ⚠️  (no mapping)
+  Line 122: text-green ⚠️  (no mapping)
+  Line 122: text-xs ⚠️  (no mapping)
+  Line 127: text-gray ⚠️  (no mapping)
+  Line 127: text-xs ⚠️  (no mapping)
+  Line 133: text-3xl ⚠️  (no mapping)
+  Line 133: text-4xl ⚠️  (no mapping)
+  Line 133: text-gray ⚠️  (no mapping)
+  Line 138: text-gray ⚠️  (no mapping)
+  Line 138: text-sm ⚠️  (no mapping)
+  Line 146: text-ferrari ⚠️  (no mapping)
+  Line 147: text-ferrari ⚠️  (no mapping)
+  Line 147: text-gray ⚠️  (no mapping)
+  Line 171: text-center ⚠️  (no mapping)
+  Line 172: text-2xl ⚠️  (no mapping)
+  Line 172: text-ferrari ⚠️  (no mapping)
+  Line 175: text-gray ⚠️  (no mapping)
+  Line 175: text-xs ⚠️  (no mapping)
+  Line 177: text-center ⚠️  (no mapping)
+
+📁 app/compare/page.tsx
+  Line 95: text-3xl ⚠️  (no mapping)
+
+📁 app/contact/page.tsx
+  Line 58: text-gray ⚠️  (no mapping)
+  Line 58: text-sm ⚠️  (no mapping)
+  Line 59: text-ferrari ⚠️  (no mapping)
+  Line 61: text-ferrari ⚠️  (no mapping)
+  Line 63: text-ferrari ⚠️  (no mapping)
+  Line 66: text-center ⚠️  (no mapping)
+  Line 68: text-green ⚠️  (no mapping)
+  Line 70: text-2xl ⚠️  (no mapping)
+  Line 71: text-gray ⚠️  (no mapping)
+  Line 74: text-left ⚠️  (no mapping)
+  Line 75: text-gray ⚠️  (no mapping)
+  Line 75: text-sm ⚠️  (no mapping)
+  Line 76: text-sm ⚠️  (no mapping)
+  Line 78: text-ferrari ⚠️  (no mapping)
+  Line 79: text-ferrari ⚠️  (no mapping)
+  Line 82: text-ferrari ⚠️  (no mapping)
+  Line 83: text-ferrari ⚠️  (no mapping)
+  Line 86: text-ferrari ⚠️  (no mapping)
+  Line 87: text-ferrari ⚠️  (no mapping)
+  Line 102: text-gray ⚠️  (no mapping)
+  Line 102: text-sm ⚠️  (no mapping)
+  Line 103: text-ferrari ⚠️  (no mapping)
+  Line 105: text-ferrari ⚠️  (no mapping)
+
+📁 app/cookies/page.tsx
+  Line 40: text-gray ⚠️  (no mapping)
+  Line 40: text-sm ⚠️  (no mapping)
+  Line 41: text-ferrari ⚠️  (no mapping)
+  Line 43: text-ferrari ⚠️  (no mapping)
+  Line 46: text-3xl ⚠️  (no mapping)
+  Line 47: text-gray ⚠️  (no mapping)
+  Line 56: text-ferrari ⚠️  (no mapping)
+  Line 59: text-gray ⚠️  (no mapping)
+  Line 59: text-sm ⚠️  (no mapping)
+  Line 64: text-green ⚠️  (no mapping)
+  Line 64: text-sm ⚠️  (no mapping)
+  Line 74: text-ferrari ⚠️  (no mapping)
+  Line 77: text-gray ⚠️  (no mapping)
+  Line 77: text-sm ⚠️  (no mapping)
+  Line 98: text-ferrari ⚠️  (no mapping)
+  Line 101: text-gray ⚠️  (no mapping)
+  Line 101: text-sm ⚠️  (no mapping)
+  Line 127: text-white → text-primary
+  Line 134: text-gray ⚠️  (no mapping)
+  Line 134: text-sm ⚠️  (no mapping)
+  Line 136: text-ferrari ⚠️  (no mapping)
+  Line 140: text-ferrari ⚠️  (no mapping)
+
+📁 app/faq/page.tsx
+  Line 122: text-white → text-primary
+  Line 124: text-4xl ⚠️  (no mapping)
+  Line 124: text-5xl ⚠️  (no mapping)
+  Line 127: text-white/90 ⚠️  (no mapping)
+  Line 127: text-xl ⚠️  (no mapping)
+  Line 137: text-gray ⚠️  (no mapping)
+  Line 160: text-2xl ⚠️  (no mapping)
+  Line 161: text-xl ⚠️  (no mapping)
+  Line 164: text-gray ⚠️  (no mapping)
+  Line 166: text-gray ⚠️  (no mapping)
+  Line 177: text-left ⚠️  (no mapping)
+  Line 179: text-gray ⚠️  (no mapping)
+  Line 183: text-gray ⚠️  (no mapping)
+  Line 185: text-gray ⚠️  (no mapping)
+  Line 189: text-gray ⚠️  (no mapping)
+  Line 201: text-center ⚠️  (no mapping)
+  Line 202: text-gray ⚠️  (no mapping)
+  Line 205: text-ferrari ⚠️  (no mapping)
+  Line 218: text-gray ⚠️  (no mapping)
+  Line 218: text-sm ⚠️  (no mapping)
+  Line 226: text-ferrari ⚠️  (no mapping)
+  Line 228: text-gray ⚠️  (no mapping)
+  Line 228: text-xs ⚠️  (no mapping)
+  Line 236: text-ferrari ⚠️  (no mapping)
+
+📁 app/global-error.tsx
+  Line 23: text-center ⚠️  (no mapping)
+  Line 27: text-red ⚠️  (no mapping)
+  Line 32: text-3xl ⚠️  (no mapping)
+  Line 32: text-4xl ⚠️  (no mapping)
+  Line 37: text-gray ⚠️  (no mapping)
+
+📁 app/how-it-works/page.tsx
+  Line 53: text-white → text-primary
+  Line 54: text-center ⚠️  (no mapping)
+  Line 55: text-4xl ⚠️  (no mapping)
+  Line 55: text-5xl ⚠️  (no mapping)
+  Line 56: text-ferrari ⚠️  (no mapping)
+  Line 58: text-gray ⚠️  (no mapping)
+  Line 58: text-xl ⚠️  (no mapping)
+  Line 69: text-center ⚠️  (no mapping)
+  Line 71: text-ferrari ⚠️  (no mapping)
+  Line 73: text-xl ⚠️  (no mapping)
+  Line 74: text-gray ⚠️  (no mapping)
+  Line 84: text-3xl ⚠️  (no mapping)
+  Line 84: text-center ⚠️  (no mapping)
+  Line 88: text-ferrari ⚠️  (no mapping)
+  Line 90: text-gray ⚠️  (no mapping)
+  Line 90: text-sm ⚠️  (no mapping)
+  Line 100: text-3xl ⚠️  (no mapping)
+  Line 100: text-center ⚠️  (no mapping)
+  Line 105: text-gray ⚠️  (no mapping)
+  Line 110: text-gray ⚠️  (no mapping)
+  Line 115: text-gray ⚠️  (no mapping)
+
+📁 app/not-found.tsx
+  Line 7: text-center ⚠️  (no mapping)
+  Line 9: text-ferrari ⚠️  (no mapping)
+  Line 11: text-4xl ⚠️  (no mapping)
+  Line 12: text-gray ⚠️  (no mapping)
+
+📁 app/offers/page.tsx
+  Line 141: text-center ⚠️  (no mapping)
+  Line 142: text-4xl ⚠️  (no mapping)
+  Line 145: text-gray ⚠️  (no mapping)
+  Line 152: text-center ⚠️  (no mapping)
+  Line 153: text-2xl ⚠️  (no mapping)
+  Line 153: text-blue ⚠️  (no mapping)
+  Line 156: text-sm ⚠️  (no mapping)
+  Line 158: text-center ⚠️  (no mapping)
+  Line 159: text-2xl ⚠️  (no mapping)
+  Line 159: text-green ⚠️  (no mapping)
+  Line 162: text-sm ⚠️  (no mapping)
+  Line 164: text-center ⚠️  (no mapping)
+  Line 165: text-2xl ⚠️  (no mapping)
+  Line 165: text-yellow ⚠️  (no mapping)
+  Line 168: text-sm ⚠️  (no mapping)
+  Line 170: text-center ⚠️  (no mapping)
+  Line 171: text-2xl ⚠️  (no mapping)
+  Line 171: text-purple ⚠️  (no mapping)
+  Line 174: text-sm ⚠️  (no mapping)
+  Line 182: text-2xl ⚠️  (no mapping)
+  Line 183: text-sm ⚠️  (no mapping)
+  Line 183: text-white → text-primary
+  Line 187: text-ferrari ⚠️  (no mapping)
+  Line 187: text-sm ⚠️  (no mapping)
+  Line 194: text-white → text-primary
+  Line 194: text-xs ⚠️  (no mapping)
+  Line 208: text-2xl ⚠️  (no mapping)
+
+📁 app/privacy/page.tsx
+  Line 21: text-gray ⚠️  (no mapping)
+  Line 21: text-sm ⚠️  (no mapping)
+  Line 22: text-ferrari ⚠️  (no mapping)
+  Line 24: text-ferrari ⚠️  (no mapping)
+  Line 29: text-3xl ⚠️  (no mapping)
+  Line 29: text-4xl ⚠️  (no mapping)
+  Line 30: text-gray ⚠️  (no mapping)
+  Line 31: text-ferrari ⚠️  (no mapping)
+  Line 38: text-lg ⚠️  (no mapping)
+  Line 39: text-ferrari ⚠️  (no mapping)
+  Line 42: text-gray ⚠️  (no mapping)
+  Line 45: text-sm ⚠️  (no mapping)
+  Line 46: text-gray ⚠️  (no mapping)
+  Line 47: text-green ⚠️  (no mapping)
+  Line 50: text-gray ⚠️  (no mapping)
+  Line 51: text-green ⚠️  (no mapping)
+  Line 54: text-gray ⚠️  (no mapping)
+  Line 55: text-green ⚠️  (no mapping)
+  Line 58: text-gray ⚠️  (no mapping)
+  Line 59: text-green ⚠️  (no mapping)
+  Line 69: text-xl ⚠️  (no mapping)
+  Line 70: text-ferrari ⚠️  (no mapping)
+
+📁 app/profile/page.tsx
+  Line 156: text-3xl ⚠️  (no mapping)
+  Line 157: text-gray ⚠️  (no mapping)
+  Line 164: text-green ⚠️  (no mapping)
+  Line 171: text-red ⚠️  (no mapping)
+  Line 182: text-white → text-primary
+  Line 184: text-2xl ⚠️  (no mapping)
+  Line 188: text-xl ⚠️  (no mapping)
+  Line 191: text-sm ⚠️  (no mapping)
+  Line 191: text-white/80 ⚠️  (no mapping)
+  Line 203: text-ferrari ⚠️  (no mapping)
+  Line 205: text-gray ⚠️  (no mapping)
+  Line 205: text-sm ⚠️  (no mapping)
+  Line 213: text-ferrari ⚠️  (no mapping)
+  Line 215: text-gray ⚠️  (no mapping)
+  Line 215: text-sm ⚠️  (no mapping)
+  Line 221: text-ferrari ⚠️  (no mapping)
+  Line 223: text-gray ⚠️  (no mapping)
+  Line 223: text-sm ⚠️  (no mapping)
+  Line 231: text-ferrari ⚠️  (no mapping)
+  Line 233: text-gray ⚠️  (no mapping)
+  Line 233: text-sm ⚠️  (no mapping)
+  Line 245: text-ferrari ⚠️  (no mapping)
+  Line 255: text-sm ⚠️  (no mapping)
+  Line 268: text-sm ⚠️  (no mapping)
+  Line 284: text-white → text-primary
+
+📁 app/profile/settings/page.tsx
+  Line 35: text-ferrari ⚠️  (no mapping)
+  Line 35: text-gray ⚠️  (no mapping)
+  Line 35: text-sm ⚠️  (no mapping)
+  Line 41: text-3xl ⚠️  (no mapping)
+  Line 47: text-ferrari ⚠️  (no mapping)
+  Line 50: text-gray ⚠️  (no mapping)
+  Line 50: text-sm ⚠️  (no mapping)
+  Line 53: text-gray ⚠️  (no mapping)
+  Line 59: text-ferrari ⚠️  (no mapping)
+  Line 62: text-gray ⚠️  (no mapping)
+  Line 62: text-sm ⚠️  (no mapping)
+  Line 65: text-gray ⚠️  (no mapping)
+  Line 71: text-ferrari ⚠️  (no mapping)
+  Line 74: text-gray ⚠️  (no mapping)
+  Line 74: text-sm ⚠️  (no mapping)
+  Line 77: text-gray ⚠️  (no mapping)
+  Line 83: text-ferrari ⚠️  (no mapping)
+  Line 86: text-gray ⚠️  (no mapping)
+  Line 86: text-sm ⚠️  (no mapping)
+  Line 89: text-gray ⚠️  (no mapping)
+
+📁 app/recently-viewed/page.tsx
+  Line 55: text-3xl ⚠️  (no mapping)
+  Line 56: text-gray ⚠️  (no mapping)
+  Line 64: text-red ⚠️  (no mapping)
+  Line 77: text-white → text-primary
+  Line 77: text-xs ⚠️  (no mapping)
+  Line 96: text-center ⚠️  (no mapping)
+  Line 97: text-gray ⚠️  (no mapping)
+  Line 98: text-xl ⚠️  (no mapping)
+  Line 99: text-gray ⚠️  (no mapping)
+
+📁 app/saved/page.tsx
+  Line 63: text-center ⚠️  (no mapping)
+  Line 66: text-ferrari ⚠️  (no mapping)
+  Line 68: text-2xl ⚠️  (no mapping)
+  Line 69: text-gray ⚠️  (no mapping)
+  Line 88: text-3xl ⚠️  (no mapping)
+  Line 89: text-gray ⚠️  (no mapping)
+  Line 120: text-ferrari ⚠️  (no mapping)
+
+📁 app/terms/page.tsx
+  Line 21: text-gray ⚠️  (no mapping)
+  Line 21: text-sm ⚠️  (no mapping)
+  Line 22: text-ferrari ⚠️  (no mapping)
+  Line 24: text-ferrari ⚠️  (no mapping)
+  Line 29: text-3xl ⚠️  (no mapping)
+  Line 29: text-4xl ⚠️  (no mapping)
+  Line 30: text-gray ⚠️  (no mapping)
+  Line 31: text-ferrari ⚠️  (no mapping)
+  Line 38: text-lg ⚠️  (no mapping)
+  Line 39: text-ferrari ⚠️  (no mapping)
+  Line 42: text-gray ⚠️  (no mapping)
+  Line 53: text-xl ⚠️  (no mapping)
+  Line 54: text-ferrari ⚠️  (no mapping)
+  Line 57: text-gray ⚠️  (no mapping)
+  Line 63: text-sm ⚠️  (no mapping)
+  Line 64: text-sm ⚠️  (no mapping)
+  Line 66: text-green ⚠️  (no mapping)
+  Line 70: text-green ⚠️  (no mapping)
+  Line 74: text-green ⚠️  (no mapping)
+  Line 84: text-xl ⚠️  (no mapping)
+  Line 85: text-ferrari ⚠️  (no mapping)
+  Line 88: text-gray ⚠️  (no mapping)
+
+📁 app/test-matchmaker/page.tsx
+  Line 119: text-3xl ⚠️  (no mapping)
+  Line 126: text-white → text-primary
+  Line 134: text-sm ⚠️  (no mapping)
+
+📁 components/cars/CarCard.tsx
+  Line 59: text-gray ⚠️  (no mapping)
+  Line 72: text-ferrari ⚠️  (no mapping)
+  Line 72: text-gray ⚠️  (no mapping)
+  Line 78: text-white → text-primary
+  Line 78: text-xs ⚠️  (no mapping)
+  Line 86: text-lg ⚠️  (no mapping)
+  Line 89: text-2xl ⚠️  (no mapping)
+  Line 89: text-ferrari ⚠️  (no mapping)
+  Line 92: text-gray ⚠️  (no mapping)
+  Line 92: text-sm ⚠️  (no mapping)
+  Line 96: text-sm ⚠️  (no mapping)
+  Line 97: text-gray ⚠️  (no mapping)
+  Line 98: text-ferrari ⚠️  (no mapping)
+  Line 101: text-gray ⚠️  (no mapping)
+  Line 102: text-ferrari ⚠️  (no mapping)
+  Line 105: text-gray ⚠️  (no mapping)
+  Line 106: text-ferrari ⚠️  (no mapping)
+  Line 109: text-gray ⚠️  (no mapping)
+  Line 110: text-ferrari ⚠️  (no mapping)
+  Line 118: text-gray ⚠️  (no mapping)
+  Line 118: text-xs ⚠️  (no mapping)
+
+📁 components/cars/CarSpecs.tsx
+  Line 27: text-xl ⚠️  (no mapping)
+  Line 32: text-ferrari ⚠️  (no mapping)
+  Line 34: text-gray ⚠️  (no mapping)
+  Line 34: text-xs ⚠️  (no mapping)
+
+📁 components/cars/CompareButton.tsx
+  Line 54: text-ferrari ⚠️  (no mapping)
+  Line 54: text-gray ⚠️  (no mapping)
+  Line 63: text-ferrari ⚠️  (no mapping)
+  Line 63: text-gray ⚠️  (no mapping)
+  Line 63: text-sm ⚠️  (no mapping)
+
+📁 components/cars/ComparisonTable.tsx
+  Line 124: text-2xl ⚠️  (no mapping)
+  Line 127: text-xs ⚠️  (no mapping)
+  Line 135: text-gray ⚠️  (no mapping)
+  Line 135: text-sm ⚠️  (no mapping)
+  Line 147: text-gray ⚠️  (no mapping)
+  Line 147: text-left ⚠️  (no mapping)
+  Line 147: text-sm ⚠️  (no mapping)
+  Line 151: text-center ⚠️  (no mapping)
+  Line 163: text-gray ⚠️  (no mapping)
+  Line 169: text-ferrari ⚠️  (no mapping)
+  Line 169: text-gray ⚠️  (no mapping)
+  Line 172: text-gray ⚠️  (no mapping)
+  Line 172: text-sm ⚠️  (no mapping)
+  Line 175: text-ferrari ⚠️  (no mapping)
+  Line 175: text-xl ⚠️  (no mapping)
+  Line 191: text-red ⚠️  (no mapping)
+  Line 205: text-gray ⚠️  (no mapping)
+  Line 205: text-sm ⚠️  (no mapping)
+  Line 207: text-ferrari ⚠️  (no mapping)
+  Line 224: text-center ⚠️  (no mapping)
+  Line 224: text-gray ⚠️  (no mapping)
+  Line 224: text-sm ⚠️  (no mapping)
+  Line 259: text-lg ⚠️  (no mapping)
+  Line 260: text-gray ⚠️  (no mapping)
+  Line 260: text-sm ⚠️  (no mapping)
+  Line 261: text-2xl ⚠️  (no mapping)
+  Line 261: text-ferrari ⚠️  (no mapping)
+  Line 274: text-red ⚠️  (no mapping)
+  Line 288: text-ferrari ⚠️  (no mapping)
+  Line 290: text-gray ⚠️  (no mapping)
+  Line 290: text-xs ⚠️  (no mapping)
+  Line 292: text-sm ⚠️  (no mapping)
+
+📁 components/cars/CostCalculator.tsx
+  Line 27: text-white → text-primary
+  Line 35: text-white → text-primary
+  Line 35: text-white/80 ⚠️  (no mapping)
+  Line 44: text-center ⚠️  (no mapping)
+  Line 45: text-gray ⚠️  (no mapping)
+  Line 45: text-sm ⚠️  (no mapping)
+  Line 46: text-3xl ⚠️  (no mapping)
+  Line 46: text-ferrari ⚠️  (no mapping)
+  Line 49: text-gray ⚠️  (no mapping)
+  Line 49: text-xs ⚠️  (no mapping)
+  Line 59: text-gray ⚠️  (no mapping)
+  Line 66: text-gray ⚠️  (no mapping)
+  Line 73: text-gray ⚠️  (no mapping)
+  Line 80: text-gray ⚠️  (no mapping)
+  Line 87: text-gray ⚠️  (no mapping)
+  Line 93: text-ferrari ⚠️  (no mapping)
+  Line 99: text-blue ⚠️  (no mapping)
+  Line 99: text-xs ⚠️  (no mapping)
+  Line 109: text-center ⚠️  (no mapping)
+  Line 109: text-ferrari ⚠️  (no mapping)
+  Line 109: text-sm ⚠️  (no mapping)
+
+📁 components/cars/DealerBadge.tsx
+  Line 20: text-blue ⚠️  (no mapping)
+  Line 24: text-gray ⚠️  (no mapping)
+  Line 24: text-xs ⚠️  (no mapping)
+  Line 31: text-blue ⚠️  (no mapping)
+  Line 31: text-sm ⚠️  (no mapping)
+
+📁 components/cars/FilterSidebar.tsx
+  Line 460: text-white → text-primary
+  Line 468: text-xs ⚠️  (no mapping)
+  Line 474: text-xs ⚠️  (no mapping)
+  Line 493: text-sm ⚠️  (no mapping)
+  Line 508: text-sm ⚠️  (no mapping)
+  Line 529: text-gray ⚠️  (no mapping)
+  Line 529: text-xs ⚠️  (no mapping)
+  Line 535: text-white → text-primary
+  Line 535: text-xs ⚠️  (no mapping)
+  Line 546: text-gray ⚠️  (no mapping)
+  Line 546: text-xs ⚠️  (no mapping)
+  Line 547: text-ferrari ⚠️  (no mapping)
+  Line 555: text-xs ⚠️  (no mapping)
+  Line 569: text-gray ⚠️  (no mapping)
+  Line 569: text-xs ⚠️  (no mapping)
+  Line 570: text-ferrari ⚠️  (no mapping)
+  Line 580: text-xs ⚠️  (no mapping)
+  Line 595: text-gray ⚠️  (no mapping)
+  Line 595: text-xs ⚠️  (no mapping)
+  Line 596: text-ferrari ⚠️  (no mapping)
+  Line 606: text-xs ⚠️  (no mapping)
+  Line 621: text-gray ⚠️  (no mapping)
+  Line 621: text-xs ⚠️  (no mapping)
+  Line 622: text-ferrari ⚠️  (no mapping)
+  Line 630: text-xs ⚠️  (no mapping)
+  Line 646: text-gray ⚠️  (no mapping)
+  Line 646: text-xs ⚠️  (no mapping)
+
+📁 components/cars/ImageGallery.tsx
+  Line 18: text-gray ⚠️  (no mapping)
+  Line 40: text-white → text-primary
+  Line 46: text-white → text-primary
+  Line 56: text-white → text-primary
+  Line 62: text-sm ⚠️  (no mapping)
+  Line 62: text-white → text-primary
+  Line 93: text-ferrari ⚠️  (no mapping)
+  Line 93: text-white → text-primary
+  Line 109: text-white → text-primary
+  Line 115: text-white → text-primary
+
+📁 components/cars/PopularityMeter.tsx
+  Line 13: text-sm ⚠️  (no mapping)
+  Line 15: text-lg ⚠️  (no mapping)
+  Line 18: text-lg ⚠️  (no mapping)
+  Line 27: text-gray ⚠️  (no mapping)
+  Line 27: text-xs ⚠️  (no mapping)
+
+📁 components/cars/QuickActions.tsx
+  Line 25: text-center ⚠️  (no mapping)
+  Line 28: text-sm ⚠️  (no mapping)
+  Line 34: text-center ⚠️  (no mapping)
+  Line 37: text-sm ⚠️  (no mapping)
+
+📁 components/cars/RecentlyViewed.tsx
+  Line 42: text-ferrari ⚠️  (no mapping)
+  Line 43: text-xl ⚠️  (no mapping)
+  Line 49: text-ferrari ⚠️  (no mapping)
+  Line 49: text-gray ⚠️  (no mapping)
+  Line 49: text-sm ⚠️  (no mapping)
+  Line 56: text-gray ⚠️  (no mapping)
+  Line 76: text-gray ⚠️  (no mapping)
+  Line 88: text-gray ⚠️  (no mapping)
+  Line 96: text-sm ⚠️  (no mapping)
+  Line 100: text-ferrari ⚠️  (no mapping)
+  Line 100: text-sm ⚠️  (no mapping)
+  Line 103: text-gray ⚠️  (no mapping)
+  Line 103: text-xs ⚠️  (no mapping)
+  Line 107: text-gray ⚠️  (no mapping)
+  Line 107: text-xs ⚠️  (no mapping)
+  Line 115: text-white → text-primary
+  Line 124: text-right ⚠️  (no mapping)
+  Line 127: text-ferrari ⚠️  (no mapping)
+  Line 127: text-sm ⚠️  (no mapping)
+
+📁 components/cars/SellerInfo.tsx
+  Line 32: text-ferrari ⚠️  (no mapping)
+  Line 38: text-lg ⚠️  (no mapping)
+  Line 41: text-yellow ⚠️  (no mapping)
+  Line 43: text-gray ⚠️  (no mapping)
+  Line 43: text-sm ⚠️  (no mapping)
+  Line 50: text-gray ⚠️  (no mapping)
+  Line 51: text-gray ⚠️  (no mapping)
+  Line 51: text-sm ⚠️  (no mapping)
+  Line 57: text-gray ⚠️  (no mapping)
+  Line 58: text-ferrari ⚠️  (no mapping)
+  Line 58: text-sm ⚠️  (no mapping)
+  Line 66: text-gray ⚠️  (no mapping)
+  Line 67: text-ferrari ⚠️  (no mapping)
+  Line 67: text-sm ⚠️  (no mapping)
+  Line 75: text-green ⚠️  (no mapping)
+  Line 75: text-xs ⚠️  (no mapping)
+
+📁 components/cars/SimilarCars.tsx
+  Line 41: text-2xl ⚠️  (no mapping)
+  Line 61: text-2xl ⚠️  (no mapping)
+
+📁 components/cars/WarrantyInfo.tsx
+  Line 22: text-ferrari ⚠️  (no mapping)
+  Line 25: text-gray ⚠️  (no mapping)
+  Line 25: text-sm ⚠️  (no mapping)
+  Line 35: text-ferrari ⚠️  (no mapping)
+  Line 44: text-ferrari ⚠️  (no mapping)
+  Line 47: text-sm ⚠️  (no mapping)
+  Line 48: text-gray ⚠️  (no mapping)
+  Line 53: text-gray ⚠️  (no mapping)
+  Line 66: text-ferrari ⚠️  (no mapping)
+  Line 69: text-sm ⚠️  (no mapping)
+  Line 70: text-gray ⚠️  (no mapping)
+  Line 75: text-gray ⚠️  (no mapping)
+  Line 87: text-gray ⚠️  (no mapping)
+  Line 87: text-xs ⚠️  (no mapping)
+
+📁 components/cars/WarrantyShowcase.tsx
+  Line 28: text-gray ⚠️  (no mapping)
+  Line 28: text-xs ⚠️  (no mapping)
+  Line 29: text-green ⚠️  (no mapping)
+  Line 31: text-gray ⚠️  (no mapping)
+  Line 31: text-xs ⚠️  (no mapping)
+  Line 39: text-gray ⚠️  (no mapping)
+  Line 39: text-xs ⚠️  (no mapping)
+  Line 40: text-green ⚠️  (no mapping)
+  Line 42: text-gray ⚠️  (no mapping)
+  Line 42: text-xs ⚠️  (no mapping)
+
+📁 components/forms/ContactForm.tsx
+  Line 62: text-center ⚠️  (no mapping)
+  Line 63: text-green ⚠️  (no mapping)
+  Line 64: text-xl ⚠️  (no mapping)
+  Line 65: text-gray ⚠️  (no mapping)
+  Line 68: text-gray ⚠️  (no mapping)
+  Line 68: text-sm ⚠️  (no mapping)
+  Line 79: text-red ⚠️  (no mapping)
+  Line 79: text-sm ⚠️  (no mapping)
+  Line 84: text-sm ⚠️  (no mapping)
+  Line 95: text-sm ⚠️  (no mapping)
+  Line 106: text-sm ⚠️  (no mapping)
+  Line 117: text-sm ⚠️  (no mapping)
+
+📁 components/home/FeaturedCars.tsx
+  Line 250: text-3xl ⚠️  (no mapping)
+  Line 272: text-3xl ⚠️  (no mapping)
+  Line 273: text-ferrari ⚠️  (no mapping)
+  Line 277: text-center ⚠️  (no mapping)
+  Line 278: text-gray ⚠️  (no mapping)
+  Line 279: text-gray ⚠️  (no mapping)
+  Line 279: text-sm ⚠️  (no mapping)
+  Line 293: text-3xl ⚠️  (no mapping)
+  Line 296: text-ferrari ⚠️  (no mapping)
+  Line 306: text-white → text-primary
+  Line 306: text-xs ⚠️  (no mapping)
+  Line 310: text-white → text-primary
+  Line 310: text-xs ⚠️  (no mapping)
+  Line 314: text-white → text-primary
+  Line 314: text-xs ⚠️  (no mapping)
+  Line 325: text-gray ⚠️  (no mapping)
+  Line 325: text-right ⚠️  (no mapping)
+  Line 325: text-xs ⚠️  (no mapping)
+
+📁 components/home/Hero.tsx
+  Line 9: text-white → text-primary
+  Line 24: text-ferrari ⚠️  (no mapping)
+  Line 25: text-ferrari ⚠️  (no mapping)
+  Line 28: text-5xl ⚠️  (no mapping)
+  Line 28: text-6xl ⚠️  (no mapping)
+  Line 30: text-ferrari ⚠️  (no mapping)
+  Line 33: text-gray ⚠️  (no mapping)
+  Line 33: text-xl ⚠️  (no mapping)
+  Line 51: text-3xl ⚠️  (no mapping)
+  Line 51: text-ferrari ⚠️  (no mapping)
+  Line 52: text-gray ⚠️  (no mapping)
+  Line 55: text-3xl ⚠️  (no mapping)
+  Line 55: text-ferrari ⚠️  (no mapping)
+  Line 56: text-gray ⚠️  (no mapping)
+  Line 59: text-3xl ⚠️  (no mapping)
+  Line 59: text-ferrari ⚠️  (no mapping)
+  Line 60: text-gray ⚠️  (no mapping)
+
+📁 components/home/HowItWorks.tsx
+  Line 32: text-3xl ⚠️  (no mapping)
+  Line 32: text-center ⚠️  (no mapping)
+  Line 40: text-center ⚠️  (no mapping)
+  Line 43: text-ferrari ⚠️  (no mapping)
+  Line 45: text-lg ⚠️  (no mapping)
+  Line 46: text-gray ⚠️  (no mapping)
+
+📁 components/kosovo/CustomsInfo.tsx
+  Line 7: text-ferrari ⚠️  (no mapping)
+  Line 14: text-gray ⚠️  (no mapping)
+  Line 14: text-xs ⚠️  (no mapping)
+  Line 15: text-ferrari ⚠️  (no mapping)
+  Line 18: text-gray ⚠️  (no mapping)
+  Line 18: text-xs ⚠️  (no mapping)
+  Line 19: text-ferrari ⚠️  (no mapping)
+  Line 25: text-gray ⚠️  (no mapping)
+  Line 28: text-gray ⚠️  (no mapping)
+  Line 28: text-sm ⚠️  (no mapping)
+  Line 32: text-gray ⚠️  (no mapping)
+  Line 35: text-gray ⚠️  (no mapping)
+  Line 35: text-sm ⚠️  (no mapping)
+  Line 41: text-xs ⚠️  (no mapping)
+  Line 41: text-yellow ⚠️  (no mapping)
+
+📁 components/kosovo/ShippingCalculator.tsx
+  Line 18: text-ferrari ⚠️  (no mapping)
+  Line 24: text-gray ⚠️  (no mapping)
+  Line 24: text-sm ⚠️  (no mapping)
+  Line 38: text-gray ⚠️  (no mapping)
+  Line 41: text-gray ⚠️  (no mapping)
+  Line 41: text-sm ⚠️  (no mapping)
+  Line 48: text-blue ⚠️  (no mapping)
+  Line 48: text-xs ⚠️  (no mapping)
+
+📁 components/layout/Footer.tsx
+  Line 24: text-white → text-primary
+  Line 32: text-white → text-primary
+  Line 32: text-xl ⚠️  (no mapping)
+  Line 34: text-2xl ⚠️  (no mapping)
+  Line 35: text-ferrari ⚠️  (no mapping)
+  Line 39: text-gray ⚠️  (no mapping)
+  Line 47: text-xs ⚠️  (no mapping)
+  Line 48: text-ferrari ⚠️  (no mapping)
+  Line 51: text-xs ⚠️  (no mapping)
+  Line 52: text-ferrari ⚠️  (no mapping)
+  Line 55: text-xs ⚠️  (no mapping)
+  Line 56: text-ferrari ⚠️  (no mapping)
+  Line 63: text-gray ⚠️  (no mapping)
+  Line 65: text-ferrari ⚠️  (no mapping)
+  Line 68: text-gray ⚠️  (no mapping)
+  Line 68: text-sm ⚠️  (no mapping)
+  Line 69: text-ferrari ⚠️  (no mapping)
+  Line 74: text-gray ⚠️  (no mapping)
+  Line 76: text-ferrari ⚠️  (no mapping)
+  Line 79: text-gray ⚠️  (no mapping)
+  Line 79: text-sm ⚠️  (no mapping)
+  Line 80: text-ferrari ⚠️  (no mapping)
+  Line 85: text-gray ⚠️  (no mapping)
+
+📁 components/layout/Header.tsx
+  Line 64: text-white → text-primary
+  Line 64: text-xs ⚠️  (no mapping)
+  Line 73: text-sm ⚠️  (no mapping)
+  Line 73: text-white → text-primary
+  Line 82: text-ferrari ⚠️  (no mapping)
+  Line 82: text-secondary ⚠️  (no mapping)
+  Line 82: text-sm ⚠️  (no mapping)
+  Line 88: text-ferrari ⚠️  (no mapping)
+  Line 88: text-secondary ⚠️  (no mapping)
+  Line 88: text-sm ⚠️  (no mapping)
+  Line 92: text-white → text-primary
+  Line 92: text-xs ⚠️  (no mapping)
+  Line 99: text-ferrari ⚠️  (no mapping)
+  Line 99: text-secondary ⚠️  (no mapping)
+  Line 99: text-sm ⚠️  (no mapping)
+  Line 107: text-error ⚠️  (no mapping)
+  Line 107: text-left ⚠️  (no mapping)
+  Line 107: text-sm ⚠️  (no mapping)
+  Line 118: text-ferrari ⚠️  (no mapping)
+  Line 118: text-sm ⚠️  (no mapping)
+  Line 118: text-white → text-primary
+  Line 124: text-sm ⚠️  (no mapping)
+  Line 124: text-white → text-primary
+  Line 138: text-white → text-primary
+  Line 156: text-secondary ⚠️  (no mapping)
+  Line 156: text-sm ⚠️  (no mapping)
+  Line 166: text-ferrari ⚠️  (no mapping)
+  Line 166: text-secondary ⚠️  (no mapping)
+  Line 168: text-white → text-primary
+  Line 168: text-xs ⚠️  (no mapping)
+  Line 179: text-center ⚠️  (no mapping)
+  Line 180: text-ferrari ⚠️  (no mapping)
+  Line 180: text-secondary ⚠️  (no mapping)
+  Line 191: text-ferrari ⚠️  (no mapping)
+  Line 191: text-secondary ⚠️  (no mapping)
+  Line 198: text-left ⚠️  (no mapping)
+  Line 200: text-error ⚠️  (no mapping)
+  Line 201: text-error ⚠️  (no mapping)
+  Line 208: text-center ⚠️  (no mapping)
+  Line 208: text-ferrari ⚠️  (no mapping)
+  Line 208: text-white → text-primary
+
+📁 components/matchmaker/MatchmakerWidget.tsx
+  Line 175: text-2xl ⚠️  (no mapping)
+  Line 198: text-center ⚠️  (no mapping)
+  Line 199: text-ferrari ⚠️  (no mapping)
+  Line 200: text-xl ⚠️  (no mapping)
+  Line 201: text-gray ⚠️  (no mapping)
+  Line 221: text-ferrari ⚠️  (no mapping)
+  Line 224: text-2xl ⚠️  (no mapping)
+  Line 225: text-gray ⚠️  (no mapping)
+  Line 239: text-sm ⚠️  (no mapping)
+  Line 239: text-white → text-primary
+  Line 256: text-sm ⚠️  (no mapping)
+  Line 256: text-white → text-primary
+
+📁 components/search/SearchBar.tsx
+  Line 87: text-ferrari ⚠️  (no mapping)
+  Line 87: text-muted ⚠️  (no mapping)
+  Line 95: text-ferrari ⚠️  (no mapping)
+  Line 95: text-muted ⚠️  (no mapping)
+  Line 103: text-muted ⚠️  (no mapping)
+  Line 103: text-xs ⚠️  (no mapping)
+  Line 111: text-left ⚠️  (no mapping)
+  Line 113: text-ferrari ⚠️  (no mapping)
+  Line 113: text-secondary ⚠️  (no mapping)
+  Line 117: text-error ⚠️  (no mapping)
+  Line 117: text-muted ⚠️  (no mapping)
+
+📁 components/ui/Breadcrumbs.tsx
+  Line 15: text-gray ⚠️  (no mapping)
+  Line 15: text-sm ⚠️  (no mapping)
+  Line 20: text-ferrari ⚠️  (no mapping)
+  Line 24: text-ferrari ⚠️  (no mapping)
+
+📁 components/ui/CookieBanner.tsx
+  Line 48: text-gray ⚠️  (no mapping)
+  Line 57: text-ferrari ⚠️  (no mapping)
+  Line 63: text-ferrari ⚠️  (no mapping)
+  Line 64: text-lg ⚠️  (no mapping)
+  Line 67: text-gray ⚠️  (no mapping)
+  Line 67: text-sm ⚠️  (no mapping)
+  Line 75: text-ferrari ⚠️  (no mapping)
+  Line 75: text-sm ⚠️  (no mapping)
+  Line 86: text-sm ⚠️  (no mapping)
+  Line 88: text-ferrari ⚠️  (no mapping)
+  Line 91: text-gray ⚠️  (no mapping)
+  Line 95: text-ferrari ⚠️  (no mapping)
+  Line 98: text-gray ⚠️  (no mapping)
+  Line 102: text-ferrari ⚠️  (no mapping)
+  Line 105: text-gray ⚠️  (no mapping)
+  Line 108: text-gray ⚠️  (no mapping)
+  Line 108: text-xs ⚠️  (no mapping)
+  Line 110: text-ferrari ⚠️  (no mapping)
+  Line 114: text-ferrari ⚠️  (no mapping)
+  Line 126: text-ferrari ⚠️  (no mapping)
+  Line 132: text-white → text-primary
+
+📁 components/ui/EmptyState.tsx
+  Line 27: text-center ⚠️  (no mapping)
+  Line 29: text-ferrari ⚠️  (no mapping)
+  Line 31: text-xl ⚠️  (no mapping)
+  Line 32: text-gray ⚠️  (no mapping)
+
+📁 components/ui/ErrorBoundary.tsx
+  Line 31: text-center ⚠️  (no mapping)
+  Line 32: text-red ⚠️  (no mapping)
+  Line 33: text-lg ⚠️  (no mapping)
+  Line 34: text-gray ⚠️  (no mapping)
+
+📁 components/ui/FloatingShareBar.tsx
+  Line 57: text-white → text-primary
+
+📁 components/ui/Newsletter.tsx
+  Line 46: text-gray ⚠️  (no mapping)
+  Line 46: text-xs ⚠️  (no mapping)
+  Line 52: text-green ⚠️  (no mapping)
+  Line 53: text-green ⚠️  (no mapping)
+  Line 53: text-sm ⚠️  (no mapping)
+  Line 61: text-red ⚠️  (no mapping)
+  Line 62: text-red ⚠️  (no mapping)
+  Line 62: text-sm ⚠️  (no mapping)
+  Line 70: text-sm ⚠️  (no mapping)
+  Line 70: text-white → text-primary
+  Line 78: text-sm ⚠️  (no mapping)
+  Line 78: text-white → text-primary
+  Line 85: text-sm ⚠️  (no mapping)
+  Line 85: text-white → text-primary
+
+📁 components/ui/Pagination.tsx
+  Line 21: text-sm ⚠️  (no mapping)
+
+📁 components/ui/ScrollToTop.tsx
+  Line 38: text-white → text-primary
+
+📁 components/ui/ShareButtons.tsx
+  Line 82: text-white → text-primary
+  Line 92: text-white → text-primary
+  Line 102: text-white → text-primary
+  Line 112: text-white → text-primary
+  Line 122: text-white → text-primary
+  Line 134: text-white → text-primary
+
+📁 components/ui/SocialLinks.tsx
+  Line 65: text-white → text-primary
+  Line 70: text-white → text-primary
+  Line 70: text-xs ⚠️  (no mapping)
+  Line 79: text-gray ⚠️  (no mapping)
+  Line 79: text-xs ⚠️  (no mapping)
+  Line 101: text-gray ⚠️  (no mapping)
+  Line 101: text-white → text-primary
+  Line 105: text-gray ⚠️  (no mapping)
+  Line 105: text-xs ⚠️  (no mapping)
+  Line 108: text-ferrari ⚠️  (no mapping)
+  Line 108: text-gray ⚠️  (no mapping)
+  Line 128: text-ferrari ⚠️  (no mapping)
+  Line 128: text-gray ⚠️  (no mapping)
+
+📁 components/ui/ThemeToggle.tsx
+  Line 27: text-ferrari ⚠️  (no mapping)
+  Line 27: text-gray ⚠️  (no mapping)
+  Line 29: text-dark ⚠️  (no mapping)
+  Line 29: text-ferrari ⚠️  (no mapping)
+  Line 29: text-secondary ⚠️  (no mapping)
+
+📁 components/ui/Toast.tsx
+  Line 38: text-green ⚠️  (no mapping)
+
+📌 BORDER CLASSES
+-----------------------------------
+
+📁 .next/dev/static/chunks/node_modules_next_dist_compiled_8ca6b690._.js
+  Line 3104: border-bottom ⚠️  (no mapping)
+  Line 3104: border-box ⚠️  (no mapping)
+  Line 3104: border-color ⚠️  (no mapping)
+  Line 3104: border-horizontal ⚠️  (no mapping)
+  Line 3104: border-left ⚠️  (no mapping)
+  Line 3104: border-radius ⚠️  (no mapping)
+  Line 3104: border-right ⚠️  (no mapping)
+  Line 3104: border-top ⚠️  (no mapping)
+  Line 3104: border-vertical ⚠️  (no mapping)
+  Line 3104: border-width ⚠️  (no mapping)
+
+📁 .next/dev/static/chunks/node_modules_next_dist_compiled_next-devtools_index_1dd7fb59.js
+  Line 1644: border-bottom ⚠️  (no mapping)
+  Line 1644: border-box ⚠️  (no mapping)
+  Line 1644: border-color ⚠️  (no mapping)
+  Line 1644: border-horizontal ⚠️  (no mapping)
+  Line 1644: border-left ⚠️  (no mapping)
+  Line 1644: border-radius ⚠️  (no mapping)
+  Line 1644: border-right ⚠️  (no mapping)
+  Line 1644: border-top ⚠️  (no mapping)
+  Line 1644: border-vertical ⚠️  (no mapping)
+  Line 1644: border-width ⚠️  (no mapping)
+
+📁 app/auth/forgot-password/page.tsx
+  Line 99: border-ferrari ⚠️  (no mapping)
+  Line 99: border-theme ⚠️  (no mapping)
+
+📁 app/auth/reset-password/page.tsx
+  Line 128: border-ferrari ⚠️  (no mapping)
+  Line 128: border-theme ⚠️  (no mapping)
+  Line 156: border-ferrari ⚠️  (no mapping)
+  Line 156: border-theme ⚠️  (no mapping)
+
+📁 app/auth/signin/page.tsx
+  Line 77: border-theme ⚠️  (no mapping)
+  Line 102: border-t ⚠️  (no mapping)
+  Line 102: border-theme ⚠️  (no mapping)
+  Line 122: border-ferrari ⚠️  (no mapping)
+  Line 122: border-theme ⚠️  (no mapping)
+  Line 139: border-ferrari ⚠️  (no mapping)
+  Line 139: border-theme ⚠️  (no mapping)
+  Line 147: border-gray ⚠️  (no mapping)
+
+📁 app/auth/signup/page.tsx
+  Line 186: border-ferrari ⚠️  (no mapping)
+  Line 186: border-theme ⚠️  (no mapping)
+  Line 204: border-ferrari ⚠️  (no mapping)
+  Line 204: border-theme ⚠️  (no mapping)
+  Line 221: border-ferrari ⚠️  (no mapping)
+  Line 221: border-theme ⚠️  (no mapping)
+  Line 239: border-ferrari ⚠️  (no mapping)
+  Line 239: border-theme ⚠️  (no mapping)
+  Line 260: border-ferrari ⚠️  (no mapping)
+  Line 260: border-theme ⚠️  (no mapping)
+  Line 271: border-gray ⚠️  (no mapping)
+
+📁 app/cars/page.tsx
+  Line 345: border-theme ⚠️  (no mapping)
+  Line 364: border-ferrari ⚠️  (no mapping)
+  Line 364: border-theme ⚠️  (no mapping)
+  Line 384: border-t ⚠️  (no mapping)
+  Line 384: border-theme ⚠️  (no mapping)
+  Line 396: border-theme ⚠️  (no mapping)
+  Line 432: border-theme ⚠️  (no mapping)
+  Line 471: border-theme ⚠️  (no mapping)
+
+📁 app/cars/[id]/error.tsx
+  Line 85: border-gray ⚠️  (no mapping)
+  Line 100: border-t ⚠️  (no mapping)
+  Line 100: border-theme ⚠️  (no mapping)
+
+📁 app/cars/[id]/loading.tsx
+  Line 7: border-b ⚠️  (no mapping)
+
+📁 app/cars/[id]/page.tsx
+  Line 87: border-b ⚠️  (no mapping)
+  Line 87: border-theme/60 ⚠️  (no mapping)
+  Line 146: border-ferrari ⚠️  (no mapping)
+  Line 146: border-theme ⚠️  (no mapping)
+  Line 165: border-theme ⚠️  (no mapping)
+  Line 171: border-theme ⚠️  (no mapping)
+  Line 177: border-theme ⚠️  (no mapping)
+  Line 181: border-theme ⚠️  (no mapping)
+  Line 185: border-theme ⚠️  (no mapping)
+  Line 205: border-theme ⚠️  (no mapping)
+  Line 258: border-theme ⚠️  (no mapping)
+  Line 268: border-theme ⚠️  (no mapping)
+  Line 283: border-theme ⚠️  (no mapping)
+  Line 308: border-theme ⚠️  (no mapping)
+  Line 321: border-t ⚠️  (no mapping)
+  Line 321: border-theme ⚠️  (no mapping)
+  Line 352: border-theme ⚠️  (no mapping)
+  Line 372: border-theme ⚠️  (no mapping)
+
+📁 app/contact/page.tsx
+  Line 228: border-ferrari ⚠️  (no mapping)
+  Line 228: border-theme ⚠️  (no mapping)
+  Line 243: border-ferrari ⚠️  (no mapping)
+  Line 243: border-theme ⚠️  (no mapping)
+  Line 259: border-ferrari ⚠️  (no mapping)
+  Line 259: border-theme ⚠️  (no mapping)
+  Line 273: border-ferrari ⚠️  (no mapping)
+  Line 273: border-theme ⚠️  (no mapping)
+  Line 295: border-ferrari ⚠️  (no mapping)
+  Line 295: border-theme ⚠️  (no mapping)
+
+📁 app/cookies/page.tsx
+  Line 89: border-gray ⚠️  (no mapping)
+  Line 89: border-white → border-light
+  Line 113: border-gray ⚠️  (no mapping)
+  Line 113: border-white → border-light
+  Line 118: border-t ⚠️  (no mapping)
+  Line 121: border-gray ⚠️  (no mapping)
+
+📁 app/faq/page.tsx
+  Line 141: border-ferrari ⚠️  (no mapping)
+  Line 141: border-theme ⚠️  (no mapping)
+  Line 153: border-theme ⚠️  (no mapping)
+  Line 172: border-t ⚠️  (no mapping)
+  Line 172: border-theme ⚠️  (no mapping)
+  Line 201: border-theme ⚠️  (no mapping)
+  Line 216: border-theme ⚠️  (no mapping)
+  Line 257: border-ferrari ⚠️  (no mapping)
+
+📁 app/privacy/page.tsx
+  Line 37: border-ferrari ⚠️  (no mapping)
+
+📁 app/profile/page.tsx
+  Line 164: border-green ⚠️  (no mapping)
+  Line 171: border-red ⚠️  (no mapping)
+  Line 262: border-ferrari ⚠️  (no mapping)
+  Line 262: border-theme ⚠️  (no mapping)
+  Line 275: border-ferrari ⚠️  (no mapping)
+  Line 275: border-theme ⚠️  (no mapping)
+  Line 301: border-gray ⚠️  (no mapping)
+
+📁 app/recently-viewed/page.tsx
+  Line 64: border-red ⚠️  (no mapping)
+
+📁 app/terms/page.tsx
+  Line 37: border-ferrari ⚠️  (no mapping)
+  Line 317: border-2 ⚠️  (no mapping)
+  Line 317: border-ferrari ⚠️  (no mapping)
+
+📁 components/cars/CarCard.tsx
+  Line 116: border-t ⚠️  (no mapping)
+  Line 116: border-theme ⚠️  (no mapping)
+
+📁 components/cars/ComparisonTable.tsx
+  Line 143: border-theme ⚠️  (no mapping)
+  Line 254: border-theme ⚠️  (no mapping)
+  Line 256: border-b ⚠️  (no mapping)
+  Line 303: border-ferrari ⚠️  (no mapping)
+
+📁 components/cars/CostCalculator.tsx
+  Line 57: border-t ⚠️  (no mapping)
+  Line 57: border-theme ⚠️  (no mapping)
+  Line 58: border-b ⚠️  (no mapping)
+  Line 58: border-dashed ⚠️  (no mapping)
+  Line 65: border-b ⚠️  (no mapping)
+  Line 65: border-dashed ⚠️  (no mapping)
+  Line 72: border-b ⚠️  (no mapping)
+  Line 72: border-dashed ⚠️  (no mapping)
+  Line 79: border-b ⚠️  (no mapping)
+  Line 79: border-dashed ⚠️  (no mapping)
+  Line 86: border-b ⚠️  (no mapping)
+  Line 86: border-dashed ⚠️  (no mapping)
+  Line 109: border-t ⚠️  (no mapping)
+
+📁 components/cars/FilterSidebar.tsx
+  Line 447: border-theme ⚠️  (no mapping)
+  Line 458: border-theme ⚠️  (no mapping)
+  Line 490: border-b ⚠️  (no mapping)
+  Line 490: border-theme ⚠️  (no mapping)
+  Line 535: border-theme ⚠️  (no mapping)
+  Line 668: border-ferrari ⚠️  (no mapping)
+  Line 668: border-theme ⚠️  (no mapping)
+  Line 693: border-ferrari ⚠️  (no mapping)
+  Line 693: border-theme ⚠️  (no mapping)
+  Line 749: border-2 ⚠️  (no mapping)
+  Line 793: border-theme ⚠️  (no mapping)
+  Line 800: border-theme ⚠️  (no mapping)
+  Line 884: border-t ⚠️  (no mapping)
+  Line 884: border-theme ⚠️  (no mapping)
+
+📁 components/cars/WarrantyInfo.tsx
+  Line 86: border-t ⚠️  (no mapping)
+  Line 86: border-theme ⚠️  (no mapping)
+
+📁 components/cars/WarrantyShowcase.tsx
+  Line 20: border-green ⚠️  (no mapping)
+
+📁 components/forms/ContactForm.tsx
+  Line 88: border-ferrari ⚠️  (no mapping)
+  Line 88: border-theme ⚠️  (no mapping)
+  Line 99: border-ferrari ⚠️  (no mapping)
+  Line 99: border-theme ⚠️  (no mapping)
+  Line 110: border-ferrari ⚠️  (no mapping)
+  Line 110: border-theme ⚠️  (no mapping)
+  Line 121: border-ferrari ⚠️  (no mapping)
+  Line 121: border-theme ⚠️  (no mapping)
+
+📁 components/home/FeaturedCars.tsx
+  Line 277: border-ferrari ⚠️  (no mapping)
+
+📁 components/kosovo/ShippingCalculator.tsx
+  Line 28: border-ferrari ⚠️  (no mapping)
+  Line 28: border-theme ⚠️  (no mapping)
+
+📁 components/layout/Footer.tsx
+  Line 158: border-gray ⚠️  (no mapping)
+  Line 158: border-t ⚠️  (no mapping)
+  Line 185: border-gray ⚠️  (no mapping)
+  Line 185: border-t ⚠️  (no mapping)
+
+📁 components/layout/Header.tsx
+  Line 78: border-medium ⚠️  (no mapping)
+  Line 104: border-medium ⚠️  (no mapping)
+  Line 104: border-t ⚠️  (no mapping)
+  Line 118: border-ferrari ⚠️  (no mapping)
+  Line 154: border-medium ⚠️  (no mapping)
+  Line 155: border-b ⚠️  (no mapping)
+  Line 155: border-medium ⚠️  (no mapping)
+  Line 205: border-medium ⚠️  (no mapping)
+  Line 205: border-t ⚠️  (no mapping)
+  Line 208: border-ferrari ⚠️  (no mapping)
+  Line 228: border-medium ⚠️  (no mapping)
+  Line 228: border-t ⚠️  (no mapping)
+
+📁 components/search/SearchBar.tsx
+  Line 80: border-medium ⚠️  (no mapping)
+  Line 102: border-medium ⚠️  (no mapping)
+
+📁 components/ui/CookieBanner.tsx
+  Line 43: border-t ⚠️  (no mapping)
+  Line 43: border-theme ⚠️  (no mapping)
+  Line 126: border-2 ⚠️  (no mapping)
+  Line 126: border-ferrari ⚠️  (no mapping)
+
+📁 components/ui/FloatingShareBar.tsx
+  Line 37: border-theme ⚠️  (no mapping)
+
+📁 components/ui/Newsletter.tsx
+  Line 70: border-ferrari ⚠️  (no mapping)
+  Line 70: border-white/20 ⚠️  (no mapping)
+  Line 78: border-ferrari ⚠️  (no mapping)
+  Line 78: border-white/20 ⚠️  (no mapping)
+
+📁 components/ui/Pagination.tsx
+  Line 15: border-theme ⚠️  (no mapping)
+  Line 28: border-theme ⚠️  (no mapping)
+
+📁 components/ui/SocialLinks.tsx
+  Line 72: border-4 ⚠️  (no mapping)
+  Line 72: border-t ⚠️  (no mapping)
+  Line 72: border-transparent ⚠️  (no mapping)
+  Line 88: border-theme ⚠️  (no mapping)
+
+📌 RING CLASSES
+-----------------------------------
+
+📁 .next/dev/static/chunks/node_modules_next_dist_compiled_8ca6b690._.js
+  Line 3104: ring-default ⚠️  (no mapping)
+  Line 3104: ring-indicator ⚠️  (no mapping)
+  Line 3104: ring-intent ⚠️  (no mapping)
+
+📁 .next/dev/static/chunks/node_modules_next_dist_compiled_next-devtools_index_1dd7fb59.js
+  Line 1644: ring-default ⚠️  (no mapping)
+  Line 1644: ring-indicator ⚠️  (no mapping)
+  Line 1644: ring-intent ⚠️  (no mapping)
+
+📁 app/auth/forgot-password/page.tsx
+  Line 99: ring-1 ⚠️  (no mapping)
+  Line 99: ring-ferrari ⚠️  (no mapping)
+
+📁 app/auth/reset-password/page.tsx
+  Line 128: ring-1 ⚠️  (no mapping)
+  Line 128: ring-ferrari ⚠️  (no mapping)
+  Line 156: ring-1 ⚠️  (no mapping)
+  Line 156: ring-ferrari ⚠️  (no mapping)
+
+📁 app/auth/signin/page.tsx
+  Line 122: ring-1 ⚠️  (no mapping)
+  Line 122: ring-ferrari ⚠️  (no mapping)
+  Line 139: ring-1 ⚠️  (no mapping)
+  Line 139: ring-ferrari ⚠️  (no mapping)
+  Line 147: ring-ferrari ⚠️  (no mapping)
+
+📁 app/auth/signup/page.tsx
+  Line 186: ring-1 ⚠️  (no mapping)
+  Line 186: ring-ferrari ⚠️  (no mapping)
+  Line 204: ring-1 ⚠️  (no mapping)
+  Line 204: ring-ferrari ⚠️  (no mapping)
+  Line 221: ring-1 ⚠️  (no mapping)
+  Line 221: ring-ferrari ⚠️  (no mapping)
+  Line 239: ring-1 ⚠️  (no mapping)
+  Line 239: ring-ferrari ⚠️  (no mapping)
+  Line 260: ring-1 ⚠️  (no mapping)
+  Line 260: ring-ferrari ⚠️  (no mapping)
+  Line 271: ring-ferrari ⚠️  (no mapping)
+
+📁 app/contact/page.tsx
+  Line 228: ring-1 ⚠️  (no mapping)
+  Line 228: ring-ferrari ⚠️  (no mapping)
+  Line 243: ring-1 ⚠️  (no mapping)
+  Line 243: ring-ferrari ⚠️  (no mapping)
+  Line 259: ring-1 ⚠️  (no mapping)
+  Line 259: ring-ferrari ⚠️  (no mapping)
+  Line 273: ring-1 ⚠️  (no mapping)
+  Line 273: ring-ferrari ⚠️  (no mapping)
+  Line 295: ring-1 ⚠️  (no mapping)
+  Line 295: ring-ferrari ⚠️  (no mapping)
+
+📁 app/cookies/page.tsx
+  Line 89: ring-4 ⚠️  (no mapping)
+  Line 89: ring-ferrari ⚠️  (no mapping)
+  Line 113: ring-4 ⚠️  (no mapping)
+  Line 113: ring-ferrari ⚠️  (no mapping)
+
+📁 app/faq/page.tsx
+  Line 141: ring-2 ⚠️  (no mapping)
+  Line 141: ring-ferrari ⚠️  (no mapping)
+
+📁 app/profile/page.tsx
+  Line 262: ring-1 ⚠️  (no mapping)
+  Line 262: ring-ferrari ⚠️  (no mapping)
+  Line 275: ring-1 ⚠️  (no mapping)
+  Line 275: ring-ferrari ⚠️  (no mapping)
+
+📁 components/cars/ImageGallery.tsx
+  Line 74: ring-2 ⚠️  (no mapping)
+  Line 74: ring-ferrari ⚠️  (no mapping)
+
+📁 components/ui/ScrollToTop.tsx
+  Line 38: ring-2 ⚠️  (no mapping)
+  Line 38: ring-ferrari ⚠️  (no mapping)
+  Line 38: ring-offset ⚠️  (no mapping)
+
+📌 OUTLINE CLASSES
+-----------------------------------
+
+📁 .next/dev/static/chunks/node_modules_next_dist_compiled_8ca6b690._.js
+  Line 3104: outline-offset ⚠️  (no mapping)
+
+📁 .next/dev/static/chunks/node_modules_next_dist_compiled_next-devtools_index_1dd7fb59.js
+  Line 1644: outline-offset ⚠️  (no mapping)
+
+📁 app/auth/forgot-password/page.tsx
+  Line 99: outline-none ⚠️  (no mapping)
+
+📁 app/auth/reset-password/page.tsx
+  Line 128: outline-none ⚠️  (no mapping)
+  Line 156: outline-none ⚠️  (no mapping)
+
+📁 app/auth/signin/page.tsx
+  Line 122: outline-none ⚠️  (no mapping)
+  Line 139: outline-none ⚠️  (no mapping)
+
+📁 app/auth/signup/page.tsx
+  Line 186: outline-none ⚠️  (no mapping)
+  Line 204: outline-none ⚠️  (no mapping)
+  Line 221: outline-none ⚠️  (no mapping)
+  Line 239: outline-none ⚠️  (no mapping)
+  Line 260: outline-none ⚠️  (no mapping)
+
+📁 app/cars/page.tsx
+  Line 364: outline-none ⚠️  (no mapping)
+
+📁 app/contact/page.tsx
+  Line 228: outline-none ⚠️  (no mapping)
+  Line 243: outline-none ⚠️  (no mapping)
+  Line 259: outline-none ⚠️  (no mapping)
+  Line 273: outline-none ⚠️  (no mapping)
+  Line 295: outline-none ⚠️  (no mapping)
+
+📁 app/cookies/page.tsx
+  Line 89: outline-none ⚠️  (no mapping)
+  Line 113: outline-none ⚠️  (no mapping)
+
+📁 app/faq/page.tsx
+  Line 141: outline-none ⚠️  (no mapping)
+
+📁 app/profile/page.tsx
+  Line 262: outline-none ⚠️  (no mapping)
+  Line 275: outline-none ⚠️  (no mapping)
+
+📁 components/cars/FilterSidebar.tsx
+  Line 668: outline-none ⚠️  (no mapping)
+  Line 693: outline-none ⚠️  (no mapping)
+
+📁 components/forms/ContactForm.tsx
+  Line 88: outline-none ⚠️  (no mapping)
+  Line 99: outline-none ⚠️  (no mapping)
+  Line 110: outline-none ⚠️  (no mapping)
+  Line 121: outline-none ⚠️  (no mapping)
+
+📁 components/kosovo/ShippingCalculator.tsx
+  Line 28: outline-none ⚠️  (no mapping)
+
+📁 components/ui/Newsletter.tsx
+  Line 70: outline-none ⚠️  (no mapping)
+  Line 78: outline-none ⚠️  (no mapping)
+
+📁 components/ui/ScrollToTop.tsx
+  Line 38: outline-none ⚠️  (no mapping)
+
+📌 SHADOW CLASSES
+-----------------------------------
+
+📁 .next/dev/server/chunks/ssr/_bedfd2ad._.js
+  Line 126: shadow-md → shadow-md
+
+📁 .next/dev/server/chunks/ssr/_d93f6e9f._.js
+  Line 150: shadow-md → shadow-md
+
+📁 .next/dev/static/chunks/node_modules_next_dist_compiled_8ca6b690._.js
+  Line 3104: shadow-menu ⚠️  (no mapping)
+  Line 3104: shadow-small ⚠️  (no mapping)
+
+📁 .next/dev/static/chunks/node_modules_next_dist_compiled_next-devtools_index_1dd7fb59.js
+  Line 1644: shadow-menu ⚠️  (no mapping)
+  Line 1644: shadow-small ⚠️  (no mapping)
+
+📁 .next/dev/static/chunks/_4add3a32._.js
+  Line 130: shadow-md → shadow-md
+
+📁 .next/dev/static/chunks/_dc253908._.js
+  Line 158: shadow-md → shadow-md
+
+📁 app/account/page.tsx
+  Line 36: shadow-md → shadow-md
+  Line 58: shadow-md → shadow-md
+  Line 91: shadow-md → shadow-md
+
+📁 app/auth/forgot-password/page.tsx
+  Line 57: shadow-md → shadow-md
+
+📁 app/auth/reset-password/page.tsx
+  Line 77: shadow-md → shadow-md
+  Line 100: shadow-md → shadow-md
+
+📁 app/auth/signin/page.tsx
+  Line 56: shadow-md → shadow-md
+
+📁 app/auth/signup/page.tsx
+  Line 116: shadow-md → shadow-md
+  Line 149: shadow-md → shadow-md
+
+📁 app/brands/page.tsx
+  Line 18: shadow-lg → shadow-lg
+  Line 18: shadow-md → shadow-md
+
+📁 app/cars/page.tsx
+  Line 345: shadow-sm → shadow-sm
+  Line 396: shadow-sm → shadow-sm
+
+📁 app/cars/[id]/error.tsx
+  Line 39: shadow-md → shadow-md
+
+📁 app/cars/[id]/loading.tsx
+  Line 34: shadow-md → shadow-md
+  Line 44: shadow-md → shadow-md
+  Line 56: shadow-md → shadow-md
+  Line 75: shadow-md → shadow-md
+  Line 85: shadow-md → shadow-md
+  Line 97: shadow-md → shadow-md
+  Line 107: shadow-md → shadow-md
+
+📁 app/cars/[id]/page.tsx
+  Line 111: shadow-md → shadow-md
+  Line 165: shadow-sm → shadow-sm
+  Line 171: shadow-md → shadow-md
+  Line 171: shadow-sm → shadow-sm
+  Line 177: shadow-md → shadow-md
+  Line 177: shadow-sm → shadow-sm
+  Line 181: shadow-md → shadow-md
+  Line 181: shadow-sm → shadow-sm
+  Line 185: shadow-md → shadow-md
+  Line 185: shadow-sm → shadow-sm
+  Line 205: shadow-sm → shadow-sm
+  Line 258: shadow-sm → shadow-sm
+  Line 268: shadow-sm → shadow-sm
+  Line 283: shadow-sm → shadow-sm
+  Line 308: shadow-lg → shadow-lg
+  Line 352: shadow-sm → shadow-sm
+  Line 372: shadow-sm → shadow-sm
+
+📁 app/contact/page.tsx
+  Line 66: shadow-md → shadow-md
+  Line 121: shadow-lg → shadow-lg
+  Line 121: shadow-md → shadow-md
+  Line 137: shadow-lg → shadow-lg
+  Line 137: shadow-md → shadow-md
+  Line 153: shadow-lg → shadow-lg
+  Line 153: shadow-md → shadow-md
+  Line 166: shadow-lg → shadow-lg
+  Line 166: shadow-md → shadow-md
+  Line 188: shadow-md → shadow-md
+  Line 213: shadow-md → shadow-md
+
+📁 app/cookies/page.tsx
+  Line 51: shadow-md → shadow-md
+
+📁 app/faq/page.tsx
+  Line 141: shadow-sm → shadow-sm
+  Line 153: shadow-sm → shadow-sm
+  Line 216: shadow-sm → shadow-sm
+
+📁 app/how-it-works/page.tsx
+  Line 87: shadow-md → shadow-md
+  Line 103: shadow-md → shadow-md
+  Line 108: shadow-md → shadow-md
+  Line 113: shadow-md → shadow-md
+
+📁 app/privacy/page.tsx
+  Line 68: shadow-md → shadow-md
+  Line 93: shadow-md → shadow-md
+  Line 119: shadow-md → shadow-md
+  Line 162: shadow-md → shadow-md
+  Line 179: shadow-md → shadow-md
+  Line 205: shadow-md → shadow-md
+
+📁 app/profile/page.tsx
+  Line 141: shadow-md → shadow-md
+  Line 180: shadow-md → shadow-md
+  Line 315: shadow-md → shadow-md
+  Line 364: shadow-md → shadow-md
+
+📁 app/profile/settings/page.tsx
+  Line 43: shadow-md → shadow-md
+
+📁 app/saved/page.tsx
+  Line 64: shadow-md → shadow-md
+  Line 117: shadow-md → shadow-md
+
+📁 app/terms/page.tsx
+  Line 52: shadow-md → shadow-md
+  Line 83: shadow-md → shadow-md
+  Line 112: shadow-md → shadow-md
+  Line 155: shadow-md → shadow-md
+  Line 186: shadow-md → shadow-md
+  Line 214: shadow-md → shadow-md
+  Line 234: shadow-md → shadow-md
+  Line 246: shadow-md → shadow-md
+  Line 259: shadow-md → shadow-md
+  Line 282: shadow-md → shadow-md
+
+📁 components/cars/CarCard.tsx
+  Line 48: shadow-md → shadow-md
+  Line 48: shadow-xl → shadow-xl
+  Line 67: shadow-md → shadow-md
+
+📁 components/cars/CarSpecs.tsx
+  Line 26: shadow-md → shadow-md
+
+📁 components/cars/ComparisonTable.tsx
+  Line 188: shadow-md → shadow-md
+
+📁 components/cars/CostCalculator.tsx
+  Line 25: shadow-md → shadow-md
+
+📁 components/cars/FilterSidebar.tsx
+  Line 447: shadow-lg → shadow-lg
+  Line 458: shadow-lg → shadow-lg
+
+📁 components/cars/ImageGallery.tsx
+  Line 26: shadow-md → shadow-md
+
+📁 components/cars/RecentlyViewed.tsx
+  Line 39: shadow-md → shadow-md
+  Line 69: shadow-md → shadow-md
+  Line 74: shadow-md → shadow-md
+
+📁 components/cars/SellerInfo.tsx
+  Line 30: shadow-md → shadow-md
+
+📁 components/cars/WarrantyInfo.tsx
+  Line 20: shadow-md → shadow-md
+  Line 33: shadow-md → shadow-md
+
+📁 components/cars/WarrantyShowcase.tsx
+  Line 27: shadow-sm → shadow-sm
+  Line 38: shadow-sm → shadow-sm
+
+📁 components/home/FeaturedCars.tsx
+  Line 306: shadow-lg → shadow-lg
+  Line 310: shadow-lg → shadow-lg
+  Line 314: shadow-lg → shadow-lg
+
+📁 components/kosovo/CustomsInfo.tsx
+  Line 5: shadow-md → shadow-md
+
+📁 components/kosovo/ShippingCalculator.tsx
+  Line 16: shadow-md → shadow-md
+
+📁 components/layout/Header.tsx
+  Line 64: shadow-md → shadow-md
+  Line 73: shadow-lg → shadow-lg
+  Line 73: shadow-md → shadow-md
+  Line 78: shadow-xl → shadow-xl
+  Line 124: shadow-lg → shadow-lg
+  Line 124: shadow-md → shadow-md
+  Line 154: shadow-xl → shadow-xl
+  Line 215: shadow-md → shadow-md
+
+📁 components/matchmaker/MatchmakerWidget.tsx
+  Line 256: shadow-lg → shadow-lg
+
+📁 components/search/SearchBar.tsx
+  Line 102: shadow-xl → shadow-xl
+
+📁 components/ui/CookieBanner.tsx
+  Line 43: shadow-2xl → shadow-2xl
+
+📁 components/ui/FloatingShareBar.tsx
+  Line 37: shadow-xl → shadow-xl
+  Line 57: shadow-lg → shadow-lg
+
+📁 components/ui/LoadingSkeleton.tsx
+  Line 20: shadow-md → shadow-md
+
+📁 components/ui/ScrollToTop.tsx
+  Line 38: shadow-lg → shadow-lg
+
+📁 components/ui/SocialLinks.tsx
+  Line 64: shadow-lg → shadow-lg
+
+📁 components/ui/Toast.tsx
+  Line 38: shadow-lg → shadow-lg
+
+📌 DIVIDE CLASSES
+-----------------------------------
+
+📁 app/faq/page.tsx
+  Line 172: divide-y ⚠️  (no mapping)
+
+📁 app/profile/settings/page.tsx
+  Line 43: divide-y ⚠️  (no mapping)
+
+📁 components/cars/ComparisonTable.tsx
+  Line 144: divide-gray ⚠️  (no mapping)
+  Line 144: divide-y ⚠️  (no mapping)
+  Line 197: divide-gray ⚠️  (no mapping)
+  Line 197: divide-y ⚠️  (no mapping)
+
+📌 PLACEHOLDER CLASSES
+-----------------------------------
+
+📁 components/ui/Newsletter.tsx
+  Line 70: placeholder-gray ⚠️  (no mapping)
+  Line 78: placeholder-gray ⚠️  (no mapping)
+
+==================================================
+📊 SUMMARY STATISTICS
+==================================================
+
+Top 20 most used background classes:
+    111 bg-secondary
+    110 bg-surface
+     92 bg-tertiary
+     65 bg-ferrari-red
+     26 bg-ferrari-red/10
+     14 bg-red-50
+     14 bg-gradient-to-r
+     11 bg-ferrari-dark
+      8 bg-gradient-to-br
+      7 bg-green-50
+      7 bg-green-100
+      6 bg-yellow-50
+      6 bg-surface/10
+      6 bg-primary/50
+      6 bg-blue-50
+      5 bg-ferrari-red/5
+      4 bg-surface/5
+      4 bg-primary
+      3 bg-white/20
+      3 bg-surface/20
+
+Top 20 most used text classes:
+    261 text-ferrari-red
+    186 text-sm
+    124 text-gray-600
+    105 text-xs
+    104 text-gray-500
+     80 text-white
+     59 text-gray-400
+     58 text-center
+     36 text-xl
+     35 text-gray-700
+     32 text-2xl
+     29 text-3xl
+     17 text-lg
+     12 text-red-600
+     12 text-red-500
+     12 text-green-500
+     11 text-secondary
+     11 text-4xl
+      9 text-left
+      8 text-green-600
+
+Top 20 most used border classes:
+     73 border-theme
+     39 border-ferrari-red
+     16 border-t
+     11 border-b
+      9 border-medium
+      8 border-gray-300
+      5 border-dashed
+      4 border-ferrari-red/20
+      3 border-2
+      2 border-white/20
+      2 border-white
+      2 border-transparent
+      2 border-ferrari-red/30
+      1 border-theme/60
+      1 border-t-gray-900
+      1 border-t-0
+      1 border-red-300
+      1 border-red-200
+      1 border-green-200
+      1 border-green-100
+
+==================================================
+🎨 THEME VARIABLES MAPPING GUIDE
+==================================================
+
+Your Theme Variables:
+
+🏠 BACKGROUNDS:
+  bg-primary     → Main page background (#0A0C10 dark / #F8F9FC light)
+  bg-secondary   → Card backgrounds (#14181F dark / #FFFFFF light)
+  bg-tertiary    → Hover states, subtle backgrounds (#1E232B dark / #F1F4F9 light)
+  bg-elevated    → Dropdowns, modals (#2A2F3A dark / #FFFFFF light)
+  bg-surface     → Surface level 1 (#1A1E26 dark / #FFFFFF light)
+  bg-surface-2   → Surface level 2 (#252B34 dark / #F8FAFE light)
+  bg-inset       → Inset backgrounds (#0F1217 dark / #EFF2F6 light)
+
+📝 TEXT:
+  text-primary    → Primary text (white / #1A2634)
+  text-secondary  → Secondary text (#CBD5E0 / #4A5568)
+  text-tertiary   → Tertiary text (#A0B3C9 / #6B7A8F)
+  text-muted      → Muted text (#7F8FA4 / #8F9EB0)
+  text-inverse    → Inverse text (#1A2634 / #FFFFFF)
+  text-disabled   → Disabled text (#4A5568 / #BFC8D6)
+
+🖼️ BORDERS:
+  border-light    → Light borders (#2A2F38 / #E9ECF0)
+  border-medium   → Default borders (#363D48 / #DCE1E8)
+  border-strong   → Strong borders (#414A58 / #C9D0D9)
+
+🎯 STATUS COLORS:
+  success-bg      → #1C2F23 / #E8F3E9
+  success-text    → #9AE6B4 / #1E7B4C
+  success-border  → #2F4A3A / #A3D8A7
+  
+  warning-bg      → #332A1C / #FEF3E2
+  warning-text    → #FBD38D / #B45B0F
+  warning-border  → #5A4A2A / #FFE4B8
+  
+  error-bg        → #321F22 / #FEF0F0
+  error-text      → #FEB2B2 / #C73B3B
+  error-border    → #5A2E33 / #FFC9C9
+  
+  info-bg         → #1C2A3F / #E8F0FE
+  info-text       → #90CDF4 / #1A5F9C
+  info-border     → #2A3F5A / #BAC8E0
+
+🔥 FERRARI RED:
+  ferrari-red     → #FF2800 (primary accent)
+  ferrari-dark    → #CC2000 (hover states)
+  ferrari-light   → #FF4D2E (highlights)
+  ferrari-glow    → #FF6B4A (glow effects)
+
+GRADIENTS:
+  Use from-ferrari-red to-ferrari-dark for primary gradients
+  Use from-primary to-secondary for subtle backgrounds
+
+Skeleton Loading Colors:
+  Light Theme:
+    - bg-skeleton: #EFF2F6 (instead of gray-200)
+    - animate-pulse: use bg-tertiary
+  
+  Dark Theme:
+    - bg-skeleton: #252B34 (instead of gray-700)
+    - animate-pulse: use bg-surface-2
+
+==================================================
+🦴 SKELETON LOADING COMPONENTS
+==================================================
+
+📁 app/account/page.tsx
+23:                    <div className="animate-pulse">
+
+📁 app/cars/page.tsx
+298:                    <p className="text-sm text-ferrari-red mt-1 animate-pulse">
+382:                                <div key={i} className="animate-pulse">
+
+📁 app/cars/[id]/error.tsx
+28:                        <div className="absolute -top-2 -right-2 w-10 h-10 bg-ferrari-red rounded-full flex items-center justify-center text-white font-bold text-sm animate-pulse">
+
+📁 app/cars/[id]/loading.tsx
+9:                    <div className="flex items-center space-x-2 animate-pulse">
+21:                <div className="mb-6 animate-pulse">
+35:                            <div className="h-96 bg-tertiary animate-pulse"></div>
+38:                                    <div key={i} className="h-20 bg-tertiary rounded animate-pulse"></div>
+48:                                        <div className="h-6 bg-tertiary rounded w-24 mx-auto mb-2 animate-pulse"></div>
+
+📁 app/compare/page.tsx
+85:                <div className="animate-pulse">
+
+📁 app/profile/page.tsx
+139:    //                 <div className="animate-pulse">
+
+📁 app/profile/settings/page.tsx
+22:                <div className="animate-pulse">
+
+📁 app/recently-viewed/page.tsx
+31:                <div className="animate-pulse">
+
+📁 app/saved/page.tsx
+50:                <div className="h-8 bg-tertiary rounded w-64 mb-8 animate-pulse"></div>
+
+📁 components/cars/FilterSidebar.tsx
+448:                <div className="animate-pulse space-y-4">
+
+📁 components/cars/SimilarCars.tsx
+44:                        <div key={i} className="animate-pulse">
+
+📁 components/cars/WarrantyShowcase.tsx
+22:                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+
+📁 components/home/FeaturedCars.tsx
+251:                    <div className="h-6 w-24 bg-tertiary rounded animate-pulse"></div>
+255:                        <div key={i} className="animate-pulse">
+
+📁 components/matchmaker/MatchmakerWidget.tsx
+179:                        <div key={i} className="animate-pulse">
+
+📁 components/ui/LoadingSkeleton.tsx
+3:// Car card skeleton
+5:    <div className="animate-pulse">
+18:// Filter skeleton
+
+
+==================================================
+✅ EXTRACTION COMPLETE
+Results saved to: color_classes_analysis.txt
