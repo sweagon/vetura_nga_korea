@@ -1,6 +1,6 @@
 {
     "name": "Formula Export",
-    "short_name": "FormulaExport",
+    "short_name": "formula-export",
     "description": "Import makina nga Korea në Kosovë",
     "start_url": "/",
     "display": "standalone",

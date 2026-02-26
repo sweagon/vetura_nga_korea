@@ -16,7 +16,7 @@ export default function SocialLinks({ variant = 'inline', showLabels = false }: 
         {
             name: 'Facebook',
             icon: Facebook,
-            url: 'https://facebook.com/formulaexport.ks',
+            url: 'https://facebook.com/formula-export.ks',
             color: 'hover:bg-[#1877f2]',
             followers: '500+',
             label: 'Ndani me miq'
@@ -24,7 +24,7 @@ export default function SocialLinks({ variant = 'inline', showLabels = false }: 
         {
             name: 'Instagram',
             icon: Instagram,
-            url: 'https://instagram.com/formulaexport.ks',
+            url: 'https://instagram.com/formula-export.ks',
             color: 'hover:bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcaf45]',
             followers: '300+',
             label: 'Foto të reja çdo ditë'
@@ -40,7 +40,7 @@ export default function SocialLinks({ variant = 'inline', showLabels = false }: 
         {
             name: 'YouTube',
             icon: Youtube,
-            url: 'https://youtube.com/@formulaexport',
+            url: 'https://youtube.com/@formula-export',
             color: 'hover:bg-[#FF0000]',
             followers: '100+',
             label: 'Video review të makinave'

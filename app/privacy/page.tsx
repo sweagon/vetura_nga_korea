@@ -213,8 +213,8 @@ export default function PrivacyPage() {
                     <div className="bg-secondary p-4 rounded-lg space-y-2">
                         <div className="flex items-center">
                             <Mail size={16} className="text-ferrari-red mr-3" />
-                            <a href="mailto:privacy@formulaexport.com" className="text-ferrari-red hover:underline">
-                                privacy@formulaexport.com
+                            <a href="mailto:privacy@formula-export.com" className="text-ferrari-red hover:underline">
+                                privacy@formula-export.com
                             </a>
                         </div>
                         <div className="flex items-center">

@@ -1,8 +1,25 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
-  reactCompiler: true,
+// next.config.js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    domains: ['formula-export.com'],
+  },
+  // Optional: Redirect from old domain if you still own it
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'formula-export.com',
+          },
+        ],
+        destination: 'https://formula-export.com/:path*',
+        permanent: true,
+      },
+    ];
+  },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

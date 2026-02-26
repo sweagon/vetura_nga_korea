@@ -77,8 +77,8 @@ export default function Footer() {
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-500">Email</p>
-                                    <a href="mailto:info@formulaexport.com" className="hover:text-ferrari-red transition">
-                                        info@formulaexport.com
+                                    <a href="mailto:info@formula-export.com" className="hover:text-ferrari-red transition">
+                                        info@formula-export.com
                                     </a>
                                 </div>
                             </div>

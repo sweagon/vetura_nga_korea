@@ -27,7 +27,7 @@ interface StructuredDataProps {
 
 export default function StructuredData({ type, data, breadcrumbs }: StructuredDataProps) {
     const pathname = usePathname();
-    const baseUrl = 'https://formulaexport.com';
+    const baseUrl = 'https://formula-export.com';
     const fullUrl = `${baseUrl}${pathname}`;
 
     const getStructuredData = () => {
@@ -53,8 +53,8 @@ export default function StructuredData({ type, data, breadcrumbs }: StructuredDa
                         availableLanguage: ['Albanian', 'English', 'Serbian']
                     },
                     sameAs: [
-                        'https://facebook.com/formulaexport',
-                        'https://instagram.com/formulaexport'
+                        'https://facebook.com/formula-export',
+                        'https://instagram.com/formula-export'
                     ]
                 };
 

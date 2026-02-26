@@ -24,7 +24,7 @@ export default function ShareButtons({
     const [copied, setCopied] = useState(false);
     const { showToast } = useToast();
 
-    const fullUrl = url.startsWith('http') ? url : `https://formulaexport.com${url}`;
+    const fullUrl = url.startsWith('http') ? url : `https://formula-export.com${url}`;
     const encodedUrl = encodeURIComponent(fullUrl);
     const encodedTitle = encodeURIComponent(title);
     const encodedDescription = encodeURIComponent(description);

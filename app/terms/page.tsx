@@ -267,8 +267,8 @@ export default function TermsPage() {
                     <div className="bg-secondary p-4 rounded-lg space-y-2">
                         <div className="flex items-center">
                             <span className="font-medium w-24">Email:</span>
-                            <a href="mailto:legal@formulaexport.com" className="text-ferrari-red hover:underline">
-                                legal@formulaexport.com
+                            <a href="mailto:legal@formula-export.com" className="text-ferrari-red hover:underline">
+                                legal@formula-export.com
                             </a>
                         </div>
                         <div className="flex items-center">

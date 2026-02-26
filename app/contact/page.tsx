@@ -140,11 +140,11 @@ export default function ContactPage() {
                         </div>
                         <h3 className="font-semibold mb-2">Email</h3>
                         <p className="text-gray-600 mb-3">Na shkruani për pyetje të detajuara</p>
-                        <a href="mailto:info@formulaexport.com" className="text-ferrari-red hover:underline font-medium block">
-                            info@formulaexport.com
+                        <a href="mailto:info@formula-export.com" className="text-ferrari-red hover:underline font-medium block">
+                            info@formula-export.com
                         </a>
-                        <a href="mailto:support@formulaexport.com" className="text-ferrari-red hover:underline font-medium block">
-                            support@formulaexport.com
+                        <a href="mailto:support@formula-export.com" className="text-ferrari-red hover:underline font-medium block">
+                            support@formula-export.com
                         </a>
                         <p className="text-xs text-gray-500 mt-2">Përgjigjem brenda 24 orëve</p>
                     </div>
@@ -241,7 +241,7 @@ export default function ContactPage() {
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                         className="w-full px-4 py-3 border border-theme rounded-lg focus:outline-none focus:border-ferrari-red focus:ring-1 focus:ring-ferrari-red"
-                                        placeholder="sh@formulaexport.com"
+                                        placeholder="sh@formula-export.com"
                                     />
                                 </div>
                             </div>

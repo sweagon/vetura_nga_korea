@@ -11,24 +11,50 @@ import StructuredData from '@/components/seo/StructuredData';
 
 const inter = Inter({ subsets: ['latin'] });
 
-export const metadata: Metadata = {
-  title: 'Formula Export - Makina nga Korea në Kosovë',
-  description: 'Importoni makina cilësore nga Korea me çmime konkurruese. Formula Export ju sjell makinat më të mira direkt në Kosovë.',
-  manifest: '/manifest.json',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: 'Formula Export'
+// app/layout.tsx or app/metadata.ts
+export const metadata = {
+  metadataBase: new URL('https://formula-export.com'),
+  title: {
+    default: 'Formula Export - Makina nga Evropa',
+    template: '%s | Formula Export'
   },
-  icons: {
-    icon: [
-      { url: '/favicon.ico' },
-      { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+  description: 'Blej makina cilësore nga tregjet evropiane. BMW, Audi, Mercedes-Benz dhe shumë të tjera.',
+  keywords: ['makina', 'export', 'ferrari', 'vetura', 'BMW', 'Audi', 'Mercedes'],
+  authors: [{ name: 'Formula Export' }],
+  openGraph: {
+    title: 'Formula Export',
+    description: 'Makina cilësore nga Evropa',
+    url: 'https://formula-export.com',
+    siteName: 'Formula Export',
+    images: [
+      {
+        url: 'https://formula-export.com/og-image.jpg',
+        width: 1200,
+        height: 630,
+      },
     ],
-    apple: [
-      { url: '/apple-touch-icon.png' },
-    ],
+    locale: 'sq_AL',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Formula Export',
+    description: 'Makina cilësore nga Evropa',
+    images: ['https://formula-export.com/twitter-image.jpg'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: 'your-google-verification-code',
   },
 };
 

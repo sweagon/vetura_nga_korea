@@ -230,13 +230,13 @@ export default function FAQPage() {
                                     </div>
                                 </a>
                                 <a
-                                    href="mailto:info@formulaexport.com"
+                                    href="mailto:info@formula-export.com"
                                     className="flex items-center gap-3 p-3 bg-secondary hover:bg-ferrari-red/5 rounded-xl transition"
                                 >
                                     <Mail size={18} className="text-ferrari-red" />
                                     <div>
                                         <p className="text-xs text-gray-500">Email</p>
-                                        <p className="font-medium">info@formulaexport.com</p>
+                                        <p className="font-medium">info@formula-export.com</p>
                                     </div>
                                 </a>
                                 <a

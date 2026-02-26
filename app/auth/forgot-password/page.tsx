@@ -97,7 +97,7 @@ export default function ForgotPasswordPage() {
                                         required
                                         disabled={loading}
                                         className="w-full pl-10 pr-4 py-2 border border-theme rounded-lg focus:outline-none focus:border-ferrari-red focus:ring-1 focus:ring-ferrari-red disabled:bg-secondary disabled:cursor-not-allowed"
-                                        placeholder="sh@formulaexport.com"
+                                        placeholder="sh@formula-export.com"
                                     />
                                 </div>
                             </div>

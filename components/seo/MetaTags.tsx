@@ -27,7 +27,7 @@ export default function MetaTags({
     noIndex = false,
 }: MetaTagsProps) {
     const pathname = usePathname();
-    const fullUrl = url || `https://formulaexport.com${pathname}`;
+    const fullUrl = url || `https://formula-export.com${pathname}`;
     const fullTitle = title.includes('Formula Export') ? title : `${title} | Formula Export`;
 
     return (
@@ -51,7 +51,7 @@ export default function MetaTags({
             <meta property="og:url" content={fullUrl} />
             <meta property="og:title" content={fullTitle} />
             <meta property="og:description" content={description} />
-            <meta property="og:image" content={`https://formulaexport.com${image}`} />
+            <meta property="og:image" content={`https://formula-export.com${image}`} />
             <meta property="og:image:width" content="1200" />
             <meta property="og:image:height" content="630" />
             <meta property="og:site_name" content="Formula Export" />
@@ -62,9 +62,9 @@ export default function MetaTags({
             <meta name="twitter:url" content={fullUrl} />
             <meta name="twitter:title" content={fullTitle} />
             <meta name="twitter:description" content={description} />
-            <meta name="twitter:image" content={`https://formulaexport.com${image}`} />
-            <meta name="twitter:site" content="@FormulaExport" />
-            <meta name="twitter:creator" content="@FormulaExport" />
+            <meta name="twitter:image" content={`https://formula-export.com${image}`} />
+            <meta name="twitter:site" content="@formula-export" />
+            <meta name="twitter:creator" content="@formula-export" />
 
             {/* Article specific */}
             {type === 'article' && publishedTime && (

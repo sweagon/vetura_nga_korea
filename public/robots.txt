@@ -1,5 +1,5 @@
 # robots.txt for Formula Export
-# https://formulaexport.com
+# https://formula-export.com
 
 # Allow all crawlers to access the main site
 User-agent: *
@@ -26,10 +26,10 @@ Disallow: /admin/
 Crawl-delay: 10
 
 # Sitemap location
-Sitemap: https://formulaexport.com/sitemap.xml
+Sitemap: https://formula-export.com/sitemap.xml
 
 # Host
-Host: https://formulaexport.com
+Host: https://formula-export.com
 
 # Specific crawler rules
 User-agent: Googlebot

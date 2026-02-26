@@ -1,6 +1,6 @@
 {
     "name": "Formula Export",
-    "short_name": "FormulaExport",
+    "short_name": "formula-export",
     "description": "Platforma më e madhe për import të makinave nga Korea në Kosovë",
     "start_url": "/",
     "display": "standalone",
