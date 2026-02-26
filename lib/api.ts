@@ -16,6 +16,8 @@ export interface Car {
     exteriorColor?: string;
     interiorColor?: string;
     description?: string;
+    sellerName?: string;
+    sellerPhone?: string;
     [key: string]: any;
 }
 
@@ -38,20 +40,48 @@ export interface FilterData {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api/proxy';
 
-// Helper for server-side fetching
+// Helper function to get the full URL
 const getFullUrl = (path: string): string => {
-    if (typeof window === 'undefined' && path.startsWith('/')) {
-        const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-        return `${baseUrl}${path}`;
+    // If we're in the browser, a relative URL is perfect
+    if (typeof window !== 'undefined') {
+        return path;
     }
-    return path;
+
+    // --- Server-side logic ---
+    // Determine the base URL based on the environment
+    let baseUrl: string;
+
+    if (process.env.NODE_ENV === 'development') {
+        // In development, use localhost
+        baseUrl = 'http://localhost:3000';
+    } else {
+        // In production, use the actual domain
+        baseUrl = process.env.NEXTAUTH_URL || 'https://ferrari-export.com';
+    }
+
+    // Remove trailing slash from baseUrl if present, and ensure path starts with one
+    const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+
+    const absoluteUrl = `${cleanBaseUrl}${cleanPath}`;
+
+    // Optional: Validate the URL
+    try {
+        new URL(absoluteUrl);
+    } catch (error) {
+        console.error(`❌ Invalid URL constructed: ${absoluteUrl}`, error);
+        return path;
+    }
+
+    console.log(`🌐 Server fetching from: ${absoluteUrl} (Environment: ${process.env.NODE_ENV})`);
+    return absoluteUrl;
 };
 
 export async function fetchCars(params: Record<string, any> = {}): Promise<FetchCarsResponse> {
     try {
         const queryParams = new URLSearchParams();
 
-        // Add all possible params
+        // Map of parameter names to handle different naming conventions
         const paramMappings: Record<string, string> = {
             search: 'search',
             make: 'make',
@@ -67,6 +97,7 @@ export async function fetchCars(params: Record<string, any> = {}): Promise<Fetch
             limit: 'limit'
         };
 
+        // Add all params with proper mapping
         Object.entries(params).forEach(([key, value]) => {
             if (value !== undefined && value !== null && value !== '') {
                 const paramKey = paramMappings[key] || key;
@@ -74,7 +105,7 @@ export async function fetchCars(params: Record<string, any> = {}): Promise<Fetch
             }
         });
 
-        // Set defaults
+        // Set defaults if not provided
         if (!params.limit) queryParams.append('limit', '12');
         if (!params.page) queryParams.append('page', '1');
         if (!params.sort) queryParams.append('sort', 'price_desc');
@@ -82,10 +113,11 @@ export async function fetchCars(params: Record<string, any> = {}): Promise<Fetch
         const path = `/api/proxy/cars${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
         const url = getFullUrl(path);
 
-        console.log('Fetching cars from:', url);
+        console.log(`🔍 [${typeof window === 'undefined' ? 'SERVER' : 'CLIENT'}] Fetching cars from:`, url);
 
         const response = await fetch(url, {
-            next: { revalidate: 60 } // Cache for 60 seconds
+            // Only add caching options on client side
+            ...(typeof window !== 'undefined' ? { next: { revalidate: 60 } } : {})
         });
 
         if (!response.ok) {
@@ -109,29 +141,44 @@ export async function fetchCars(params: Record<string, any> = {}): Promise<Fetch
 
         return { cars, pagination };
     } catch (error) {
-        console.error('Error fetching cars:', error);
-        return { cars: [], pagination: { page: 1, totalPages: 1, total: 0 } };
+        console.error('❌ Error fetching cars:', error);
+        return {
+            cars: [],
+            pagination: { page: 1, totalPages: 1, total: 0 }
+        };
     }
 }
 
 export async function fetchCarDetails(carId: string): Promise<Car | null> {
     try {
-        const cleanId = carId.replace(/\D/g, '');
+        // Extract numeric ID (remove any non-numeric characters)
+        const cleanId = carId.toString().replace(/\D/g, '');
+
+        if (!cleanId) {
+            throw new Error('Invalid car ID');
+        }
+
         const path = `/api/proxy/cars/${cleanId}`;
         const url = getFullUrl(path);
 
+        console.log(`🔍 [${typeof window === 'undefined' ? 'SERVER' : 'CLIENT'}] Fetching car details from:`, url);
+
         const response = await fetch(url, {
-            next: { revalidate: 3600 } // Cache for 1 hour
+            ...(typeof window !== 'undefined' ? { next: { revalidate: 3600 } } : {}) // Cache for 1 hour on client
         });
 
         if (!response.ok) {
+            if (response.status === 404) {
+                console.log('Car not found:', carId);
+                return null;
+            }
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('Error fetching car details:', error);
+        console.error('❌ Error fetching car details:', error);
         return null;
     }
 }
@@ -141,8 +188,10 @@ export async function fetchFilterData(): Promise<FilterData> {
         const path = `/api/proxy/cars/meta/types`;
         const url = getFullUrl(path);
 
+        console.log(`🔍 [${typeof window === 'undefined' ? 'SERVER' : 'CLIENT'}] Fetching filter data from:`, url);
+
         const response = await fetch(url, {
-            next: { revalidate: 300 } // Cache for 5 minutes
+            ...(typeof window !== 'undefined' ? { next: { revalidate: 300 } } : {}) // Cache for 5 minutes on client
         });
 
         if (!response.ok) {
@@ -159,7 +208,8 @@ export async function fetchFilterData(): Promise<FilterData> {
             modelsByMake: data.modelsByMake || {}
         };
     } catch (error) {
-        console.error('Error fetching filter data:', error);
+        console.error('❌ Error fetching filter data:', error);
+        // Return default data to prevent UI crashes
         return {
             makes: [],
             fuelTypes: ['Diesel', 'Gasoline', 'Electric', 'Hybrid'],
@@ -167,4 +217,104 @@ export async function fetchFilterData(): Promise<FilterData> {
             years: Array.from({ length: 10 }, (_, i) => 2026 - i)
         };
     }
+}
+
+export async function fetchSoldStatus(carId: string): Promise<boolean> {
+    try {
+        const cleanId = carId.toString().replace(/\D/g, '');
+        const path = `/api/proxy/encar/sold-status?carId=${cleanId}`;
+        const url = getFullUrl(path);
+
+        const response = await fetch(url);
+        const data = await response.json();
+        return data?.sold || false;
+    } catch (error) {
+        console.error('Error checking sold status:', error);
+        return false;
+    }
+}
+
+export async function fetchVehicleInfo(carId: string) {
+    try {
+        const cleanId = carId.toString().replace(/\D/g, '');
+        const path = `/api/proxy/encar/vehicle/${cleanId}`;
+        const url = getFullUrl(path);
+
+        const response = await fetch(url);
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching vehicle info:', error);
+        return null;
+    }
+}
+
+// Helper function to check if API is healthy
+export async function checkApiHealth(): Promise<boolean> {
+    try {
+        const path = `/api/proxy/cars?limit=1`;
+        const url = getFullUrl(path);
+        const response = await fetch(url);
+        return response.ok;
+    } catch {
+        return false;
+    }
+}
+
+// Helper function to get makes array from filter data
+export async function getMakesArray(): Promise<string[]> {
+    try {
+        const filterData = await fetchFilterData();
+        return filterData.makes;
+    } catch {
+        return [];
+    }
+}
+
+// Helper function to get models for a specific make
+export async function getModelsForMake(make: string): Promise<string[]> {
+    try {
+        const filterData = await fetchFilterData();
+        return filterData.modelsByMake?.[make] || [];
+    } catch {
+        return [];
+    }
+}
+
+// Helper function to format price
+export function formatPrice(price: number): string {
+    return new Intl.NumberFormat('sq-AL', {
+        style: 'currency',
+        currency: 'EUR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(price);
+}
+
+// Helper function to format mileage
+export function formatMileage(mileage: number): string {
+    return new Intl.NumberFormat('sq-AL').format(mileage) + ' km';
+}
+
+// Helper function to get fuel type in Albanian
+export function getFuelTypeAlbanian(fuelType: string): string {
+    const fuelMap: Record<string, string> = {
+        'Diesel': 'Naftë',
+        'Gasoline': 'Benzinë',
+        'Electric': 'Elektrik',
+        'Hybrid': 'Hibrid',
+        'LPG': 'LPG',
+        'CNG': 'CNG'
+    };
+    return fuelMap[fuelType] || fuelType;
+}
+
+// Helper function to get transmission in Albanian
+export function getTransmissionAlbanian(transmission: string): string {
+    const transMap: Record<string, string> = {
+        'Automatic': 'Automatik',
+        'Manual': 'Manuel',
+        'CVT': 'CVT',
+        'Semi-Automatic': 'Gjysmë-automatik'
+    };
+    return transMap[transmission] || transmission;
 }
