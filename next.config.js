@@ -15,7 +15,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'ferrari-export.com',
+        hostname: 'formula-export.com',
         pathname: '/**',
       },
     ],

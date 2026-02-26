@@ -94,7 +94,7 @@ const getFullUrl = (path: string): string => {
     }
 
     // In production, use the actual domain
-    const baseUrl = process.env.NEXTAUTH_URL || 'https://ferrari-export.com';
+    const baseUrl = process.env.NEXTAUTH_URL || 'https://formula-export.com';
     const cleanBaseUrl = baseUrl.replace(/\/$/, '');
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
 
