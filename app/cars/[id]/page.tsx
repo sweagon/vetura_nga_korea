@@ -1,6 +1,7 @@
-// app/cars/[id]/page.tsx
+import { SocialShare } from '@/components/ui/Social';
 import { notFound } from 'next/navigation';
 import { fetchCarDetails } from '@/lib/api';
+import { Metadata } from 'next';
 import ImageGallery from '@/components/cars/ImageGallery';
 import CarSpecs from '@/components/cars/CarSpecs';
 import CostCalculator from '@/components/cars/CostCalculator';
@@ -35,9 +36,9 @@ import {
 import Link from 'next/link';
 import CompareButton from '@/components/cars/CompareButton';
 import StructuredData from '@/components/seo/StructuredData';
-import ShareButtons from '@/components/ui/ShareButtons';
 import RecentlyViewedTracker from '@/components/cars/RecentlyViewedTracker';
 import CarSaveButton from '@/components/cars/CarSaveButton';
+
 
 interface PageProps {
     params: Promise<{
@@ -45,29 +46,52 @@ interface PageProps {
     }>;
 }
 
-export default async function CarDetailPage({ params }: PageProps) {
-    console.log('🚀 CarDetailPage started');
-    console.log('📦 Environment:', process.env.NODE_ENV);
-    console.log('🔑 NEXTAUTH_URL:', process.env.NEXTAUTH_URL);
-
+// Generate metadata dynamically for each car
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { id } = await params;
-    console.log('🔍 Looking for car with ID:', id);
-
-    console.log('📞 Calling fetchCarDetails...');
     const car = await fetchCarDetails(id);
-    console.log('📥 fetchCarDetails returned:', car ? 'Car found' : 'Car not found');
 
-    if (car) {
-        console.log('✅ Car details:', {
-            id: car.id,
-            make: car.make,
-            model: car.model,
-            year: car.year,
-            price: car.price,
-            hasImages: car.images?.length || 0
-        });
-    } else {
-        console.log('❌ Car not found, calling notFound()');
+    if (!car) {
+        return {
+            title: 'Makina nuk u gjet | Formula Export',
+            description: 'Makina që po kërkoni nuk ekziston ose është shitur.',
+        };
+    }
+
+    const title = `${car.make} ${car.model} ${car.year} | Formula Export`;
+    const description = `${car.make} ${car.model} e vitit ${car.year} me ${car.mileage?.toLocaleString()} km. Çmimi: €${car.price?.toLocaleString()}. Makina nga Korea në Kosovë.`;
+    const images = car.images?.length ? [car.images[0]] : ['/og-image.jpg'];
+
+    return {
+        title,
+        description,
+        keywords: [`${car.make}`, `${car.model}`, 'makina', 'import', 'korea', 'kosovë', `${car.year}`],
+        openGraph: {
+            title: `${car.make} ${car.model} ${car.year}`,
+            description: `Viti: ${car.year}, Km: ${car.mileage?.toLocaleString()}, Çmimi: €${car.price?.toLocaleString()}`,
+            images: images.map(img => ({
+                url: img,
+                width: 1200,
+                height: 630,
+                alt: `${car.make} ${car.model} ${car.year}`,
+            })),
+            locale: 'sq_AL',
+            type: 'website',
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: `${car.make} ${car.model} ${car.year}`,
+            description: `Viti: ${car.year}, Km: ${car.mileage?.toLocaleString()}, Çmimi: €${car.price?.toLocaleString()}`,
+            images: images,
+        },
+    };
+}
+
+export default async function CarDetailPage({ params }: PageProps) {
+    const { id } = await params;
+    const car = await fetchCarDetails(id);
+
+    if (!car) {
         notFound();
     }
 
@@ -165,11 +189,11 @@ export default async function CarDetailPage({ params }: PageProps) {
                             <div className="flex items-center gap-3">
                                 <CarSaveButton car={car} />
                                 <CompareButton car={{ id: car.id, make: car.make, model: car.model }} variant="icon" />
-                                <ShareButtons
+                                <SocialShare
                                     url={`/cars/${car.id}`}
                                     title={`${car.make} ${car.model} ${car.year}`}
                                     description={`${car.make} ${car.model} - Viti: ${car.year}, Km: ${car.mileage?.toLocaleString()}, Çmimi: €${car.price?.toLocaleString()}`}
-                                    size="md"
+                                    image={car.images?.[0]}
                                 />
                             </div>
                         </div>

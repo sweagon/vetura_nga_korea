@@ -19,11 +19,11 @@ export default function LoadingSkeleton({ type = 'card' }: { type?: 'card' | 'fo
 
     if (type === 'form') {
         return (
-            <div className="bg-surface rounded-xl shadow-xl p-8 border border-medium">
+            <div className="bg-surface rounded-xl border border-medium p-6">
                 <div className="h-8 bg-surface-2 rounded w-1/3 mb-6 animate-pulse"></div>
                 <div className="space-y-4">
-                    <div className="h-20 bg-surface-2 rounded animate-pulse"></div>
-                    <div className="h-20 bg-surface-2 rounded animate-pulse"></div>
+                    <div className="h-12 bg-surface-2 rounded animate-pulse"></div>
+                    <div className="h-12 bg-surface-2 rounded animate-pulse"></div>
                     <div className="h-12 bg-surface-2 rounded animate-pulse"></div>
                 </div>
             </div>
@@ -40,7 +40,13 @@ export default function LoadingSkeleton({ type = 'card' }: { type?: 'card' | 'fo
         );
     }
 
-    return null;
+    return (
+        <div className="bg-surface rounded-xl border border-medium p-4">
+            <div className="h-48 bg-surface-2 rounded-lg mb-4 animate-pulse"></div>
+            <div className="h-4 bg-surface-2 rounded w-3/4 mb-2 animate-pulse"></div>
+            <div className="h-4 bg-surface-2 rounded w-1/2 animate-pulse"></div>
+        </div>
+    );
 }
 
 // Export named skeletons for backward compatibility
@@ -53,11 +59,11 @@ export const CarCardSkeleton = () => (
 );
 
 export const FormSkeleton = () => (
-    <div className="bg-surface rounded-xl shadow-xl p-8 border border-medium">
+    <div className="bg-surface rounded-xl border border-medium p-6">
         <div className="h-8 bg-surface-2 rounded w-1/3 mb-6 animate-pulse"></div>
         <div className="space-y-4">
-            <div className="h-20 bg-surface-2 rounded animate-pulse"></div>
-            <div className="h-20 bg-surface-2 rounded animate-pulse"></div>
+            <div className="h-12 bg-surface-2 rounded animate-pulse"></div>
+            <div className="h-12 bg-surface-2 rounded animate-pulse"></div>
             <div className="h-12 bg-surface-2 rounded animate-pulse"></div>
         </div>
     </div>

@@ -1,3 +1,4 @@
+// app/layout.tsx
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
@@ -6,24 +7,32 @@ import Footer from '@/components/layout/Footer';
 import CookieBanner from '@/components/ui/CookieBanner';
 import ScrollToTop from '@/components/ui/ScrollToTop';
 import Providers from './providers';
-import MetaTags from '@/components/seo/MetaTags';
 import StructuredData from '@/components/seo/StructuredData';
+import PageTransition from '@/components/ui/PageTransition';
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 const inter = Inter({ subsets: ['latin'] });
 
-// app/layout.tsx or app/metadata.ts
-export const metadata = {
+export const metadata: Metadata = {
   metadataBase: new URL('https://formula-export.com'),
   title: {
-    default: 'Formula Export - Makina nga Evropa',
+    default: 'Formula Export - Makina nga Korea në Kosovë',
     template: '%s | Formula Export'
   },
-  description: 'Blej makina cilësore nga tregjet evropiane. BMW, Audi, Mercedes-Benz dhe shumë të tjera.',
-  keywords: ['makina', 'export', 'ferrari', 'vetura', 'BMW', 'Audi', 'Mercedes'],
-  authors: [{ name: 'Formula Export' }],
+  description: 'Importoni makina cilësore nga Korea me çmime konkurruese. BMW, Audi, Mercedes-Benz dhe makina të tjera direkt në Kosovë.',
+  keywords: ['makina', 'import', 'korea', 'kosovë', 'vetura', 'audi', 'bmw', 'mercedes', 'makina ne kosove', 'import makina'],
+  authors: [{ name: 'Formula Export', url: 'https://formula-export.com' }],
+  creator: 'Formula Export',
+  publisher: 'Formula Export',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+
   openGraph: {
-    title: 'Formula Export',
-    description: 'Makina cilësore nga Evropa',
+    title: 'Formula Export - Import Makina nga Korea',
+    description: 'Platforma më e madhe për import të makinave nga Korea në Kosovë',
     url: 'https://formula-export.com',
     siteName: 'Formula Export',
     images: [
@@ -31,17 +40,23 @@ export const metadata = {
         url: 'https://formula-export.com/og-image.jpg',
         width: 1200,
         height: 630,
+        alt: 'Formula Export - Makina nga Korea',
       },
     ],
     locale: 'sq_AL',
     type: 'website',
+    countryName: 'Kosovo',
   },
+
   twitter: {
     card: 'summary_large_image',
-    title: 'Formula Export',
-    description: 'Makina cilësore nga Evropa',
+    title: 'Formula Export - Import Makina nga Korea',
+    description: 'Platforma më e madhe për import të makinave nga Korea në Kosovë',
     images: ['https://formula-export.com/twitter-image.jpg'],
+    site: '@formulaexport',
+    creator: '@formulaexport',
   },
+
   robots: {
     index: true,
     follow: true,
@@ -53,8 +68,27 @@ export const metadata = {
       'max-snippet': -1,
     },
   },
+
   verification: {
-    google: 'your-google-verification-code',
+    google: 'YOUR_GOOGLE_VERIFICATION_CODE',
+    yandex: 'YOUR_YANDEX_CODE',
+    other: {
+      'msvalidate.01': 'YOUR_BING_CODE',
+      'facebook-domain-verification': 'YOUR_FACEBOOK_CODE',
+    },
+  },
+
+  alternates: {
+    canonical: 'https://formula-export.com',
+    languages: {
+      'sq-AL': 'https://formula-export.com',
+    },
+  },
+
+  category: 'automotive',
+
+  other: {
+    'p:domain_verify': 'YOUR_PINTEREST_CODE',
   },
 };
 
@@ -66,15 +100,6 @@ export default function RootLayout({
   return (
     <html lang="sq">
       <head>
-        <MetaTags
-          title="Formula Export - Makina nga Korea në Kosovë"
-          description="Importoni makina cilësore nga Korea me çmime konkurruese. Formula Export ju sjell makinat më të mira direkt në Kosovë."
-          image="/og-image.jpg"
-        />
-        <StructuredData type="organization" />
-        <StructuredData type="website" />
-        <StructuredData type="search" />
-
         {/* PWA Manifest */}
         <link rel="manifest" href="/manifest.json" />
 
@@ -104,23 +129,52 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#FF2800" />
         <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
-
-        {/* Theme Color */}
-        <meta name="theme-color" content="#FF2800" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Formula Export" />
-        <meta name="format-detection" content="telephone=no" />
-        <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className={inter.className} cz-shortcut-listen="true">
+      <body className={inter.className}>
+        <StructuredData type="organization" />
+        <StructuredData type="website" />
+        <StructuredData type="search" />
+
         <Providers>
           <Header />
-          <main className="min-h-screen">{children}</main>
+          <main className="min-h-screen">
+            <PageTransition>
+              {children}
+            </PageTransition>
+          </main>
           <Footer />
           <CookieBanner />
           <ScrollToTop />
         </Providers>
+
+        {/* Google Analytics */}
+        <GoogleAnalytics gaId="G-0BSR9BPSWY" />
+
+        {/* Facebook Pixel */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              !function(f,b,e,v,n,t,s)
+              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+              n.queue=[];t=b.createElement(e);t.async=!0;
+              t.src=v;s=b.getElementsByTagName(e)[0];
+              s.parentNode.insertBefore(t,s)}(window, document,'script',
+              'https://connect.facebook.net/en_US/fbevents.js');
+              fbq('init', 'YOUR_PIXEL_ID');
+              fbq('track', 'PageView');
+            `
+          }}
+        />
+        <noscript>
+          <img
+            height="1"
+            width="1"
+            style={{ display: 'none' }}
+            src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"
+          />
+        </noscript>
       </body>
     </html>
   );

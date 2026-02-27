@@ -1,140 +1,248 @@
+// components/ui/CookieBanner.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
+import { X, Cookie, Check, Settings } from 'lucide-react';
 import Link from 'next/link';
-import { X, Cookie, Shield, ChevronRight } from 'lucide-react';
+
+declare global {
+    interface Window {
+        gtag: (...args: any[]) => void;
+    }
+}
 
 export default function CookieBanner() {
-    const [showBanner, setShowBanner] = useState(false);
-    const [showDetails, setShowDetails] = useState(false);
+    const [isVisible, setIsVisible] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
+    const [consents, setConsents] = useState({
+        necessary: true, // Always true - can't disable
+        analytics: false,
+        marketing: false,
+        preferences: false,
+    });
 
     useEffect(() => {
         // Check if user has already made a choice
-        const consent = localStorage.getItem('cookieConsent');
+        const consent = localStorage.getItem('cookie-consent');
         if (!consent) {
-            setShowBanner(true);
+            setIsVisible(true);
+        } else {
+            // Load saved consents
+            const saved = JSON.parse(consent);
+            setConsents(saved);
+
+            // Update Google Consent Mode
+            updateGoogleConsent(saved);
         }
     }, []);
 
-    const acceptAll = () => {
-        localStorage.setItem('cookieConsent', 'all');
-        setShowBanner(false);
-        // Here you could initialize analytics, etc.
+    const updateGoogleConsent = (consentData: typeof consents) => {
+        if (typeof window !== 'undefined' && window.gtag) {
+            window.gtag('consent', 'update', {
+                'ad_storage': consentData.marketing ? 'granted' : 'denied',
+                'ad_user_data': consentData.marketing ? 'granted' : 'denied',
+                'ad_personalization': consentData.marketing ? 'granted' : 'denied',
+                'analytics_storage': consentData.analytics ? 'granted' : 'denied',
+                'functionality_storage': consentData.preferences ? 'granted' : 'denied',
+                'personalization_storage': consentData.preferences ? 'granted' : 'denied',
+                'security_storage': 'granted', // Always granted for security
+            });
+        }
     };
 
-    const acceptEssential = () => {
-        localStorage.setItem('cookieConsent', 'essential');
-        setShowBanner(false);
+    const handleAcceptAll = () => {
+        const newConsents = {
+            necessary: true,
+            analytics: true,
+            marketing: true,
+            preferences: true,
+        };
+        setConsents(newConsents);
+        localStorage.setItem('cookie-consent', JSON.stringify(newConsents));
+        updateGoogleConsent(newConsents);
+        setIsVisible(false);
+        setShowSettings(false);
     };
 
-    const declineAll = () => {
-        localStorage.setItem('cookieConsent', 'none');
-        setShowBanner(false);
+    const handleRejectAll = () => {
+        const newConsents = {
+            necessary: true,
+            analytics: false,
+            marketing: false,
+            preferences: false,
+        };
+        setConsents(newConsents);
+        localStorage.setItem('cookie-consent', JSON.stringify(newConsents));
+        updateGoogleConsent(newConsents);
+        setIsVisible(false);
+        setShowSettings(false);
     };
 
-    if (!showBanner) return null;
+    const handleSaveSettings = () => {
+        localStorage.setItem('cookie-consent', JSON.stringify(consents));
+        updateGoogleConsent(consents);
+        setIsVisible(false);
+        setShowSettings(false);
+    };
+
+    if (!isVisible) return null;
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50">
-            {/* Backdrop for mobile */}
-            <div className="absolute inset-0 bg-primary/20 backdrop-blur-sm" onClick={() => setShowBanner(false)} />
-
-            {/* Banner */}
-            <div className="relative bg-surface border-t border-theme shadow-2xl">
-                <div className="container-custom py-6">
-                    {/* Close button */}
-                    <button
-                        onClick={declineAll}
-                        className="absolute top-4 right-4 text-muted hover:text-secondary transition"
-                        aria-label="Close"
-                    >
-                        <X size={20} />
-                    </button>
-
-                    <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-                        {/* Icon */}
-                        <div className="hidden lg:flex w-12 h-12 bg-ferrari-red/10 rounded-full items-center justify-center flex-shrink-0">
-                            <Cookie className="text-ferrari-red" size={24} />
+        <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6">
+            <div className="max-w-7xl mx-auto">
+                <div className="bg-surface rounded-2xl shadow-2xl border border-medium overflow-hidden">
+                    {!showSettings ? (
+                        // Main Banner
+                        <div className="p-6">
+                            <div className="flex items-start gap-4">
+                                <div className="flex-shrink-0">
+                                    <div className="w-12 h-12 bg-ferrari-red/10 rounded-full flex items-center justify-center">
+                                        <Cookie size={24} className="text-ferrari-red" />
+                                    </div>
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-lg font-semibold text-primary mb-2">🍪 Cookies në Formula Export</h3>
+                                    <p className="text-secondary text-sm mb-4">
+                                        Ne përdorim cookies për të përmirësuar përvojën tuaj, për të personalizuar rekomandimet
+                                        dhe për të analizuar trafikun. Duke klikuar "Prano të gjitha", ju pajtoheni me përdorimin
+                                        e të gjitha cookies-ve. Mund të menaxhoni preferencat tuaja duke klikuar "Cilësimet".
+                                    </p>
+                                    <div className="flex flex-wrap gap-3">
+                                        <button
+                                            onClick={handleAcceptAll}
+                                            className="px-4 py-2 bg-ferrari-red text-white rounded-lg hover:bg-ferrari-dark transition flex items-center gap-2"
+                                        >
+                                            <Check size={16} />
+                                            <span>Prano të gjitha</span>
+                                        </button>
+                                        <button
+                                            onClick={() => setShowSettings(true)}
+                                            className="px-4 py-2 bg-surface-2 text-secondary rounded-lg hover:bg-surface border border-medium transition flex items-center gap-2"
+                                        >
+                                            <Settings size={16} />
+                                            <span>Cilësimet</span>
+                                        </button>
+                                        <Link
+                                            href="/privacy"
+                                            className="px-4 py-2 text-secondary hover:text-ferrari-red transition"
+                                        >
+                                            Mëso më shumë
+                                        </Link>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={handleRejectAll}
+                                    className="flex-shrink-0 text-muted hover:text-ferrari-red transition"
+                                    aria-label="Mbyll"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
                         </div>
-
-                        {/* Content */}
-                        <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                                <Cookie className="text-ferrari-red lg:hidden" size={20} />
-                                <h3 className="font-bold text-lg">Cookies në Formula Export</h3>
+                    ) : (
+                        // Settings Panel
+                        <div className="p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold text-primary">Cilësimet e cookies</h3>
+                                <button
+                                    onClick={() => setShowSettings(false)}
+                                    className="text-muted hover:text-ferrari-red transition"
+                                >
+                                    <X size={20} />
+                                </button>
                             </div>
 
-                            <p className="text-secondary text-sm mb-3">
-                                Ne përdorim cookies për të përmirësuar përvojën tuaj,
-                                për të personalizuar rekomandimet dhe për të analizuar trafikun.
-                            </p>
-
-                            {/* Details toggle */}
-                            <button
-                                onClick={() => setShowDetails(!showDetails)}
-                                className="text-ferrari-red text-sm hover:underline flex items-center mb-3"
-                            >
-                                {showDetails ? 'Më pak detaje' : 'Më shumë detaje'}
-                                <ChevronRight
-                                    size={16}
-                                    className={`ml-1 transition-transform ${showDetails ? 'rotate-90' : ''}`}
-                                />
-                            </button>
-
-                            {/* Detailed information */}
-                            {showDetails && (
-                                <div className="bg-secondary p-4 rounded-lg mb-4 space-y-3 text-sm">
-                                    <div className="flex items-start gap-2">
-                                        <Shield size={16} className="text-ferrari-red mt-0.5 flex-shrink-0" />
-                                        <div>
-                                            <span className="font-medium">Cookies esenciale:</span>
-                                            <p className="text-secondary">Ruajnë preferencat tuaja, makinat e ruajtura dhe kërkimet e fundit.</p>
+                            <div className="space-y-4 mb-6">
+                                {/* Necessary Cookies - Always enabled */}
+                                <div className="flex items-start justify-between p-3 bg-surface-2 rounded-lg">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="font-medium text-primary">Të nevojshme</span>
+                                            <span className="text-xs bg-ferrari-red/10 text-ferrari-red px-2 py-0.5 rounded-full">Gjithmonë aktive</span>
                                         </div>
+                                        <p className="text-xs text-secondary">Këto cookies janë të domosdoshme për funksionimin e faqes.</p>
                                     </div>
-                                    <div className="flex items-start gap-2">
-                                        <Shield size={16} className="text-ferrari-red mt-0.5 flex-shrink-0" />
-                                        <div>
-                                            <span className="font-medium">Cookies funksionale:</span>
-                                            <p className="text-secondary">Mundësojnë Matchmaker-in të mësojë preferencat tuaja.</p>
-                                        </div>
+                                    <div className="flex-shrink-0">
+                                        <input
+                                            type="checkbox"
+                                            checked={consents.necessary}
+                                            disabled
+                                            className="w-5 h-5 rounded border-medium text-ferrari-red focus:ring-ferrari-red"
+                                        />
                                     </div>
-                                    <div className="flex items-start gap-2">
-                                        <Shield size={16} className="text-ferrari-red mt-0.5 flex-shrink-0" />
-                                        <div>
-                                            <span className="font-medium">Cookies analitike:</span>
-                                            <p className="text-secondary">Na ndihmojnë të kuptojmë se si përdorni faqen.</p>
-                                        </div>
-                                    </div>
-                                    <p className="text-xs text-secondary mt-2">
-                                        Për më shumë informacion, lexoni{' '}
-                                        <Link href="/privacy" className="text-ferrari-red hover:underline">
-                                            Politikën e Privatësisë
-                                        </Link>
-                                        {' '}dhe{' '}
-                                        <Link href="/terms" className="text-ferrari-red hover:underline">
-                                            Termat e Përdorimit
-                                        </Link>.
-                                    </p>
                                 </div>
-                            )}
-                        </div>
 
-                        {/* Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-                            <button
-                                onClick={acceptEssential}
-                                className="px-6 py-3 border-2 border-ferrari-red text-ferrari-red rounded-lg font-medium hover:bg-ferrari-red/5 transition whitespace-nowrap"
-                            >
-                                Vetëm esenciale
-                            </button>
-                            <button
-                                onClick={acceptAll}
-                                className="px-6 py-3 bg-ferrari-red text-primary rounded-lg font-medium hover:bg-ferrari-dark transition whitespace-nowrap"
-                            >
-                                Pranoj të gjitha
-                            </button>
+                                {/* Analytics Cookies */}
+                                <div className="flex items-start justify-between p-3 hover:bg-surface-2 rounded-lg transition">
+                                    <div className="flex-1">
+                                        <span className="font-medium text-primary block mb-1">Analitikë</span>
+                                        <p className="text-xs text-secondary">Na ndihmojnë të kuptojmë se si vizitorët ndërveprojnë me faqen.</p>
+                                    </div>
+                                    <div className="flex-shrink-0">
+                                        <input
+                                            type="checkbox"
+                                            checked={consents.analytics}
+                                            onChange={(e) => setConsents({ ...consents, analytics: e.target.checked })}
+                                            className="w-5 h-5 rounded border-medium text-ferrari-red focus:ring-ferrari-red"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Marketing Cookies */}
+                                <div className="flex items-start justify-between p-3 hover:bg-surface-2 rounded-lg transition">
+                                    <div className="flex-1">
+                                        <span className="font-medium text-primary block mb-1">Marketingu</span>
+                                        <p className="text-xs text-secondary">Përdoren për të shfaqur reklama të personalizuara.</p>
+                                    </div>
+                                    <div className="flex-shrink-0">
+                                        <input
+                                            type="checkbox"
+                                            checked={consents.marketing}
+                                            onChange={(e) => setConsents({ ...consents, marketing: e.target.checked })}
+                                            className="w-5 h-5 rounded border-medium text-ferrari-red focus:ring-ferrari-red"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Preferences Cookies */}
+                                <div className="flex items-start justify-between p-3 hover:bg-surface-2 rounded-lg transition">
+                                    <div className="flex-1">
+                                        <span className="font-medium text-primary block mb-1">Preferencat</span>
+                                        <p className="text-xs text-secondary">Lejojnë faqen të mbajë mend zgjedhjet tuaja.</p>
+                                    </div>
+                                    <div className="flex-shrink-0">
+                                        <input
+                                            type="checkbox"
+                                            checked={consents.preferences}
+                                            onChange={(e) => setConsents({ ...consents, preferences: e.target.checked })}
+                                            className="w-5 h-5 rounded border-medium text-ferrari-red focus:ring-ferrari-red"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-wrap gap-3 justify-end">
+                                <button
+                                    onClick={handleRejectAll}
+                                    className="px-4 py-2 text-secondary hover:text-ferrari-red transition"
+                                >
+                                    Refuzo të gjitha
+                                </button>
+                                <button
+                                    onClick={handleAcceptAll}
+                                    className="px-4 py-2 bg-ferrari-red text-white rounded-lg hover:bg-ferrari-dark transition"
+                                >
+                                    Prano të gjitha
+                                </button>
+                                <button
+                                    onClick={handleSaveSettings}
+                                    className="px-4 py-2 bg-surface-2 text-secondary rounded-lg hover:bg-surface border border-medium transition"
+                                >
+                                    Ruaj cilësimet
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             </div>
         </div>

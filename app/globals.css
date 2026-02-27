@@ -173,6 +173,25 @@
   }
 }
 
+/* app/globals.css */
+@keyframes slide-right {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  50% {
+    transform: translateX(100%);
+  }
+
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+.animate-slide-right {
+  animation: slide-right 1.5s ease-in-out infinite;
+}
+
 @layer components {
 
   /* Text utilities */

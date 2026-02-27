@@ -15,7 +15,7 @@ import {
     MessageCircle
 } from 'lucide-react';
 import Newsletter from '@/components/ui/Newsletter'; // Import the Newsletter component
-import SocialLinks from '../ui/SocialLinks';
+import Social from '../ui/Social';
 
 export default function Footer() {
     const currentYear = new Date().getFullYear();
@@ -173,7 +173,7 @@ export default function Footer() {
                         </h4>
 
                         {/* Social Links */}
-                        <SocialLinks variant="footer" />
+                        <Social type="links" variant="minimal" />
 
                         {/* Newsletter Component */}
                         <Newsletter />

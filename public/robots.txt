@@ -1,56 +1,41 @@
-# robots.txt for Formula Export
-# https://formula-export.com
-
-# Allow all crawlers to access the main site
+# public/robots.txt
 User-agent: *
 Allow: /
 Allow: /cars/
 Allow: /brands/
 Allow: /offers/
 Allow: /how-it-works/
-Allow: /privacy/
-Allow: /terms/
-Allow: /cookies/
-
-# Disallow private/user-specific pages
+Disallow: /api/
+Disallow: /admin/
 Disallow: /account/
 Disallow: /saved/
-Disallow: /api/
-Disallow: /compare?*
+Disallow: /compare
 Disallow: /*?*
 
-# Disallow admin areas
-Disallow: /admin/
-
 # Crawl delay for polite crawling
-Crawl-delay: 10
+Crawl-delay: 5
 
-# Sitemap location
+# Sitemap
 Sitemap: https://formula-export.com/sitemap.xml
 
 # Host
 Host: https://formula-export.com
 
-# Specific crawler rules
+# Google-specific
 User-agent: Googlebot
 Allow: /
-Crawl-delay: 5
+Crawl-delay: 2
 
+# Bing-specific
 User-agent: Bingbot
 Allow: /
-Crawl-delay: 5
+Crawl-delay: 2
 
+# Social media bots
 User-agent: Twitterbot
 Allow: /
-Allow: /*?search=
+Allow: /cars/*
 
 User-agent: FacebookExternalHit
 Allow: /
 Allow: /cars/*
-
-# Block bad bots
-User-agent: *
-Disallow: /admin/
-Disallow: /cgi-bin/
-Disallow: /wp-admin/
-Disallow: /wordpress/
