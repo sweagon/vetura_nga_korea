@@ -138,7 +138,6 @@ const FEATURES = [
 export default function FilterSidebar({ className = '' }: FilterSidebarProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const [isPending, setIsPending] = useState(false);
     const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const lastUpdateRef = useRef<string>('');
 
@@ -291,7 +290,6 @@ export default function FilterSidebar({ className = '' }: FilterSidebarProps) {
             clearTimeout(updateTimeoutRef.current);
         }
 
-        setIsPending(true);
         lastUpdateRef.current = currentFilterString;
 
         updateTimeoutRef.current = setTimeout(() => {
@@ -329,7 +327,6 @@ export default function FilterSidebar({ className = '' }: FilterSidebarProps) {
             // Update URL - CarGrid will react to this
             router.push(`/cars?${params.toString()}`, { scroll: false });
 
-            setIsPending(false);
             updateTimeoutRef.current = null;
         }, 600);
     }, [selectedMakes, selectedModel, selectedFuel, selectedTransmission, selectedBodyTypes, selectedColors, selectedFeatures, priceRange, yearRange, mileageRange, engineSize, powerRange, searchParams, router, getFilterString]);
@@ -480,12 +477,6 @@ export default function FilterSidebar({ className = '' }: FilterSidebarProps) {
                         <h3 className="font-semibold">Filtro makina</h3>
                     </div>
                     <div className="flex items-center gap-2">
-                        {isPending && (
-                            <div className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded-full text-xs">
-                                <Loader2 size={10} className="animate-spin" />
-                                <span>Duke aplikuar...</span>
-                            </div>
-                        )}
                         {getActiveFilterCount() > 0 && (
                             <span className="bg-white/20 px-2 py-1 rounded-full text-xs font-medium">
                                 {getActiveFilterCount()}
@@ -507,8 +498,8 @@ export default function FilterSidebar({ className = '' }: FilterSidebarProps) {
                 <button
                     onClick={() => setActiveTab('quick')}
                     className={`flex-1 py-3 text-sm font-medium transition-colors relative ${activeTab === 'quick'
-                            ? 'text-ferrari-red'
-                            : 'text-secondary hover:text-primary'
+                        ? 'text-ferrari-red'
+                        : 'text-secondary hover:text-primary'
                         }`}
                 >
                     <div className="flex items-center justify-center gap-1">
@@ -522,8 +513,8 @@ export default function FilterSidebar({ className = '' }: FilterSidebarProps) {
                 <button
                     onClick={() => setActiveTab('detailed')}
                     className={`flex-1 py-3 text-sm font-medium transition-colors relative ${activeTab === 'detailed'
-                            ? 'text-ferrari-red'
-                            : 'text-secondary hover:text-primary'
+                        ? 'text-ferrari-red'
+                        : 'text-secondary hover:text-primary'
                         }`}
                 >
                     <div className="flex items-center justify-center gap-1">
@@ -572,8 +563,8 @@ export default function FilterSidebar({ className = '' }: FilterSidebarProps) {
                                         key={make}
                                         onClick={() => toggleMake(make)}
                                         className={`px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-2 border ${selectedMakes.includes(make)
-                                                ? 'bg-ferrari-red text-white border-ferrari-red'
-                                                : 'bg-secondary text-primary hover:bg-tertiary border-medium'
+                                            ? 'bg-ferrari-red text-white border-ferrari-red'
+                                            : 'bg-secondary text-primary hover:bg-tertiary border-medium'
                                             }`}
                                     >
                                         <span>{make}</span>
@@ -605,8 +596,8 @@ export default function FilterSidebar({ className = '' }: FilterSidebarProps) {
                                                     key={range.id}
                                                     onClick={() => setPriceRange(isActive ? { min: '', max: '' } : { min: range.min.toString(), max: range.max.toString() })}
                                                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${isActive
-                                                            ? 'bg-ferrari-red text-white'
-                                                            : 'bg-secondary text-primary hover:bg-tertiary'
+                                                        ? 'bg-ferrari-red text-white'
+                                                        : 'bg-secondary text-primary hover:bg-tertiary'
                                                         }`}
                                                 >
                                                     <span>{range.icon}</span>
@@ -641,8 +632,8 @@ export default function FilterSidebar({ className = '' }: FilterSidebarProps) {
                                                     key={range.id}
                                                     onClick={() => setYearRange(isActive ? { min: '', max: '' } : { min: range.min.toString(), max: range.max.toString() })}
                                                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${isActive
-                                                            ? 'bg-ferrari-red text-white'
-                                                            : 'bg-secondary text-primary hover:bg-tertiary'
+                                                        ? 'bg-ferrari-red text-white'
+                                                        : 'bg-secondary text-primary hover:bg-tertiary'
                                                         }`}
                                                 >
                                                     <span>{range.icon}</span>
@@ -674,8 +665,8 @@ export default function FilterSidebar({ className = '' }: FilterSidebarProps) {
                                             key={type}
                                             onClick={() => toggleFuel(type)}
                                             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${selectedFuel.includes(type)
-                                                    ? 'bg-ferrari-red text-white'
-                                                    : 'bg-secondary text-primary hover:bg-tertiary'
+                                                ? 'bg-ferrari-red text-white'
+                                                : 'bg-secondary text-primary hover:bg-tertiary'
                                                 }`}
                                         >
                                             {type === 'Diesel' ? 'Naftë' :
@@ -704,8 +695,8 @@ export default function FilterSidebar({ className = '' }: FilterSidebarProps) {
                                             key={trans}
                                             onClick={() => toggleTransmission(trans)}
                                             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${selectedTransmission.includes(trans)
-                                                    ? 'bg-ferrari-red text-white'
-                                                    : 'bg-secondary text-primary hover:bg-tertiary'
+                                                ? 'bg-ferrari-red text-white'
+                                                : 'bg-secondary text-primary hover:bg-tertiary'
                                                 }`}
                                         >
                                             {trans === 'Automatic' ? 'Automatik' : trans === 'Manual' ? 'Manuel' : trans}
@@ -778,8 +769,8 @@ export default function FilterSidebar({ className = '' }: FilterSidebarProps) {
                                         key={type.id}
                                         onClick={() => toggleBodyType(type.id)}
                                         className={`px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-2 ${selectedBodyTypes.includes(type.id)
-                                                ? 'bg-ferrari-red text-white'
-                                                : 'bg-secondary text-primary hover:bg-tertiary'
+                                            ? 'bg-ferrari-red text-white'
+                                            : 'bg-secondary text-primary hover:bg-tertiary'
                                             }`}
                                     >
                                         <span>{type.icon}</span>
@@ -802,8 +793,8 @@ export default function FilterSidebar({ className = '' }: FilterSidebarProps) {
                                     >
                                         <div
                                             className={`w-8 h-8 rounded-full border-2 transition-all ${selectedColors.includes(color.id)
-                                                    ? 'border-ferrari-red scale-110'
-                                                    : 'border-transparent group-hover:border-medium'
+                                                ? 'border-ferrari-red scale-110'
+                                                : 'border-transparent group-hover:border-medium'
                                                 }`}
                                             style={{ backgroundColor: color.color }}
                                         />
@@ -839,8 +830,8 @@ export default function FilterSidebar({ className = '' }: FilterSidebarProps) {
                                                     key={range.id}
                                                     onClick={() => setMileageRange(isActive ? { min: '', max: '' } : { min: range.min.toString(), max: range.max.toString() })}
                                                     className={`px-2 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${isActive
-                                                            ? 'bg-ferrari-red text-white'
-                                                            : 'bg-secondary text-primary hover:bg-tertiary'
+                                                        ? 'bg-ferrari-red text-white'
+                                                        : 'bg-secondary text-primary hover:bg-tertiary'
                                                         }`}
                                                 >
                                                     <span>{range.icon}</span>
@@ -891,8 +882,8 @@ export default function FilterSidebar({ className = '' }: FilterSidebarProps) {
                                                     key={range.id}
                                                     onClick={() => setEngineSize(isActive ? { min: '', max: '' } : { min: range.min.toString(), max: range.max.toString() })}
                                                     className={`px-2 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${isActive
-                                                            ? 'bg-ferrari-red text-white'
-                                                            : 'bg-secondary text-primary hover:bg-tertiary'
+                                                        ? 'bg-ferrari-red text-white'
+                                                        : 'bg-secondary text-primary hover:bg-tertiary'
                                                         }`}
                                                 >
                                                     <span>{range.icon}</span>
@@ -927,8 +918,8 @@ export default function FilterSidebar({ className = '' }: FilterSidebarProps) {
                                                     key={range.id}
                                                     onClick={() => setPowerRange(isActive ? { min: '', max: '' } : { min: range.min.toString(), max: range.max.toString() })}
                                                     className={`px-2 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${isActive
-                                                            ? 'bg-ferrari-red text-white'
-                                                            : 'bg-secondary text-primary hover:bg-tertiary'
+                                                        ? 'bg-ferrari-red text-white'
+                                                        : 'bg-secondary text-primary hover:bg-tertiary'
                                                         }`}
                                                 >
                                                     <span>{range.icon}</span>
@@ -957,8 +948,8 @@ export default function FilterSidebar({ className = '' }: FilterSidebarProps) {
                                             key={feature.id}
                                             onClick={() => toggleFeature(feature.id)}
                                             className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-2 ${selectedFeatures.includes(feature.id)
-                                                    ? 'bg-ferrari-red text-white'
-                                                    : 'bg-secondary text-primary hover:bg-tertiary'
+                                                ? 'bg-ferrari-red text-white'
+                                                : 'bg-secondary text-primary hover:bg-tertiary'
                                                 }`}
                                         >
                                             <span>{feature.icon}</span>

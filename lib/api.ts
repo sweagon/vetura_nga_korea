@@ -159,10 +159,21 @@ export async function fetchCars(params: Record<string, any> = {}): Promise<Fetch
     try {
         const queryParams = new URLSearchParams();
 
-        // Map of parameter names to handle different naming conventions
+        // Handle 'make' parameter - it might be comma-separated
+        if (params.make) {
+            // If your API expects comma-separated values
+            queryParams.append('make', params.make);
+
+            // OR if it expects multiple make params:
+            // const makes = params.make.split(',');
+            // makes.forEach((make: string) => {
+            //     queryParams.append('make', make);
+            // });
+        }
+
+        // Handle other params
         const paramMappings: Record<string, string> = {
             search: 'search',
-            make: 'make',
             model: 'model',
             minPrice: 'minPrice',
             maxPrice: 'maxPrice',
@@ -172,72 +183,35 @@ export async function fetchCars(params: Record<string, any> = {}): Promise<Fetch
             transmission: 'transmission',
             sort: 'sort',
             page: 'page',
-            limit: 'limit',
-            inStock: 'inStock'
+            limit: 'limit'
         };
 
-        // Add all params with proper mapping
         Object.entries(params).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== '') {
+            if (value !== undefined && value !== null && value !== '' && key !== 'make') {
                 const paramKey = paramMappings[key] || key;
                 queryParams.append(paramKey, String(value));
             }
         });
 
-        // Set defaults if not provided
+        // Set defaults
         if (!params.limit) queryParams.append('limit', '12');
         if (!params.page) queryParams.append('page', '1');
         if (!params.sort) queryParams.append('sort', 'price_desc');
 
-        const path = `/api/proxy/cars${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
-        const url = getFullUrl(path);
+        const url = `${API_BASE_URL}/cars${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
 
-        console.log(`🔍 [${typeof window === 'undefined' ? 'SERVER' : 'CLIENT'}] Fetching cars from:`, url);
+        console.log('📡 Fetching cars from:', url);
 
-        const response = await fetchWithTimeout(url, {
-            // Only add caching options on client side
-            ...(typeof window !== 'undefined'
-                ? { next: { revalidate: 60 } }
-                : { cache: 'no-store' })
-        }, 15000);
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
+        const response = await fetch(url);
         const data = await response.json();
 
-        // Handle different API response structures
-        let cars: Car[] = [];
-        let pagination = { page: 1, totalPages: 1, total: 0 };
-
-        if (data.cars && Array.isArray(data.cars)) {
-            cars = data.cars;
-            pagination = data.pagination || pagination;
-
-            // Pre-populate the car details cache with any cars we fetched
-            cars.forEach(car => {
-                if (car.car_id) {
-                    carDetailsCache.set(car.car_id, car);
-                }
-            });
-        } else if (Array.isArray(data)) {
-            cars = data;
-        } else if (data.data && Array.isArray(data.data)) {
-            cars = data.data;
-        }
-
-        return { cars, pagination };
-    } catch (error: any) {
-        if (error.name === 'AbortError') {
-            console.error('❌ Request timeout for cars fetch');
-        } else {
-            console.error('❌ Error fetching cars:', error);
-        }
         return {
-            cars: [],
-            pagination: { page: 1, totalPages: 1, total: 0 }
+            cars: data.cars || [],
+            pagination: data.pagination || { page: 1, totalPages: 1, total: 0 }
         };
+    } catch (error) {
+        console.error('Error fetching cars:', error);
+        return { cars: [], pagination: { page: 1, totalPages: 1, total: 0 } };
     }
 }
 

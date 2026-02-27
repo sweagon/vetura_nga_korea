@@ -34,8 +34,8 @@ export default function Header() {
 
     return (
         <header className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled
-            ? 'bg-ferrari-dark/95 shadow-lg backdrop-blur-md border-b border-ferrari-red/20'
-            : 'bg-ferrari-dark'
+                ? 'bg-ferrari-dark/95 shadow-lg backdrop-blur-md border-b border-ferrari-red/20'
+                : 'bg-ferrari-dark'
             }`}>
             {/* Subtle gradient line */}
             <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-ferrari-red/30 to-transparent" />
@@ -54,14 +54,18 @@ export default function Header() {
                     <div className="hidden md:flex items-center space-x-1">
                         <ThemeToggle />
 
+                        {/* Saved Cars Icon - FIXED */}
                         <Link
                             href="/saved"
                             className="p-2 hover:bg-ferrari-red/10 rounded-lg transition-all duration-300 relative group"
                             title="Të ruajtura"
                         >
-                            <Heart size={20} className="text-white/70 group-hover:text-ferrari-red transition-colors" />
+                            <Heart
+                                size={20}
+                                className="text-white/70 group-hover:text-ferrari-red transition-colors"
+                            />
                             {!savedLoading && savedCount > 0 && (
-                                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-ferrari-red text-white text-xs font-bold rounded-full flex items-center justify-center px-1 shadow-md">
+                                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-ferrari-red text-white text-xs font-bold rounded-full flex items-center justify-center px-1 shadow-md animate-in zoom-in duration-200">
                                     {savedCount > 99 ? '99+' : savedCount}
                                 </span>
                             )}
@@ -224,8 +228,8 @@ export default function Header() {
                 )}
             </div>
 
-            {/* Navigation Menu */}
-            <nav className="hidden md:block bg-ferrari-red/25 border-t border-ferrari-red backdrop-blur-sm">
+            {/* Navigation Menu - FIXED */}
+            <nav className="hidden md:block bg-ferrari-red/95 backdrop-blur-sm border-t border-ferrari-red/20">
                 <div className="container-custom">
                     <ul className="flex items-center space-x-8 py-3">
                         {[
@@ -238,15 +242,12 @@ export default function Header() {
                             <li key={item.href}>
                                 <Link
                                     href={item.href}
-                                    className={`relative text-sm font-medium transition-colors py-1 ${pathname === item.href
-                                        ? 'text-white font-semibold'
-                                        : 'text-white/70 hover:text-white'
+                                    className={`relative text-sm font-medium transition-colors py-1.5 px-2 rounded-lg ${pathname === item.href
+                                            ? 'text-white bg-white/10'
+                                            : 'text-white/70 hover:text-white hover:bg-white/5'
                                         }`}
                                 >
                                     {item.label}
-                                    {pathname === item.href && (
-                                        <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-white rounded-full" />
-                                    )}
                                 </Link>
                             </li>
                         ))}

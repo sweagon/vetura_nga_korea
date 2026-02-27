@@ -1,6 +1,7 @@
+// hooks/useSavedCars.ts
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
@@ -14,7 +15,6 @@ interface SavedCar {
     created_at: string;
 }
 
-// Custom error type for better handling
 interface SupabaseError {
     message: string;
     code?: string;
@@ -32,6 +32,9 @@ export const useSavedCars = () => {
     const [savedCarIds, setSavedCarIds] = useState<Set<number>>(new Set());
     const [authChecked, setAuthChecked] = useState(false);
 
+    // Add ref to prevent multiple sync attempts
+    const syncAttemptedRef = useRef(false);
+
     // Check if user is authenticated with Supabase
     const checkSupabaseAuth = useCallback(async () => {
         try {
@@ -47,8 +50,8 @@ export const useSavedCars = () => {
     const loadSavedCars = useCallback(async () => {
         setLoading(true);
         try {
-            // Handle guest users
             if (!session?.user?.id) {
+                // Guest: only use localStorage
                 const localSaved = localStorage.getItem('savedCars');
                 if (localSaved) {
                     try {
@@ -73,29 +76,13 @@ export const useSavedCars = () => {
                 return;
             }
 
-            // Check if we have a valid Supabase session
+            // Check Supabase session
             const hasSupabaseAuth = await checkSupabaseAuth();
             if (!hasSupabaseAuth) {
+                // Try to refresh
                 const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
                 if (!refreshedSession) {
-                    console.log('No valid Supabase session');
-                    setLoading(false);
-                    setAuthChecked(true);
-                    return;
-                }
-            }
-
-            // Load saved cars from Supabase
-            const { data, error } = await supabase
-                .from('saved_cars')
-                .select('*')
-                .eq('user_id', session.user.id)
-                .order('created_at', { ascending: false });
-
-            if (error) {
-                const supabaseError = error as SupabaseError;
-                if (supabaseError.code === 'PGRST301' || supabaseError.code === '42501') {
-                    console.log('Permission denied - loading from localStorage');
+                    console.log('No valid Supabase session, loading from localStorage');
                     const localSaved = localStorage.getItem('savedCars');
                     if (localSaved) {
                         const parsed = JSON.parse(localSaved);
@@ -106,19 +93,24 @@ export const useSavedCars = () => {
                         } as SavedCar)));
                         setSavedCarIds(new Set(parsed));
                     }
-                } else {
-                    throw error;
+                    setLoading(false);
+                    setAuthChecked(true);
+                    return;
                 }
-            } else {
-                setSavedCars(data || []);
-                setSavedCarIds(new Set(data?.map((car: SavedCar) => car.car_id) || []));
             }
-        } catch (error) {
-            console.error('Error loading saved cars:', error);
-            // Fallback to localStorage
-            const localSaved = localStorage.getItem('savedCars');
-            if (localSaved) {
-                try {
+
+            // Load from Supabase
+            const { data, error } = await supabase
+                .from('saved_cars')
+                .select('*')
+                .eq('user_id', session.user.id)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error loading from Supabase:', error);
+                // Fallback to localStorage
+                const localSaved = localStorage.getItem('savedCars');
+                if (localSaved) {
                     const parsed = JSON.parse(localSaved);
                     setSavedCars(parsed.map((id: number) => ({
                         car_id: id,
@@ -126,15 +118,26 @@ export const useSavedCars = () => {
                         created_at: new Date().toISOString()
                     } as SavedCar)));
                     setSavedCarIds(new Set(parsed));
-                } catch (e) {
-                    console.error('Error parsing local saved cars:', e);
+                }
+            } else {
+                setSavedCars(data || []);
+                setSavedCarIds(new Set(data?.map((car: SavedCar) => car.car_id) || []));
+
+                // Update localStorage to match Supabase (ensures cache is clean)
+                if (data && data.length > 0) {
+                    localStorage.setItem('savedCars', JSON.stringify(data.map((c: SavedCar) => c.car_id)));
+                } else {
+                    // If Supabase has no cars, clear localStorage
+                    localStorage.removeItem('savedCars');
                 }
             }
+        } catch (error) {
+            console.error('Error loading saved cars:', error);
         } finally {
             setLoading(false);
             setAuthChecked(true);
         }
-    }, [session?.user?.id, supabase, showToast, checkSupabaseAuth]);
+    }, [session?.user?.id, supabase, checkSupabaseAuth]);
 
     // Load on mount and when session changes
     useEffect(() => {
@@ -145,26 +148,7 @@ export const useSavedCars = () => {
     const saveCar = async (carId: number, carData?: any) => {
         if (!session?.user?.id) {
             // Guest: use localStorage
-            try {
-                const localSaved = JSON.parse(localStorage.getItem('savedCars') || '[]');
-                if (!localSaved.includes(carId)) {
-                    const updated = [...localSaved, carId];
-                    localStorage.setItem('savedCars', JSON.stringify(updated));
-                    setSavedCarIds(new Set(updated));
-                    setSavedCars(prev => [...prev, {
-                        car_id: carId,
-                        car_data: carData,
-                        id: `local-${carId}`,
-                        notes: null,
-                        created_at: new Date().toISOString()
-                    } as SavedCar]);
-                    showToast('success', 'Makina u ruajt në këtë pajisje');
-                }
-            } catch (error) {
-                console.error('Error saving to localStorage:', error);
-                showToast('error', 'Nuk mund të ruhej makina');
-            }
-            return;
+            return saveToLocalStorage(carId, carData);
         }
 
         try {
@@ -176,11 +160,8 @@ export const useSavedCars = () => {
                 .eq('car_id', carId)
                 .maybeSingle();
 
-            if (checkError) {
-                const typedError = checkError as SupabaseError;
-                if (typedError.code !== 'PGRST116') {
-                    throw checkError;
-                }
+            if (checkError && checkError.code !== 'PGRST116') {
+                throw checkError;
             }
 
             if (existing) {
@@ -188,7 +169,10 @@ export const useSavedCars = () => {
                 return;
             }
 
-            // Save to Supabase
+            // Save to Supabase with timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
             const { data, error } = await supabase
                 .from('saved_cars')
                 .insert({
@@ -199,51 +183,112 @@ export const useSavedCars = () => {
                 .select()
                 .single();
 
-            if (error) {
-                const typedError = error as SupabaseError;
+            clearTimeout(timeoutId);
 
-                if (typedError.code === '42501') {
-                    // Permission denied - fallback to localStorage
-                    const localSaved = JSON.parse(localStorage.getItem('savedCars') || '[]');
-                    if (!localSaved.includes(carId)) {
-                        const updated = [...localSaved, carId];
-                        localStorage.setItem('savedCars', JSON.stringify(updated));
-                        setSavedCarIds(new Set(updated));
-                        setSavedCars(prev => [...prev, {
-                            car_id: carId,
-                            car_data: carData,
-                            id: `local-${carId}`,
-                            notes: null,
-                            created_at: new Date().toISOString()
-                        } as SavedCar]);
-                        showToast('success', 'Makina u ruajt në këtë pajisje');
-                    }
-                    return;
+            if (error) {
+                // Handle specific error codes
+                switch (error.code) {
+                    case '23505': // Unique violation
+                        showToast('info', 'Makina është tashmë e ruajtur');
+                        return;
+
+                    case '42501': // Permission denied
+                    case 'PGRST301': // JWT expired
+                    case 'PGRST302': // JWT invalid
+                        console.log('Auth error, falling back to localStorage');
+                        await saveToLocalStorage(carId, carData);
+                        return;
+
+                    case '42P01': // Table doesn't exist
+                    case '3F000': // Schema error
+                        console.error('Database schema error:', error);
+                        showToast('error', 'Gabim në sistem. Makina u ruajt lokalish.');
+                        await saveToLocalStorage(carId, carData);
+                        return;
+
+                    default:
+                        // Network or other errors
+                        console.error('Supabase error:', error);
+                        await saveToLocalStorage(carId, carData);
+                        showToast('warning', 'Lidhja me serverin dështoi. Makina u ruajt lokalish.');
                 }
-                throw error;
+                return;
             }
 
+            // Success - update state and localStorage
             setSavedCars(prev => [data, ...prev]);
             setSavedCarIds(prev => new Set([...prev, carId]));
+
+            // Update localStorage as backup
+            const localSaved = JSON.parse(localStorage.getItem('savedCars') || '[]');
+            if (!localSaved.includes(carId)) {
+                localStorage.setItem('savedCars', JSON.stringify([...localSaved, carId]));
+            }
+
             showToast('success', 'Makina u ruajt në llogarinë tuaj');
+
+        } catch (error: any) {
+            if (error.name === 'AbortError') {
+                console.log('Request timeout');
+                await saveToLocalStorage(carId, carData);
+                showToast('warning', 'Kërkesa zgjati shumë. Makina u ruajt lokalish.');
+            } else {
+                console.error('Unexpected error saving car:', error);
+                await saveToLocalStorage(carId, carData);
+                showToast('error', 'Ndodhi një gabim. Makina u ruajt lokalish.');
+            }
+        }
+    };
+
+    // Helper function for localStorage saves
+    const saveToLocalStorage = async (carId: number, carData?: any) => {
+        try {
+            const localSaved = JSON.parse(localStorage.getItem('savedCars') || '[]');
+            if (!localSaved.includes(carId)) {
+                const updated = [...localSaved, carId];
+                localStorage.setItem('savedCars', JSON.stringify(updated));
+                setSavedCarIds(new Set(updated));
+                setSavedCars(prev => [...prev, {
+                    car_id: carId,
+                    car_data: carData,
+                    id: `local-${carId}`,
+                    notes: null,
+                    created_at: new Date().toISOString()
+                } as SavedCar]);
+            }
         } catch (error) {
-            console.error('Error saving car:', error);
-            showToast('error', 'Nuk mund të ruhej makina');
+            console.error('Error saving to localStorage:', error);
         }
     };
 
     // Remove saved car
     const removeSavedCar = async (carId: number) => {
+        // Optimistically update UI
+        const previousCars = savedCars;
+        const previousIds = savedCarIds;
+
+        setSavedCars(prev => prev.filter(car => car.car_id !== carId));
+        setSavedCarIds(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(carId);
+            return newSet;
+        });
+
         if (!session?.user?.id) {
             // Guest: use localStorage
             try {
                 const localSaved = JSON.parse(localStorage.getItem('savedCars') || '[]');
                 const updated = localSaved.filter((id: number) => id !== carId);
                 localStorage.setItem('savedCars', JSON.stringify(updated));
-                setSavedCarIds(new Set(updated));
-                setSavedCars(prev => prev.filter(car => car.car_id !== carId));
+
+                // Also clear from any backup cache
+                localStorage.removeItem(`saved_car_${carId}`);
+
                 showToast('success', 'Makina u hoq nga të ruajturat');
             } catch (error) {
+                // Revert on error
+                setSavedCars(previousCars);
+                setSavedCarIds(previousIds);
                 console.error('Error removing from localStorage:', error);
                 showToast('error', 'Nuk mund të hiqej makina');
             }
@@ -258,29 +303,27 @@ export const useSavedCars = () => {
                 .eq('car_id', carId);
 
             if (error) {
-                const typedError = error as SupabaseError;
-
-                if (typedError.code === '42501') {
-                    // Permission denied - fallback to localStorage
-                    const localSaved = JSON.parse(localStorage.getItem('savedCars') || '[]');
-                    const updated = localSaved.filter((id: number) => id !== carId);
-                    localStorage.setItem('savedCars', JSON.stringify(updated));
-                    setSavedCarIds(new Set(updated));
-                    setSavedCars(prev => prev.filter(car => car.car_id !== carId));
-                    showToast('success', 'Makina u hoq nga të ruajturat');
-                    return;
-                }
-                throw error;
+                console.error('Supabase delete error:', error);
+                // Revert on error
+                setSavedCars(previousCars);
+                setSavedCarIds(previousIds);
+                showToast('error', 'Nuk mund të hiqej makina');
+                return;
             }
 
-            setSavedCars(prev => prev.filter(car => car.car_id !== carId));
-            setSavedCarIds(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(carId);
-                return newSet;
-            });
+            // Also remove from localStorage (backup)
+            const localSaved = JSON.parse(localStorage.getItem('savedCars') || '[]');
+            const updated = localSaved.filter((id: number) => id !== carId);
+            localStorage.setItem('savedCars', JSON.stringify(updated));
+
+            // Clear any cached car details
+            localStorage.removeItem(`saved_car_${carId}`);
+
             showToast('success', 'Makina u hoq nga të ruajturat');
         } catch (error) {
+            // Revert on error
+            setSavedCars(previousCars);
+            setSavedCarIds(previousIds);
             console.error('Error removing saved car:', error);
             showToast('error', 'Nuk mund të hiqej makina');
         }
@@ -301,15 +344,9 @@ export const useSavedCars = () => {
     };
 
     // Sync localStorage to Supabase when user logs in
+    // Sync localStorage to Supabase when user logs in
     const syncLocalToSupabase = useCallback(async () => {
         if (!session?.user?.id) return;
-
-        // Check if we have a valid Supabase session
-        const hasSupabaseAuth = await checkSupabaseAuth();
-        if (!hasSupabaseAuth) {
-            console.log('No valid Supabase session for sync');
-            return;
-        }
 
         const localSaved = localStorage.getItem('savedCars');
         if (!localSaved) return;
@@ -318,6 +355,13 @@ export const useSavedCars = () => {
             const localIds = JSON.parse(localSaved);
             if (!Array.isArray(localIds) || localIds.length === 0) return;
 
+            // Check connection first
+            const { error: healthCheck } = await supabase.from('saved_cars').select('id').limit(1);
+            if (healthCheck) {
+                console.log('Supabase unavailable, skipping sync');
+                return;
+            }
+
             // Get existing saved cars from Supabase
             const { data: existing, error: fetchError } = await supabase
                 .from('saved_cars')
@@ -325,57 +369,92 @@ export const useSavedCars = () => {
                 .eq('user_id', session.user.id);
 
             if (fetchError) {
-                const typedError = fetchError as SupabaseError;
+                console.error('Error fetching existing saved cars:', {
+                    message: fetchError?.message || 'Unknown error',
+                    code: fetchError?.code || null
+                });
 
-                if (typedError.code === '42501') {
-                    // Permission denied - can't sync
+                // Don't show toast for auth errors
+                if (fetchError.code === '42501' || fetchError.code === 'PGRST301') {
                     return;
                 }
-                throw fetchError;
+
+                showToast('error', 'Nuk mund të sinkronizoheshin makinat.');
+                return;
             }
 
             const existingIds = new Set(existing?.map((e: { car_id: number }) => e.car_id) || []);
-            // Find new cars to sync
             const newIds = localIds.filter((id: number) => !existingIds.has(id));
 
-            if (newIds.length > 0) {
-                // Insert new cars
+            if (newIds.length === 0) {
+                // Nothing to sync, just clear localStorage
+                localStorage.removeItem('savedCars');
+                return;
+            }
+
+            // Sync in batches to avoid overwhelming the API
+            const batchSize = 10;
+            let syncedCount = 0;
+
+            for (let i = 0; i < newIds.length; i += batchSize) {
+                const batch = newIds.slice(i, i + batchSize);
                 const { error: insertError } = await supabase
                     .from('saved_cars')
-                    .insert(newIds.map((car_id: number) => ({
+                    .insert(batch.map((car_id: number) => ({
                         user_id: session.user.id,
                         car_id,
                         car_data: null,
                     })));
 
                 if (insertError) {
-                    const typedError = insertError as SupabaseError;
+                    console.error('Error syncing batch:', {
+                        batch,
+                        error: {
+                            message: insertError?.message || 'Unknown error',
+                            code: insertError?.code || null
+                        }
+                    });
 
-                    if (typedError.code !== '42501') {
-                        throw insertError;
+                    // If it's a duplicate error, continue with next batch
+                    if (insertError.code === '23505') {
+                        syncedCount += batch.length;
+                        continue;
                     }
-                    return;
+
+                    // Stop on other errors
+                    break;
                 }
 
-                // Clear localStorage after successful sync
-                localStorage.removeItem('savedCars');
-
-                // Reload saved cars
-                await loadSavedCars();
-
-                showToast('success', `${newIds.length} makina u sinkronizuan me llogarinë tuaj`);
+                syncedCount += batch.length;
             }
-        } catch (error) {
-            console.error('Error syncing saved cars:', error);
-        }
-    }, [session?.user?.id, supabase, loadSavedCars, showToast, checkSupabaseAuth]);
 
-    // Sync when user logs in
+            if (syncedCount > 0) {
+                // Clear localStorage and reload
+                localStorage.removeItem('savedCars');
+                await loadSavedCars();
+                showToast('success', `${syncedCount} makina u sinkronizuan`);
+            }
+
+        } catch (error) {
+            console.error('Error in sync process:', error);
+            // Don't show toast for background sync errors
+        }
+    }, [session?.user?.id, supabase, loadSavedCars, showToast]);
+
+    // Sync when user logs in - ONCE only
     useEffect(() => {
-        if (session?.user?.id && authChecked) {
+        if (session?.user?.id && authChecked && !syncAttemptedRef.current) {
+            syncAttemptedRef.current = true;
             syncLocalToSupabase();
         }
     }, [session?.user?.id, authChecked, syncLocalToSupabase]);
+
+    // Reset sync when user logs out
+    useEffect(() => {
+        if (!session?.user?.id) {
+            syncAttemptedRef.current = false;
+        }
+    }, [session?.user?.id]);
 
     return {
         savedCars,

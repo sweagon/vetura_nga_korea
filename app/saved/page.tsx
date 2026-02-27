@@ -2,91 +2,79 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import { useSavedCars } from '@/hooks/useSavedCars';
+import { fetchCarDetails } from '@/lib/api';
 import CarCard from '@/components/cars/CarCard';
 import EmptyState from '@/components/ui/EmptyState';
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
-import { useSavedCars } from '@/hooks/useSavedCars';
-import { fetchCarDetails } from '@/lib/api';
-import { Heart, LogIn, RefreshCw, X } from 'lucide-react';
+import { Heart, LogIn } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SavedPage() {
     const { data: session, status } = useSession();
-    const router = useRouter();
-    const { savedCars, loading, removeSavedCar, reloadSavedCars } = useSavedCars();
+    const { savedCars, loading, removeSavedCar } = useSavedCars();
     const [carDetails, setCarDetails] = useState<Map<number, any>>(new Map());
     const [loadingDetails, setLoadingDetails] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [refreshing, setRefreshing] = useState(false);
+    const [isRemoving, setIsRemoving] = useState<number | null>(null);
 
     // Fetch car details for saved cars
-    const fetchDetails = useCallback(async () => {
-        if (savedCars.length === 0) {
-            setLoadingDetails(false);
-            return;
-        }
-
-        setLoadingDetails(true);
-        setError(null);
-        const detailsMap = new Map();
-
-        try {
-            await Promise.all(
-                savedCars.map(async (saved) => {
-                    if (!detailsMap.has(saved.car_id)) {
-                        const car = await fetchCarDetails(saved.car_id.toString());
-                        if (car) {
-                            detailsMap.set(saved.car_id, car);
-                        }
-                    }
-                })
-            );
-
-            setCarDetails(detailsMap);
-        } catch (err) {
-            console.error('Error fetching saved car details:', err);
-            setError('Failed to load some saved cars. Please try again.');
-        } finally {
-            setLoadingDetails(false);
-        }
-    }, [savedCars]);
-
     useEffect(() => {
+        const loadDetails = async () => {
+            if (savedCars.length === 0) {
+                setLoadingDetails(false);
+                return;
+            }
+
+            setLoadingDetails(true);
+            const detailsMap = new Map();
+
+            try {
+                await Promise.all(
+                    savedCars.map(async (saved) => {
+                        if (!detailsMap.has(saved.car_id)) {
+                            const car = await fetchCarDetails(saved.car_id.toString());
+                            if (car) {
+                                detailsMap.set(saved.car_id, car);
+                            }
+                        }
+                    })
+                );
+
+                setCarDetails(detailsMap);
+            } catch (error) {
+                console.error('Error fetching car details:', error);
+            } finally {
+                setLoadingDetails(false);
+            }
+        };
+
         if (!loading) {
-            fetchDetails();
+            loadDetails();
         }
-    }, [savedCars, loading, fetchDetails]);
+    }, [savedCars, loading]);
 
     const handleRemove = async (carId: number) => {
-        try {
-            await removeSavedCar(carId);
-            // Optimistically update UI
-            setCarDetails(prev => {
-                const newMap = new Map(prev);
-                newMap.delete(carId);
-                return newMap;
-            });
-        } catch (error) {
-            console.error('Error removing car:', error);
-            setError('Failed to remove car. Please try again.');
-        }
+        setIsRemoving(carId);
+        await removeSavedCar(carId);
+
+        // Update local state optimistically
+        setCarDetails(prev => {
+            const newMap = new Map(prev);
+            newMap.delete(carId);
+            return newMap;
+        });
+
+        setIsRemoving(null);
     };
 
-    const handleRefresh = async () => {
-        setRefreshing(true);
-        await reloadSavedCars();
-        await fetchDetails();
-        setRefreshing(false);
-    };
-
-    if (status === 'loading' || loading) {
+    // Show loading state while either saved cars or details are loading
+    if (status === 'loading' || loading || loadingDetails) {
         return (
             <div className="container-custom py-8">
                 <div className="h-8 bg-surface-2 rounded w-64 mb-8 animate-pulse"></div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {[...Array(4)].map((_, i) => (
+                    {[...Array(Math.max(4, savedCars.length || 4))].map((_, i) => (
                         <LoadingSkeleton key={i} />
                     ))}
                 </div>
@@ -116,73 +104,44 @@ export default function SavedPage() {
         );
     }
 
-    const hasCars = savedCars.length > 0;
+    if (savedCars.length === 0) {
+        return (
+            <EmptyState
+                type="saved"
+                message="Filloni duke ruajtur makina që ju pëlqejnë dhe ato do të shfaqen këtu."
+            />
+        );
+    }
 
     return (
         <div className="container-custom py-8">
             <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold text-primary mb-2">Makinat e ruajtura</h1>
-                    <p className="text-secondary">
-                        {savedCars.length} {savedCars.length === 1 ? 'makinë e ruajtur' : 'makina të ruajtura'}
-                    </p>
-                </div>
-                <button
-                    onClick={handleRefresh}
-                    disabled={refreshing}
-                    className="p-2 hover:bg-surface-2 rounded-lg transition-colors"
-                    title="Rifresko"
-                >
-                    <RefreshCw size={20} className={`text-muted ${refreshing ? 'animate-spin' : ''}`} />
-                </button>
+                <h1 className="text-3xl font-bold text-primary">Makinat e ruajtura</h1>
+                <p className="text-secondary">
+                    {savedCars.length} {savedCars.length === 1 ? 'makinë' : 'makina'}
+                </p>
             </div>
 
-            {error && (
-                <div className="bg-error-bg border border-error-border text-error-text px-4 py-3 rounded-lg mb-6 flex items-center justify-between">
-                    <span>{error}</span>
-                    <button onClick={() => setError(null)} className="text-error-text hover:text-error-text/80">
-                        <X size={18} />
-                    </button>
-                </div>
-            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {savedCars.map((saved) => {
+                    const car = carDetails.get(saved.car_id);
+                    if (!car) return <LoadingSkeleton key={saved.id} />;
 
-            {loadingDetails ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {[...Array(Math.min(4, savedCars.length || 4))].map((_, i) => (
-                        <LoadingSkeleton key={i} />
-                    ))}
-                </div>
-            ) : !hasCars ? (
-                <EmptyState
-                    type="saved"
-                    message="Filloni duke ruajtur makina që ju pëlqejnë dhe ato do të shfaqen këtu."
-                />
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {savedCars.map((saved) => {
-                        const car = carDetails.get(saved.car_id);
-
-                        return (
-                            <div key={saved.id} className="relative">
-                                {car ? (
-                                    <>
-                                        <CarCard car={car} />
-                                        <button
-                                            onClick={() => handleRemove(saved.car_id)}
-                                            className="absolute top-3 right-3 z-10 p-2 bg-surface rounded-full shadow-md hover:bg-surface-2 transition border border-medium"
-                                            title="Hiq nga të ruajturat"
-                                        >
-                                            <Heart size={18} className="fill-ferrari-red text-ferrari-red" />
-                                        </button>
-                                    </>
-                                ) : (
-                                    <LoadingSkeleton />
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
+                    return (
+                        <div key={saved.id} className="relative">
+                            <CarCard car={car} />
+                            <button
+                                onClick={() => handleRemove(saved.car_id)}
+                                disabled={isRemoving === saved.car_id}
+                                className="absolute top-3 right-3 z-10 p-2 bg-surface rounded-full shadow-md hover:bg-surface-2 transition border border-medium disabled:opacity-50"
+                                title="Hiq nga të ruajturat"
+                            >
+                                <Heart size={18} className="fill-ferrari-red text-ferrari-red" />
+                            </button>
+                        </div>
+                    );
+                })}
+            </div>
         </div>
     );
 }

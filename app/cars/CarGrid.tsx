@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import CarCard from '@/components/cars/CarCard';
 import { fetchCars, type Car } from '@/lib/api';
-import { CarIcon, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Car as CarIcon } from 'lucide-react';
 
 // Cache for car data
 const carCache = new Map<string, { cars: Car[]; timestamp: number }>();
@@ -26,6 +26,13 @@ export default function CarGrid() {
 
     const currentPage = Number(searchParams.get('page')) || 1;
     const itemsPerPage = 12;
+
+    // Get makes array from URL
+    const getMakesArray = useCallback((): string[] => {
+        const makes = searchParams.get('make');
+        if (!makes) return [];
+        return makes.split(',').filter(Boolean);
+    }, [searchParams]);
 
     // Build cache key from search params
     const getCacheKey = useCallback(() => {
@@ -67,30 +74,90 @@ export default function CarGrid() {
                     return;
                 }
 
-                // Build filters from URL params
-                const filters: Record<string, string> = {};
-                searchParams.forEach((value, key) => {
-                    filters[key] = value;
-                });
+                // Build base filters from URL params (excluding make)
+                const baseFilters: Record<string, any> = {};
+
+                if (searchParams.get('search')) baseFilters.search = searchParams.get('search')!;
+                if (searchParams.get('model')) baseFilters.model = searchParams.get('model')!;
+                if (searchParams.get('minPrice')) baseFilters.minPrice = searchParams.get('minPrice')!;
+                if (searchParams.get('maxPrice')) baseFilters.maxPrice = searchParams.get('maxPrice')!;
+                if (searchParams.get('minYear')) baseFilters.minYear = searchParams.get('minYear')!;
+                if (searchParams.get('maxYear')) baseFilters.maxYear = searchParams.get('maxYear')!;
+                if (searchParams.get('fuelType')) baseFilters.fuelType = searchParams.get('fuelType')!;
+                if (searchParams.get('transmission')) baseFilters.transmission = searchParams.get('transmission')!;
+                if (searchParams.get('sort')) baseFilters.sort = searchParams.get('sort')!;
 
                 // Add pagination
-                filters.page = currentPage.toString();
-                filters.limit = itemsPerPage.toString();
+                baseFilters.page = '1'; // Fetch first page for each make
+                baseFilters.limit = '50'; // Fetch more cars per make to combine
 
-                console.log('🔍 Fetching cars with filters:', filters);
+                const makes = getMakesArray();
+                let allCars: Car[] = [];
 
-                const data = await fetchCars(filters);
+                if (makes.length > 1) {
+                    console.log('🔍 Fetching multiple makes separately:', makes);
 
-                setCars(data.cars);
+                    // Fetch each make separately
+                    const promises = makes.map(make =>
+                        fetchCars({
+                            ...baseFilters,
+                            make
+                        })
+                    );
+
+                    const results = await Promise.all(promises);
+
+                    // Combine all cars and remove duplicates by id
+                    const carMap = new Map<number, Car>();
+                    results.forEach(result => {
+                        result.cars.forEach(car => {
+                            if (!carMap.has(car.id)) {
+                                carMap.set(car.id, car);
+                            }
+                        });
+                    });
+
+                    allCars = Array.from(carMap.values());
+                    console.log(`✅ Combined ${allCars.length} cars from ${makes.length} makes`);
+                } else {
+                    // Single make or no make
+                    const filters = { ...baseFilters };
+                    if (makes.length === 1) {
+                        filters.make = makes[0];
+                    }
+
+                    console.log('🔍 Fetching single make:', filters);
+                    const data = await fetchCars(filters);
+                    allCars = data.cars;
+                }
+
+                // Apply sorting client-side if needed
+                const sortOption = searchParams.get('sort') || 'price_desc';
+                allCars = [...allCars].sort((a, b) => {
+                    switch (sortOption) {
+                        case 'price_asc': return (a.price || 0) - (b.price || 0);
+                        case 'price_desc': return (b.price || 0) - (a.price || 0);
+                        case 'year_desc': return (b.year || 0) - (a.year || 0);
+                        case 'mileage_asc': return (a.mileage || 0) - (b.mileage || 0);
+                        default: return (b.id || 0) - (a.id || 0);
+                    }
+                });
+
+                // Apply pagination
+                const start = (currentPage - 1) * itemsPerPage;
+                const paginatedCars = allCars.slice(start, start + itemsPerPage);
+                const totalPages = Math.ceil(allCars.length / itemsPerPage);
+
+                setCars(paginatedCars);
                 setPagination({
                     page: currentPage,
-                    totalPages: data.pagination.totalPages,
-                    total: data.pagination.total
+                    totalPages: totalPages || 1,
+                    total: allCars.length
                 });
 
                 // Cache the results
                 carCache.set(cacheKey, {
-                    cars: data.cars,
+                    cars: allCars,
                     timestamp: Date.now()
                 });
 
@@ -123,25 +190,25 @@ export default function CarGrid() {
                 abortControllerRef.current.abort();
             }
         };
-    }, [searchParams, currentPage, getCacheKey, itemsPerPage]);
+    }, [searchParams, currentPage, getCacheKey, itemsPerPage, getMakesArray]);
 
     const handlePageChange = (newPage: number) => {
         const params = new URLSearchParams(searchParams.toString());
         params.set('page', newPage.toString());
 
-        // Update URL without refresh - this will trigger the useEffect
+        // Update URL without refresh
         window.history.pushState(null, '', `/cars?${params.toString()}`);
-
-        // Dispatch event for any listeners
         window.dispatchEvent(new PopStateEvent('popstate'));
-
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleClearFilters = () => {
+        window.location.href = '/cars';
     };
 
     if (loading) {
         return (
             <div className="space-y-6">
-                <div className="h-10 bg-surface-2 rounded-lg w-64 animate-pulse"></div>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                     {[...Array(8)].map((_, i) => (
                         <div key={i} className="bg-surface rounded-xl border border-medium p-4">
@@ -165,13 +232,19 @@ export default function CarGrid() {
                 <p className="text-secondary mb-6">
                     Provo të ndryshosh filtrat ose të kërkosh për diçka tjetër
                 </p>
+                <button
+                    onClick={handleClearFilters}
+                    className="btn-primary"
+                >
+                    Pastro filtrat
+                </button>
             </div>
         );
     }
 
     return (
         <div className="space-y-8">
-            {/* Results count and sort */}
+            {/* Results count */}
             <div className="flex items-center justify-between">
                 <p className="text-secondary">
                     Duke shfaqur <span className="font-semibold text-ferrari-red">{cars.length}</span> nga {pagination.total} makina
