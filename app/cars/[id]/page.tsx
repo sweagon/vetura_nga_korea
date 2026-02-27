@@ -92,7 +92,7 @@ export default async function CarDetailPage({ params }: PageProps) {
             <StructuredData
                 type="breadcrumb"
                 breadcrumbs={[
-                    { name: 'Ferrari Export', url: '/' },
+                    { name: 'Formula Export', url: '/' },
                     { name: 'Makina', url: '/cars' },
                     { name: car.make, url: `/cars?make=${car.make}` },
                     { name: `${car.make} ${car.model}`, url: `/cars/${car.id}` }
@@ -107,7 +107,7 @@ export default async function CarDetailPage({ params }: PageProps) {
                     <div className="container-custom py-3">
                         <div className="flex items-center text-sm">
                             <Link href="/" className="text-muted hover:text-ferrari-red transition flex items-center gap-1">
-                                <span>Ferrari Export</span>
+                                <span>Formula Export</span>
                             </Link>
                             <ChevronRight size={14} className="mx-2 text-muted" />
                             <Link href="/cars" className="text-muted hover:text-ferrari-red transition">Makina</Link>
