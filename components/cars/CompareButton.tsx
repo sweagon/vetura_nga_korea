@@ -67,8 +67,8 @@ export default function CompareButton({ car, variant = 'icon' }: CompareButtonPr
                 onClick={handleCompare}
                 disabled={isUpdating}
                 className={`p-2 rounded-lg transition-all ${isInCompare
-                        ? 'bg-ferrari-red text-white hover:bg-ferrari-dark'
-                        : 'bg-surface-2 text-secondary hover:bg-ferrari-red hover:text-white border border-medium'
+                    ? 'bg-ferrari-red text-white hover:bg-ferrari-dark'
+                    : 'bg-surface-2 text-secondary hover:bg-ferrari-red hover:text-white border border-medium'
                     } ${isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
                 title={isInCompare ? "Hiq nga krahasimi" : "Shto në krahasim"}
             >
@@ -83,8 +83,8 @@ export default function CompareButton({ car, variant = 'icon' }: CompareButtonPr
                 onClick={handleCompare}
                 disabled={isUpdating}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isInCompare
-                        ? 'bg-ferrari-red text-white hover:bg-ferrari-dark'
-                        : 'bg-surface-2 text-secondary hover:bg-ferrari-red hover:text-white border border-medium'
+                    ? 'bg-ferrari-red text-white hover:bg-ferrari-dark'
+                    : 'bg-surface-2 text-secondary hover:bg-ferrari-red hover:text-white border border-medium'
                     } ${isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
                 <GitCompare size={14} />
@@ -99,8 +99,8 @@ export default function CompareButton({ car, variant = 'icon' }: CompareButtonPr
             onClick={handleCompare}
             disabled={isUpdating}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${isInCompare
-                    ? 'bg-ferrari-red text-white hover:bg-ferrari-dark'
-                    : 'bg-surface-2 text-secondary hover:bg-ferrari-red hover:text-white border border-medium'
+                ? 'bg-ferrari-red text-white hover:bg-ferrari-dark'
+                : 'bg-surface-2 text-secondary hover:bg-ferrari-red hover:text-white border border-medium'
                 } ${isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
             <GitCompare size={18} />

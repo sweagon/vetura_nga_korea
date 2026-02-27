@@ -36,7 +36,6 @@ export default function CarCard({ car }: CarCardProps) {
                 image: car.images?.[0],
             });
 
-            // Dispatch events for matchmaker
             const event = new CustomEvent(wasSaved ? 'carUnsave' : 'carSave', {
                 detail: car
             });
@@ -55,7 +54,7 @@ export default function CarCard({ car }: CarCardProps) {
         <Link href={`/cars/${car.id}`} onClick={handleView}>
             <div className="bg-surface rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 group border border-medium">
                 {/* Image Container */}
-                <div className="relative h-48 bg-secondary">
+                <div className="relative h-48 bg-surface-2">
                     {car.images && car.images.length > 0 && !imageError ? (
                         <img
                             src={car.images[0]}
@@ -69,7 +68,7 @@ export default function CarCard({ car }: CarCardProps) {
                         </div>
                     )}
 
-                    {/* Save Button - FIXED */}
+                    {/* Save Button */}
                     <button
                         onClick={handleSave}
                         disabled={isSaving}
@@ -80,20 +79,20 @@ export default function CarCard({ car }: CarCardProps) {
                         <Heart
                             size={18}
                             className={`transition-colors ${isSaved
-                                    ? 'fill-ferrari-red text-ferrari-red'
-                                    : 'text-secondary hover:text-ferrari-red'
+                                ? 'fill-ferrari-red text-ferrari-red'
+                                : 'text-secondary hover:text-ferrari-red'
                                 }`}
                         />
                     </button>
 
-                    {/* Badge for new/featured - FIXED text color */}
+                    {/* Featured Badge */}
                     {car.isFeatured && (
                         <div className="absolute top-3 left-3 bg-ferrari-red text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
                             🔥 Featured
                         </div>
                     )}
 
-                    {/* Sold badge */}
+                    {/* Sold Badge */}
                     {car.sold && (
                         <div className="absolute top-3 left-3 bg-error-bg text-error-text px-3 py-1 rounded-full text-xs font-semibold shadow-md border border-error-border">
                             Sold
@@ -140,7 +139,7 @@ export default function CarCard({ car }: CarCardProps) {
                         </div>
                     </div>
 
-                    {/* Actions - FIXED CompareButton */}
+                    {/* Actions */}
                     <div className="flex items-center justify-between mt-3 pt-3 border-t border-medium">
                         <CompareButton
                             car={{ id: car.id, make: car.make, model: car.model }}
