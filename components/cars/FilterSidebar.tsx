@@ -542,7 +542,7 @@ export default function FilterSidebar({ className = '' }: FilterSidebarProps) {
                                         onClick={() => applyQuickFilter(filter.filter)}
                                         className="px-3 py-1.5 bg-secondary hover:bg-ferrari-red hover:text-white rounded-full text-xs font-medium transition-all flex items-center gap-1 border border-medium"
                                     >
-                                        <span>{filter.icon}</span>
+                                        {/*<span>{filter.icon}</span>*/}
                                         <span>{filter.label}</span>
                                     </button>
                                 ))}

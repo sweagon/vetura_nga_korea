@@ -80,7 +80,7 @@ export default function CarCard({ car }: CarCardProps) {
                             size={18}
                             className={`transition-colors ${isSaved
                                 ? 'fill-ferrari-red text-ferrari-red'
-                                : 'text-secondary hover:text-ferrari-red'
+                                : 'text-ferrari-red hover:text-ferrari-dark'
                                 }`}
                         />
                     </button>

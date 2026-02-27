@@ -1,10 +1,20 @@
-// app/offers/page.tsx
-export const dynamic = 'force-dynamic';
-// or
-export const revalidate = 0;
-
+import { Metadata } from 'next';
 import { Suspense } from 'react';
 import OffersContent from './OffersContent';
+
+export const metadata: Metadata = {
+    title: 'Ofertat e Javës | Formula Export',
+    description: 'Ofertat më të mira të javës për makina nga Korea. Çmime speciale për makina cilësore.',
+    keywords: ['oferta', 'zbritje', 'makina të lira', 'blerje makine'],
+    openGraph: {
+        title: 'Ofertat e Javës | Formula Export',
+        description: 'Ofertat më të mira të javës',
+        images: ['/og-image.jpg'],
+    },
+};
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 
 export default function OffersPage() {
     return (

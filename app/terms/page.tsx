@@ -1,3 +1,4 @@
+import { Metadata } from 'next';
 import Link from 'next/link';
 import {
     Scale,
@@ -11,6 +12,15 @@ import {
     XCircle,
     Info
 } from 'lucide-react';
+
+export const metadata: Metadata = {
+    title: 'Termat dhe Kushtet | Formula Export',
+    description: 'Termat dhe kushtet e përdorimit të platformës Formula Export.',
+    robots: {
+        index: true,
+        follow: true,
+    },
+};
 
 export default function TermsPage() {
     const lastUpdated = "25 Shkurt 2026";

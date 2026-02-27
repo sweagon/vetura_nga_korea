@@ -54,16 +54,12 @@ export default function Header() {
                     <div className="hidden md:flex items-center space-x-1">
                         <ThemeToggle />
 
-                        {/* Saved Cars Icon - FIXED */}
                         <Link
                             href="/saved"
                             className="p-2 hover:bg-ferrari-red/10 rounded-lg transition-all duration-300 relative group"
                             title="Të ruajtura"
                         >
-                            <Heart
-                                size={20}
-                                className="text-white/70 group-hover:text-ferrari-red transition-colors"
-                            />
+                            <Heart size={20} className="text-white/70 group-hover:text-ferrari-red transition-colors" />
                             {!savedLoading && savedCount > 0 && (
                                 <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-ferrari-red text-white text-xs font-bold rounded-full flex items-center justify-center px-1 shadow-md animate-in zoom-in duration-200">
                                     {savedCount > 99 ? '99+' : savedCount}
@@ -228,7 +224,7 @@ export default function Header() {
                 )}
             </div>
 
-            {/* Navigation Menu - FIXED */}
+            {/* Navigation Menu */}
             <nav className="hidden md:block bg-ferrari-red/95 backdrop-blur-sm border-t border-ferrari-red/20">
                 <div className="container-custom">
                     <ul className="flex items-center space-x-8 py-3">

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Metadata } from 'next';
 import {
     Shield,
     Mail,
@@ -11,6 +12,15 @@ import {
     AlertCircle,
     CheckCircle
 } from 'lucide-react';
+
+export const metadata: Metadata = {
+    title: 'Politika e Privatësisë | Formula Export',
+    description: 'Politika e privatësisë së Formula Export. Mësoni si mbrojmë të dhënat tuaja personale.',
+    robots: {
+        index: true,
+        follow: true,
+    },
+};
 
 export default function PrivacyPage() {
     const lastUpdated = "25 Shkurt 2026";

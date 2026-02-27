@@ -1,6 +1,18 @@
 // app/cars/page.tsx (Enhanced Version)
 import { Suspense } from 'react';
 import CarsContent from './CarsContent';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Makina për Shitje | Formula Export',
+    description: 'Shfleto makinat më të mira nga Korea. BMW, Audi, Mercedes-Benz, Volkswagen dhe marka të tjera me çmime konkurruese.',
+    keywords: ['makina për shitje', 'makina nga Korea', 'import makina', 'BMW', 'Audi', 'Mercedes'],
+    openGraph: {
+        title: 'Makina për Shitje | Formula Export',
+        description: 'Shfleto makinat më të mira nga Korea',
+        images: ['/og-image.jpg'],
+    },
+};
 
 export default function CarsPage() {
     return (

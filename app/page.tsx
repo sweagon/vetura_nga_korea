@@ -1,5 +1,3 @@
-export const dynamic = 'force-dynamic';
-// app/page.tsx
 import { Suspense } from 'react';
 import Hero from '@/components/home/Hero';
 import FeaturedCars from '@/components/home/FeaturedCars';
@@ -7,7 +5,10 @@ import MatchmakerWidget from '@/components/matchmaker/MatchmakerWidget';
 import HowItWorks from '@/components/home/HowItWorks';
 import { fetchCars } from '@/lib/api';
 import RecentlyViewed from '@/components/cars/RecentlyViewed';
-import { CarCardSkeleton, GridSkeleton } from '@/components/ui/LoadingSkeleton';
+import { GridSkeleton } from '@/components/ui/LoadingSkeleton';
+
+// Force dynamic rendering - homepage has dynamic content
+export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   // Fetch 100 cars for the matchmaker to analyze

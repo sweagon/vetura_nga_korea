@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import FilterSidebar from '@/components/cars/FilterSidebar';
 import CarGrid from './CarGrid';
-import { SlidersHorizontal, Search, XCircle } from 'lucide-react';
+import { SlidersHorizontal, Search, XCircle, ChevronDown } from 'lucide-react';
 
 export default function CarsContent() {
     const router = useRouter();
@@ -92,35 +92,64 @@ export default function CarsContent() {
 
                 {/* Main Content - WILL re-render when URL changes */}
                 <div className="lg:w-4/5">
-                    {/* Sort Bar */}
+                    {/* Sort Bar - Enhanced with more options */}
                     <div className="bg-surface rounded-xl shadow-sm border border-medium p-4 mb-6">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-secondary">
-                                    Filtro sipas:
-                                </span>
-                                {getActiveFilterCount() > 0 && (
-                                    <button
-                                        onClick={handleClearFilters}
-                                        className="text-xs text-muted hover:text-ferrari-red flex items-center gap-1"
-                                    >
-                                        <XCircle size={12} />
-                                        <span>Pastro filtrat</span>
-                                    </button>
-                                )}
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2 text-muted">
+                                    <span className="text-sm">Rendit sipas:</span>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {searchParams.get('fuelType') && (
+                                        <span className="bg-surface-2 text-secondary text-xs px-3 py-1.5 rounded-full border border-medium flex items-center gap-1">
+                                            <span>⛽</span>
+                                            {searchParams.get('fuelType') === 'Diesel' ? 'Naftë' :
+                                                searchParams.get('fuelType') === 'Gasoline' ? 'Benzinë' :
+                                                    searchParams.get('fuelType')}
+                                        </span>
+                                    )}
+                                    {searchParams.get('transmission') && (
+                                        <span className="bg-surface-2 text-secondary text-xs px-3 py-1.5 rounded-full border border-medium flex items-center gap-1">
+                                            <span>⚙️</span>
+                                            {searchParams.get('transmission') === 'Automatic' ? 'Automatik' : 'Manuel'}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2 w-full sm:w-auto">
-                                <span className="text-xs text-muted whitespace-nowrap">Rendit sipas:</span>
-                                <select
-                                    className="flex-1 sm:w-48 px-3 py-1.5 bg-surface-2 border border-medium rounded-lg text-sm focus:outline-none focus:border-ferrari-red text-primary"
-                                    value={searchParams.get('sort') || 'price_asc'}
-                                    onChange={(e) => handleSortChange(e.target.value)}
-                                >
-                                    <option value="price_asc">Çmimi: Nga më i ulëti</option>
-                                    <option value="price_desc">Çmimi: Nga më i larti</option>
-                                    <option value="year_desc">Viti: Më të rijtë</option>
-                                    <option value="mileage_asc">Kilometrazha: Më e ulët</option>
-                                </select>
+
+                            <div className="flex items-center gap-3 w-full sm:w-auto">
+                                <div className="relative w-full sm:w-64">
+                                    <select
+                                        className="w-full appearance-none px-4 py-2.5 bg-surface-2 border border-medium rounded-lg text-sm 
+                             focus:outline-none focus:border-ferrari-red focus:ring-1 focus:ring-ferrari-red/50 
+                             text-primary cursor-pointer pr-10"
+                                        value={searchParams.get('sort') || 'recommended'}
+                                        onChange={(e) => handleSortChange(e.target.value)}
+                                    >
+                                        <optgroup label="✨ Rekomanduar">
+                                            <option value="recommended" className="bg-surface">Më të përshtatshmet</option>
+                                            <option value="newest" className="bg-surface">Më të rejat</option>
+                                            <option value="popular" className="bg-surface">Më të kërkuarat</option>
+                                        </optgroup>
+                                        <optgroup label="💰 Çmimi">
+                                            <option value="price_asc" className="bg-surface">Nga më i ulëti</option>
+                                            <option value="price_desc" className="bg-surface">Nga më i larti</option>
+                                        </optgroup>
+                                        <optgroup label="📅 Viti">
+                                            <option value="year_desc" className="bg-surface">Më të rijtë</option>
+                                            <option value="year_asc" className="bg-surface">Më të vjetrit</option>
+                                        </optgroup>
+                                        <optgroup label="🛣️ Kilometrazha">
+                                            <option value="mileage_asc" className="bg-surface">Më e ulët</option>
+                                            <option value="mileage_desc" className="bg-surface">Më e lartë</option>
+                                        </optgroup>
+                                        <optgroup label="⚡ Performanca">
+                                            <option value="power_desc" className="bg-surface">Fuqia më e lartë</option>
+                                            <option value="engine_desc" className="bg-surface">Motorri më i madh</option>
+                                        </optgroup>
+                                    </select>
+                                    <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+                                </div>
                             </div>
                         </div>
                     </div>

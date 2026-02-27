@@ -38,7 +38,7 @@ export default function StructuredData({ type, data, breadcrumbs }: StructuredDa
                     '@type': 'Organization',
                     name: 'Formula Export',
                     url: baseUrl,
-                    logo: `${baseUrl}/logo.jpg`,
+                    logo: `${baseUrl}/logo.webp`,
                     description: 'Import i makinave nga Korea në Kosovë',
                     address: {
                         '@type': 'PostalAddress',
@@ -96,7 +96,7 @@ export default function StructuredData({ type, data, breadcrumbs }: StructuredDa
                     vehicleTransmission: data.transmission === 'Automatic' ? 'Automatic' : 'Manual',
                     fuelType: data.fuelType,
                     color: data.exteriorColor || 'Unknown',
-                    image: data.images?.[0] || '/logo.jpg',
+                    image: data.images?.[0] || '/logo.webp',
                     offers: {
                         '@type': 'Offer',
                         price: data.price,

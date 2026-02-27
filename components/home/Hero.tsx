@@ -76,14 +76,14 @@ export default function Hero() {
                     >
                         <Link
                             href="/cars"
-                            className="group bg-ferrari-red hover:bg-ferrari-dark text-primary px-8 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 inline-flex items-center"
+                            className="group bg-ferrari-red hover:bg-ferrari-dark text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 inline-flex items-center"
                         >
                             Shfleto makinat
                             <ChevronRight className="ml-2 group-hover:translate-x-1 transition-transform" size={20} />
                         </Link>
                         <Link
                             href="/how-it-works"
-                            className="group bg-transparent hover:bg-surface/10 text-primary border-2 border-light/30 hover:border-light px-8 py-4 rounded-xl font-semibold transition-all duration-300 inline-flex items-center"
+                            className="group bg-transparent hover:bg-white/10 text-white border-2 border-white/30 hover:border-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 inline-flex items-center"
                         >
                             Mëso më shumë
                         </Link>
@@ -121,17 +121,17 @@ export default function Hero() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.8 }}
-                        className="flex items-center gap-4 mt-12 pt-8 border-t border-light/10"
+                        className="flex items-center gap-4 mt-12 pt-8 border-t border-white/10"
                     >
                         <div className="flex -space-x-2">
                             {[1, 2, 3].map((i) => (
-                                <div key={i} className="w-8 h-8 rounded-full bg-ferrari-red/20 border-2 border-light/20 flex items-center justify-center text-xs text-primary">
+                                <div key={i} className="w-8 h-8 rounded-full bg-ferrari-red/20 border-2 border-white/20 flex items-center justify-center text-xs text-white">
                                     ✓
                                 </div>
                             ))}
                         </div>
-                        <p className="text-sm text-muted">
-                            <span className="text-primary font-semibold">1000+</span> makina të importuara me sukses
+                        <p className="text-sm text-white/70">
+                            <span className="text-white font-semibold">1000+</span> makina të importuara me sukses
                         </p>
                     </motion.div>
                 </motion.div>

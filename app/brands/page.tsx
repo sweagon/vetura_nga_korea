@@ -1,6 +1,20 @@
-export const dynamic = 'force-dynamic';
 import Link from 'next/link';
 import { fetchFilterData } from '@/lib/api';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Markat e Makinave | Formula Export',
+    description: 'Shfleto të gjitha markat e makinave nga Korea. BMW, Audi, Mercedes-Benz, Volkswagen dhe shumë të tjera.',
+    keywords: ['marka makinash', 'BMW', 'Audi', 'Mercedes', 'Volkswagen', 'makina nga Korea'],
+    openGraph: {
+        title: 'Markat e Makinave | Formula Export',
+        description: 'Shfleto të gjitha markat e makinave nga Korea',
+        images: ['/og-image.jpg'],
+    },
+};
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 
 export default async function BrandsPage() {
     const filterData = await fetchFilterData();
@@ -21,7 +35,7 @@ export default async function BrandsPage() {
                         <div className="w-16 h-16 bg-ferrari-red/10 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-ferrari-red/20 transition">
                             <span className="text-ferrari-red font-bold text-xl">{brand[0]}</span>
                         </div>
-                        <h3 className="font-semibold">{brand}</h3>
+                        <h3 className="font-semibold text-primary">{brand}</h3>
                     </Link>
                 ))}
             </div>

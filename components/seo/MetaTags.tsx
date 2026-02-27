@@ -19,7 +19,7 @@ export default function MetaTags({
     title,
     description,
     keywords = 'makina, import, korea, kosovë, vetura, audi, bmw, mercedes, makina ne kosove, import makinsah',
-    image = '/logo.jpg',
+    image = '/logo.webp',
     url,
     type = 'website',
     publishedTime,

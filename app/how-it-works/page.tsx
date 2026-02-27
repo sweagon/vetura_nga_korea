@@ -1,4 +1,16 @@
 import { Search, FileCheck, Ship, Truck, Shield, CreditCard, Clock, Headphones } from 'lucide-react';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Si Funksionon | Formula Export',
+    description: 'Procesi i importit të makinave nga Korea në Kosovë. Udhëzime hap pas hapi për të blerë makinën tuaj ideale.',
+    keywords: ['si funksionon', 'import makina', 'procesi', 'udhëzime'],
+    openGraph: {
+        title: 'Si Funksionon | Formula Export',
+        description: 'Procesi i importit të makinave nga Korea në Kosovë',
+        images: ['/og-image.jpg'],
+    },
+};
 
 const steps = [
     {
