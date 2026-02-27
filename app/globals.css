@@ -166,6 +166,7 @@
   }
 
   body {
+    overflow-x: hidden;
     @apply antialiased;
     background-color: var(--bg-primary);
     color: var(--text-primary);
@@ -298,7 +299,7 @@
 
   /* Container */
   .container-custom {
-    @apply px-4 sm:px-6 lg:px-8;
+    @apply px-4 sm:px-6 lg:px-8 mx-auto;
   }
 
   /* Buttons */

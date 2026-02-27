@@ -1,9 +1,6 @@
-// app/api/newsletter/subscribe/route.ts
 import { NextResponse } from 'next/server';
-import { Resend } from 'resend';
 import { createClient } from '@/lib/supabase/server';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { sendEmail } from '@/lib/email-service';
 
 export async function POST(request: Request) {
     try {
@@ -25,7 +22,7 @@ export async function POST(request: Request) {
             );
         }
 
-        // Save to Supabase - FIXED: Added await
+        // Save to Supabase
         const supabase = await createClient();
         const { error: dbError } = await supabase
             .from('newsletter')
@@ -47,10 +44,9 @@ export async function POST(request: Request) {
             throw dbError;
         }
 
-        // Send welcome email
-        await resend.emails.send({
-            from: 'Formula Export <onboarding@resend.dev>', // Using test sender for now
-            to: [email],
+        // Send welcome email using your new email service
+        await sendEmail({
+            to: email,
             subject: 'Mirë se vini në newsletter-in e Formula Export!',
             html: `
                 <!DOCTYPE html>
@@ -86,10 +82,22 @@ export async function POST(request: Request) {
                     
                     <p style="color: #999; font-size: 12px; text-align: center; margin-top: 32px;">
                         © ${new Date().getFullYear()} Formula Export. Të gjitha të drejtat e rezervuara.<br>
-                        Për të çregjistruar, <a href="{{UNSUBSCRIBE_LINK}}" style="color: #FF2800;">kliko këtu</a>.
+                        Për të çregjistruar, na kontaktoni në <a href="mailto:info@formula-export.com" style="color: #FF2800;">info@formula-export.com</a>.
                     </p>
                 </body>
                 </html>
+            `
+        });
+
+        // Also notify admin about new subscriber
+        await sendEmail({
+            to: process.env.ADMIN_EMAIL!,
+            subject: 'Abonent i ri në newsletter',
+            html: `
+                <h2>Abonent i ri në newsletter</h2>
+                <p><strong>Email:</strong> ${email}</p>
+                ${name ? `<p><strong>Emri:</strong> ${name}</p>` : ''}
+                <p><strong>Data:</strong> ${new Date().toLocaleString('sq-AL')}</p>
             `
         });
 

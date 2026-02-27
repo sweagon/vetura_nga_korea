@@ -1,16 +1,22 @@
 import nodemailer from 'nodemailer';
 
+// Define a proper type for email results
+export type EmailResult = {
+    success: boolean;
+    data?: nodemailer.SentMessageInfo;
+    error?: string;
+};
+
 // Create transporter
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT),
-    secure: true, // true for 465, false for other ports
+    secure: true,
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
     },
     tls: {
-        // Do not fail on invalid certs
         rejectUnauthorized: false
     }
 });
@@ -25,7 +31,7 @@ export async function sendEmail({
     subject: string;
     html: string;
     from?: string;
-}): Promise<{ success: boolean; data?: any; error?: string }> {
+}): Promise<EmailResult> {
     try {
         console.log('📧 Sending email via SMTP...', { to, subject });
 
@@ -50,7 +56,7 @@ export async function sendContactEmail(formData: {
     phone?: string;
     message: string;
     carName?: string;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<EmailResult> {
     try {
         // Send to admin
         const adminResult = await sendEmail({
@@ -68,11 +74,11 @@ export async function sendContactEmail(formData: {
         });
 
         if (!adminResult.success) {
-            return { success: false, error: adminResult.error };
+            return adminResult;
         }
 
         // Send auto-reply to user
-        await sendEmail({
+        const userResult = await sendEmail({
             to: formData.email,
             subject: 'Ne morëm pyetjen tuaj - Formula Export',
             html: `
@@ -85,7 +91,7 @@ export async function sendContactEmail(formData: {
             `
         });
 
-        return { success: true };
+        return userResult;
     } catch (error) {
         console.error('❌ Error in sendContactEmail:', error);
         return { success: false, error: String(error) };

@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { sendContactEmail } from '@/lib/email-service';
 
 export async function POST(request: Request) {
     try {
@@ -16,33 +14,25 @@ export async function POST(request: Request) {
             );
         }
 
-        console.log('📧 Sending email via Resend...');
+        console.log('📧 Sending contact email via Namecheap SMTP...');
 
-        // Send email using Resend directly
-        const { data, error } = await resend.emails.send({
-            from: 'onboarding@resend.dev',
-            to: ['ma.webagency@outlook.com'],
-            subject: `Pyetje e re nga ${name} - Formula Export`,
-            html: `
-                <h2>Pyetje e re nga faqja</h2>
-                <p><strong>Emri:</strong> ${name}</p>
-                <p><strong>Email:</strong> ${email}</p>
-                ${phone ? `<p><strong>Telefoni:</strong> ${phone}</p>` : ''}
-                ${carName ? `<p><strong>Makina:</strong> ${carName}</p>` : ''}
-                <p><strong>Mesazhi:</strong></p>
-                <p>${message.replace(/\n/g, '<br>')}</p>
-            `
+        const result = await sendContactEmail({
+            name,
+            email,
+            phone,
+            message,
+            carName
         });
 
-        if (error) {
-            console.error('❌ Resend error:', error);
+        if (!result.success) {
+            console.error('❌ Email error:', result.error);
             return NextResponse.json(
-                { error: 'Dërgimi i email-it dështoi: ' + error.message },
+                { error: result.error || 'Dërgimi i email-it dështoi' },
                 { status: 500 }
             );
         }
 
-        console.log('✅ Email sent:', data);
+        console.log('✅ Emails sent successfully');
         return NextResponse.json({ success: true });
 
     } catch (error) {

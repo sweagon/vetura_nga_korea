@@ -20,13 +20,9 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
-    // Modern image formats
     formats: ['image/avif', 'image/webp'],
-    // Device sizes for responsive images
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    // Image sizes for srcset
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    // Cache optimized images for 60 days
     minimumCacheTTL: 60 * 60 * 24 * 60, // 60 days
   },
 
@@ -38,9 +34,6 @@ const nextConfig = {
 
   // React strict mode for better development
   reactStrictMode: true,
-
-  // Enable SWC minification (faster than Terser)
-  swcMinify: true,
 
   // HTTP headers for security and caching
   async headers() {
@@ -70,7 +63,6 @@ const nextConfig = {
           },
         ],
       },
-      // Cache static assets
       {
         source: '/icons/:path*',
         headers: [
@@ -101,22 +93,15 @@ const nextConfig = {
     ];
   },
 
-  // Redirects (optional - add if you need)
+  // Redirects (optional)
   async redirects() {
-    return [
-      // Example: Redirect old paths
-      // {
-      //   source: '/old-cars',
-      //   destination: '/cars',
-      //   permanent: true,
-      // },
-    ];
+    return [];
   },
 
-  // Experimental features (optional)
+  // Experimental features
   experimental: {
-    optimizeCss: true, // Optimize CSS
-    scrollRestoration: true, // Better scroll handling
+    optimizeCss: true,
+    scrollRestoration: true,
   },
 };
 
