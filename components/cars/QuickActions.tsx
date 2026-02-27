@@ -1,41 +1,46 @@
+// components/cars/QuickActions.tsx
 'use client';
 
-import { MessageCircle, Phone } from 'lucide-react';
+import { Phone, Mail, MessageCircle, Calendar } from 'lucide-react';
+import Link from 'next/link';
 
 interface QuickActionsProps {
-    car: {
-        sellerPhone?: string | null;
-        full_name?: string;
-        id?: number;
-    };
+    car: any;
 }
 
 export default function QuickActions({ car }: QuickActionsProps) {
-    if (!car.sellerPhone) return null;
-
-    const cleanPhone = car.sellerPhone.replace(/[^0-9+]/g, '');
-    const whatsappUrl = `https://wa.me/${cleanPhone.replace('+', '')}?text=${encodeURIComponent(
-        `Përshëndetje, jam i interesuar për makinën ${car.full_name || ''} (ID: ${car.id || ''})`
-    )}`;
-
     return (
         <div className="grid grid-cols-2 gap-2">
             <a
-                href={`tel:${cleanPhone}`}
-                className="bg-secondary p-3 rounded-xl text-center hover:bg-tertiary transition flex items-center justify-center gap-2"
+                href={`tel:${car.sellerPhone}`}
+                className="flex items-center justify-center gap-2 p-3 bg-surface-2 hover:bg-ferrari-red hover:text-primary rounded-xl border border-medium transition-all group"
             >
-                <Phone size={16} />
-                <span className="text-sm">Telefono</span>
+                <Phone size={18} className="text-primary group-hover:text-primary" />
+                <span className="text-sm font-medium">Telefon</span>
             </a>
             <a
-                href={whatsappUrl}
+                href={`mailto:${car.sellerEmail}`}
+                className="flex items-center justify-center gap-2 p-3 bg-surface-2 hover:bg-ferrari-red hover:text-primary rounded-xl border border-medium transition-all group"
+            >
+                <Mail size={18} className="text-primary group-hover:text-primary" />
+                <span className="text-sm font-medium">Email</span>
+            </a>
+            <a
+                href={`https://wa.me/${car.sellerPhone?.replace(/\D/g, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-green-100 p-3 rounded-xl text-center hover:bg-green-200 transition flex items-center justify-center gap-2"
+                className="flex items-center justify-center gap-2 p-3 bg-surface-2 hover:bg-ferrari-red hover:text-primary rounded-xl border border-medium transition-all group"
             >
-                <MessageCircle size={16} />
-                <span className="text-sm">WhatsApp</span>
+                <MessageCircle size={18} className="text-primary group-hover:text-primary" />
+                <span className="text-sm font-medium">WhatsApp</span>
             </a>
+            <Link
+                href={`/contact?car=${car.id}`}
+                className="flex items-center justify-center gap-2 p-3 bg-surface-2 hover:bg-ferrari-red hover:text-primary rounded-xl border border-medium transition-all group"
+            >
+                <Calendar size={18} className="text-primary group-hover:text-primary" />
+                <span className="text-sm font-medium">Takim</span>
+            </Link>
         </div>
     );
 }

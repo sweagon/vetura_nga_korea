@@ -154,21 +154,21 @@ export default function ProfilePage() {
                 {/* Header */}
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold mb-2">Profili im</h1>
-                    <p className="text-gray-600">
+                    <p className="text-secondary">
                         Menaxho informacionet personale dhe preferencat
                     </p>
                 </div>
 
                 {/* Success Message */}
                 {success && (
-                    <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
+                    <div className="bg-success-bg border border-success-border text-green-700 px-4 py-3 rounded-lg mb-6">
                         {success}
                     </div>
                 )}
 
                 {/* Error Message */}
                 {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 flex items-start">
+                    <div className="bg-error-bg border border-error-border text-error-text px-4 py-3 rounded-lg mb-6 flex items-start">
                         <AlertCircle size={18} className="mr-2 mt-0.5 flex-shrink-0" />
                         <span>{error}</span>
                     </div>
@@ -179,7 +179,7 @@ export default function ProfilePage() {
                     <div className="md:col-span-2">
                         <div className="bg-surface rounded-lg shadow-md overflow-hidden">
                             {/* Profile Header */}
-                            <div className="bg-gradient-to-r from-ferrari-red to-ferrari-dark p-6 text-white">
+                            <div className="bg-gradient-to-r from-ferrari-red to-ferrari-dark p-6 text-primary">
                                 <div className="flex items-center">
                                     <div className="w-16 h-16 bg-surface/20 rounded-full flex items-center justify-center text-2xl font-bold">
                                         {profile?.full_name?.charAt(0) || profile?.email?.charAt(0) || 'U'}
@@ -188,7 +188,7 @@ export default function ProfilePage() {
                                         <h2 className="text-xl font-semibold">
                                             {profile?.full_name || 'Përdorues'}
                                         </h2>
-                                        <p className="text-white/80 text-sm">{profile?.email}</p>
+                                        <p className="text-primary/80 text-sm">{profile?.email}</p>
                                     </div>
                                 </div>
                             </div>
@@ -202,7 +202,7 @@ export default function ProfilePage() {
                                             <div className="flex items-start p-3 bg-secondary rounded-lg">
                                                 <User className="text-ferrari-red mr-3 mt-1" size={18} />
                                                 <div>
-                                                    <p className="text-sm text-gray-500">Emri i plotë</p>
+                                                    <p className="text-sm text-secondary">Emri i plotë</p>
                                                     <p className="font-medium">
                                                         {profile?.full_name || 'N/A'}
                                                     </p>
@@ -212,7 +212,7 @@ export default function ProfilePage() {
                                             <div className="flex items-start p-3 bg-secondary rounded-lg">
                                                 <Mail className="text-ferrari-red mr-3 mt-1" size={18} />
                                                 <div>
-                                                    <p className="text-sm text-gray-500">Email</p>
+                                                    <p className="text-sm text-secondary">Email</p>
                                                     <p className="font-medium">{profile?.email}</p>
                                                 </div>
                                             </div>
@@ -220,7 +220,7 @@ export default function ProfilePage() {
                                             <div className="flex items-start p-3 bg-secondary rounded-lg">
                                                 <Phone className="text-ferrari-red mr-3 mt-1" size={18} />
                                                 <div>
-                                                    <p className="text-sm text-gray-500">Telefoni</p>
+                                                    <p className="text-sm text-secondary">Telefoni</p>
                                                     <p className="font-medium">
                                                         {profile?.phone || 'N/A'}
                                                     </p>
@@ -230,7 +230,7 @@ export default function ProfilePage() {
                                             <div className="flex items-start p-3 bg-secondary rounded-lg">
                                                 <Clock className="text-ferrari-red mr-3 mt-1" size={18} />
                                                 <div>
-                                                    <p className="text-sm text-gray-500">Anëtar që nga</p>
+                                                    <p className="text-sm text-secondary">Anëtar që nga</p>
                                                     <p className="font-medium">
                                                         {profile?.created_at
                                                             ? new Date(profile.created_at).toLocaleDateString('sq-AL')
@@ -281,7 +281,7 @@ export default function ProfilePage() {
                                             <button
                                                 onClick={handleSave}
                                                 disabled={saving}
-                                                className="flex items-center px-4 py-2 bg-ferrari-red text-white rounded-lg hover:bg-ferrari-dark transition disabled:opacity-50"
+                                                className="flex items-center px-4 py-2 bg-ferrari-red text-primary rounded-lg hover:bg-ferrari-dark transition disabled:opacity-50"
                                             >
                                                 {saving ? (
                                                     <>
@@ -298,7 +298,7 @@ export default function ProfilePage() {
                                             <button
                                                 onClick={handleCancel}
                                                 disabled={saving}
-                                                className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-secondary transition"
+                                                className="flex items-center px-4 py-2 border border-medium rounded-lg hover:bg-secondary transition"
                                             >
                                                 <X size={16} className="mr-2" />
                                                 Anulo
@@ -323,7 +323,7 @@ export default function ProfilePage() {
                                         <Heart size={18} className="text-ferrari-red mr-3" />
                                         <span>Makinat e ruajtura</span>
                                     </div>
-                                    <ChevronRight size={16} className="text-gray-400 group-hover:text-ferrari-red transition" />
+                                    <ChevronRight size={16} className="text-muted group-hover:text-ferrari-red transition" />
                                 </Link>
 
                                 <Link
@@ -334,7 +334,7 @@ export default function ProfilePage() {
                                         <Settings size={18} className="text-ferrari-red mr-3" />
                                         <span>Cilësimet</span>
                                     </div>
-                                    <ChevronRight size={16} className="text-gray-400 group-hover:text-ferrari-red transition" />
+                                    <ChevronRight size={16} className="text-muted group-hover:text-ferrari-red transition" />
                                 </Link>
 
                                 <Link
@@ -345,35 +345,35 @@ export default function ProfilePage() {
                                         <Settings size={18} className="text-ferrari-red mr-3" />
                                         <span>Ndrysho passwordin</span>
                                     </div>
-                                    <ChevronRight size={16} className="text-gray-400 group-hover:text-ferrari-red transition" />
+                                    <ChevronRight size={16} className="text-muted group-hover:text-ferrari-red transition" />
                                 </Link>
 
                                 <button
                                     onClick={handleSignOut}
-                                    className="w-full flex items-center justify-between p-3 hover:bg-red-50 rounded-lg transition group text-left"
+                                    className="w-full flex items-center justify-between p-3 hover:bg-error-bg rounded-lg transition group text-left"
                                 >
                                     <div className="flex items-center">
-                                        <LogOut size={18} className="text-red-500 mr-3" />
-                                        <span className="text-red-600">Dil</span>
+                                        <LogOut size={18} className="text-error-text mr-3" />
+                                        <span className="text-error-text">Dil</span>
                                     </div>
                                 </button>
                             </div>
                         </div>
 
                         {/* Stats Card */}
-                        <div className="bg-gradient-to-br from-ferrari-red to-ferrari-dark text-white rounded-lg shadow-md p-6 mt-6">
+                        <div className="bg-gradient-to-br from-ferrari-red to-ferrari-dark text-primary rounded-lg shadow-md p-6 mt-6">
                             <h3 className="font-semibold mb-4">Statistikat</h3>
                             <div className="space-y-3">
                                 <div>
-                                    <p className="text-white/80 text-sm">Makinat e ruajtura</p>
+                                    <p className="text-primary/80 text-sm">Makinat e ruajtura</p>
                                     <p className="text-2xl font-bold">0</p>
                                 </div>
                                 <div>
-                                    <p className="text-white/80 text-sm">Kërkimet e fundit</p>
+                                    <p className="text-primary/80 text-sm">Kërkimet e fundit</p>
                                     <p className="text-2xl font-bold">0</p>
                                 </div>
                                 <div>
-                                    <p className="text-white/80 text-sm">Krahasimet</p>
+                                    <p className="text-primary/80 text-sm">Krahasimet</p>
                                     <p className="text-2xl font-bold">0</p>
                                 </div>
                             </div>

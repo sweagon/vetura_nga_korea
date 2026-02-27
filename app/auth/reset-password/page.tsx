@@ -75,14 +75,14 @@ export default function ResetPasswordPage() {
             <div className="min-h-[80vh] flex items-center justify-center bg-secondary py-12">
                 <div className="container-custom max-w-md">
                     <div className="bg-surface rounded-lg shadow-md p-8 text-center">
-                        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <CheckCircle size={40} className="text-green-500" />
+                        <div className="w-20 h-20 bg-success-bg rounded-full flex items-center justify-center mx-auto mb-6">
+                            <CheckCircle size={40} className="text-success-text" />
                         </div>
                         <h1 className="text-2xl font-bold mb-4">Passwordi u ndryshua!</h1>
-                        <p className="text-gray-600 mb-6">
+                        <p className="text-secondary mb-6">
                             Passwordi juaj u ndryshua me sukses. Tani mund të hyni në llogari me passwordin e ri.
                         </p>
-                        <p className="text-sm text-gray-500 mb-4">
+                        <p className="text-sm text-secondary mb-4">
                             Duke ju ridrejtuar te faqja e hyrjes...
                         </p>
                         <Link href="/auth/signin" className="btn-primary inline-block">
@@ -100,15 +100,15 @@ export default function ResetPasswordPage() {
                 <div className="bg-surface rounded-lg shadow-md p-8">
                     <div className="text-center mb-8">
                         <h1 className="text-3xl font-bold mb-2">Ndrysho passwordin</h1>
-                        <p className="text-gray-600">
+                        <p className="text-secondary">
                             Shkruani passwordin tuaj të ri.
                         </p>
                     </div>
 
                     {error && (
-                        <div className="bg-red-50 p-4 rounded-lg mb-6 flex items-start">
-                            <AlertCircle size={18} className="text-red-500 mr-2 mt-0.5 flex-shrink-0" />
-                            <p className="text-sm text-red-600">{error}</p>
+                        <div className="bg-error-bg p-4 rounded-lg mb-6 flex items-start">
+                            <AlertCircle size={18} className="text-error-text mr-2 mt-0.5 flex-shrink-0" />
+                            <p className="text-sm text-error-text">{error}</p>
                         </div>
                     )}
 
@@ -118,7 +118,7 @@ export default function ResetPasswordPage() {
                                 Password i ri <span className="text-ferrari-red">*</span>
                             </label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
+                                <Lock className="absolute left-3 top-3 text-muted" size={18} />
                                 <input
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
@@ -131,12 +131,12 @@ export default function ResetPasswordPage() {
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                                    className="absolute right-3 top-2.5 text-muted hover:text-secondary"
                                 >
                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-secondary mt-1">
                                 Të paktën 8 karaktere
                             </p>
                         </div>
@@ -146,7 +146,7 @@ export default function ResetPasswordPage() {
                                 Konfirmo passwordin e ri <span className="text-ferrari-red">*</span>
                             </label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
+                                <Lock className="absolute left-3 top-3 text-muted" size={18} />
                                 <input
                                     type={showConfirmPassword ? 'text' : 'password'}
                                     value={confirmPassword}
@@ -159,7 +159,7 @@ export default function ResetPasswordPage() {
                                 <button
                                     type="button"
                                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                                    className="absolute right-3 top-2.5 text-muted hover:text-secondary"
                                 >
                                     {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>

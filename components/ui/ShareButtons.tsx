@@ -79,7 +79,7 @@ export default function ShareButtons({
             {/* Facebook */}
             <button
                 onClick={() => handleShare('facebook', shareLinks.facebook)}
-                className={`${sizeClasses[size]} bg-[#1877f2] text-white rounded-full hover:bg-[#1877f2]/90 transition transform hover:scale-110 active:scale-95`}
+                className={`${sizeClasses[size]} bg-[#1877f2] text-primary rounded-full hover:bg-[#1877f2]/90 transition transform hover:scale-110 active:scale-95`}
                 aria-label="Share on Facebook"
                 title="Shpërndaje në Facebook"
             >
@@ -89,7 +89,7 @@ export default function ShareButtons({
             {/* Twitter */}
             <button
                 onClick={() => handleShare('twitter', shareLinks.twitter)}
-                className={`${sizeClasses[size]} bg-[#1da1f2] text-white rounded-full hover:bg-[#1da1f2]/90 transition transform hover:scale-110 active:scale-95`}
+                className={`${sizeClasses[size]} bg-[#1da1f2] text-primary rounded-full hover:bg-[#1da1f2]/90 transition transform hover:scale-110 active:scale-95`}
                 aria-label="Share on Twitter"
                 title="Shpërndaje në Twitter"
             >
@@ -99,7 +99,7 @@ export default function ShareButtons({
             {/* LinkedIn */}
             <button
                 onClick={() => handleShare('linkedin', shareLinks.linkedin)}
-                className={`${sizeClasses[size]} bg-[#0a66c2] text-white rounded-full hover:bg-[#0a66c2]/90 transition transform hover:scale-110 active:scale-95`}
+                className={`${sizeClasses[size]} bg-[#0a66c2] text-primary rounded-full hover:bg-[#0a66c2]/90 transition transform hover:scale-110 active:scale-95`}
                 aria-label="Share on LinkedIn"
                 title="Shpërndaje në LinkedIn"
             >
@@ -109,7 +109,7 @@ export default function ShareButtons({
             {/* WhatsApp */}
             <button
                 onClick={() => handleShare('whatsapp', shareLinks.whatsapp)}
-                className={`${sizeClasses[size]} bg-[#25d366] text-white rounded-full hover:bg-[#25d366]/90 transition transform hover:scale-110 active:scale-95`}
+                className={`${sizeClasses[size]} bg-[#25d366] text-primary rounded-full hover:bg-[#25d366]/90 transition transform hover:scale-110 active:scale-95`}
                 aria-label="Share on WhatsApp"
                 title="Shpërndaje në WhatsApp"
             >
@@ -119,7 +119,7 @@ export default function ShareButtons({
             {/* Email */}
             <a
                 href={shareLinks.email}
-                className={`${sizeClasses[size]} bg-gray-600 text-white rounded-full hover:bg-gray-700 transition transform hover:scale-110 active:scale-95`}
+                className={`${sizeClasses[size]} bg-elevated text-primary rounded-full hover:bg-primary transition transform hover:scale-110 active:scale-95`}
                 aria-label="Share via Email"
                 title="Shpërndaje me email"
                 target="_blank"
@@ -131,7 +131,7 @@ export default function ShareButtons({
             {/* Copy Link */}
             <button
                 onClick={copyToClipboard}
-                className={`${sizeClasses[size]} bg-ferrari-red text-white rounded-full hover:bg-ferrari-dark transition transform hover:scale-110 active:scale-95 relative`}
+                className={`${sizeClasses[size]} bg-ferrari-red text-primary rounded-full hover:bg-ferrari-dark transition transform hover:scale-110 active:scale-95 relative`}
                 aria-label="Copy link"
                 title="Kopjo linkun"
             >

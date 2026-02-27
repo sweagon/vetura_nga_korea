@@ -22,7 +22,7 @@ export default function CarNotFound() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-lg mx-auto">
                         <Link
                             href="/cars"
-                            className="flex items-center justify-center gap-2 p-4 bg-surface-2 hover:bg-ferrari-red hover:text-white rounded-xl border border-medium transition-all group"
+                            className="flex items-center justify-center gap-2 p-4 bg-surface-2 hover:bg-ferrari-red hover:text-primary rounded-xl border border-medium transition-all group"
                         >
                             <Search size={20} />
                             <span>Shfleto makina të tjera</span>
@@ -30,7 +30,7 @@ export default function CarNotFound() {
 
                         <Link
                             href="/"
-                            className="flex items-center justify-center gap-2 p-4 bg-surface-2 hover:bg-ferrari-red hover:text-white rounded-xl border border-medium transition-all group"
+                            className="flex items-center justify-center gap-2 p-4 bg-surface-2 hover:bg-ferrari-red hover:text-primary rounded-xl border border-medium transition-all group"
                         >
                             <Home size={20} />
                             <span>Kthehu në fillim</span>

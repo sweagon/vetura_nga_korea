@@ -15,18 +15,25 @@ export interface CarView {
 }
 
 export class SupabaseMatchmakerService {
-    private supabase: SupabaseClient;
+    private supabase: SupabaseClient | null = null;
     private userId: string | null = null;
 
     constructor(userId?: string) {
-        this.supabase = createClient();
+        try {
+            this.supabase = createClient();
+        } catch (error) {
+            console.error('Failed to initialize Supabase client:', error);
+            this.supabase = null;
+        }
         this.userId = userId || null;
     }
 
     // Track car view
-    // lib/matchmaker/supabase-service.ts
     async trackCarView(car: CarView): Promise<void> {
-        if (!this.userId) return;
+        if (!this.userId || !this.supabase) {
+            console.log('📝 Supabase not available, skipping tracking');
+            return;
+        }
 
         try {
             // Ensure car_id is a number and exists
@@ -39,7 +46,12 @@ export class SupabaseMatchmakerService {
                 ? parseInt(car.car_id, 10)
                 : car.car_id;
 
-            // Check if car_views table exists and has correct schema
+            // Validate carId is a valid number
+            if (isNaN(carId)) {
+                console.warn('⚠️ Invalid car_id format:', car.car_id);
+                return;
+            }
+
             const { error: insertError } = await this.supabase
                 .from('car_views')
                 .insert({
@@ -49,17 +61,17 @@ export class SupabaseMatchmakerService {
                 });
 
             if (insertError) {
-                // Log detailed error
+                // ✅ FIXED: Safe error logging with null checks
                 console.error('Supabase insert error:', {
-                    message: insertError.message,
-                    details: insertError.details,
-                    code: insertError.code
+                    message: insertError?.message || 'Unknown error',
+                    details: insertError?.details || null,
+                    code: insertError?.code || null,
+                    hint: insertError?.hint || null
                 });
 
-                // If table doesn't exist, create it (optional)
-                if (insertError.code === '42P01') { // undefined_table
-                    console.log('Creating car_views table...');
-                    await this.createCarViewsTable();
+                // If table doesn't exist, log it but don't crash
+                if (insertError?.code === '42P01') { // undefined_table
+                    console.log('ℹ️ car_views table may not exist - this is ok for now');
                 }
             }
         } catch (error) {
@@ -67,15 +79,9 @@ export class SupabaseMatchmakerService {
         }
     }
 
-    // Optional: Create table if it doesn't exist
-    async createCarViewsTable() {
-        const { error } = await this.supabase.rpc('create_car_views_table');
-        if (error) console.error('Error creating table:', error);
-    }
-
     // Get user preferences from database
     async getUserPreferences() {
-        if (!this.userId) return null;
+        if (!this.userId || !this.supabase) return null;
 
         try {
             const { data, error } = await this.supabase
@@ -84,7 +90,14 @@ export class SupabaseMatchmakerService {
                 .eq('user_id', this.userId)
                 .maybeSingle();
 
-            if (error) throw error;
+            if (error) {
+                console.error('Error getting preferences:', {
+                    message: error.message,
+                    details: error.details,
+                    code: error.code
+                });
+                return null;
+            }
             return data;
         } catch (error) {
             console.error('Error getting preferences:', error);
@@ -94,7 +107,7 @@ export class SupabaseMatchmakerService {
 
     // Update user preferences
     async updateUserPreferences(preferences: any) {
-        if (!this.userId) return;
+        if (!this.userId || !this.supabase) return;
 
         try {
             const { error } = await this.supabase
@@ -105,7 +118,13 @@ export class SupabaseMatchmakerService {
                     updated_at: new Date().toISOString(),
                 });
 
-            if (error) throw error;
+            if (error) {
+                console.error('Error updating preferences:', {
+                    message: error.message,
+                    details: error.details,
+                    code: error.code
+                });
+            }
         } catch (error) {
             console.error('Error updating preferences:', error);
         }
@@ -113,7 +132,7 @@ export class SupabaseMatchmakerService {
 
     // Get view history
     async getViewHistory(limit = 50) {
-        if (!this.userId) return [];
+        if (!this.userId || !this.supabase) return [];
 
         try {
             const { data, error } = await this.supabase
@@ -123,7 +142,14 @@ export class SupabaseMatchmakerService {
                 .order('viewed_at', { ascending: false })
                 .limit(limit);
 
-            if (error) throw error;
+            if (error) {
+                console.error('Error getting view history:', {
+                    message: error.message,
+                    details: error.details,
+                    code: error.code
+                });
+                return [];
+            }
             return data || [];
         } catch (error) {
             console.error('Error getting view history:', error);
@@ -133,7 +159,7 @@ export class SupabaseMatchmakerService {
 
     // Get saved cars for matchmaker
     async getSavedCars() {
-        if (!this.userId) return [];
+        if (!this.userId || !this.supabase) return [];
 
         try {
             const { data, error } = await this.supabase
@@ -141,11 +167,38 @@ export class SupabaseMatchmakerService {
                 .select('*')
                 .eq('user_id', this.userId);
 
-            if (error) throw error;
+            if (error) {
+                console.error('Error getting saved cars:', {
+                    message: error.message,
+                    details: error.details,
+                    code: error.code
+                });
+                return [];
+            }
             return data || [];
         } catch (error) {
             console.error('Error getting saved cars:', error);
             return [];
+        }
+    }
+
+    // Optional: Create car_views table if it doesn't exist (run this once)
+    async ensureTablesExist() {
+        if (!this.supabase) return;
+
+        try {
+            // Check if we can query the table
+            const { error } = await this.supabase
+                .from('car_views')
+                .select('id')
+                .limit(1);
+
+            if (error && error.code === '42P01') {
+                console.log('ℹ️ car_views table does not exist - please create it in Supabase dashboard');
+                // You could also create it via SQL here if you have admin rights
+            }
+        } catch (error) {
+            console.error('Error checking tables:', error);
         }
     }
 }

@@ -50,12 +50,12 @@ export default function HowItWorksPage() {
     return (
         <div>
             {/* Hero Section */}
-            <section className="bg-gradient-to-br from-gray-900 to-gray-800 text-white py-20">
+            <section className="bg-gradient-to-br from-primary to-primary text-primary py-20">
                 <div className="container-custom text-center">
                     <h1 className="text-4xl md:text-5xl font-bold mb-4">
                         Si funksionon <span className="text-ferrari-red">Formula Export</span>
                     </h1>
-                    <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+                    <p className="text-xl text-primary max-w-2xl mx-auto">
                         Importimi i makinës nga Korea në Kosovë në 4 hapa të thjeshtë
                     </p>
                 </div>
@@ -71,7 +71,7 @@ export default function HowItWorksPage() {
                                     <step.icon className="text-ferrari-red" size={40} />
                                 </div>
                                 <h3 className="text-xl font-bold mb-2">{step.title}</h3>
-                                <p className="text-gray-600">{step.description}</p>
+                                <p className="text-secondary">{step.description}</p>
                             </div>
                         ))}
                     </div>
@@ -87,7 +87,7 @@ export default function HowItWorksPage() {
                             <div key={index} className="bg-surface p-6 rounded-lg shadow-md">
                                 <feature.icon className="text-ferrari-red mb-4" size={32} />
                                 <h3 className="font-bold mb-2">{feature.title}</h3>
-                                <p className="text-gray-600 text-sm">{feature.description}</p>
+                                <p className="text-secondary text-sm">{feature.description}</p>
                             </div>
                         ))}
                     </div>
@@ -102,17 +102,17 @@ export default function HowItWorksPage() {
                     <div className="space-y-4">
                         <div className="bg-surface p-6 rounded-lg shadow-md">
                             <h3 className="font-bold mb-2">Sa kushton transporti?</h3>
-                            <p className="text-gray-600">Transporti nga Korea në Kosovë kushton rreth 800-1200€ në varësi të madhësisë së makinës.</p>
+                            <p className="text-secondary">Transporti nga Korea në Kosovë kushton rreth 800-1200€ në varësi të madhësisë së makinës.</p>
                         </div>
 
                         <div className="bg-surface p-6 rounded-lg shadow-md">
                             <h3 className="font-bold mb-2">Sa zgjat transporti?</h3>
-                            <p className="text-gray-600">Transporti zgjat rreth 15-20 ditë nga Korea në Durrës, plus 2-3 ditë për procedurat doganore.</p>
+                            <p className="text-secondary">Transporti zgjat rreth 15-20 ditë nga Korea në Durrës, plus 2-3 ditë për procedurat doganore.</p>
                         </div>
 
                         <div className="bg-surface p-6 rounded-lg shadow-md">
                             <h3 className="font-bold mb-2">A kam garanci?</h3>
-                            <p className="text-gray-600">Po, të gjitha makinat vijnë me garanci dhe inspektim të plotë teknik.</p>
+                            <p className="text-secondary">Po, të gjitha makinat vijnë me garanci dhe inspektim të plotë teknik.</p>
                         </div>
                     </div>
                 </div>

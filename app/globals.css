@@ -425,3 +425,257 @@
 .animate-slideDown {
   animation: slideDown 0.2s ease-out;
 }
+
+/* Add to your globals.css - after your existing styles */
+
+/* ==========================================
+   CUSTOM SCROLLBARS - SLIM & THEMED
+   ========================================== */
+
+/* For Webkit browsers (Chrome, Safari, Edge, Opera) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-surface-2);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ferrari-red);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--bg-primary);
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-medium) var(--bg-surface-2);
+}
+
+/* Dark mode adjustments */
+.dark ::-webkit-scrollbar-track {
+  background: var(--bg-surface-2);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--ferrari-red);
+}
+
+/* ==========================================
+   SPECIFIC COMPONENT SCROLLBARS
+   ========================================== */
+
+/* For dropdowns and modals */
+.scrollbar-dropdown::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.scrollbar-dropdown {
+  scrollbar-width: thin;
+}
+
+/* For horizontal scroll (image galleries, etc) */
+.scrollbar-horizontal::-webkit-scrollbar {
+  height: 4px;
+}
+
+.scrollbar-horizontal {
+  scrollbar-width: thin;
+}
+
+/* Hide scrollbar but keep functionality (optional) */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari, Opera */
+}
+
+/* ==========================================
+   UTILITY CLASSES FOR SCROLLBARS
+   ========================================== */
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.scrollbar-thumb-ferrari::-webkit-scrollbar-thumb {
+  background: var(--ferrari-red);
+}
+
+.scrollbar-thumb-ferrari {
+  scrollbar-color: var(--ferrari-red) var(--bg-surface-2);
+}
+
+.scrollbar-track-surface::-webkit-scrollbar-track {
+  background: var(--bg-surface);
+}
+
+.scrollbar-track-surface-2::-webkit-scrollbar-track {
+  background: var(--bg-surface-2);
+}
+
+/* ==========================================
+   SPECIFIC COMPONENT EXAMPLES
+   ========================================== */
+
+/* For FilterSidebar */
+.filter-sidebar-scroll {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  padding-right: 4px;
+  /* Prevent content shift */
+}
+
+.filter-sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.filter-sidebar-scroll::-webkit-scrollbar-track {
+  background: var(--bg-surface-2);
+  border-radius: 4px;
+}
+
+.filter-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 4px;
+}
+
+.filter-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--ferrari-red);
+}
+
+/* For dropdowns */
+.dropdown-scroll {
+  max-height: 300px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.dropdown-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.dropdown-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dropdown-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 4px;
+}
+
+/* For tables with many rows */
+.table-scroll {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 600px;
+  scrollbar-width: thin;
+}
+
+.table-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.table-scroll::-webkit-scrollbar-track {
+  background: var(--bg-surface-2);
+}
+
+.table-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 6px;
+}
+
+.table-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--ferrari-red);
+}
+
+/* For modals */
+.modal-scroll {
+  max-height: 80vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  padding-right: 8px;
+  /* Prevent content shift */
+}
+
+.modal-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.modal-scroll::-webkit-scrollbar-track {
+  background: var(--bg-surface-2);
+  border-radius: 4px;
+}
+
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 4px;
+}
+
+/* For long lists */
+.list-scroll {
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.list-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.list-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.list-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 4px;
+}
+
+/* For code blocks or long text */
+.code-scroll {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.code-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.code-scroll::-webkit-scrollbar-track {
+  background: var(--bg-surface-2);
+}
+
+.code-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 4px;
+}

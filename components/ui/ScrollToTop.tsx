@@ -35,7 +35,7 @@ export default function ScrollToTop() {
     return (
         <button
             onClick={scrollToTop}
-            className="fixed bottom-6 right-6 z-40 p-3 bg-ferrari-red text-white rounded-full shadow-lg hover:bg-ferrari-dark transition-all duration-300 transform hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-ferrari-red focus:ring-offset-2"
+            className="fixed bottom-6 right-6 z-40 p-3 bg-ferrari-red text-primary rounded-full shadow-lg hover:bg-ferrari-dark transition-all duration-300 transform hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-ferrari-red focus:ring-offset-2"
             aria-label="Scroll to top"
             title="Kthehu në fillim"
         >

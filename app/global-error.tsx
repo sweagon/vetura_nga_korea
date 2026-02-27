@@ -23,8 +23,8 @@ export default function GlobalError({
                         <div className="max-w-2xl mx-auto text-center">
                             {/* Error Icon */}
                             <div className="mb-6">
-                                <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto">
-                                    <AlertTriangle size={48} className="text-red-500" />
+                                <div className="w-24 h-24 bg-error-bg rounded-full flex items-center justify-center mx-auto">
+                                    <AlertTriangle size={48} className="text-error-text" />
                                 </div>
                             </div>
 
@@ -34,7 +34,7 @@ export default function GlobalError({
                             </h1>
 
                             {/* Error Message */}
-                            <p className="text-gray-600 mb-8">
+                            <p className="text-secondary mb-8">
                                 Na vjen keq, ndodhi një gabim i papritur. Ekipi ynë u njoftua dhe po punon për ta rregulluar.
                             </p>
 

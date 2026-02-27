@@ -1,3 +1,4 @@
+// components/cars/FilterSidebar.tsx
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -21,19 +22,15 @@ import {
     Sliders,
     Filter,
     XCircle,
-    TrendingUp,
-    Clock,
-    Battery,
     Cpu,
     Wind
 } from 'lucide-react';
 
 interface FilterSidebarProps {
-    onFilterChange?: (filters: any) => void;
     className?: string;
 }
 
-// Quick filter presets with better icons
+// Quick filter presets
 const QUICK_FILTERS = [
     { id: 'german', label: 'Gjermane', icon: '🇩🇪', filter: { make: ['BMW', 'Audi', 'Mercedes-Benz', 'Volkswagen'].join(',') } },
     { id: 'french', label: 'Franceze', icon: '🇫🇷', filter: { make: ['Renault', 'Peugeot', 'Citroën'].join(',') } },
@@ -45,7 +42,7 @@ const QUICK_FILTERS = [
     { id: 'new', label: '2022+', icon: '🆕', filter: { minYear: 2022 } },
 ];
 
-// Price ranges with better labels
+// Price ranges
 const PRICE_RANGES = [
     { id: 'price-1', label: '€0 - €5k', min: 0, max: 5000, icon: '🟢' },
     { id: 'price-2', label: '€5k - €10k', min: 5000, max: 10000, icon: '🟡' },
@@ -55,7 +52,7 @@ const PRICE_RANGES = [
     { id: 'price-6', label: '€30k+', min: 30000, max: 1000000, icon: '👑' },
 ];
 
-// Year ranges with decades
+// Year ranges
 const YEAR_RANGES = [
     { id: 'year-1', label: '2023+', min: 2023, max: 2026, icon: '🆕' },
     { id: 'year-2', label: '2020-2022', min: 2020, max: 2022, icon: '✨' },
@@ -65,7 +62,7 @@ const YEAR_RANGES = [
     { id: 'year-6', label: 'Para 2005', min: 1900, max: 2004, icon: '📅' },
 ];
 
-// Mileage ranges with better labels
+// Mileage ranges
 const MILEAGE_RANGES = [
     { id: 'mileage-1', label: '0 - 20k km', min: 0, max: 20000, icon: '🆕' },
     { id: 'mileage-2', label: '20k - 50k', min: 20000, max: 50000, icon: '✨' },
@@ -86,7 +83,7 @@ const ENGINE_SIZES = [
     { id: 'engine-6', label: '3.0L+', min: 3.0, max: 10.0, icon: '⚡' },
 ];
 
-// Power (HP) ranges
+// Power ranges
 const POWER_RANGES = [
     { id: 'power-1', label: '< 75 HP', min: 0, max: 75, icon: '🐌' },
     { id: 'power-2', label: '75 - 110 HP', min: 75, max: 110, icon: '🚗' },
@@ -138,7 +135,7 @@ const FEATURES = [
     { id: 'keyless', label: 'Pa çelës', icon: '🔑' },
 ];
 
-export default function FilterSidebar({ onFilterChange, className = '' }: FilterSidebarProps) {
+export default function FilterSidebar({ className = '' }: FilterSidebarProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [isPending, setIsPending] = useState(false);
@@ -153,8 +150,21 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState<'quick' | 'detailed'>('quick');
+    const [expandedSections, setExpandedSections] = useState({
+        quickFilters: true,
+        popular: true,
+        price: true,
+        year: true,
+        mileage: true,
+        make: false,
+        fuel: false,
+        transmission: false,
+        engineSize: false,
+        powerRange: false,
+        features: false
+    });
 
-    // Fix useState initialization - add proper initial values
+    // Filter state - initialize from URL
     const [selectedMakes, setSelectedMakes] = useState<string[]>(() =>
         searchParams.get('make')?.split(',').filter(Boolean) || []
     );
@@ -183,7 +193,6 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
         searchParams.get('features')?.split(',').filter(Boolean) || []
     );
 
-    // Fix number state with proper typing
     const [priceRange, setPriceRange] = useState<{ min: string; max: string }>({
         min: searchParams.get('minPrice') || '',
         max: searchParams.get('maxPrice') || ''
@@ -249,7 +258,7 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
     };
 
     // Build current filter state as string for comparison
-    const getFilterString = useCallback(() => {
+    const getFilterString = useCallback((): string => {
         const filters = {
             makes: [...selectedMakes].sort().join(','),
             model: selectedModel,
@@ -272,7 +281,7 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
         return JSON.stringify(filters);
     }, [selectedMakes, selectedModel, selectedFuel, selectedTransmission, selectedBodyTypes, selectedColors, selectedFeatures, priceRange, yearRange, mileageRange, engineSize, powerRange]);
 
-    // Update URL only when filters actually change
+    // Update URL when filters change
     const updateURL = useCallback(() => {
         const currentFilterString = getFilterString();
 
@@ -288,9 +297,11 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
         updateTimeoutRef.current = setTimeout(() => {
             const params = new URLSearchParams();
 
+            // Preserve search query
             const searchQuery = searchParams.get('search');
             if (searchQuery) params.set('search', searchQuery);
 
+            // Add all filter params
             if (selectedMakes.length > 0) params.set('make', selectedMakes.join(','));
             if (selectedModel) params.set('model', selectedModel);
             if (selectedFuel.length > 0) params.set('fuelType', selectedFuel.join(','));
@@ -315,27 +326,25 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
 
             params.set('page', '1');
 
+            // Update URL - CarGrid will react to this
             router.push(`/cars?${params.toString()}`, { scroll: false });
-
-            if (onFilterChange) {
-                onFilterChange(Object.fromEntries(params));
-            }
 
             setIsPending(false);
             updateTimeoutRef.current = null;
         }, 600);
-    }, [selectedMakes, selectedModel, selectedFuel, selectedTransmission, selectedBodyTypes, selectedColors, selectedFeatures, priceRange, yearRange, mileageRange, engineSize, powerRange, searchParams, router, onFilterChange, getFilterString]);
+    }, [selectedMakes, selectedModel, selectedFuel, selectedTransmission, selectedBodyTypes, selectedColors, selectedFeatures, priceRange, yearRange, mileageRange, engineSize, powerRange, searchParams, router, getFilterString]);
 
     // Trigger update when filters change
     useEffect(() => {
         updateURL();
         return () => {
             if (updateTimeoutRef.current) {
-                window.clearTimeout(updateTimeoutRef.current);
+                clearTimeout(updateTimeoutRef.current);
             }
         };
     }, [updateURL]);
 
+    // Toggle functions
     const toggleMake = (make: string) => {
         setSelectedMakes(prev =>
             prev.includes(make)
@@ -419,7 +428,7 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
         setPowerRange({ min: '', max: '' });
     };
 
-    const getActiveFilterCount = () => {
+    const getActiveFilterCount = (): number => {
         let count = 0;
         count += selectedMakes.length;
         if (selectedModel) count++;
@@ -436,15 +445,22 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
         return count;
     };
 
-    const filteredMakes = useMemo(() => {
+    const filteredMakes = useMemo((): string[] => {
         return makes
             .filter(make => make.toLowerCase().includes(searchTerm.toLowerCase()))
             .sort();
     }, [makes, searchTerm]);
 
+    const toggleSection = (section: keyof typeof expandedSections) => {
+        setExpandedSections(prev => ({
+            ...prev,
+            [section]: !prev[section]
+        }));
+    };
+
     if (loading) {
         return (
-            <div className="bg-surface rounded-2xl shadow-lg p-6 border border-theme">
+            <div className="bg-surface rounded-2xl shadow-lg p-6 border border-medium">
                 <div className="animate-pulse space-y-4">
                     <div className="h-10 bg-tertiary rounded-xl w-2/3"></div>
                     <div className="h-12 bg-tertiary rounded-xl"></div>
@@ -455,7 +471,7 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
     }
 
     return (
-        <div className={`bg-surface rounded-2xl shadow-lg border border-theme overflow-hidden sticky top-24 ${className}`}>
+        <div className={`bg-surface rounded-2xl shadow-lg border border-medium overflow-hidden sticky top-24 ${className}`}>
             {/* Header */}
             <div className="bg-ferrari-red p-4 text-white">
                 <div className="flex items-center justify-between">
@@ -472,7 +488,7 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
                         )}
                         {getActiveFilterCount() > 0 && (
                             <span className="bg-white/20 px-2 py-1 rounded-full text-xs font-medium">
-                                {getActiveFilterCount()} aktive
+                                {getActiveFilterCount()}
                             </span>
                         )}
                         <button
@@ -487,12 +503,12 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-theme">
+            <div className="flex border-b border-medium">
                 <button
                     onClick={() => setActiveTab('quick')}
                     className={`flex-1 py-3 text-sm font-medium transition-colors relative ${activeTab === 'quick'
-                        ? 'text-ferrari-red'
-                        : 'text-gray-500 hover:text-gray-700'
+                            ? 'text-ferrari-red'
+                            : 'text-secondary hover:text-primary'
                         }`}
                 >
                     <div className="flex items-center justify-center gap-1">
@@ -506,8 +522,8 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
                 <button
                     onClick={() => setActiveTab('detailed')}
                     className={`flex-1 py-3 text-sm font-medium transition-colors relative ${activeTab === 'detailed'
-                        ? 'text-ferrari-red'
-                        : 'text-gray-500 hover:text-gray-700'
+                            ? 'text-ferrari-red'
+                            : 'text-secondary hover:text-primary'
                         }`}
                 >
                     <div className="flex items-center justify-center gap-1">
@@ -520,19 +536,20 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
                 </button>
             </div>
 
+            {/* Filter Content */}
             <div className="p-4 max-h-[calc(100vh-250px)] overflow-y-auto scrollbar-thin">
                 {/* QUICK FILTERS TAB */}
                 {activeTab === 'quick' && (
                     <div className="space-y-6">
                         {/* Quick Filter Pills */}
                         <div>
-                            <h4 className="text-xs font-medium text-gray-500 mb-2">Filtro shpejt</h4>
+                            <h4 className="text-xs font-medium text-secondary mb-2">Filtro shpejt</h4>
                             <div className="flex flex-wrap gap-1.5">
                                 {QUICK_FILTERS.map((filter) => (
                                     <button
                                         key={filter.id}
                                         onClick={() => applyQuickFilter(filter.filter)}
-                                        className="px-3 py-1.5 bg-secondary hover:bg-ferrari-red hover:text-white rounded-full text-xs font-medium transition-all flex items-center gap-1 border border-theme"
+                                        className="px-3 py-1.5 bg-secondary hover:bg-ferrari-red hover:text-white rounded-full text-xs font-medium transition-all flex items-center gap-1 border border-medium"
                                     >
                                         <span>{filter.icon}</span>
                                         <span>{filter.label}</span>
@@ -543,18 +560,20 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
 
                         {/* Popular Brands */}
                         <div>
-                            <h4 className="text-xs font-medium text-gray-500 mb-2 flex items-center gap-1">
-                                <Star size={12} className="text-ferrari-red" />
-                                Markat popullore
-                            </h4>
+                            <div className="flex items-center justify-between mb-2">
+                                <h4 className="text-xs font-medium text-secondary flex items-center gap-1">
+                                    <Star size={12} className="text-ferrari-red" />
+                                    Markat popullore
+                                </h4>
+                            </div>
                             <div className="grid grid-cols-2 gap-1.5">
                                 {makes.slice(0, 10).map((make) => (
                                     <button
                                         key={make}
                                         onClick={() => toggleMake(make)}
                                         className={`px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-2 border ${selectedMakes.includes(make)
-                                            ? 'bg-ferrari-red text-white border-ferrari-red'
-                                            : 'bg-secondary text-gray-700 hover:bg-tertiary border-theme'
+                                                ? 'bg-ferrari-red text-white border-ferrari-red'
+                                                : 'bg-secondary text-primary hover:bg-tertiary border-medium'
                                             }`}
                                     >
                                         <span>{make}</span>
@@ -566,106 +585,142 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
 
                         {/* Price Ranges */}
                         <div>
-                            <h4 className="text-xs font-medium text-gray-500 mb-2 flex items-center gap-1">
-                                <Euro size={12} className="text-ferrari-red" />
-                                Çmimi
-                            </h4>
-                            <div className="flex flex-wrap gap-1.5">
-                                {PRICE_RANGES.map((range) => {
-                                    const isActive = priceRange.min === range.min.toString() && priceRange.max === range.max.toString();
-                                    return (
-                                        <button
-                                            key={range.id}
-                                            onClick={() => setPriceRange(isActive ? { min: '', max: '' } : { min: range.min.toString(), max: range.max.toString() })}
-                                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${isActive
-                                                ? 'bg-ferrari-red text-white'
-                                                : 'bg-secondary text-gray-700 hover:bg-tertiary'
-                                                }`}
-                                        >
-                                            <span>{range.icon}</span>
-                                            <span>{range.label}</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
+                            <button
+                                onClick={() => toggleSection('price')}
+                                className="w-full flex items-center justify-between text-sm font-medium text-primary"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <Euro size={16} className="text-ferrari-red" />
+                                    <span>Çmimi</span>
+                                </div>
+                                {expandedSections.price ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                            </button>
+                            {expandedSections.price && (
+                                <div className="mt-3 space-y-2">
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {PRICE_RANGES.map((range) => {
+                                            const isActive = priceRange.min === range.min.toString() && priceRange.max === range.max.toString();
+                                            return (
+                                                <button
+                                                    key={range.id}
+                                                    onClick={() => setPriceRange(isActive ? { min: '', max: '' } : { min: range.min.toString(), max: range.max.toString() })}
+                                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${isActive
+                                                            ? 'bg-ferrari-red text-white'
+                                                            : 'bg-secondary text-primary hover:bg-tertiary'
+                                                        }`}
+                                                >
+                                                    <span>{range.icon}</span>
+                                                    <span>{range.label}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Year Ranges */}
                         <div>
-                            <h4 className="text-xs font-medium text-gray-500 mb-2 flex items-center gap-1">
-                                <Calendar size={12} className="text-ferrari-red" />
-                                Viti
-                            </h4>
-                            <div className="flex flex-wrap gap-1.5">
-                                {YEAR_RANGES.map((range) => {
-                                    const isActive = yearRange.min === range.min.toString() && yearRange.max === range.max.toString();
-                                    return (
-                                        <button
-                                            key={range.id}
-                                            onClick={() => setYearRange(isActive ? { min: '', max: '' } : { min: range.min.toString(), max: range.max.toString() })}
-                                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${isActive
-                                                ? 'bg-ferrari-red text-white'
-                                                : 'bg-secondary text-gray-700 hover:bg-tertiary'
-                                                }`}
-                                        >
-                                            <span>{range.icon}</span>
-                                            <span>{range.label}</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
+                            <button
+                                onClick={() => toggleSection('year')}
+                                className="w-full flex items-center justify-between text-sm font-medium text-primary"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <Calendar size={16} className="text-ferrari-red" />
+                                    <span>Viti</span>
+                                </div>
+                                {expandedSections.year ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                            </button>
+                            {expandedSections.year && (
+                                <div className="mt-3 space-y-2">
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {YEAR_RANGES.map((range) => {
+                                            const isActive = yearRange.min === range.min.toString() && yearRange.max === range.max.toString();
+                                            return (
+                                                <button
+                                                    key={range.id}
+                                                    onClick={() => setYearRange(isActive ? { min: '', max: '' } : { min: range.min.toString(), max: range.max.toString() })}
+                                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${isActive
+                                                            ? 'bg-ferrari-red text-white'
+                                                            : 'bg-secondary text-primary hover:bg-tertiary'
+                                                        }`}
+                                                >
+                                                    <span>{range.icon}</span>
+                                                    <span>{range.label}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Fuel Type */}
                         <div>
-                            <h4 className="text-xs font-medium text-gray-500 mb-2 flex items-center gap-1">
-                                <Fuel size={12} className="text-ferrari-red" />
-                                Karburanti
-                            </h4>
-                            <div className="flex flex-wrap gap-1.5">
-                                {fuelTypes.map((type) => (
-                                    <button
-                                        key={type}
-                                        onClick={() => toggleFuel(type)}
-                                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${selectedFuel.includes(type)
-                                            ? 'bg-ferrari-red text-white'
-                                            : 'bg-secondary text-gray-700 hover:bg-tertiary'
-                                            }`}
-                                    >
-                                        {type === 'Diesel' ? 'Naftë' :
-                                            type === 'Gasoline' ? 'Benzinë' :
-                                                type === 'Electric' ? 'Elektrik' :
-                                                    type === 'Hybrid' ? 'Hibrid' : type}
-                                    </button>
-                                ))}
-                            </div>
+                            <button
+                                onClick={() => toggleSection('fuel')}
+                                className="w-full flex items-center justify-between text-sm font-medium text-primary"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <Fuel size={16} className="text-ferrari-red" />
+                                    <span>Karburanti</span>
+                                </div>
+                                {expandedSections.fuel ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                            </button>
+                            {expandedSections.fuel && (
+                                <div className="mt-3 flex flex-wrap gap-1.5">
+                                    {fuelTypes.map((type) => (
+                                        <button
+                                            key={type}
+                                            onClick={() => toggleFuel(type)}
+                                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${selectedFuel.includes(type)
+                                                    ? 'bg-ferrari-red text-white'
+                                                    : 'bg-secondary text-primary hover:bg-tertiary'
+                                                }`}
+                                        >
+                                            {type === 'Diesel' ? 'Naftë' :
+                                                type === 'Gasoline' ? 'Benzinë' :
+                                                    type === 'Electric' ? 'Elektrik' :
+                                                        type === 'Hybrid' ? 'Hibrid' : type}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         {/* Transmission */}
                         <div>
-                            <h4 className="text-xs font-medium text-gray-500 mb-2">Transmisioni</h4>
-                            <div className="flex flex-wrap gap-1.5">
-                                {transmissions.map((trans) => (
-                                    <button
-                                        key={trans}
-                                        onClick={() => toggleTransmission(trans)}
-                                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${selectedTransmission.includes(trans)
-                                            ? 'bg-ferrari-red text-white'
-                                            : 'bg-secondary text-gray-700 hover:bg-tertiary'
-                                            }`}
-                                    >
-                                        {trans === 'Automatic' ? 'Automatik' : trans === 'Manual' ? 'Manuel' : trans}
-                                    </button>
-                                ))}
-                            </div>
+                            <button
+                                onClick={() => toggleSection('transmission')}
+                                className="w-full flex items-center justify-between text-sm font-medium text-primary"
+                            >
+                                <span>Transmisioni</span>
+                                {expandedSections.transmission ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                            </button>
+                            {expandedSections.transmission && (
+                                <div className="mt-3 flex flex-wrap gap-1.5">
+                                    {transmissions.map((trans) => (
+                                        <button
+                                            key={trans}
+                                            onClick={() => toggleTransmission(trans)}
+                                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${selectedTransmission.includes(trans)
+                                                    ? 'bg-ferrari-red text-white'
+                                                    : 'bg-secondary text-primary hover:bg-tertiary'
+                                                }`}
+                                        >
+                                            {trans === 'Automatic' ? 'Automatik' : trans === 'Manual' ? 'Manuel' : trans}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         {/* Model selection - only show if a make is selected */}
                         {selectedMakes.length === 1 && models.length > 0 && (
                             <div>
-                                <h4 className="text-xs font-medium text-gray-500 mb-2">Modeli</h4>
+                                <h4 className="text-xs font-medium text-secondary mb-2">Modeli</h4>
                                 <select
-                                    className="w-full px-3 py-2 bg-secondary border border-theme rounded-lg text-sm focus:outline-none focus:border-ferrari-red"
+                                    className="w-full px-3 py-2 bg-secondary border border-medium rounded-lg text-sm focus:outline-none focus:border-ferrari-red"
                                     value={selectedModel}
                                     onChange={(e) => setSelectedModel(e.target.value)}
                                 >
@@ -684,13 +739,13 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
                     <div className="space-y-5">
                         {/* Search makes */}
                         <div>
-                            <h4 className="text-xs font-medium text-gray-500 mb-2">Kërko markën</h4>
+                            <h4 className="text-xs font-medium text-secondary mb-2">Kërko markën</h4>
                             <div className="relative">
-                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
                                 <input
                                     type="text"
                                     placeholder="P.sh. BMW, Audi..."
-                                    className="w-full pl-8 pr-3 py-2 bg-secondary border border-theme rounded-lg text-sm focus:outline-none focus:border-ferrari-red"
+                                    className="w-full pl-8 pr-3 py-2 bg-secondary border border-medium rounded-lg text-sm focus:outline-none focus:border-ferrari-red"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
@@ -713,7 +768,7 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
 
                         {/* Body Type */}
                         <div>
-                            <h4 className="text-xs font-medium text-gray-500 mb-2 flex items-center gap-1">
+                            <h4 className="text-xs font-medium text-secondary mb-2 flex items-center gap-1">
                                 <Car size={12} className="text-ferrari-red" />
                                 Tipi i karrocerisë
                             </h4>
@@ -723,8 +778,8 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
                                         key={type.id}
                                         onClick={() => toggleBodyType(type.id)}
                                         className={`px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-2 ${selectedBodyTypes.includes(type.id)
-                                            ? 'bg-ferrari-red text-white'
-                                            : 'bg-secondary text-gray-700 hover:bg-tertiary'
+                                                ? 'bg-ferrari-red text-white'
+                                                : 'bg-secondary text-primary hover:bg-tertiary'
                                             }`}
                                     >
                                         <span>{type.icon}</span>
@@ -736,7 +791,7 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
 
                         {/* Colors */}
                         <div>
-                            <h4 className="text-xs font-medium text-gray-500 mb-2">Ngjyra</h4>
+                            <h4 className="text-xs font-medium text-secondary mb-2">Ngjyra</h4>
                             <div className="flex flex-wrap gap-2">
                                 {COLORS.map((color) => (
                                     <button
@@ -747,8 +802,8 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
                                     >
                                         <div
                                             className={`w-8 h-8 rounded-full border-2 transition-all ${selectedColors.includes(color.id)
-                                                ? 'border-ferrari-red scale-110'
-                                                : 'border-transparent group-hover:border-gray-300'
+                                                    ? 'border-ferrari-red scale-110'
+                                                    : 'border-transparent group-hover:border-medium'
                                                 }`}
                                             style={{ backgroundColor: color.color }}
                                         />
@@ -764,116 +819,154 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
 
                         {/* Mileage Ranges */}
                         <div>
-                            <h4 className="text-xs font-medium text-gray-500 mb-2 flex items-center gap-1">
-                                <Gauge size={12} className="text-ferrari-red" />
-                                Kilometrazha
-                            </h4>
-                            <div className="flex flex-wrap gap-1.5">
-                                {MILEAGE_RANGES.map((range) => {
-                                    const isActive = mileageRange.min === range.min.toString() && mileageRange.max === range.max.toString();
-                                    return (
-                                        <button
-                                            key={range.id}
-                                            onClick={() => setMileageRange(isActive ? { min: '', max: '' } : { min: range.min.toString(), max: range.max.toString() })}
-                                            className={`px-2 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${isActive
-                                                ? 'bg-ferrari-red text-white'
-                                                : 'bg-secondary text-gray-700 hover:bg-tertiary'
-                                                }`}
-                                        >
-                                            <span>{range.icon}</span>
-                                            <span>{range.label}</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 mt-2">
-                                <input
-                                    type="number"
-                                    placeholder="Min km"
-                                    className="w-full px-2 py-1 bg-secondary border border-theme rounded-lg text-xs"
-                                    value={mileageRange.min}
-                                    onChange={(e) => setMileageRange({ ...mileageRange, min: e.target.value })}
-                                />
-                                <input
-                                    type="number"
-                                    placeholder="Max km"
-                                    className="w-full px-2 py-1 bg-secondary border border-theme rounded-lg text-xs"
-                                    value={mileageRange.max}
-                                    onChange={(e) => setMileageRange({ ...mileageRange, max: e.target.value })}
-                                />
-                            </div>
+                            <button
+                                onClick={() => toggleSection('mileage')}
+                                className="w-full flex items-center justify-between text-sm font-medium text-primary"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <Gauge size={16} className="text-ferrari-red" />
+                                    <span>Kilometrazha</span>
+                                </div>
+                                {expandedSections.mileage ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                            </button>
+                            {expandedSections.mileage && (
+                                <div className="mt-3 space-y-2">
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {MILEAGE_RANGES.map((range) => {
+                                            const isActive = mileageRange.min === range.min.toString() && mileageRange.max === range.max.toString();
+                                            return (
+                                                <button
+                                                    key={range.id}
+                                                    onClick={() => setMileageRange(isActive ? { min: '', max: '' } : { min: range.min.toString(), max: range.max.toString() })}
+                                                    className={`px-2 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${isActive
+                                                            ? 'bg-ferrari-red text-white'
+                                                            : 'bg-secondary text-primary hover:bg-tertiary'
+                                                        }`}
+                                                >
+                                                    <span>{range.icon}</span>
+                                                    <span>{range.label}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <input
+                                            type="number"
+                                            placeholder="Min km"
+                                            className="w-full px-2 py-1 bg-secondary border border-medium rounded-lg text-xs"
+                                            value={mileageRange.min}
+                                            onChange={(e) => setMileageRange({ ...mileageRange, min: e.target.value })}
+                                        />
+                                        <input
+                                            type="number"
+                                            placeholder="Max km"
+                                            className="w-full px-2 py-1 bg-secondary border border-medium rounded-lg text-xs"
+                                            value={mileageRange.max}
+                                            onChange={(e) => setMileageRange({ ...mileageRange, max: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Engine Size */}
                         <div>
-                            <h4 className="text-xs font-medium text-gray-500 mb-2 flex items-center gap-1">
-                                <Cpu size={12} className="text-ferrari-red" />
-                                Motorri
-                            </h4>
-                            <div className="flex flex-wrap gap-1.5">
-                                {ENGINE_SIZES.map((range) => {
-                                    const isActive = engineSize.min === range.min.toString() && engineSize.max === range.max.toString();
-                                    return (
-                                        <button
-                                            key={range.id}
-                                            onClick={() => setEngineSize(isActive ? { min: '', max: '' } : { min: range.min.toString(), max: range.max.toString() })}
-                                            className={`px-2 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${isActive
-                                                ? 'bg-ferrari-red text-white'
-                                                : 'bg-secondary text-gray-700 hover:bg-tertiary'
-                                                }`}
-                                        >
-                                            <span>{range.icon}</span>
-                                            <span>{range.label}</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
+                            <button
+                                onClick={() => toggleSection('engineSize')}
+                                className="w-full flex items-center justify-between text-sm font-medium text-primary"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <Cpu size={16} className="text-ferrari-red" />
+                                    <span>Motorri</span>
+                                </div>
+                                {expandedSections.engineSize ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                            </button>
+                            {expandedSections.engineSize && (
+                                <div className="mt-3 space-y-2">
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {ENGINE_SIZES.map((range) => {
+                                            const isActive = engineSize.min === range.min.toString() && engineSize.max === range.max.toString();
+                                            return (
+                                                <button
+                                                    key={range.id}
+                                                    onClick={() => setEngineSize(isActive ? { min: '', max: '' } : { min: range.min.toString(), max: range.max.toString() })}
+                                                    className={`px-2 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${isActive
+                                                            ? 'bg-ferrari-red text-white'
+                                                            : 'bg-secondary text-primary hover:bg-tertiary'
+                                                        }`}
+                                                >
+                                                    <span>{range.icon}</span>
+                                                    <span>{range.label}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Power */}
                         <div>
-                            <h4 className="text-xs font-medium text-gray-500 mb-2 flex items-center gap-1">
-                                <Wind size={12} className="text-ferrari-red" />
-                                Fuqia (HP)
-                            </h4>
-                            <div className="flex flex-wrap gap-1.5">
-                                {POWER_RANGES.map((range) => {
-                                    const isActive = powerRange.min === range.min.toString() && powerRange.max === range.max.toString();
-                                    return (
-                                        <button
-                                            key={range.id}
-                                            onClick={() => setPowerRange(isActive ? { min: '', max: '' } : { min: range.min.toString(), max: range.max.toString() })}
-                                            className={`px-2 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${isActive
-                                                ? 'bg-ferrari-red text-white'
-                                                : 'bg-secondary text-gray-700 hover:bg-tertiary'
-                                                }`}
-                                        >
-                                            <span>{range.icon}</span>
-                                            <span>{range.label}</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
+                            <button
+                                onClick={() => toggleSection('powerRange')}
+                                className="w-full flex items-center justify-between text-sm font-medium text-primary"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <Wind size={16} className="text-ferrari-red" />
+                                    <span>Fuqia (HP)</span>
+                                </div>
+                                {expandedSections.powerRange ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                            </button>
+                            {expandedSections.powerRange && (
+                                <div className="mt-3 space-y-2">
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {POWER_RANGES.map((range) => {
+                                            const isActive = powerRange.min === range.min.toString() && powerRange.max === range.max.toString();
+                                            return (
+                                                <button
+                                                    key={range.id}
+                                                    onClick={() => setPowerRange(isActive ? { min: '', max: '' } : { min: range.min.toString(), max: range.max.toString() })}
+                                                    className={`px-2 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${isActive
+                                                            ? 'bg-ferrari-red text-white'
+                                                            : 'bg-secondary text-primary hover:bg-tertiary'
+                                                        }`}
+                                                >
+                                                    <span>{range.icon}</span>
+                                                    <span>{range.label}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Features */}
                         <div>
-                            <h4 className="text-xs font-medium text-gray-500 mb-2">Pajisjet</h4>
-                            <div className="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto scrollbar-thin">
-                                {FEATURES.map((feature) => (
-                                    <button
-                                        key={feature.id}
-                                        onClick={() => toggleFeature(feature.id)}
-                                        className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-2 ${selectedFeatures.includes(feature.id)
-                                            ? 'bg-ferrari-red text-white'
-                                            : 'bg-secondary text-gray-700 hover:bg-tertiary'
-                                            }`}
-                                    >
-                                        <span>{feature.icon}</span>
-                                        <span className="truncate">{feature.label}</span>
-                                    </button>
-                                ))}
-                            </div>
+                            <button
+                                onClick={() => toggleSection('features')}
+                                className="w-full flex items-center justify-between text-sm font-medium text-primary"
+                            >
+                                <span>Pajisjet</span>
+                                {expandedSections.features ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                            </button>
+                            {expandedSections.features && (
+                                <div className="mt-3 grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto scrollbar-thin">
+                                    {FEATURES.map((feature) => (
+                                        <button
+                                            key={feature.id}
+                                            onClick={() => toggleFeature(feature.id)}
+                                            className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-2 ${selectedFeatures.includes(feature.id)
+                                                    ? 'bg-ferrari-red text-white'
+                                                    : 'bg-secondary text-primary hover:bg-tertiary'
+                                                }`}
+                                        >
+                                            <span>{feature.icon}</span>
+                                            <span className="truncate">{feature.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
@@ -881,9 +974,9 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
 
             {/* Active Filters Summary */}
             {getActiveFilterCount() > 0 && (
-                <div className="p-3 border-t border-theme bg-secondary/50">
+                <div className="p-3 border-t border-medium bg-secondary/50">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-gray-500">Filtrat aktive:</span>
+                        <span className="text-xs font-medium text-secondary">Filtrat aktive:</span>
                         <button
                             onClick={clearFilters}
                             className="text-xs text-ferrari-red hover:underline flex items-center gap-0.5"
@@ -902,7 +995,7 @@ export default function FilterSidebar({ onFilterChange, className = '' }: Filter
                             </span>
                         ))}
                         {selectedMakes.length > 3 && (
-                            <span className="px-2 py-0.5 bg-tertiary text-gray-600 rounded-full text-xs">
+                            <span className="px-2 py-0.5 bg-tertiary text-secondary rounded-full text-xs">
                                 +{selectedMakes.length - 3}
                             </span>
                         )}

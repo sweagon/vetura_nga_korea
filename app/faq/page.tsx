@@ -119,12 +119,12 @@ export default function FAQPage() {
     return (
         <div className="min-h-screen bg-gradient-to-b from-secondary to-surface">
             {/* Hero Section */}
-            <div className="bg-gradient-to-r from-ferrari-red to-ferrari-dark text-white">
+            <div className="bg-gradient-to-r from-ferrari-red to-ferrari-dark text-primary">
                 <div className="container-custom py-16">
                     <h1 className="text-4xl md:text-5xl font-bold mb-4">
                         Pyetje të shpeshta
                     </h1>
-                    <p className="text-xl text-white/90 max-w-2xl">
+                    <p className="text-xl text-primary/90 max-w-2xl">
                         Gjeni përgjigje për pyetjet më të zakonshme rreth importit të makinave nga Korea.
                     </p>
                 </div>
@@ -134,7 +134,7 @@ export default function FAQPage() {
                 {/* Search Bar */}
                 <div className="max-w-2xl mx-auto mb-12">
                     <div className="relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" size={20} />
                         <input
                             type="text"
                             placeholder="Kërko në FAQ..."
@@ -161,9 +161,9 @@ export default function FAQPage() {
                                         <h2 className="text-xl font-semibold">{category.title}</h2>
                                     </div>
                                     {openCategories.includes(catIndex) ? (
-                                        <ChevronUp size={20} className="text-gray-500" />
+                                        <ChevronUp size={20} className="text-secondary" />
                                     ) : (
-                                        <ChevronDown size={20} className="text-gray-500" />
+                                        <ChevronDown size={20} className="text-secondary" />
                                     )}
                                 </button>
 
@@ -176,17 +176,17 @@ export default function FAQPage() {
                                                     onClick={() => toggleQuestion(qIndex, catIndex)}
                                                     className="w-full flex items-start justify-between gap-4 text-left"
                                                 >
-                                                    <h3 className="font-medium text-gray-900 flex-1">
+                                                    <h3 className="font-medium text-primary flex-1">
                                                         {q.q}
                                                     </h3>
                                                     {openQuestions[`${catIndex}-${qIndex}`] ? (
-                                                        <ChevronUp size={18} className="text-gray-500 flex-shrink-0 mt-1" />
+                                                        <ChevronUp size={18} className="text-secondary flex-shrink-0 mt-1" />
                                                     ) : (
-                                                        <ChevronDown size={18} className="text-gray-500 flex-shrink-0 mt-1" />
+                                                        <ChevronDown size={18} className="text-secondary flex-shrink-0 mt-1" />
                                                     )}
                                                 </button>
                                                 {openQuestions[`${catIndex}-${qIndex}`] && (
-                                                    <p className="mt-4 text-gray-600 leading-relaxed">
+                                                    <p className="mt-4 text-secondary leading-relaxed">
                                                         {q.a}
                                                     </p>
                                                 )}
@@ -199,7 +199,7 @@ export default function FAQPage() {
 
                         {filteredCategories.length === 0 && (
                             <div className="bg-surface rounded-2xl p-12 text-center border border-theme">
-                                <p className="text-gray-500 mb-4">Nuk u gjet asnjë pyetje për "{searchQuery}"</p>
+                                <p className="text-secondary mb-4">Nuk u gjet asnjë pyetje për "{searchQuery}"</p>
                                 <button
                                     onClick={() => setSearchQuery('')}
                                     className="text-ferrari-red hover:underline"
@@ -215,7 +215,7 @@ export default function FAQPage() {
                         {/* Contact Card */}
                         <div className="bg-surface rounded-2xl p-6 border border-theme shadow-sm">
                             <h3 className="font-semibold mb-4">Nuk e gjetët atë që kërkoni?</h3>
-                            <p className="text-sm text-gray-600 mb-6">
+                            <p className="text-sm text-secondary mb-6">
                                 Na kontaktoni direkt dhe do t'ju përgjigjemi brenda 24 orëve.
                             </p>
                             <div className="space-y-3">
@@ -225,7 +225,7 @@ export default function FAQPage() {
                                 >
                                     <Phone size={18} className="text-ferrari-red" />
                                     <div>
-                                        <p className="text-xs text-gray-500">Telefon</p>
+                                        <p className="text-xs text-secondary">Telefon</p>
                                         <p className="font-medium">+383 45 528 033</p>
                                     </div>
                                 </a>
@@ -235,7 +235,7 @@ export default function FAQPage() {
                                 >
                                     <Mail size={18} className="text-ferrari-red" />
                                     <div>
-                                        <p className="text-xs text-gray-500">Email</p>
+                                        <p className="text-xs text-secondary">Email</p>
                                         <p className="font-medium">info@formula-export.com</p>
                                     </div>
                                 </a>
@@ -246,7 +246,7 @@ export default function FAQPage() {
                                 >
                                     <MessageCircle size={18} className="text-ferrari-red" />
                                     <div>
-                                        <p className="text-xs text-gray-500">WhatsApp</p>
+                                        <p className="text-xs text-secondary">WhatsApp</p>
                                         <p className="font-medium">+383 45 528 033</p>
                                     </div>
                                 </a>
@@ -258,19 +258,19 @@ export default function FAQPage() {
                             <h3 className="font-semibold mb-3">Linke të shpejta</h3>
                             <ul className="space-y-2">
                                 <li>
-                                    <Link href="/how-it-works" className="text-sm text-gray-600 hover:text-ferrari-red transition flex items-center gap-2">
+                                    <Link href="/how-it-works" className="text-sm text-secondary hover:text-ferrari-red transition flex items-center gap-2">
                                         <ChevronRight size={14} className="text-ferrari-red" />
                                         Si funksionon importi?
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/cars" className="text-sm text-gray-600 hover:text-ferrari-red transition flex items-center gap-2">
+                                    <Link href="/cars" className="text-sm text-secondary hover:text-ferrari-red transition flex items-center gap-2">
                                         <ChevronRight size={14} className="text-ferrari-red" />
                                         Shfleto makinat
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/offers" className="text-sm text-gray-600 hover:text-ferrari-red transition flex items-center gap-2">
+                                    <Link href="/offers" className="text-sm text-secondary hover:text-ferrari-red transition flex items-center gap-2">
                                         <ChevronRight size={14} className="text-ferrari-red" />
                                         Ofertat e javës
                                     </Link>

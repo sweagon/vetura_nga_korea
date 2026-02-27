@@ -1,9 +1,8 @@
-// components/cars/RecentlyViewed.tsx
+// components/cars/RecentlyViewed.tsx - UPDATED WITH THEME VARIABLES
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Clock, X, ChevronRight, Eye } from 'lucide-react';
 import { recentlyViewedService, RecentlyViewedCar } from '@/lib/recentlyViewed';
 
@@ -20,7 +19,6 @@ export default function RecentlyViewed() {
         setRecentCars(cars);
     };
 
-    // ✅ FIXED: Added React.MouseEvent type
     const removeCar = (id: number, e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -38,24 +36,24 @@ export default function RecentlyViewed() {
     }
 
     return (
-        <div className="bg-surface rounded-lg shadow-md p-6 mb-8">
+        <div className="bg-surface rounded-lg shadow-md p-6 mb-8 border border-medium">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                     <Clock size={20} className="text-ferrari-red" />
-                    <h2 className="text-xl font-bold">Shikuar së fundmi</h2>
+                    <h2 className="text-xl font-bold text-primary">Shikuar së fundmi</h2>
                 </div>
                 <div className="flex items-center gap-4">
                     {recentCars.length > 0 && (
                         <button
                             onClick={clearAll}
-                            className="text-sm text-gray-500 hover:text-ferrari-red transition"
+                            className="text-sm text-muted hover:text-ferrari-red transition"
                         >
                             Pastro të gjitha
                         </button>
                     )}
                     <button
                         onClick={() => setIsVisible(false)}
-                        className="text-gray-400 hover:text-gray-600 transition"
+                        className="text-muted hover:text-ferrari-red transition"
                         title="Fshih"
                     >
                         <X size={18} />
@@ -68,18 +66,18 @@ export default function RecentlyViewed() {
                     <Link
                         key={car.id}
                         href={`/cars/${car.id}`}
-                        className="group relative bg-secondary rounded-lg overflow-hidden hover:shadow-md transition"
+                        className="group relative bg-surface-2 rounded-lg overflow-hidden hover:shadow-md transition border border-medium"
                     >
                         {/* Remove button */}
                         <button
                             onClick={(e) => removeCar(car.id, e)}
-                            className="absolute top-2 right-2 z-10 p-1 bg-surface rounded-full shadow-md opacity-0 group-hover:opacity-100 transition hover:bg-secondary"
+                            className="absolute top-2 right-2 z-10 p-1 bg-surface rounded-full shadow-md opacity-0 group-hover:opacity-100 transition hover:bg-surface-2"
                         >
-                            <X size={14} className="text-gray-600" />
+                            <X size={14} className="text-muted" />
                         </button>
 
                         {/* Image */}
-                        <div className="aspect-video bg-tertiary relative">
+                        <div className="aspect-video bg-surface-2 relative">
                             {car.image ? (
                                 <img
                                     src={car.image}
@@ -87,7 +85,7 @@ export default function RecentlyViewed() {
                                     className="w-full h-full object-cover"
                                 />
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                <div className="w-full h-full flex items-center justify-center text-muted">
                                     <Eye size={24} />
                                 </div>
                             )}
@@ -95,18 +93,18 @@ export default function RecentlyViewed() {
 
                         {/* Details */}
                         <div className="p-3">
-                            <h3 className="font-semibold text-sm mb-1 line-clamp-1">
+                            <h3 className="font-semibold text-sm mb-1 line-clamp-1 text-primary">
                                 {car.make} {car.model}
                             </h3>
                             <div className="flex items-center justify-between">
                                 <span className="text-ferrari-red font-bold text-sm">
                                     €{car.price?.toLocaleString()}
                                 </span>
-                                <span className="text-xs text-gray-500">
+                                <span className="text-xs text-muted">
                                     {car.year}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                            <div className="flex items-center gap-2 mt-2 text-xs text-muted">
                                 <span>{car.fuelType === 'Diesel' ? 'Naftë' : 'Benzinë'}</span>
                                 <span>•</span>
                                 <span>{car.mileage?.toLocaleString()} km</span>
@@ -114,7 +112,7 @@ export default function RecentlyViewed() {
                         </div>
 
                         {/* View badge */}
-                        <div className="absolute bottom-2 left-2 bg-primary/50 text-white text-[10px] px-2 py-1 rounded">
+                        <div className="absolute bottom-2 left-2 bg-primary/70 text-primary text-[10px] px-2 py-1 rounded">
                             {new Date(car.viewedAt).toLocaleDateString('sq-AL')}
                         </div>
                     </Link>

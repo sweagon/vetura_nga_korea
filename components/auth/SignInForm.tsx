@@ -81,7 +81,7 @@ export default function SignInForm() {
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-ferrari-red text-white px-6 py-3 rounded-lg font-semibold hover:bg-ferrari-dark transition-all duration-300 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-primary"
                 >
                     {loading ? 'Duke hyrë...' : 'Hyr'}
                 </button>

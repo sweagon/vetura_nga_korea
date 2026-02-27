@@ -35,9 +35,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 {toasts.map(toast => (
                     <div
                         key={toast.id}
-                        className={`flex items-center justify-between p-4 rounded-lg shadow-lg min-w-[300px] ${toast.type === 'success' ? 'bg-green-50 text-green-800' :
-                                toast.type === 'error' ? 'bg-red-50 text-red-800' :
-                                    'bg-blue-50 text-blue-800'
+                        className={`flex items-center justify-between p-4 rounded-lg shadow-lg min-w-[300px] ${toast.type === 'success' ? 'bg-success-bg text-green-800' :
+                                toast.type === 'error' ? 'bg-error-bg text-red-800' :
+                                    'bg-info-bg text-blue-800'
                             }`}
                     >
                         <div className="flex items-center space-x-2">

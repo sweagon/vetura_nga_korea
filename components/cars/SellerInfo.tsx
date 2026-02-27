@@ -1,16 +1,19 @@
-import { MapPin, Phone, Mail, Building2, Star } from 'lucide-react';
+// components/cars/SellerInfo.tsx
+'use client';
+
+import { User, Phone, Mail, MapPin, Building2 } from 'lucide-react';
 
 interface SellerInfoProps {
     dealer?: {
-        name?: string | null;
-        firm?: string | null;
-        location?: string | null;
-        phone?: string | null;
-    } | null;
-    sellerName?: string | null;
-    sellerPhone?: string | null;
-    sellerEmail?: string | null;
-    sellerLocation?: string | null;
+        name: string;
+        firm: string;
+        location: string;
+        phone: string;
+    };
+    sellerName?: string;
+    sellerPhone?: string;
+    sellerEmail?: string;
+    sellerLocation?: string;
 }
 
 export default function SellerInfo({
@@ -20,61 +23,55 @@ export default function SellerInfo({
     sellerEmail,
     sellerLocation
 }: SellerInfoProps) {
-
-    const name = dealer?.firm || dealer?.name || sellerName || 'Shitës në Kore';
-    const phone = dealer?.phone || sellerPhone;
-    const email = sellerEmail;
-    const location = dealer?.location || sellerLocation || 'Kore e Jugut';
+    const name = dealer?.name || sellerName || 'Tregtar i paidentifikuar';
+    const phone = dealer?.phone || sellerPhone || 'N/A';
+    const location = dealer?.location || sellerLocation || 'Kore';
+    const firm = dealer?.firm || 'Tregtar i autorizuar';
 
     return (
-        <div className="bg-surface rounded-lg shadow-md p-6">
-            <h3 className="font-bold mb-4 flex items-center">
-                <Building2 size={18} className="mr-2 text-ferrari-red" />
-                Informacioni i shitësit
-            </h3>
-
-            <div className="space-y-4">
+        <div className="space-y-3">
+            <div className="flex items-start gap-3">
+                <User size={18} className="text-ferrari-red flex-shrink-0 mt-1" />
                 <div>
-                    <p className="font-semibold text-lg">{name}</p>
-                    <div className="flex items-center mt-1">
-                        {[...Array(5)].map((_, i) => (
-                            <Star key={i} size={16} className="text-yellow-400 fill-current" />
-                        ))}
-                        <span className="text-sm text-gray-500 ml-2">Shitës i verifikuar</span>
+                    <p className="text-sm text-muted">Emri</p>
+                    <p className="font-medium text-primary">{name}</p>
+                    <p className="text-xs text-secondary">{firm}</p>
+                </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+                <Phone size={18} className="text-ferrari-red flex-shrink-0 mt-1" />
+                <div>
+                    <p className="text-sm text-muted">Telefoni</p>
+                    <a
+                        href={`tel:${phone}`}
+                        className="text-sm text-secondary hover:text-ferrari-red transition"
+                    >
+                        {phone}
+                    </a>
+                </div>
+            </div>
+
+            {sellerEmail && (
+                <div className="flex items-start gap-3">
+                    <Mail size={18} className="text-ferrari-red flex-shrink-0 mt-1" />
+                    <div>
+                        <p className="text-sm text-muted">Email</p>
+                        <a
+                            href={`mailto:${sellerEmail}`}
+                            className="text-sm text-secondary hover:text-ferrari-red transition"
+                        >
+                            {sellerEmail}
+                        </a>
                     </div>
                 </div>
+            )}
 
-                <div className="space-y-2">
-                    {location && (
-                        <div className="flex items-start space-x-2">
-                            <MapPin size={16} className="text-gray-400 mt-1 flex-shrink-0" />
-                            <span className="text-sm text-gray-600">{location}</span>
-                        </div>
-                    )}
-
-                    {phone && (
-                        <div className="flex items-center space-x-2">
-                            <Phone size={16} className="text-gray-400 flex-shrink-0" />
-                            <a href={`tel:${phone}`} className="text-sm text-ferrari-red hover:underline">
-                                {phone}
-                            </a>
-                        </div>
-                    )}
-
-                    {email && (
-                        <div className="flex items-center space-x-2">
-                            <Mail size={16} className="text-gray-400 flex-shrink-0" />
-                            <a href={`mailto:${email}`} className="text-sm text-ferrari-red hover:underline">
-                                {email}
-                            </a>
-                        </div>
-                    )}
-                </div>
-
-                <div className="bg-green-50 p-3 rounded-lg">
-                    <p className="text-xs text-green-700">
-                        ✓ Shitës i verifikuar nga Auto Korea Kosova
-                    </p>
+            <div className="flex items-start gap-3">
+                <MapPin size={18} className="text-ferrari-red flex-shrink-0 mt-1" />
+                <div>
+                    <p className="text-sm text-muted">Vendndodhja</p>
+                    <p className="text-sm text-secondary">{location}</p>
                 </div>
             </div>
         </div>

@@ -29,7 +29,7 @@ export default function EmptyState({ type, message }: EmptyStateProps) {
                 <Icon className="text-ferrari-red" size={32} />
             </div>
             <h3 className="text-xl font-semibold mb-2">{titles[type]}</h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-secondary mb-6">
                 {message || 'Provo të ndryshosh filtrat ose të kërkosh për diçka tjetër'}
             </p>
             {type === 'saved' && (

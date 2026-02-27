@@ -18,7 +18,7 @@ export default function TermsPage() {
     return (
         <div className="container-custom py-12 max-w-4xl">
             {/* Breadcrumbs */}
-            <div className="flex items-center text-sm text-gray-500 mb-6">
+            <div className="flex items-center text-sm text-secondary mb-6">
                 <Link href="/" className="hover:text-ferrari-red">Formula Export</Link>
                 <ChevronRight size={14} className="mx-2" />
                 <span className="text-ferrari-red">Termat e Përdorimit</span>
@@ -27,7 +27,7 @@ export default function TermsPage() {
             {/* Header */}
             <div className="mb-8">
                 <h1 className="text-3xl md:text-4xl font-bold mb-2">Termat e Përdorimit</h1>
-                <div className="flex items-center gap-3 text-gray-600">
+                <div className="flex items-center gap-3 text-secondary">
                     <Scale size={18} className="text-ferrari-red" />
                     <p>Përditësuar më: {lastUpdated}</p>
                 </div>
@@ -39,7 +39,7 @@ export default function TermsPage() {
                     <Info size={20} className="text-ferrari-red mr-2" />
                     Përmbledhje e shkurtër
                 </h2>
-                <p className="text-gray-700">
+                <p className="text-primary">
                     Duke përdorur faqen Formula Export, ju pranoni këto terma.
                     Ne jemi një platformë që ju lidh me shitës të makinave në Kore.
                     Ju lutemi lexoni me kujdes para se të përdorni shërbimet tona.
@@ -54,7 +54,7 @@ export default function TermsPage() {
                         <CheckCircle className="text-ferrari-red mr-2" size={20} />
                         1. Pranimi i termave
                     </h2>
-                    <div className="space-y-3 text-gray-700">
+                    <div className="space-y-3 text-primary">
                         <p>
                             Duke aksesuar ose përdorur faqen Formula Export, ju pranoni të jeni të detyruar nga këto terma.
                             Nëse nuk pranoni ndonjë pjesë të termave, nuk mund të përdorni shërbimet tona.
@@ -63,15 +63,15 @@ export default function TermsPage() {
                             <p className="text-sm font-medium mb-2">Duke përdorur faqen, ju konfirmoni se:</p>
                             <ul className="text-sm space-y-1">
                                 <li className="flex items-start">
-                                    <CheckCircle size={14} className="text-green-500 mr-2 mt-0.5" />
+                                    <CheckCircle size={14} className="text-success-text mr-2 mt-0.5" />
                                     <span>Jeni mbi 18 vjeç</span>
                                 </li>
                                 <li className="flex items-start">
-                                    <CheckCircle size={14} className="text-green-500 mr-2 mt-0.5" />
+                                    <CheckCircle size={14} className="text-success-text mr-2 mt-0.5" />
                                     <span>Keni autoritetin për të hyrë në marrëveshje ligjore</span>
                                 </li>
                                 <li className="flex items-start">
-                                    <CheckCircle size={14} className="text-green-500 mr-2 mt-0.5" />
+                                    <CheckCircle size={14} className="text-success-text mr-2 mt-0.5" />
                                     <span>Do t'i përdorni shërbimet tona në përputhje me ligjin</span>
                                 </li>
                             </ul>
@@ -85,7 +85,7 @@ export default function TermsPage() {
                         <Truck className="text-ferrari-red mr-2" size={20} />
                         2. Roli i Formula Export
                     </h2>
-                    <div className="space-y-3 text-gray-700">
+                    <div className="space-y-3 text-primary">
                         <p>
                             Formula Export vepron si një platformë që lidh blerësit në Kosovë me shitësit e makinave në Kore.
                             Ne nuk jemi shitës të makinave, por ofrojmë:
@@ -96,7 +96,7 @@ export default function TermsPage() {
                             <li>Llogaritës të kostove të importit (vlerësim)</li>
                             <li>Platformë për komunikim me shitësit</li>
                         </ul>
-                        <div className="bg-yellow-50 p-4 rounded-lg mt-3">
+                        <div className="bg-warning-bg p-4 rounded-lg mt-3">
                             <p className="text-sm text-yellow-800 flex items-start">
                                 <AlertCircle size={16} className="mr-2 flex-shrink-0 mt-0.5" />
                                 <span>
@@ -120,19 +120,19 @@ export default function TermsPage() {
                             <ul className="space-y-2">
                                 <li className="flex items-start">
                                     <span className="w-2 h-2 bg-ferrari-red rounded-full mt-2 mr-3"></span>
-                                    <span className="text-gray-700">
+                                    <span className="text-primary">
                                         <span className="font-medium">Çmimi në Kore:</span> Çmimi bazë i makinës në tregun Korean
                                     </span>
                                 </li>
                                 <li className="flex items-start">
                                     <span className="w-2 h-2 bg-ferrari-red rounded-full mt-2 mr-3"></span>
-                                    <span className="text-gray-700">
+                                    <span className="text-primary">
                                         <span className="font-medium">Llogaritësi i kostos:</span> Vlerësim i kostove të importit (jo garanci)
                                     </span>
                                 </li>
                                 <li className="flex items-start">
                                     <span className="w-2 h-2 bg-ferrari-red rounded-full mt-2 mr-3"></span>
-                                    <span className="text-gray-700">
+                                    <span className="text-primary">
                                         <span className="font-medium">Kostot doganore:</span> Përcaktohen nga dogana e Kosovës
                                     </span>
                                 </li>
@@ -140,7 +140,7 @@ export default function TermsPage() {
                         </div>
 
                         <div className="bg-secondary p-4 rounded-lg">
-                            <p className="text-sm text-gray-600 flex items-start">
+                            <p className="text-sm text-secondary flex items-start">
                                 <Info size={16} className="text-ferrari-red mr-2 flex-shrink-0 mt-0.5" />
                                 <span>
                                     Kostot e importit (dogana, TVSH, transport) janë vlerësime.
@@ -158,11 +158,11 @@ export default function TermsPage() {
                         4. Përgjegjësitë e përdoruesit
                     </h2>
                     <div className="space-y-3">
-                        <p className="text-gray-700">Si përdorues, ju pranoni që:</p>
+                        <p className="text-primary">Si përdorues, ju pranoni që:</p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div className="p-3 border rounded-lg">
-                                <h3 className="font-medium text-green-600 mb-1">✓ Duhet të</h3>
-                                <ul className="text-sm text-gray-600 space-y-1">
+                                <h3 className="font-medium text-success-text mb-1">✓ Duhet të</h3>
+                                <ul className="text-sm text-secondary space-y-1">
                                     <li>• Jepni informacion të saktë</li>
                                     <li>• Verifikoni vetë makinat</li>
                                     <li>• Komunikoni me shitësit</li>
@@ -170,8 +170,8 @@ export default function TermsPage() {
                                 </ul>
                             </div>
                             <div className="p-3 border rounded-lg">
-                                <h3 className="font-medium text-red-600 mb-1">✗ Nuk duhet të</h3>
-                                <ul className="text-sm text-gray-600 space-y-1">
+                                <h3 className="font-medium text-error-text mb-1">✗ Nuk duhet të</h3>
+                                <ul className="text-sm text-secondary space-y-1">
                                     <li>• Postoni informacion të rremë</li>
                                     <li>• Shkelni të drejtat e autorit</li>
                                     <li>• Përdorni faqen për qëllime të paligjshme</li>
@@ -188,7 +188,7 @@ export default function TermsPage() {
                         <XCircle className="text-ferrari-red mr-2" size={20} />
                         5. Kufizimi i përgjegjësisë
                     </h2>
-                    <div className="space-y-3 text-gray-700">
+                    <div className="space-y-3 text-primary">
                         <p>Formula Export nuk mban përgjegjësi për:</p>
                         <ul className="list-disc pl-6 space-y-2">
                             <li>Saktësinë e informacionit të makinave (informacioni vjen nga burime të treta)</li>
@@ -198,7 +198,7 @@ export default function TermsPage() {
                             <li>Transaksionet midis jush dhe shitësve</li>
                             <li>Dëmet direkte ose indirekte nga përdorimi i faqes</li>
                         </ul>
-                        <div className="bg-red-50 p-4 rounded-lg mt-3">
+                        <div className="bg-error-bg p-4 rounded-lg mt-3">
                             <p className="text-sm text-red-800 flex items-start">
                                 <AlertCircle size={16} className="mr-2 flex-shrink-0 mt-0.5" />
                                 <span>
@@ -216,16 +216,16 @@ export default function TermsPage() {
                         <FileText className="text-ferrari-red mr-2" size={20} />
                         6. Pronësia intelektuale
                     </h2>
-                    <p className="text-gray-700 mb-3">
+                    <p className="text-primary mb-3">
                         E gjithë përmbajtja në këtë faqe, përfshirë:
                     </p>
-                    <ul className="list-disc pl-6 text-gray-700 space-y-1">
+                    <ul className="list-disc pl-6 text-primary space-y-1">
                         <li>Logot dhe markat tregtare</li>
                         <li>Dizajni dhe kodi i faqes</li>
                         <li>Përmbajtja e shkruar</li>
                         <li>Fotografitë (përveç atyre të makinave)</li>
                     </ul>
-                    <p className="text-gray-700 mt-3">
+                    <p className="text-primary mt-3">
                         janë pronë e Formula Export dhe mbrohen nga ligjet e pronësisë intelektuale.
                     </p>
                 </section>
@@ -236,7 +236,7 @@ export default function TermsPage() {
                         <XCircle className="text-ferrari-red mr-2" size={20} />
                         7. Ndërprerja e shërbimit
                     </h2>
-                    <p className="text-gray-700">
+                    <p className="text-primary">
                         Ne rezervojmë të drejtën të ndërpresim ose kufizojmë aksesin tuaj në faqe
                         pa njoftim paraprak për çdo arsye, përfshirë shkeljen e këtyre termave.
                     </p>
@@ -248,7 +248,7 @@ export default function TermsPage() {
                         <FileText className="text-ferrari-red mr-2" size={20} />
                         8. Ndryshimet në terma
                     </h2>
-                    <p className="text-gray-700">
+                    <p className="text-primary">
                         Ne mund të ndryshojmë këto terma në çdo kohë. Ndryshimet hyjnë në fuqi
                         menjëherë pas publikimit në faqe. Vazhdimi i përdorimit të faqes pas
                         ndryshimeve nënkupton pranimin e termave të reja.
@@ -261,7 +261,7 @@ export default function TermsPage() {
                         <Shield className="text-ferrari-red mr-2" size={20} />
                         9. Na kontaktoni
                     </h2>
-                    <p className="text-gray-700 mb-4">
+                    <p className="text-primary mb-4">
                         Për pyetje në lidhje me këto terma, na kontaktoni:
                     </p>
                     <div className="bg-secondary p-4 rounded-lg space-y-2">
@@ -284,7 +284,7 @@ export default function TermsPage() {
                         <Scale className="text-ferrari-red mr-2" size={20} />
                         10. Ligji në fuqi
                     </h2>
-                    <p className="text-gray-700">
+                    <p className="text-primary">
                         Këto terma rregullohen nga ligjet e Republikës së Kosovës.
                         Çdo mosmarrëveshje që lind nga përdorimi i faqes do të zgjidhet
                         në gjykatat kompetente të Kosovës.
@@ -292,7 +292,7 @@ export default function TermsPage() {
                 </section>
 
                 {/* Last Updated Notice */}
-                <div className="bg-yellow-50 p-4 rounded-lg text-sm text-yellow-800 flex items-start">
+                <div className="bg-warning-bg p-4 rounded-lg text-sm text-yellow-800 flex items-start">
                     <AlertCircle size={18} className="mr-3 flex-shrink-0 mt-0.5" />
                     <p>
                         <strong>Versioni aktual:</strong> {lastUpdated}. Duke përdorur faqen tonë,
@@ -301,7 +301,7 @@ export default function TermsPage() {
                 </div>
 
                 {/* Link to Privacy */}
-                <div className="text-center text-gray-600 text-sm">
+                <div className="text-center text-secondary text-sm">
                     <p>
                         Lexoni gjithashtu{' '}
                         <Link href="/privacy" className="text-ferrari-red hover:underline font-medium">
@@ -320,7 +320,7 @@ export default function TermsPage() {
                     </Link>
                     <Link
                         href="/cars"
-                        className="px-8 py-3 bg-ferrari-red text-white rounded-lg font-medium hover:bg-ferrari-dark transition text-center"
+                        className="px-8 py-3 bg-ferrari-red text-primary rounded-lg font-medium hover:bg-ferrari-dark transition text-center"
                     >
                         Pranoj dhe vazhdoj
                     </Link>

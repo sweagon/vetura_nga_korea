@@ -21,7 +21,7 @@ export default function ShippingCalculator() {
 
             <div className="space-y-4">
                 <div>
-                    <label className="block text-sm text-gray-600 mb-2">Qyteti</label>
+                    <label className="block text-sm text-secondary mb-2">Qyteti</label>
                     <select
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
@@ -35,16 +35,16 @@ export default function ShippingCalculator() {
 
                 <div className="bg-secondary p-4 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-gray-600">Transporti nga Durrësi</span>
+                        <span className="text-secondary">Transporti nga Durrësi</span>
                         <span className="font-semibold">€150 - €250</span>
                     </div>
-                    <div className="flex items-center text-sm text-gray-500">
+                    <div className="flex items-center text-sm text-secondary">
                         <Calendar size={14} className="mr-2" />
                         <span>Dorëzimi në {city} për 2-3 ditë pas mbërritjes në Durrës</span>
                     </div>
                 </div>
 
-                <div className="bg-blue-50 p-3 rounded-lg">
+                <div className="bg-info-bg p-3 rounded-lg">
                     <p className="text-xs text-blue-700 flex items-start">
                         <MapPin size={14} className="mr-2 mt-0.5 flex-shrink-0" />
                         Transporti nga Durrësi në qytetin tënd organizohet pasi makina të kalojë doganën.

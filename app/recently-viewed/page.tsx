@@ -53,7 +53,7 @@ export default function RecentlyViewedPage() {
                     </Link>
                     <div>
                         <h1 className="text-3xl font-bold mb-2">Shikuar së fundmi</h1>
-                        <p className="text-gray-600">
+                        <p className="text-secondary">
                             {recentCars.length} {recentCars.length === 1 ? 'makinë' : 'makina'} të shikuara
                         </p>
                     </div>
@@ -61,7 +61,7 @@ export default function RecentlyViewedPage() {
                 {recentCars.length > 0 && (
                     <button
                         onClick={clearAll}
-                        className="flex items-center gap-2 px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition"
+                        className="flex items-center gap-2 px-4 py-2 border border-red-300 text-error-text rounded-lg hover:bg-error-bg transition"
                     >
                         <Trash2 size={18} />
                         <span>Pastro historikun</span>
@@ -74,7 +74,7 @@ export default function RecentlyViewedPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                     {recentCars.map((car) => (
                         <div key={car.id} className="relative">
-                            <div className="absolute top-2 left-2 z-10 bg-primary/50 text-white text-xs px-2 py-1 rounded">
+                            <div className="absolute top-2 left-2 z-10 bg-primary/50 text-primary text-xs px-2 py-1 rounded">
                                 {new Date(car.viewedAt).toLocaleDateString('sq-AL', {
                                     day: 'numeric',
                                     month: 'short',
@@ -94,9 +94,9 @@ export default function RecentlyViewedPage() {
                 </div>
             ) : (
                 <div className="text-center py-16 bg-secondary rounded-lg">
-                    <Clock size={48} className="mx-auto text-gray-400 mb-4" />
+                    <Clock size={48} className="mx-auto text-muted mb-4" />
                     <h3 className="text-xl font-semibold mb-2">Nuk keni shikuar asnjë makinë</h3>
-                    <p className="text-gray-600 mb-6">
+                    <p className="text-secondary mb-6">
                         Makinat që shikoni do të shfaqen këtu
                     </p>
                     <Link href="/cars" className="btn-primary inline-block">

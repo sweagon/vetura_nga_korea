@@ -59,13 +59,13 @@ export default function ContactForm({ carId, carName }: ContactFormProps) {
 
     if (submitted) {
         return (
-            <div className="bg-green-50 p-6 rounded-lg text-center">
-                <CheckCircle className="text-green-500 mx-auto mb-3" size={48} />
+            <div className="bg-success-bg p-6 rounded-lg text-center">
+                <CheckCircle className="text-success-text mx-auto mb-3" size={48} />
                 <h3 className="text-xl font-semibold mb-2">Mesazhi u dërgua!</h3>
-                <p className="text-gray-600 mb-4">
+                <p className="text-secondary mb-4">
                     Faleminderit për mesazhin. Do të kontaktojmë sa më shpejt.
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-secondary">
                     Një kopje e mesazhit u dërgua në email-in tuaj.
                 </p>
             </div>
@@ -75,8 +75,8 @@ export default function ContactForm({ carId, carName }: ContactFormProps) {
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-                <div className="bg-red-50 p-3 rounded-lg">
-                    <p className="text-sm text-red-600">{error}</p>
+                <div className="bg-error-bg p-3 rounded-lg">
+                    <p className="text-sm text-error-text">{error}</p>
                 </div>
             )}
 

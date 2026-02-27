@@ -114,16 +114,16 @@ export default function SignUpPage() {
             <div className="min-h-[80vh] flex items-center justify-center bg-secondary py-12">
                 <div className="container-custom max-w-md">
                     <div className="bg-surface rounded-lg shadow-md p-8 text-center">
-                        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="w-20 h-20 bg-success-bg rounded-full flex items-center justify-center mx-auto mb-6">
+                            <svg className="w-10 h-10 text-success-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
                         </div>
                         <h1 className="text-2xl font-bold mb-4">Regjistrimi i suksesshëm!</h1>
-                        <p className="text-gray-600 mb-6">
+                        <p className="text-secondary mb-6">
                             Llogaria juaj u krijua me sukses. Tani mund të hyni në llogari.
                         </p>
-                        <p className="text-sm text-gray-500 mb-4">
+                        <p className="text-sm text-secondary mb-4">
                             Duke ju ridrejtuar te faqja e hyrjes...
                         </p>
                         <Link href="/auth/signin" className="btn-primary inline-block">
@@ -139,7 +139,7 @@ export default function SignUpPage() {
         <div className="min-h-[80vh] flex items-center justify-center bg-secondary py-12">
             <div className="container-custom max-w-md">
                 {/* Breadcrumbs */}
-                <div className="flex items-center text-sm text-gray-500 mb-6">
+                <div className="flex items-center text-sm text-secondary mb-6">
                     <Link href="/" className="hover:text-ferrari-red">Formula Export</Link>
                     <ChevronRight size={14} className="mx-2" />
                     <span className="text-ferrari-red">Regjistrohu</span>
@@ -149,19 +149,19 @@ export default function SignUpPage() {
                 <div className="bg-surface rounded-lg shadow-md p-8">
                     <div className="text-center mb-8">
                         <h1 className="text-3xl font-bold mb-2">Krijo llogari</h1>
-                        <p className="text-gray-600">
+                        <p className="text-secondary">
                             Regjistrohu për të ruajtur makinat e preferuara dhe më shumë.
                         </p>
                     </div>
 
                     {/* Error Message */}
                     {error && (
-                        <div className="bg-red-50 p-4 rounded-lg mb-6 flex items-start">
-                            <AlertCircle size={18} className="text-red-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <div className="bg-error-bg p-4 rounded-lg mb-6 flex items-start">
+                            <AlertCircle size={18} className="text-error-text mr-2 mt-0.5 flex-shrink-0" />
                             <div>
-                                <p className="text-sm text-red-600">{error}</p>
+                                <p className="text-sm text-error-text">{error}</p>
                                 {retryAfter > 0 && (
-                                    <p className="text-xs text-red-500 mt-1">
+                                    <p className="text-xs text-error-text mt-1">
                                         Mund të provoni përsëri pas {Math.floor(retryAfter / 60)} minutash.
                                     </p>
                                 )}
@@ -176,7 +176,7 @@ export default function SignUpPage() {
                                 Emri dhe Mbiemri <span className="text-ferrari-red">*</span>
                             </label>
                             <div className="relative">
-                                <User className="absolute left-3 top-3 text-gray-400" size={18} />
+                                <User className="absolute left-3 top-3 text-muted" size={18} />
                                 <input
                                     type="text"
                                     value={formData.name}
@@ -194,7 +194,7 @@ export default function SignUpPage() {
                                 Email <span className="text-ferrari-red">*</span>
                             </label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-3 text-gray-400" size={18} />
+                                <Mail className="absolute left-3 top-3 text-muted" size={18} />
                                 <input
                                     type="email"
                                     value={formData.email}
@@ -212,7 +212,7 @@ export default function SignUpPage() {
                                 Telefoni
                             </label>
                             <div className="relative">
-                                <Phone className="absolute left-3 top-3 text-gray-400" size={18} />
+                                <Phone className="absolute left-3 top-3 text-muted" size={18} />
                                 <input
                                     type="tel"
                                     value={formData.phone}
@@ -229,7 +229,7 @@ export default function SignUpPage() {
                                 Password <span className="text-ferrari-red">*</span>
                             </label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
+                                <Lock className="absolute left-3 top-3 text-muted" size={18} />
                                 <input
                                     type="password"
                                     value={formData.password}
@@ -240,7 +240,7 @@ export default function SignUpPage() {
                                     placeholder="••••••••"
                                 />
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-secondary mt-1">
                                 Të paktën 8 karaktere
                             </p>
                         </div>
@@ -250,7 +250,7 @@ export default function SignUpPage() {
                                 Konfirmo Passwordin <span className="text-ferrari-red">*</span>
                             </label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
+                                <Lock className="absolute left-3 top-3 text-muted" size={18} />
                                 <input
                                     type="password"
                                     value={formData.confirmPassword}
@@ -268,9 +268,9 @@ export default function SignUpPage() {
                                 type="checkbox"
                                 required
                                 disabled={loading}
-                                className="mt-1 rounded border-gray-300 text-ferrari-red focus:ring-ferrari-red"
+                                className="mt-1 rounded border-medium text-ferrari-red focus:ring-ferrari-red"
                             />
-                            <span className="ml-2 text-sm text-gray-600">
+                            <span className="ml-2 text-sm text-secondary">
                                 Pranoj{' '}
                                 <Link href="/terms" className="text-ferrari-red hover:underline">
                                     Termat e Përdorimit
@@ -298,7 +298,7 @@ export default function SignUpPage() {
                         </button>
                     </form>
 
-                    <p className="text-center text-sm text-gray-600 mt-6">
+                    <p className="text-center text-sm text-secondary mt-6">
                         Ke tashmë një llogari?{' '}
                         <Link href="/auth/signin" className="text-ferrari-red hover:underline font-medium">
                             Hyr këtu

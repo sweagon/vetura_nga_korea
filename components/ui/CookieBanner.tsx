@@ -45,7 +45,7 @@ export default function CookieBanner() {
                     {/* Close button */}
                     <button
                         onClick={declineAll}
-                        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+                        className="absolute top-4 right-4 text-muted hover:text-secondary transition"
                         aria-label="Close"
                     >
                         <X size={20} />
@@ -64,7 +64,7 @@ export default function CookieBanner() {
                                 <h3 className="font-bold text-lg">Cookies në Formula Export</h3>
                             </div>
 
-                            <p className="text-gray-600 text-sm mb-3">
+                            <p className="text-secondary text-sm mb-3">
                                 Ne përdorim cookies për të përmirësuar përvojën tuaj,
                                 për të personalizuar rekomandimet dhe për të analizuar trafikun.
                             </p>
@@ -88,24 +88,24 @@ export default function CookieBanner() {
                                         <Shield size={16} className="text-ferrari-red mt-0.5 flex-shrink-0" />
                                         <div>
                                             <span className="font-medium">Cookies esenciale:</span>
-                                            <p className="text-gray-600">Ruajnë preferencat tuaja, makinat e ruajtura dhe kërkimet e fundit.</p>
+                                            <p className="text-secondary">Ruajnë preferencat tuaja, makinat e ruajtura dhe kërkimet e fundit.</p>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2">
                                         <Shield size={16} className="text-ferrari-red mt-0.5 flex-shrink-0" />
                                         <div>
                                             <span className="font-medium">Cookies funksionale:</span>
-                                            <p className="text-gray-600">Mundësojnë Matchmaker-in të mësojë preferencat tuaja.</p>
+                                            <p className="text-secondary">Mundësojnë Matchmaker-in të mësojë preferencat tuaja.</p>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2">
                                         <Shield size={16} className="text-ferrari-red mt-0.5 flex-shrink-0" />
                                         <div>
                                             <span className="font-medium">Cookies analitike:</span>
-                                            <p className="text-gray-600">Na ndihmojnë të kuptojmë se si përdorni faqen.</p>
+                                            <p className="text-secondary">Na ndihmojnë të kuptojmë se si përdorni faqen.</p>
                                         </div>
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-2">
+                                    <p className="text-xs text-secondary mt-2">
                                         Për më shumë informacion, lexoni{' '}
                                         <Link href="/privacy" className="text-ferrari-red hover:underline">
                                             Politikën e Privatësisë
@@ -129,7 +129,7 @@ export default function CookieBanner() {
                             </button>
                             <button
                                 onClick={acceptAll}
-                                className="px-6 py-3 bg-ferrari-red text-white rounded-lg font-medium hover:bg-ferrari-dark transition whitespace-nowrap"
+                                className="px-6 py-3 bg-ferrari-red text-primary rounded-lg font-medium hover:bg-ferrari-dark transition whitespace-nowrap"
                             >
                                 Pranoj të gjitha
                             </button>

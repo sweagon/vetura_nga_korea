@@ -19,16 +19,16 @@ export default function WarrantyShowcase({ warranty }: WarrantyShowcaseProps) {
     return (
         <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl border border-green-100">
             <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                <span className="w-2 h-2 bg-success-bg0 rounded-full animate-pulse"></span>
                 Garanci e përfshirë
             </h3>
             <div className="grid grid-cols-2 gap-3">
                 {hasBodyWarranty && (
                     <div className="bg-surface p-3 rounded-lg shadow-sm">
-                        <p className="text-xs text-gray-500">Motori</p>
-                        <p className="font-bold text-green-600">{warranty?.bodyMonth} muaj</p>
+                        <p className="text-xs text-secondary">Motori</p>
+                        <p className="font-bold text-success-text">{warranty?.bodyMonth} muaj</p>
                         {(warranty?.bodyMileage ?? 0) > 0 && (
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-muted">
                                 deri {warranty?.bodyMileage?.toLocaleString()} km
                             </p>
                         )}
@@ -36,10 +36,10 @@ export default function WarrantyShowcase({ warranty }: WarrantyShowcaseProps) {
                 )}
                 {hasTransmissionWarranty && (
                     <div className="bg-surface p-3 rounded-lg shadow-sm">
-                        <p className="text-xs text-gray-500">Transmisioni</p>
-                        <p className="font-bold text-green-600">{warranty?.transmissionMonth} muaj</p>
+                        <p className="text-xs text-secondary">Transmisioni</p>
+                        <p className="font-bold text-success-text">{warranty?.transmissionMonth} muaj</p>
                         {(warranty?.transmissionMileage ?? 0) > 0 && (
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-muted">
                                 deri {warranty?.transmissionMileage?.toLocaleString()} km
                             </p>
                         )}

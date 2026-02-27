@@ -288,15 +288,15 @@ export default function FeaturedCars() {
                 {cars.map((car: Car) => (
                     <div key={car.id} className="relative">
                         {(car.score && car.score > 70) ? (
-                            <div className="absolute top-2 left-2 z-10 bg-ferrari-red text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                            <div className="absolute top-2 left-2 z-10 bg-ferrari-red text-primary px-3 py-1 rounded-full text-xs font-bold shadow-lg">
                                 🔥 Top Choice
                             </div>
                         ) : car.fuelType === 'Diesel' ? (
-                            <div className="absolute top-2 left-2 z-10 bg-info-text text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                            <div className="absolute top-2 left-2 z-10 bg-info-text text-primary px-3 py-1 rounded-full text-xs font-bold shadow-lg">
                                 ⛽ Diesel
                             </div>
                         ) : (
-                            <div className="absolute top-2 left-2 z-10 bg-success-text text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                            <div className="absolute top-2 left-2 z-10 bg-success-text text-primary px-3 py-1 rounded-full text-xs font-bold shadow-lg">
                                 🇪🇺 European
                             </div>
                         )}

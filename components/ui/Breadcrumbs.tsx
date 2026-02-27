@@ -12,7 +12,7 @@ interface BreadcrumbsProps {
 
 export default function Breadcrumbs({ items }: BreadcrumbsProps) {
     return (
-        <div className="flex items-center space-x-2 text-sm text-gray-500">
+        <div className="flex items-center space-x-2 text-sm text-secondary">
             {items.map((item, index) => (
                 <div key={index} className="flex items-center">
                     {index > 0 && <ChevronRight size={14} className="mx-2" />}

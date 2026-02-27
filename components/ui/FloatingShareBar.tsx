@@ -54,7 +54,7 @@ export default function FloatingShareBar({ url, title, description }: FloatingSh
             ) : (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="bg-ferrari-red text-white p-4 rounded-full shadow-lg hover:bg-ferrari-dark transition transform hover:scale-110 active:scale-95"
+                    className="bg-ferrari-red text-primary p-4 rounded-full shadow-lg hover:bg-ferrari-dark transition transform hover:scale-110 active:scale-95"
                     aria-label="Share"
                 >
                     <Share2 size={24} />

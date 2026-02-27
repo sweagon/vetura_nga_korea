@@ -17,9 +17,9 @@ export default function TestProxy() {
     return (
         <div className="p-8">
             <h1 className="text-2xl mb-4">Proxy Test</h1>
-            {error && <div className="text-red-500">Error: {error}</div>}
+            {error && <div className="text-error-text">Error: {error}</div>}
             {data && (
-                <pre className="bg-gray-100 p-4 rounded overflow-auto">
+                <pre className="bg-surface p-4 rounded overflow-auto">
                     {JSON.stringify(data, null, 2)}
                 </pre>
             )}

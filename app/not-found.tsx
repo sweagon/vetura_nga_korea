@@ -9,7 +9,7 @@ export default function NotFound() {
                     <Car className="text-ferrari-red" size={40} />
                 </div>
                 <h1 className="text-4xl font-bold mb-4">404 - Makina nuk u gjet</h1>
-                <p className="text-gray-600 mb-8 max-w-md">
+                <p className="text-secondary mb-8 max-w-md">
                     Makina që po kërkon nuk ekziston ose është shitur.
                 </p>
                 <Link

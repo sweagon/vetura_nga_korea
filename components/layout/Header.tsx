@@ -34,8 +34,8 @@ export default function Header() {
 
     return (
         <header className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled
-            ? 'bg-ferrari-dark/50 shadow-lg backdrop-blur-md border-b border-medium'
-            : 'bg-ferrari-dark/75'
+            ? 'bg-ferrari-dark/95 shadow-lg backdrop-blur-md border-b border-ferrari-red/20'
+            : 'bg-ferrari-dark'
             }`}>
             {/* Subtle gradient line */}
             <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-ferrari-red/30 to-transparent" />
@@ -59,7 +59,7 @@ export default function Header() {
                             className="p-2 hover:bg-ferrari-red/10 rounded-lg transition-all duration-300 relative group"
                             title="Të ruajtura"
                         >
-                            <Heart size={20} className="icon group-hover:icon-hover" />
+                            <Heart size={20} className="text-white/70 group-hover:text-ferrari-red transition-colors" />
                             {!savedLoading && savedCount > 0 && (
                                 <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-ferrari-red text-white text-xs font-bold rounded-full flex items-center justify-center px-1 shadow-md">
                                     {savedCount > 99 ? '99+' : savedCount}
@@ -75,7 +75,7 @@ export default function Header() {
                                     </div>
                                 </button>
 
-                                <div className="absolute right-0 mt-2 w-56 bg-elevated rounded-xl shadow-xl border border-medium opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right">
+                                <div className="absolute z-50 right-0 mt-2 w-56 bg-elevated rounded-xl shadow-xl border border-medium opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right">
                                     <div className="py-2">
                                         <Link
                                             href="/profile"
@@ -115,7 +115,7 @@ export default function Header() {
                             <div className="flex items-center space-x-2 ml-2">
                                 <Link
                                     href="/auth/signin"
-                                    className="px-4 py-2 text-sm font-medium text-ferrari-red border border-ferrari-red/30 rounded-lg hover:bg-ferrari-red hover:text-white transition-all duration-300"
+                                    className="px-4 py-2 text-sm font-medium text-white border border-white/30 rounded-lg hover:bg-ferrari-red hover:border-ferrari-red hover:text-white transition-all duration-300"
                                 >
                                     Hyr
                                 </Link>
@@ -139,7 +139,7 @@ export default function Header() {
                                 {savedCount > 9 ? '9+' : savedCount}
                             </span>
                         )}
-                        {isMenuOpen ? <X size={24} className="icon" /> : <Menu size={24} className="icon" />}
+                        {isMenuOpen ? <X size={24} className="text-white/70" /> : <Menu size={24} className="text-white/70" />}
                     </button>
                 </div>
 
@@ -162,7 +162,7 @@ export default function Header() {
                                 className="flex items-center px-4 py-3 hover:bg-surface rounded-lg transition-colors group"
                                 onClick={() => setIsMenuOpen(false)}
                             >
-                                <Heart size={18} className="mr-3 icon-muted group-hover:icon-hover" />
+                                <Heart size={18} className="mr-3 text-muted group-hover:text-ferrari-red" />
                                 <span className="text-secondary group-hover:text-ferrari-red flex-1">Të ruajtura</span>
                                 {savedCount > 0 && (
                                     <span className="bg-ferrari-red text-white text-xs px-2 py-0.5 rounded-full">
@@ -176,7 +176,7 @@ export default function Header() {
                                 className="flex items-center px-4 py-3 hover:bg-surface rounded-lg transition-colors group"
                                 onClick={() => setIsMenuOpen(false)}
                             >
-                                <span className="w-[18px] mr-3 icon-muted group-hover:icon-hover text-center">⌛</span>
+                                <span className="w-[18px] mr-3 text-muted group-hover:text-ferrari-red text-center">⌛</span>
                                 <span className="text-secondary group-hover:text-ferrari-red">Shikuar së fundmi</span>
                             </Link>
 
@@ -187,7 +187,7 @@ export default function Header() {
                                         className="flex items-center px-4 py-3 hover:bg-surface rounded-lg transition-colors group"
                                         onClick={() => setIsMenuOpen(false)}
                                     >
-                                        <User size={18} className="mr-3 icon-muted group-hover:icon-hover" />
+                                        <User size={18} className="mr-3 text-muted group-hover:text-ferrari-red" />
                                         <span className="text-secondary group-hover:text-ferrari-red">Llogaria ime</span>
                                     </Link>
                                     <button
@@ -225,7 +225,7 @@ export default function Header() {
             </div>
 
             {/* Navigation Menu */}
-            <nav className="hidden md:block bg-ferrari-dark/50 backdrop-blur-sm">
+            <nav className="hidden md:block bg-ferrari-red/25 border-t border-ferrari-red backdrop-blur-sm">
                 <div className="container-custom">
                     <ul className="flex items-center space-x-8 py-3">
                         {[
@@ -239,13 +239,14 @@ export default function Header() {
                                 <Link
                                     href={item.href}
                                     className={`relative text-sm font-medium transition-colors py-1 ${pathname === item.href
-                                        ? 'text-primary'  // Pure white in dark, dark in light
-                                        : 'text-secondary hover:text-primary'
+                                        ? 'text-white font-semibold'
+                                        : 'text-white/70 hover:text-white'
                                         }`}
                                 >
                                     {item.label}
-                                    <span className={`absolute -bottom-1 left-0 right-0 h-0.5 bg-ferrari-red/50 transform origin-left transition-transform duration-300 ${pathname === item.href ? 'scale-x-100' : 'scale-x-0'
-                                        }`} />
+                                    {pathname === item.href && (
+                                        <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-white rounded-full" />
+                                    )}
                                 </Link>
                             </li>
                         ))}

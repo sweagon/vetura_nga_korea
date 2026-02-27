@@ -62,12 +62,12 @@ export default function SocialLinks({ variant = 'inline', showLabels = false }: 
                             onMouseLeave={() => setHovered(null)}
                         >
                             <div className="w-12 h-12 bg-surface/10 hover:bg-ferrari-red rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg">
-                                <social.icon size={20} className="text-white" />
+                                <social.icon size={20} className="text-primary" />
                             </div>
 
                             {/* Tooltip */}
                             {hovered === social.name && (
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1 bg-primary text-white text-xs rounded-lg whitespace-nowrap">
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1 bg-primary text-primary text-xs rounded-lg whitespace-nowrap">
                                     {social.name}
                                     <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></div>
                                 </div>
@@ -76,7 +76,7 @@ export default function SocialLinks({ variant = 'inline', showLabels = false }: 
                     ))}
                 </div>
 
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-muted">
                     Na ndiqni për të parë makinat më të reja para të gjithëve!
                 </p>
             </div>
@@ -98,14 +98,14 @@ export default function SocialLinks({ variant = 'inline', showLabels = false }: 
                         >
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-secondary group-hover:bg-ferrari-red rounded-lg flex items-center justify-center transition">
-                                    <social.icon size={18} className="text-gray-600 group-hover:text-white" />
+                                    <social.icon size={18} className="text-secondary group-hover:text-primary" />
                                 </div>
                                 <div>
                                     <p className="font-medium">{social.name}</p>
-                                    <p className="text-xs text-gray-500">{social.followers} ndjekës</p>
+                                    <p className="text-xs text-secondary">{social.followers} ndjekës</p>
                                 </div>
                             </div>
-                            <ExternalLink size={16} className="text-gray-400 group-hover:text-ferrari-red" />
+                            <ExternalLink size={16} className="text-muted group-hover:text-ferrari-red" />
                         </a>
                     ))}
                 </div>
@@ -125,7 +125,7 @@ export default function SocialLinks({ variant = 'inline', showLabels = false }: 
                     className="p-2 hover:bg-secondary rounded-lg transition group"
                     title={social.name}
                 >
-                    <social.icon size={18} className="text-gray-600 group-hover:text-ferrari-red" />
+                    <social.icon size={18} className="text-secondary group-hover:text-ferrari-red" />
                 </a>
             ))}
         </div>

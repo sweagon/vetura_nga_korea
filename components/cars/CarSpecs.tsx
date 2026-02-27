@@ -31,7 +31,7 @@ export default function CarSpecs({ car }: CarSpecsProps) {
                     <div key={index} className="flex items-start space-x-3 p-3 bg-secondary rounded-lg">
                         <spec.icon className="text-ferrari-red mt-1 flex-shrink-0" size={18} />
                         <div>
-                            <p className="text-xs text-gray-500">{spec.label}</p>
+                            <p className="text-xs text-secondary">{spec.label}</p>
                             <p className="font-medium">{spec.value}</p>
                         </div>
                     </div>

@@ -48,7 +48,7 @@ export default function ForgotPasswordPage() {
                 {/* Back to Sign In */}
                 <Link
                     href="/auth/signin"
-                    className="inline-flex items-center text-sm text-gray-600 hover:text-ferrari-red mb-6 transition"
+                    className="inline-flex items-center text-sm text-secondary hover:text-ferrari-red mb-6 transition"
                 >
                     <ArrowLeft size={16} className="mr-2" />
                     Kthehu te hyrja
@@ -57,28 +57,28 @@ export default function ForgotPasswordPage() {
                 <div className="bg-surface rounded-lg shadow-md p-8">
                     <div className="text-center mb-8">
                         <h1 className="text-3xl font-bold mb-2">Keni harruar passwordin?</h1>
-                        <p className="text-gray-600">
+                        <p className="text-secondary">
                             Shkruani email-in tuaj dhe ne do t'ju dërgojmë një link për të ndryshuar passwordin.
                         </p>
                     </div>
 
                     {error && (
-                        <div className="bg-red-50 p-4 rounded-lg mb-6 flex items-start">
-                            <AlertCircle size={18} className="text-red-500 mr-2 mt-0.5 flex-shrink-0" />
-                            <p className="text-sm text-red-600">{error}</p>
+                        <div className="bg-error-bg p-4 rounded-lg mb-6 flex items-start">
+                            <AlertCircle size={18} className="text-error-text mr-2 mt-0.5 flex-shrink-0" />
+                            <p className="text-sm text-error-text">{error}</p>
                         </div>
                     )}
 
                     {success ? (
-                        <div className="bg-green-50 p-6 rounded-lg text-center">
-                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <CheckCircle size={32} className="text-green-500" />
+                        <div className="bg-success-bg p-6 rounded-lg text-center">
+                            <div className="w-16 h-16 bg-success-bg rounded-full flex items-center justify-center mx-auto mb-4">
+                                <CheckCircle size={32} className="text-success-text" />
                             </div>
                             <h2 className="text-xl font-semibold mb-2">Email u dërgua!</h2>
-                            <p className="text-gray-600 mb-4">
+                            <p className="text-secondary mb-4">
                                 Ne kemi dërguar një email në <strong>{email}</strong> me udhëzime për të ndryshuar passwordin.
                             </p>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-secondary">
                                 Nëse nuk e gjeni email-in, kontrolloni dosjen e spam-it.
                             </p>
                         </div>
@@ -89,7 +89,7 @@ export default function ForgotPasswordPage() {
                                     Email <span className="text-ferrari-red">*</span>
                                 </label>
                                 <div className="relative">
-                                    <Mail className="absolute left-3 top-3 text-gray-400" size={18} />
+                                    <Mail className="absolute left-3 top-3 text-muted" size={18} />
                                     <input
                                         type="email"
                                         value={email}
@@ -119,7 +119,7 @@ export default function ForgotPasswordPage() {
                         </form>
                     )}
 
-                    <p className="text-center text-sm text-gray-600 mt-6">
+                    <p className="text-center text-sm text-secondary mt-6">
                         Mos harroni?{' '}
                         <Link href="/auth/signin" className="text-ferrari-red hover:underline font-medium">
                             Kthehu te hyrja

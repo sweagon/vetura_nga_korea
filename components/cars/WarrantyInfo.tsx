@@ -22,7 +22,7 @@ export default function WarrantyInfo({ warranty }: WarrantyInfoProps) {
                     <Shield size={18} className="mr-2 text-ferrari-red" />
                     Garancia
                 </h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-secondary">
                     Kontaktoni shitësin për informacion rreth garancisë.
                 </p>
             </div>
@@ -45,12 +45,12 @@ export default function WarrantyInfo({ warranty }: WarrantyInfoProps) {
                             <span className="font-medium">Motori</span>
                         </div>
                         <div className="flex items-center space-x-3 text-sm">
-                            <span className="flex items-center text-gray-600">
+                            <span className="flex items-center text-secondary">
                                 <Clock size={14} className="mr-1" />
                                 {warranty.bodyMonth} muaj
                             </span>
                             {(warranty.bodyMileage ?? 0) > 0 && (
-                                <span className="flex items-center text-gray-600">
+                                <span className="flex items-center text-secondary">
                                     <Gauge size={14} className="mr-1" />
                                     {warranty.bodyMileage?.toLocaleString()} km
                                 </span>
@@ -67,12 +67,12 @@ export default function WarrantyInfo({ warranty }: WarrantyInfoProps) {
                             <span className="font-medium">Transmisioni</span>
                         </div>
                         <div className="flex items-center space-x-3 text-sm">
-                            <span className="flex items-center text-gray-600">
+                            <span className="flex items-center text-secondary">
                                 <Clock size={14} className="mr-1" />
                                 {warranty.transmissionMonth} muaj
                             </span>
                             {(warranty.transmissionMileage ?? 0) > 0 && (
-                                <span className="flex items-center text-gray-600">
+                                <span className="flex items-center text-secondary">
                                     <Gauge size={14} className="mr-1" />
                                     {warranty.transmissionMileage?.toLocaleString()} km
                                 </span>
@@ -84,7 +84,7 @@ export default function WarrantyInfo({ warranty }: WarrantyInfoProps) {
 
             {/* Warranty Note */}
             <div className="mt-4 pt-4 border-t border-theme">
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-secondary">
                     * Garancia vlen sipas kushteve të shitësit në Kore
                 </p>
             </div>

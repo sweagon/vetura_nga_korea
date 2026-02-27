@@ -10,7 +10,10 @@ export const getProfile = async (userId: string) => {
         .eq('id', userId)
         .single();
 
-    if (error) throw error;
+    if (error) {
+        console.error(`❌ Failed to fetch profile for user ${userId}:`, error);
+        throw error;
+    }
     return data as Profile;
 };
 
@@ -23,7 +26,10 @@ export const updateProfile = async (userId: string, updates: Partial<Profile>) =
         .select()
         .single();
 
-    if (error) throw error;
+    if (error) {
+        console.error(`❌ Failed to update profile for user ${userId}:`, error);
+        throw error;
+    }
     return data as Profile;
 };
 
@@ -36,7 +42,10 @@ export const getSavedCars = async (userId: string) => {
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+        console.error(`❌ Failed to fetch saved cars for user ${userId}:`, error);
+        throw error;
+    }
     return data as SavedCar[];
 };
 
@@ -48,7 +57,10 @@ export const saveCar = async (userId: string, carId: number, carData?: any) => {
         .select()
         .single();
 
-    if (error) throw error;
+    if (error) {
+        console.error(`❌ Failed to save car ${carId} for user ${userId}:`, error);
+        throw error;
+    }
     return data as SavedCar;
 };
 
@@ -60,7 +72,10 @@ export const removeSavedCar = async (userId: string, carId: number) => {
         .eq('user_id', userId)
         .eq('car_id', carId);
 
-    if (error) throw error;
+    if (error) {
+        console.error(`❌ Failed to remove car ${carId} for user ${userId}:`, error);
+        throw error;
+    }
 };
 
 export const isCarSaved = async (userId: string, carId: number) => {
@@ -72,7 +87,10 @@ export const isCarSaved = async (userId: string, carId: number) => {
         .eq('car_id', carId)
         .maybeSingle();
 
-    if (error) throw error;
+    if (error) {
+        console.error(`❌ Failed to check if car ${carId} is saved for user ${userId}:`, error);
+        throw error;
+    }
     return !!data;
 };
 
@@ -85,7 +103,10 @@ export const createInquiry = async (inquiry: Omit<Inquiry, 'id' | 'created_at' |
         .select()
         .single();
 
-    if (error) throw error;
+    if (error) {
+        console.error(`❌ Failed to create inquiry:`, error);
+        throw error;
+    }
     return data as Inquiry;
 };
 
@@ -97,7 +118,10 @@ export const getInquiries = async (userId: string) => {
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+        console.error(`❌ Failed to fetch inquiries for user ${userId}:`, error);
+        throw error;
+    }
     return data as Inquiry[];
 };
 
@@ -110,7 +134,10 @@ export const getUserPreferences = async (userId: string) => {
         .eq('user_id', userId)
         .maybeSingle();
 
-    if (error) throw error;
+    if (error) {
+        console.error(`❌ Failed to fetch preferences for user ${userId}:`, error);
+        throw error;
+    }
     return data as UserPreferences | null;
 };
 
@@ -128,6 +155,7 @@ export const updateUserPreferences = async (userId: string, preferences: Partial
             .eq('user_id', userId)
             .select()
             .single();
+        if (error) throw error;
         result = data;
     } else {
         const { data, error } = await supabase
@@ -135,6 +163,7 @@ export const updateUserPreferences = async (userId: string, preferences: Partial
             .insert({ user_id: userId, ...preferences })
             .select()
             .single();
+        if (error) throw error;
         result = data;
     }
 
@@ -148,7 +177,10 @@ export const trackCarView = async (userId: string | null, carId: number) => {
         .from('car_views')
         .insert({ user_id: userId, car_id: carId });
 
-    if (error) throw error;
+    if (error) {
+        console.error(`❌ Failed to track car view for car ${carId}:`, error);
+        throw error;
+    }
 };
 
 export const getCarViews = async (userId: string, limit = 50) => {
@@ -160,6 +192,9 @@ export const getCarViews = async (userId: string, limit = 50) => {
         .order('viewed_at', { ascending: false })
         .limit(limit);
 
-    if (error) throw error;
+    if (error) {
+        console.error(`❌ Failed to fetch car views for user ${userId}:`, error);
+        throw error;
+    }
     return data as CarView[];
 };

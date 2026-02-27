@@ -1,7 +1,9 @@
+// components/cars/ImageGallery.tsx
 'use client';
 
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, X, Maximize2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Maximize2, X } from 'lucide-react';
+import Image from 'next/image';
 
 interface ImageGalleryProps {
     images: string[];
@@ -9,13 +11,36 @@ interface ImageGalleryProps {
 }
 
 export default function ImageGallery({ images, carName }: ImageGalleryProps) {
-    const [selectedImage, setSelectedImage] = useState(0);
+    const [currentIndex, setCurrentIndex] = useState(0);
     const [showLightbox, setShowLightbox] = useState(false);
+    const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
 
     if (!images || images.length === 0) {
         return (
-            <div className="bg-tertiary h-96 rounded-lg flex items-center justify-center">
-                <span className="text-gray-500">Nuk ka foto</span>
+            <div className="aspect-video bg-surface-2 rounded-lg flex items-center justify-center">
+                <span className="text-muted">No images available</span>
+            </div>
+        );
+    }
+
+    const handlePrevious = () => {
+        setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    };
+
+    const handleNext = () => {
+        setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    };
+
+    const handleImageError = (index: number) => {
+        setImageErrors(prev => new Set(prev).add(index));
+    };
+
+    const validImages = images.filter((_, index) => !imageErrors.has(index));
+
+    if (validImages.length === 0) {
+        return (
+            <div className="aspect-video bg-surface-2 rounded-lg flex items-center justify-center">
+                <span className="text-muted">No valid images</span>
             </div>
         );
     }
@@ -23,101 +48,139 @@ export default function ImageGallery({ images, carName }: ImageGalleryProps) {
     return (
         <>
             {/* Main Gallery */}
-            <div className="bg-surface rounded-lg shadow-md overflow-hidden">
+            <div className="relative bg-surface rounded-lg overflow-hidden">
                 {/* Main Image */}
-                <div className="relative h-96 bg-secondary group">
-                    <img
-                        src={images[selectedImage]}
-                        alt={`${carName} - Foto kryesore`}
-                        className="w-full h-full object-cover"
-                    />
+                <div className="relative aspect-video bg-surface-2">
+                    {!imageErrors.has(currentIndex) ? (
+                        <img
+                            src={images[currentIndex]}
+                            alt={`${carName} - Image ${currentIndex + 1}`}
+                            className="w-full h-full object-cover cursor-pointer"
+                            onClick={() => setShowLightbox(true)}
+                            onError={() => handleImageError(currentIndex)}
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-surface-2">
+                            <span className="text-muted">Image failed to load</span>
+                        </div>
+                    )}
 
-                    {/* Navigation Arrows (for multiple images) */}
+                    {/* Navigation Buttons */}
                     {images.length > 1 && (
                         <>
                             <button
-                                onClick={() => setSelectedImage((prev) => (prev > 0 ? prev - 1 : images.length - 1))}
-                                className="absolute left-4 top-1/2 -translate-y-1/2 bg-primary/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition hover:bg-ferrari-red"
+                                onClick={handlePrevious}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-surface/80 hover:bg-surface rounded-full shadow-lg backdrop-blur-sm transition-all group"
+                                aria-label="Previous image"
                             >
-                                <ChevronLeft size={20} />
+                                <ChevronLeft size={20} className="text-primary group-hover:text-ferrari-red transition-colors" />
                             </button>
                             <button
-                                onClick={() => setSelectedImage((prev) => (prev < images.length - 1 ? prev + 1 : 0))}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 bg-primary/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition hover:bg-ferrari-red"
+                                onClick={handleNext}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-surface/80 hover:bg-surface rounded-full shadow-lg backdrop-blur-sm transition-all group"
+                                aria-label="Next image"
                             >
-                                <ChevronRight size={20} />
+                                <ChevronRight size={20} className="text-primary group-hover:text-ferrari-red transition-colors" />
                             </button>
                         </>
                     )}
 
+                    {/* Image Counter */}
+                    <div className="absolute bottom-4 right-4 px-3 py-1.5 bg-surface/90 backdrop-blur-sm rounded-full text-sm text-primary border border-medium">
+                        {currentIndex + 1} / {images.length}
+                    </div>
+
                     {/* Fullscreen Button */}
                     <button
                         onClick={() => setShowLightbox(true)}
-                        className="absolute bottom-4 right-4 bg-primary/50 text-white p-2 rounded-lg opacity-0 group-hover:opacity-100 transition hover:bg-ferrari-red"
+                        className="absolute bottom-4 left-4 p-2 bg-surface/90 hover:bg-surface backdrop-blur-sm rounded-full shadow-md transition-colors group border border-medium"
+                        aria-label="View fullscreen"
                     >
-                        <Maximize2 size={20} />
+                        <Maximize2 size={18} className="text-primary group-hover:text-ferrari-red transition-colors" />
                     </button>
-
-                    {/* Image Counter */}
-                    <div className="absolute bottom-4 left-4 bg-primary/50 text-white px-3 py-1 rounded-full text-sm">
-                        {selectedImage + 1} / {images.length}
-                    </div>
                 </div>
 
-                {/* Thumbnail Grid */}
+                {/* Thumbnail Strip */}
                 {images.length > 1 && (
-                    <div className="grid grid-cols-6 gap-2 p-4">
-                        {images.map((img, idx) => (
+                    <div className="flex gap-2 p-4 bg-surface border-t border-medium overflow-x-auto scrollbar-thin">
+                        {images.map((image, index) => (
                             <button
-                                key={idx}
-                                onClick={() => setSelectedImage(idx)}
-                                className={`relative h-20 rounded overflow-hidden ${idx === selectedImage ? 'ring-2 ring-ferrari-red' : 'opacity-70 hover:opacity-100'
+                                key={index}
+                                onClick={() => setCurrentIndex(index)}
+                                className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden transition-all ${currentIndex === index
+                                    ? 'ring-2 ring-ferrari-red ring-offset-2 ring-offset-surface'
+                                    : 'opacity-70 hover:opacity-100'
                                     }`}
                             >
-                                <img
-                                    src={img}
-                                    alt={`${carName} - Foto ${idx + 1}`}
-                                    className="w-full h-full object-cover"
-                                />
+                                {!imageErrors.has(index) ? (
+                                    <img
+                                        src={image}
+                                        alt={`${carName} - Thumbnail ${index + 1}`}
+                                        className="w-full h-full object-cover"
+                                        onError={() => handleImageError(index)}
+                                    />
+                                ) : (
+                                    <div className="w-full h-full bg-surface-2 flex items-center justify-center">
+                                        <span className="text-xs text-muted">Error</span>
+                                    </div>
+                                )}
                             </button>
                         ))}
                     </div>
                 )}
             </div>
 
-            {/* Lightbox Modal */}
+            {/* Lightbox */}
             {showLightbox && (
-                <div className="fixed inset-0 bg-primary/90 z-50 flex items-center justify-center">
+                <div className="fixed inset-0 z-50 bg-primary/95 backdrop-blur-xl flex items-center justify-center">
                     <button
                         onClick={() => setShowLightbox(false)}
-                        className="absolute top-4 right-4 text-white hover:text-ferrari-red transition"
+                        className="absolute top-6 right-6 p-3 bg-surface hover:bg-surface-2 rounded-full shadow-lg transition-colors group border border-medium"
+                        aria-label="Close fullscreen"
                     >
-                        <X size={32} />
+                        <X size={24} className="text-primary group-hover:text-ferrari-red transition-colors" />
                     </button>
 
-                    <div className="relative w-full h-full flex items-center justify-center p-4">
-                        <img
-                            src={images[selectedImage]}
-                            alt={`${carName} - Lightbox`}
-                            className="max-w-full max-h-full object-contain"
-                        />
+                    <div className="relative w-full max-w-6xl mx-4">
+                        {/* Lightbox Image */}
+                        <div className="relative aspect-video bg-surface-2 rounded-lg overflow-hidden">
+                            {!imageErrors.has(currentIndex) ? (
+                                <img
+                                    src={images[currentIndex]}
+                                    alt={`${carName} - Fullscreen ${currentIndex + 1}`}
+                                    className="w-full h-full object-contain"
+                                />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                    <span className="text-muted">Image failed to load</span>
+                                </div>
+                            )}
 
-                        {images.length > 1 && (
-                            <>
-                                <button
-                                    onClick={() => setSelectedImage((prev) => (prev > 0 ? prev - 1 : images.length - 1))}
-                                    className="absolute left-4 bg-surface/20 hover:bg-ferrari-red text-white p-3 rounded-full transition"
-                                >
-                                    <ChevronLeft size={24} />
-                                </button>
-                                <button
-                                    onClick={() => setSelectedImage((prev) => (prev < images.length - 1 ? prev + 1 : 0))}
-                                    className="absolute right-4 bg-surface/20 hover:bg-ferrari-red text-white p-3 rounded-full transition"
-                                >
-                                    <ChevronRight size={24} />
-                                </button>
-                            </>
-                        )}
+                            {/* Lightbox Navigation */}
+                            {images.length > 1 && (
+                                <>
+                                    <button
+                                        onClick={handlePrevious}
+                                        className="absolute left-4 top-1/2 -translate-y-1/2 p-4 bg-surface/80 hover:bg-surface rounded-full shadow-lg backdrop-blur-sm transition-all group"
+                                        aria-label="Previous image"
+                                    >
+                                        <ChevronLeft size={24} className="text-primary group-hover:text-ferrari-red" />
+                                    </button>
+                                    <button
+                                        onClick={handleNext}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 p-4 bg-surface/80 hover:bg-surface rounded-full shadow-lg backdrop-blur-sm transition-all group"
+                                        aria-label="Next image"
+                                    >
+                                        <ChevronRight size={24} className="text-primary group-hover:text-ferrari-red" />
+                                    </button>
+                                </>
+                            )}
+
+                            {/* Lightbox Counter */}
+                            <div className="absolute bottom-4 right-4 px-4 py-2 bg-surface/90 backdrop-blur-sm rounded-full text-primary border border-medium">
+                                {currentIndex + 1} / {images.length}
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

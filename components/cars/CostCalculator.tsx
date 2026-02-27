@@ -24,7 +24,7 @@ export default function CostCalculator({ carPrice = 0 }: CostCalculatorProps) {
     return (
         <div className="bg-surface rounded-lg shadow-md overflow-hidden">
             {/* Header */}
-            <div className="bg-ferrari-red p-4 text-white">
+            <div className="bg-ferrari-red p-4 text-primary">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                         <Calculator size={20} />
@@ -32,7 +32,7 @@ export default function CostCalculator({ carPrice = 0 }: CostCalculatorProps) {
                     </div>
                     <button
                         onClick={() => setShowDetails(!showDetails)}
-                        className="text-white/80 hover:text-white"
+                        className="text-primary/80 hover:text-primary"
                     >
                         <Info size={18} />
                     </button>
@@ -42,11 +42,11 @@ export default function CostCalculator({ carPrice = 0 }: CostCalculatorProps) {
             {/* Quick Total */}
             <div className="p-4 bg-gradient-to-br from-ferrari-red/5 to-transparent">
                 <div className="text-center">
-                    <p className="text-sm text-gray-500 mb-1">Totali i përllogaritur në Kosovë</p>
+                    <p className="text-sm text-secondary mb-1">Totali i përllogaritur në Kosovë</p>
                     <div className="text-3xl font-bold text-ferrari-red">
                         €{totalCost.toFixed(0)}
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-muted mt-1">
                         *Çmimi në Kore: €{price.toLocaleString()}
                     </p>
                 </div>
@@ -56,35 +56,35 @@ export default function CostCalculator({ carPrice = 0 }: CostCalculatorProps) {
             {showDetails && (
                 <div className="p-4 border-t border-theme space-y-3">
                     <div className="flex justify-between py-2 border-b border-dashed">
-                        <span className="flex items-center text-gray-600">
+                        <span className="flex items-center text-secondary">
                             <Euro size={16} className="mr-2" />
                             Çmimi në Kore
                         </span>
                         <span className="font-medium">€{price.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between py-2 border-b border-dashed">
-                        <span className="flex items-center text-gray-600">
+                        <span className="flex items-center text-secondary">
                             <Truck size={16} className="mr-2" />
                             Transporti (Korea → Durrës)
                         </span>
                         <span className="font-medium">€{shippingCost}</span>
                     </div>
                     <div className="flex justify-between py-2 border-b border-dashed">
-                        <span className="flex items-center text-gray-600">
+                        <span className="flex items-center text-secondary">
                             <FileCheck size={16} className="mr-2" />
                             Dogana (10%)
                         </span>
                         <span className="font-medium">€{customs.toFixed(0)}</span>
                     </div>
                     <div className="flex justify-between py-2 border-b border-dashed">
-                        <span className="flex items-center text-gray-600">
+                        <span className="flex items-center text-secondary">
                             <FileCheck size={16} className="mr-2" />
                             TVSH (18%)
                         </span>
                         <span className="font-medium">€{vat.toFixed(0)}</span>
                     </div>
                     <div className="flex justify-between py-2 border-b border-dashed">
-                        <span className="flex items-center text-gray-600">
+                        <span className="flex items-center text-secondary">
                             <Calculator size={16} className="mr-2" />
                             Shërbimi Formula Export
                         </span>
@@ -95,7 +95,7 @@ export default function CostCalculator({ carPrice = 0 }: CostCalculatorProps) {
                         <span>€{totalCost.toFixed(0)}</span>
                     </div>
 
-                    <div className="bg-blue-50 p-3 rounded-lg mt-2">
+                    <div className="bg-info-bg p-3 rounded-lg mt-2">
                         <p className="text-xs text-blue-700">
                             ⓘ Llogaritja është orientuese. Kostot reale mund të ndryshojnë në varësi të vlerësimit doganor dhe tarifave aktuale të transportit.
                         </p>

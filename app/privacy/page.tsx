@@ -18,7 +18,7 @@ export default function PrivacyPage() {
     return (
         <div className="container-custom py-12 max-w-4xl">
             {/* Breadcrumbs */}
-            <div className="flex items-center text-sm text-gray-500 mb-6">
+            <div className="flex items-center text-sm text-secondary mb-6">
                 <Link href="/" className="hover:text-ferrari-red">Formula Export</Link>
                 <ChevronRight size={14} className="mx-2" />
                 <span className="text-ferrari-red">Politika e Privatësisë</span>
@@ -27,7 +27,7 @@ export default function PrivacyPage() {
             {/* Header */}
             <div className="mb-8">
                 <h1 className="text-3xl md:text-4xl font-bold mb-2">Politika e Privatësisë</h1>
-                <div className="flex items-center gap-3 text-gray-600">
+                <div className="flex items-center gap-3 text-secondary">
                     <Shield size={18} className="text-ferrari-red" />
                     <p>Përditësuar më: {lastUpdated}</p>
                 </div>
@@ -39,24 +39,24 @@ export default function PrivacyPage() {
                     <CheckCircle size={20} className="text-ferrari-red mr-2" />
                     Përmbledhje e shkurtër
                 </h2>
-                <p className="text-gray-700 mb-3">
+                <p className="text-primary mb-3">
                     Në Formula Export, privatësia juaj është prioritet. Ne mbledhim vetëm të dhënat e nevojshme për të:
                 </p>
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                    <li className="flex items-center text-gray-600">
-                        <CheckCircle size={14} className="text-green-500 mr-2" />
+                    <li className="flex items-center text-secondary">
+                        <CheckCircle size={14} className="text-success-text mr-2" />
                         Personalizuar kërkimin tuaj
                     </li>
-                    <li className="flex items-center text-gray-600">
-                        <CheckCircle size={14} className="text-green-500 mr-2" />
+                    <li className="flex items-center text-secondary">
+                        <CheckCircle size={14} className="text-success-text mr-2" />
                         Ruajtur makinat e preferuara
                     </li>
-                    <li className="flex items-center text-gray-600">
-                        <CheckCircle size={14} className="text-green-500 mr-2" />
+                    <li className="flex items-center text-secondary">
+                        <CheckCircle size={14} className="text-success-text mr-2" />
                         Përmirësuar shërbimet tona
                     </li>
-                    <li className="flex items-center text-gray-600">
-                        <CheckCircle size={14} className="text-green-500 mr-2" />
+                    <li className="flex items-center text-secondary">
+                        <CheckCircle size={14} className="text-success-text mr-2" />
                         Komunikuar për pyetjet tuaja
                     </li>
                 </ul>
@@ -70,7 +70,7 @@ export default function PrivacyPage() {
                         <Database className="text-ferrari-red mr-2" size={20} />
                         1. Çfarë të dhënash mbledhim?
                     </h2>
-                    <div className="space-y-4 text-gray-700">
+                    <div className="space-y-4 text-primary">
                         <p>Të dhënat që na jepni direkt:</p>
                         <ul className="list-disc pl-6 space-y-2">
                             <li><span className="font-medium">Emri dhe mbiemri</span> - kur plotësoni formularin e kontaktit</li>
@@ -98,7 +98,7 @@ export default function PrivacyPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="p-4 bg-secondary rounded-lg">
                             <h3 className="font-medium mb-2 text-ferrari-red">Për shërbimin</h3>
-                            <ul className="text-sm text-gray-600 space-y-1">
+                            <ul className="text-sm text-secondary space-y-1">
                                 <li>✓ Kontakt për makinat që ju interesojnë</li>
                                 <li>✓ Ruajtja e preferencave të kërkimit</li>
                                 <li>✓ Funksionimi i Matchmaker-it</li>
@@ -106,7 +106,7 @@ export default function PrivacyPage() {
                         </div>
                         <div className="p-4 bg-secondary rounded-lg">
                             <h3 className="font-medium mb-2 text-ferrari-red">Për përmirësim</h3>
-                            <ul className="text-sm text-gray-600 space-y-1">
+                            <ul className="text-sm text-secondary space-y-1">
                                 <li>✓ Analizë e përdorimit të faqes</li>
                                 <li>✓ Përmirësim i rekomandimeve</li>
                                 <li>✓ Zhvillim i veçorive të reja</li>
@@ -121,7 +121,7 @@ export default function PrivacyPage() {
                         <Cookie className="text-ferrari-red mr-2" size={20} />
                         3. Cookies
                     </h2>
-                    <p className="text-gray-700 mb-4">
+                    <p className="text-primary mb-4">
                         Përdorim cookies për të përmirësuar përvojën tuaj. Ju keni kontroll të plotë:
                     </p>
                     <div className="space-y-3">
@@ -129,21 +129,21 @@ export default function PrivacyPage() {
                             <Shield size={18} className="text-ferrari-red mt-1 flex-shrink-0" />
                             <div>
                                 <span className="font-medium">Cookies esenciale:</span>
-                                <p className="text-sm text-gray-600">Ruajnë preferencat tuaja dhe makinat e ruajtura.</p>
+                                <p className="text-sm text-secondary">Ruajnë preferencat tuaja dhe makinat e ruajtura.</p>
                             </div>
                         </div>
                         <div className="flex items-start gap-3 p-3 bg-secondary rounded-lg">
                             <Shield size={18} className="text-ferrari-red mt-1 flex-shrink-0" />
                             <div>
                                 <span className="font-medium">Cookies funksionale:</span>
-                                <p className="text-sm text-gray-600">Mundësojnë Matchmaker-in të mësojë preferencat.</p>
+                                <p className="text-sm text-secondary">Mundësojnë Matchmaker-in të mësojë preferencat.</p>
                             </div>
                         </div>
                         <div className="flex items-start gap-3 p-3 bg-secondary rounded-lg">
                             <Shield size={18} className="text-ferrari-red mt-1 flex-shrink-0" />
                             <div>
                                 <span className="font-medium">Cookies analitike:</span>
-                                <p className="text-sm text-gray-600">Na ndihmojnë të kuptojmë se si përdoret faqja.</p>
+                                <p className="text-sm text-secondary">Na ndihmojnë të kuptojmë se si përdoret faqja.</p>
                             </div>
                         </div>
                     </div>
@@ -164,7 +164,7 @@ export default function PrivacyPage() {
                         <Lock className="text-ferrari-red mr-2" size={20} />
                         4. Si i mbrojmë të dhënat tuaja?
                     </h2>
-                    <div className="space-y-3 text-gray-700">
+                    <div className="space-y-3 text-primary">
                         <p>Ne marrim masa të rrepta sigurie:</p>
                         <ul className="list-disc pl-6 space-y-2">
                             <li>Enkriptim i të dhënave në transmision (SSL/TLS)</li>
@@ -184,19 +184,19 @@ export default function PrivacyPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="p-3 border rounded-lg">
                             <span className="font-medium block">Qasja</span>
-                            <span className="text-sm text-gray-600">Kërkoni kopje të të dhënave</span>
+                            <span className="text-sm text-secondary">Kërkoni kopje të të dhënave</span>
                         </div>
                         <div className="p-3 border rounded-lg">
                             <span className="font-medium block">Korrigjimi</span>
-                            <span className="text-sm text-gray-600">Ndryshoni të dhënat e pasakta</span>
+                            <span className="text-sm text-secondary">Ndryshoni të dhënat e pasakta</span>
                         </div>
                         <div className="p-3 border rounded-lg">
                             <span className="font-medium block">Fshirja</span>
-                            <span className="text-sm text-gray-600">Kërkoni fshirjen e të dhënave</span>
+                            <span className="text-sm text-secondary">Kërkoni fshirjen e të dhënave</span>
                         </div>
                         <div className="p-3 border rounded-lg">
                             <span className="font-medium block">Kundërshtimi</span>
-                            <span className="text-sm text-gray-600">Kundërshtoni përpunimin</span>
+                            <span className="text-sm text-secondary">Kundërshtoni përpunimin</span>
                         </div>
                     </div>
                 </section>
@@ -207,7 +207,7 @@ export default function PrivacyPage() {
                         <Mail className="text-ferrari-red mr-2" size={20} />
                         6. Na kontaktoni
                     </h2>
-                    <p className="text-gray-700 mb-4">
+                    <p className="text-primary mb-4">
                         Për çdo pyetje në lidhje me privatësinë, na shkruani:
                     </p>
                     <div className="bg-secondary p-4 rounded-lg space-y-2">
@@ -225,7 +225,7 @@ export default function PrivacyPage() {
                 </section>
 
                 {/* Last Updated Notice */}
-                <div className="bg-yellow-50 p-4 rounded-lg text-sm text-yellow-800 flex items-start">
+                <div className="bg-warning-bg p-4 rounded-lg text-sm text-yellow-800 flex items-start">
                     <AlertCircle size={18} className="mr-3 flex-shrink-0 mt-0.5" />
                     <p>
                         Kjo politikë përditësohet rregullisht. Versioni i fundit është i datës {lastUpdated}.
@@ -234,7 +234,7 @@ export default function PrivacyPage() {
                 </div>
 
                 {/* Link to Terms */}
-                <div className="text-center text-gray-600 text-sm">
+                <div className="text-center text-secondary text-sm">
                     <p>
                         Lexoni gjithashtu{' '}
                         <Link href="/terms" className="text-ferrari-red hover:underline font-medium">

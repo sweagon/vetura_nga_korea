@@ -43,7 +43,7 @@ export default function HowItWorks() {
                             <step.icon className="text-ferrari-red" size={32} />
                         </div>
                         <h3 className="font-bold text-lg mb-2">{step.title}</h3>
-                        <p className="text-gray-600">{step.description}</p>
+                        <p className="text-secondary">{step.description}</p>
                     </motion.div>
                 ))}
             </div>

@@ -24,7 +24,7 @@ export default function ThemeToggle() {
             aria-label="Toggle theme"
         >
             {theme === 'light' ? (
-                <Moon size={20} className="text-gray-700 group-hover:text-ferrari-red transition-colors" />
+                <Moon size={20} className="text-primary group-hover:text-ferrari-red transition-colors" />
             ) : (
                 <Sun size={20} className="text-dark-text-secondary group-hover:text-ferrari-red transition-colors" />
             )}

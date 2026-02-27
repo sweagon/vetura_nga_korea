@@ -1,3 +1,4 @@
+// FIXED: SearchBar.tsx with proper theme classes
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -77,7 +78,7 @@ export default function SearchBar() {
                         }
                     }}
                     placeholder="Kërko sipas markës, modelit... (p.sh. Audi A6)"
-                    className="w-full px-6 py-3 bg-surface-2/90 border border-medium rounded-lg 
+                    className="w-full px-6 py-3 bg-ferrari-red/25 border border-ferrari-red rounded-lg 
                              focus:outline-none focus:border-ferrari-red focus:ring-1 focus:ring-ferrari-red/50
                              text-primary placeholder:text-muted pr-24 transition-all"
                 />

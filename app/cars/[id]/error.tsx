@@ -22,10 +22,10 @@ export default function CarDetailError({
                 <div className="max-w-2xl mx-auto text-center">
                     {/* Error Icon */}
                     <div className="mb-6 relative">
-                        <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto">
-                            <AlertTriangle size={48} className="text-red-500" />
+                        <div className="w-24 h-24 bg-error-bg rounded-full flex items-center justify-center mx-auto">
+                            <AlertTriangle size={48} className="text-error-text" />
                         </div>
-                        <div className="absolute -top-2 -right-2 w-10 h-10 bg-ferrari-red rounded-full flex items-center justify-center text-white font-bold text-sm animate-pulse">
+                        <div className="absolute -top-2 -right-2 w-10 h-10 bg-ferrari-red rounded-full flex items-center justify-center text-primary font-bold text-sm animate-pulse">
                             !
                         </div>
                     </div>
@@ -37,27 +37,27 @@ export default function CarDetailError({
 
                     {/* Error Message */}
                     <div className="bg-surface rounded-lg shadow-md p-6 mb-8">
-                        <p className="text-gray-600 mb-4">
+                        <p className="text-secondary mb-4">
                             Makina që po kërkoni nuk mund të shfaqet për momentin.
                             Kjo mund të ndodhë për disa arsye:
                         </p>
                         <ul className="text-left space-y-2 mb-4">
-                            <li className="flex items-start text-gray-600">
+                            <li className="flex items-start text-secondary">
                                 <span className="w-1.5 h-1.5 bg-ferrari-red rounded-full mt-2 mr-3"></span>
                                 <span>Makina mund të jetë shitur ose hequr nga lista</span>
                             </li>
-                            <li className="flex items-start text-gray-600">
+                            <li className="flex items-start text-secondary">
                                 <span className="w-1.5 h-1.5 bg-ferrari-red rounded-full mt-2 mr-3"></span>
                                 <span>Probleme teknike me lidhjen me serverin</span>
                             </li>
-                            <li className="flex items-start text-gray-600">
+                            <li className="flex items-start text-secondary">
                                 <span className="w-1.5 h-1.5 bg-ferrari-red rounded-full mt-2 mr-3"></span>
                                 <span>ID e makinës mund të jetë e pasaktë</span>
                             </li>
                         </ul>
                         {error.message && (
-                            <div className="bg-red-50 p-4 rounded-lg">
-                                <p className="text-sm text-red-600 font-mono break-all">
+                            <div className="bg-error-bg p-4 rounded-lg">
+                                <p className="text-sm text-error-text font-mono break-all">
                                     {error.message}
                                 </p>
                             </div>
@@ -82,7 +82,7 @@ export default function CarDetailError({
                         </Link>
                         <Link
                             href="/"
-                            className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-secondary transition flex items-center justify-center"
+                            className="px-6 py-3 border border-medium rounded-lg hover:bg-secondary transition flex items-center justify-center"
                         >
                             <Home size={18} className="mr-2" />
                             Kthehu në fillim
@@ -91,14 +91,14 @@ export default function CarDetailError({
 
                     {/* Error ID for support */}
                     {error.digest && (
-                        <p className="text-xs text-gray-400 mt-8">
+                        <p className="text-xs text-muted mt-8">
                             Error ID: {error.digest}
                         </p>
                     )}
 
                     {/* Support Info */}
                     <div className="mt-8 pt-8 border-t border-theme">
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-secondary">
                             Nëse problemi vazhdon, ju lutemi{' '}
                             <Link href="/contact" className="text-ferrari-red hover:underline">
                                 na kontaktoni

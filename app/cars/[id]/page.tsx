@@ -37,6 +37,7 @@ import CompareButton from '@/components/cars/CompareButton';
 import StructuredData from '@/components/seo/StructuredData';
 import ShareButtons from '@/components/ui/ShareButtons';
 import RecentlyViewedTracker from '@/components/cars/RecentlyViewedTracker';
+import CarSaveButton from '@/components/cars/CarSaveButton';
 
 interface PageProps {
     params: Promise<{
@@ -160,11 +161,9 @@ export default async function CarDetailPage({ params }: PageProps) {
                                 </div>
                             </div>
 
-                            {/* Action Buttons */}
+                            {/* Action Buttons - FIXED: Save button now uses CarSaveButton component */}
                             <div className="flex items-center gap-3">
-                                <button className="p-3 bg-surface border border-medium rounded-xl hover:border-ferrari-red hover:text-ferrari-red transition-all group">
-                                    <Heart size={20} className="text-muted group-hover:text-ferrari-red" />
-                                </button>
+                                <CarSaveButton car={car} />
                                 <CompareButton car={{ id: car.id, make: car.make, model: car.model }} variant="icon" />
                                 <ShareButtons
                                     url={`/cars/${car.id}`}
@@ -212,7 +211,7 @@ export default async function CarDetailPage({ params }: PageProps) {
                             {/* Warranty Showcase */}
                             {car.warranty && <WarrantyShowcase warranty={car.warranty} />}
 
-                            {/* Popularity Meter - Fixed with null checks */}
+                            {/* Popularity Meter */}
                             {(car.viewCount && car.viewCount > 0) || (car.subscriberCount && car.subscriberCount > 0) ? (
                                 <PopularityMeter
                                     views={car.viewCount ?? 0}

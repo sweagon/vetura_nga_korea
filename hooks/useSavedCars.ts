@@ -45,6 +45,7 @@ export const useSavedCars = () => {
 
     // Load saved cars from Supabase
     const loadSavedCars = useCallback(async () => {
+        setLoading(true);
         try {
             // Handle guest users
             if (!session?.user?.id) {
@@ -53,13 +54,14 @@ export const useSavedCars = () => {
                     try {
                         const parsed = JSON.parse(localSaved);
                         if (Array.isArray(parsed)) {
-                            setSavedCars(parsed.map((id: number) => ({
+                            const cars = parsed.map((id: number) => ({
                                 car_id: id,
                                 id: `local-${id}`,
                                 car_data: null,
                                 notes: null,
                                 created_at: new Date().toISOString()
-                            } as SavedCar)));
+                            } as SavedCar));
+                            setSavedCars(cars);
                             setSavedCarIds(new Set(parsed));
                         }
                     } catch (e) {
@@ -74,7 +76,6 @@ export const useSavedCars = () => {
             // Check if we have a valid Supabase session
             const hasSupabaseAuth = await checkSupabaseAuth();
             if (!hasSupabaseAuth) {
-                // Try to refresh the session
                 const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
                 if (!refreshedSession) {
                     console.log('No valid Supabase session');
@@ -91,18 +92,18 @@ export const useSavedCars = () => {
                 .eq('user_id', session.user.id)
                 .order('created_at', { ascending: false });
 
-            // Around line 100-120 in useSavedCars.ts
             if (error) {
-                // Handle specific error codes - properly typed now
                 const supabaseError = error as SupabaseError;
-
                 if (supabaseError.code === 'PGRST301' || supabaseError.code === '42501') {
-                    console.log('Permission denied - user may not have proper access');
-                    // Still try to load from localStorage as fallback
+                    console.log('Permission denied - loading from localStorage');
                     const localSaved = localStorage.getItem('savedCars');
                     if (localSaved) {
                         const parsed = JSON.parse(localSaved);
-                        setSavedCars(parsed.map((id: number) => ({ car_id: id } as SavedCar)));
+                        setSavedCars(parsed.map((id: number) => ({
+                            car_id: id,
+                            id: `local-${id}`,
+                            created_at: new Date().toISOString()
+                        } as SavedCar)));
                         setSavedCarIds(new Set(parsed));
                     }
                 } else {
@@ -110,26 +111,20 @@ export const useSavedCars = () => {
                 }
             } else {
                 setSavedCars(data || []);
-                // ✅ Fixed: Added type for car parameter
                 setSavedCarIds(new Set(data?.map((car: SavedCar) => car.car_id) || []));
             }
         } catch (error) {
             console.error('Error loading saved cars:', error);
-
-            // Properly type the error for code checking
-            const typedError = error as SupabaseError;
-
-            // Don't show toast for expected errors
-            if (!typedError.code?.includes('PGRST')) {
-                showToast('error', 'Nuk mund të ngarkonin makinat e ruajtura');
-            }
-
             // Fallback to localStorage
             const localSaved = localStorage.getItem('savedCars');
             if (localSaved) {
                 try {
                     const parsed = JSON.parse(localSaved);
-                    setSavedCars(parsed.map((id: number) => ({ car_id: id } as SavedCar)));
+                    setSavedCars(parsed.map((id: number) => ({
+                        car_id: id,
+                        id: `local-${id}`,
+                        created_at: new Date().toISOString()
+                    } as SavedCar)));
                     setSavedCarIds(new Set(parsed));
                 } catch (e) {
                     console.error('Error parsing local saved cars:', e);

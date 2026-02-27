@@ -32,7 +32,7 @@ export default function ProfileSettingsPage() {
                 {/* Back Button */}
                 <Link
                     href="/profile"
-                    className="inline-flex items-center text-sm text-gray-600 hover:text-ferrari-red mb-6 transition"
+                    className="inline-flex items-center text-sm text-secondary hover:text-ferrari-red mb-6 transition"
                 >
                     <ChevronLeft size={16} className="mr-1" />
                     Kthehu te profili
@@ -47,10 +47,10 @@ export default function ProfileSettingsPage() {
                             <Bell className="text-ferrari-red mr-4" size={20} />
                             <div>
                                 <h3 className="font-medium">Njoftimet</h3>
-                                <p className="text-sm text-gray-500">Menaxho preferencat e njoftimeve</p>
+                                <p className="text-sm text-secondary">Menaxho preferencat e njoftimeve</p>
                             </div>
                         </div>
-                        <ChevronRight className="text-gray-400" size={20} />
+                        <ChevronRight className="text-muted" size={20} />
                     </div>
 
                     {/* Language */}
@@ -59,10 +59,10 @@ export default function ProfileSettingsPage() {
                             <Globe className="text-ferrari-red mr-4" size={20} />
                             <div>
                                 <h3 className="font-medium">Gjuha</h3>
-                                <p className="text-sm text-gray-500">Shqip (default)</p>
+                                <p className="text-sm text-secondary">Shqip (default)</p>
                             </div>
                         </div>
-                        <ChevronRight className="text-gray-400" size={20} />
+                        <ChevronRight className="text-muted" size={20} />
                     </div>
 
                     {/* Theme */}
@@ -71,10 +71,10 @@ export default function ProfileSettingsPage() {
                             <Moon className="text-ferrari-red mr-4" size={20} />
                             <div>
                                 <h3 className="font-medium">Tema</h3>
-                                <p className="text-sm text-gray-500">Ndrysho pamjen e faqes</p>
+                                <p className="text-sm text-secondary">Ndrysho pamjen e faqes</p>
                             </div>
                         </div>
-                        <ChevronRight className="text-gray-400" size={20} />
+                        <ChevronRight className="text-muted" size={20} />
                     </div>
 
                     {/* Privacy */}
@@ -83,10 +83,10 @@ export default function ProfileSettingsPage() {
                             <Shield className="text-ferrari-red mr-4" size={20} />
                             <div>
                                 <h3 className="font-medium">Privatësia</h3>
-                                <p className="text-sm text-gray-500">Menaxho të dhënat personale</p>
+                                <p className="text-sm text-secondary">Menaxho të dhënat personale</p>
                             </div>
                         </div>
-                        <ChevronRight className="text-gray-400" size={20} />
+                        <ChevronRight className="text-muted" size={20} />
                     </div>
                 </div>
             </div>

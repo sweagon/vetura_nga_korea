@@ -43,12 +43,12 @@ export default function Newsletter() {
     return (
         <div className="bg-surface/5 rounded-xl p-5">
             <h5 className="font-medium mb-2">Qëndro i informuar</h5>
-            <p className="text-xs text-gray-400 mb-4">
+            <p className="text-xs text-muted mb-4">
                 Regjistrohu për të marrë ofertat më të reja
             </p>
 
             {success && (
-                <div className="bg-green-500/20 p-3 rounded-lg mb-4 flex items-start gap-2">
+                <div className="bg-success-bg0/20 p-3 rounded-lg mb-4 flex items-start gap-2">
                     <CheckCircle size={18} className="text-green-400 flex-shrink-0 mt-0.5" />
                     <p className="text-sm text-green-400">
                         Faleminderit! U regjistruat me sukses.
@@ -57,7 +57,7 @@ export default function Newsletter() {
             )}
 
             {error && (
-                <div className="bg-red-500/20 p-3 rounded-lg mb-4 flex items-start gap-2">
+                <div className="bg-error-bg0/20 p-3 rounded-lg mb-4 flex items-start gap-2">
                     <AlertCircle size={18} className="text-red-400 flex-shrink-0 mt-0.5" />
                     <p className="text-sm text-red-400">{error}</p>
                 </div>
@@ -67,7 +67,7 @@ export default function Newsletter() {
                 <input
                     type="text"
                     placeholder="Emri juaj (opsional)"
-                    className="w-full px-4 py-2 bg-surface/10 border border-white/20 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-ferrari-red transition"
+                    className="w-full px-4 py-2 bg-surface/10 border border-light/20 rounded-lg text-sm text-primary placeholder-gray-500 focus:outline-none focus:border-ferrari-red transition"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                 />
@@ -75,14 +75,14 @@ export default function Newsletter() {
                     type="email"
                     required
                     placeholder="Email-i juaj"
-                    className="w-full px-4 py-2 bg-surface/10 border border-white/20 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-ferrari-red transition"
+                    className="w-full px-4 py-2 bg-surface/10 border border-light/20 rounded-lg text-sm text-primary placeholder-gray-500 focus:outline-none focus:border-ferrari-red transition"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                 />
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-ferrari-red text-white py-2 rounded-lg text-sm font-medium hover:bg-ferrari-dark transition disabled:opacity-50"
+                    className="w-full bg-ferrari-red text-primary py-2 rounded-lg text-sm font-medium hover:bg-ferrari-dark transition disabled:opacity-50"
                 >
                     {loading ? 'Duke regjistruar...' : 'Abonohu'}
                 </button>

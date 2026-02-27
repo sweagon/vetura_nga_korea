@@ -55,7 +55,7 @@ export default function ContactPage() {
         return (
             <div className="container-custom py-12 max-w-2xl">
                 {/* Breadcrumbs */}
-                <div className="flex items-center text-sm text-gray-500 mb-6">
+                <div className="flex items-center text-sm text-secondary mb-6">
                     <Link href="/" className="hover:text-ferrari-red">Formula Export</Link>
                     <ChevronRight size={14} className="mx-2" />
                     <Link href="/contact" className="hover:text-ferrari-red">Kontakt</Link>
@@ -64,15 +64,15 @@ export default function ContactPage() {
                 </div>
 
                 <div className="bg-surface rounded-lg shadow-md p-8 text-center">
-                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <CheckCircle size={40} className="text-green-500" />
+                    <div className="w-20 h-20 bg-success-bg rounded-full flex items-center justify-center mx-auto mb-6">
+                        <CheckCircle size={40} className="text-success-text" />
                     </div>
                     <h1 className="text-2xl font-bold mb-2">Mesazhi u dërgua!</h1>
-                    <p className="text-gray-600 mb-6">
+                    <p className="text-secondary mb-6">
                         Faleminderit për mesazhin. Do të kontaktojmë sa më shpejt të jetë e mundur.
                     </p>
                     <div className="bg-secondary p-4 rounded-lg mb-6 text-left">
-                        <p className="text-sm text-gray-600 mb-2"><strong>Në pritje të përgjigjes, mund të:</strong></p>
+                        <p className="text-sm text-secondary mb-2"><strong>Në pritje të përgjigjes, mund të:</strong></p>
                         <ul className="text-sm space-y-2">
                             <li className="flex items-start">
                                 <CheckCircle size={16} className="text-ferrari-red mr-2 mt-0.5 flex-shrink-0" />
@@ -99,7 +99,7 @@ export default function ContactPage() {
     return (
         <div className="container-custom py-12">
             {/* Breadcrumbs */}
-            <div className="flex items-center text-sm text-gray-500 mb-6">
+            <div className="flex items-center text-sm text-secondary mb-6">
                 <Link href="/" className="hover:text-ferrari-red">Formula Export</Link>
                 <ChevronRight size={14} className="mx-2" />
                 <span className="text-ferrari-red">Kontakt</span>
@@ -108,7 +108,7 @@ export default function ContactPage() {
             {/* Header */}
             <div className="mb-8">
                 <h1 className="text-3xl md:text-4xl font-bold mb-2">Na kontaktoni</h1>
-                <p className="text-gray-600 max-w-2xl">
+                <p className="text-secondary max-w-2xl">
                     Keni pyetje rreth importit të makinave? Dëshironi një ofertë të personalizuar?
                     Jemi këtu për t'ju ndihmuar.
                 </p>
@@ -123,14 +123,14 @@ export default function ContactPage() {
                             <Phone className="text-ferrari-red" size={24} />
                         </div>
                         <h3 className="font-semibold mb-2">Telefon</h3>
-                        <p className="text-gray-600 mb-3">Na telefononi për ndihmë të shpejtë</p>
+                        <p className="text-secondary mb-3">Na telefononi për ndihmë të shpejtë</p>
                         <a href="tel:+38345255388" className="text-ferrari-red hover:underline font-medium block">
                             +383 45 528 033
                         </a>
                         <a href="tel:+38348656656" className="text-ferrari-red hover:underline font-medium block">
                             +383 48 656 656
                         </a>
-                        <p className="text-xs text-gray-500 mt-2">Hënë - Premte: 09:00 - 18:00</p>
+                        <p className="text-xs text-secondary mt-2">Hënë - Premte: 09:00 - 18:00</p>
                     </div>
 
                     {/* Email */}
@@ -139,14 +139,14 @@ export default function ContactPage() {
                             <Mail className="text-ferrari-red" size={24} />
                         </div>
                         <h3 className="font-semibold mb-2">Email</h3>
-                        <p className="text-gray-600 mb-3">Na shkruani për pyetje të detajuara</p>
+                        <p className="text-secondary mb-3">Na shkruani për pyetje të detajuara</p>
                         <a href="mailto:info@formula-export.com" className="text-ferrari-red hover:underline font-medium block">
                             info@formula-export.com
                         </a>
                         <a href="mailto:support@formula-export.com" className="text-ferrari-red hover:underline font-medium block">
                             support@formula-export.com
                         </a>
-                        <p className="text-xs text-gray-500 mt-2">Përgjigjem brenda 24 orëve</p>
+                        <p className="text-xs text-secondary mt-2">Përgjigjem brenda 24 orëve</p>
                     </div>
 
                     {/* Address */}
@@ -155,8 +155,8 @@ export default function ContactPage() {
                             <MapPin className="text-ferrari-red" size={24} />
                         </div>
                         <h3 className="font-semibold mb-2">Adresa</h3>
-                        <p className="text-gray-600 mb-3">Na vizitoni në zyrën tonë</p>
-                        <p className="text-gray-800 font-medium">
+                        <p className="text-secondary mb-3">Na vizitoni në zyrën tonë</p>
+                        <p className="text-primary font-medium">
                             Rr. B, Prishtinë<br />
                             10000, Kosovë
                         </p>
@@ -168,7 +168,7 @@ export default function ContactPage() {
                             <Clock className="text-ferrari-red" size={24} />
                         </div>
                         <h3 className="font-semibold mb-2">Orari i punës</h3>
-                        <div className="space-y-2 text-gray-600">
+                        <div className="space-y-2 text-secondary">
                             <div className="flex justify-between">
                                 <span>Hënë - Premte:</span>
                                 <span className="font-medium">09:00 - 18:00</span>
@@ -185,22 +185,22 @@ export default function ContactPage() {
                     </div>
 
                     {/* Quick Links */}
-                    <div className="bg-gradient-to-br from-ferrari-red to-ferrari-dark text-white rounded-lg shadow-md p-6">
+                    <div className="bg-gradient-to-br from-ferrari-red to-ferrari-dark text-primary rounded-lg shadow-md p-6">
                         <h3 className="font-semibold mb-3">Ndihmë e shpejtë</h3>
                         <div className="space-y-2">
-                            <Link href="/how-it-works" className="flex items-center text-white/90 hover:text-white">
+                            <Link href="/how-it-works" className="flex items-center text-primary/90 hover:text-primary">
                                 <Truck size={16} className="mr-2" />
                                 <span>Si funksionon importi?</span>
                             </Link>
-                            <Link href="/faq" className="flex items-center text-white/90 hover:text-white">
+                            <Link href="/faq" className="flex items-center text-primary/90 hover:text-primary">
                                 <HelpCircle size={16} className="mr-2" />
                                 <span>Pyetje të shpeshta</span>
                             </Link>
-                            <Link href="/privacy" className="flex items-center text-white/90 hover:text-white">
+                            <Link href="/privacy" className="flex items-center text-primary/90 hover:text-primary">
                                 <Shield size={16} className="mr-2" />
                                 <span>Politika e privatësisë</span>
                             </Link>
-                            <Link href="/terms" className="flex items-center text-white/90 hover:text-white">
+                            <Link href="/terms" className="flex items-center text-primary/90 hover:text-primary">
                                 <MessageSquare size={16} className="mr-2" />
                                 <span>Termat e përdorimit</span>
                             </Link>
@@ -299,7 +299,7 @@ export default function ContactPage() {
 
                             {/* Privacy Notice */}
                             <div className="bg-secondary p-4 rounded-lg">
-                                <p className="text-sm text-gray-600 flex items-start">
+                                <p className="text-sm text-secondary flex items-start">
                                     <AlertCircle size={16} className="text-ferrari-red mr-2 mt-0.5 flex-shrink-0" />
                                     <span>
                                         Duke dërguar këtë formular, ju pranoni{' '}
