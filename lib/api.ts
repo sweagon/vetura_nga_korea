@@ -63,6 +63,11 @@ export interface FilterData {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api/proxy';
 
+// Cache for ID mappings (internal ID -> external car_id)
+const idMappingCache = new Map<string, string>();
+// Cache for car details to avoid repeated fetching
+const carDetailsCache = new Map<string, Car>();
+
 // Helper to get the base URL for server-side requests
 const getBaseUrl = (): string => {
     // 1. Check for explicitly set NEXTAUTH_URL (production)
@@ -118,6 +123,37 @@ const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout 
         throw error;
     }
 };
+
+// Helper function to fetch by external ID
+async function fetchCarByExternalId(externalId: string): Promise<Car | null> {
+    // Check cache first
+    if (carDetailsCache.has(externalId)) {
+        console.log('📦 Using cached car details for external ID:', externalId);
+        return carDetailsCache.get(externalId) || null;
+    }
+
+    try {
+        const path = `/api/proxy/cars/${externalId}`;
+        const url = getFullUrl(path);
+
+        const response = await fetchWithTimeout(url, {
+            ...(typeof window !== 'undefined'
+                ? { next: { revalidate: 3600 } }
+                : { cache: 'no-store' })
+        }, 10000);
+
+        if (response.status === 200) {
+            const car = await response.json();
+            // Cache the result
+            carDetailsCache.set(externalId, car);
+            return car;
+        }
+        return null;
+    } catch (error) {
+        console.error('Error in fetchCarByExternalId:', error);
+        return null;
+    }
+}
 
 export async function fetchCars(params: Record<string, any> = {}): Promise<FetchCarsResponse> {
     try {
@@ -178,6 +214,13 @@ export async function fetchCars(params: Record<string, any> = {}): Promise<Fetch
         if (data.cars && Array.isArray(data.cars)) {
             cars = data.cars;
             pagination = data.pagination || pagination;
+
+            // Pre-populate the car details cache with any cars we fetched
+            cars.forEach(car => {
+                if (car.car_id) {
+                    carDetailsCache.set(car.car_id, car);
+                }
+            });
         } else if (Array.isArray(data)) {
             cars = data;
         } else if (data.data && Array.isArray(data.data)) {
@@ -199,48 +242,92 @@ export async function fetchCars(params: Record<string, any> = {}): Promise<Fetch
 }
 
 export async function fetchCarDetails(carId: string): Promise<Car | null> {
+    console.log('🔍 fetchCarDetails called with ID:', carId);
+
     try {
-        // Extract numeric ID (remove any non-numeric characters)
-        const cleanId = carId.toString().replace(/\D/g, '');
-
-        if (!cleanId) {
-            console.warn(`⚠️ Invalid car ID format: ${carId}`);
-            return null;
+        // 1. Check if we already have a mapping for this internal ID
+        const mappedId = idMappingCache.get(carId);
+        if (mappedId) {
+            console.log('📦 Using cached ID mapping:', carId, '->', mappedId);
+            const car = await fetchCarByExternalId(mappedId);
+            if (car) return car;
         }
 
-        const path = `/api/proxy/cars/${cleanId}`;
-        const url = getFullUrl(path);
-
-        console.log(`🔍 [${typeof window === 'undefined' ? 'SERVER' : 'CLIENT'}] Fetching car details for ID: ${cleanId}`);
-
-        const response = await fetchWithTimeout(url, {
-            ...(typeof window !== 'undefined'
-                ? { next: { revalidate: 3600 } }
-                : { cache: 'no-store' })
-        }, 10000);
-
-        if (response.status === 404) {
-            console.log(`📭 Car not found (404): ${cleanId} - This car may have been sold or removed`);
-            return null;
+        // 2. Try to fetch using the provided ID directly (might be external ID)
+        console.log('📡 Trying direct fetch with ID:', carId);
+        const directResult = await fetchCarByExternalId(carId);
+        if (directResult) {
+            // If this worked, store the mapping (carId is the external ID)
+            if (directResult.car_id) {
+                idMappingCache.set(carId, directResult.car_id);
+            }
+            return directResult;
         }
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        // 3. If direct fetch fails, try to find the car in a batch of cars
+        console.log('🔍 ID not found directly, searching in cars list...');
+        try {
+            // Fetch a reasonable batch of cars
+            const { cars } = await fetchCars({ limit: 200 });
+
+            // Look for a car where either id or car_id matches
+            const foundCar = cars.find(c =>
+                c.id.toString() === carId ||
+                c.car_id?.toString() === carId
+            );
+
+            if (foundCar && foundCar.car_id) {
+                console.log('✅ Found car in list:', foundCar.id, 'with car_id:', foundCar.car_id);
+
+                // Store the mapping for future use
+                idMappingCache.set(carId, foundCar.car_id);
+
+                // If we already have the full car object, return it
+                if (carDetailsCache.has(foundCar.car_id)) {
+                    return carDetailsCache.get(foundCar.car_id) || null;
+                }
+
+                // Otherwise fetch using the correct external ID
+                return await fetchCarByExternalId(foundCar.car_id);
+            }
+        } catch (error) {
+            console.error('Error searching cars list:', error);
         }
 
-        const data = await response.json();
+        // 4. Final attempt: try fetching with the original ID without cleaning
+        // (sometimes the API expects the exact format)
+        try {
+            console.log('📡 Final attempt - trying original ID format:', carId);
+            const path = `/api/proxy/cars/${carId}`;
+            const url = getFullUrl(path);
 
-        if (!data || Object.keys(data).length === 0) {
-            console.warn(`⚠️ Empty response for car ID: ${cleanId}`);
-            return null;
+            const response = await fetchWithTimeout(url, {
+                ...(typeof window !== 'undefined'
+                    ? { next: { revalidate: 3600 } }
+                    : { cache: 'no-store' })
+            }, 10000);
+
+            if (response.status === 200) {
+                const car = await response.json();
+                console.log('✅ Car found with original ID format');
+                if (car.car_id) {
+                    idMappingCache.set(carId, car.car_id);
+                    carDetailsCache.set(car.car_id, car);
+                }
+                return car;
+            }
+        } catch (error) {
+            // Ignore, just means it didn't work
         }
 
-        return data;
+        console.log('❌ Car not found with any method for ID:', carId);
+        return null;
+
     } catch (error: any) {
         if (error.name === 'AbortError') {
             console.error(`❌ Request timeout for car ID: ${carId}`);
         } else {
-            console.error('❌ Error fetching car details:', error);
+            console.error('❌ Error in fetchCarDetails:', error);
         }
         return null;
     }
