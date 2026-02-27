@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 // app/page.tsx
 import { Suspense } from 'react';
 import Hero from '@/components/home/Hero';
