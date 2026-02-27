@@ -1,3 +1,4 @@
+// components/cars/RecentlyViewed.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -19,6 +20,7 @@ export default function RecentlyViewed() {
         setRecentCars(cars);
     };
 
+    // ✅ FIXED: Added React.MouseEvent type
     const removeCar = (id: number, e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();

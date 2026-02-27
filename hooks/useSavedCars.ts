@@ -91,6 +91,7 @@ export const useSavedCars = () => {
                 .eq('user_id', session.user.id)
                 .order('created_at', { ascending: false });
 
+            // Around line 100-120 in useSavedCars.ts
             if (error) {
                 // Handle specific error codes - properly typed now
                 const supabaseError = error as SupabaseError;
@@ -109,7 +110,8 @@ export const useSavedCars = () => {
                 }
             } else {
                 setSavedCars(data || []);
-                setSavedCarIds(new Set(data?.map(car => car.car_id) || []));
+                // ✅ Fixed: Added type for car parameter
+                setSavedCarIds(new Set(data?.map((car: SavedCar) => car.car_id) || []));
             }
         } catch (error) {
             console.error('Error loading saved cars:', error);
@@ -337,8 +339,7 @@ export const useSavedCars = () => {
                 throw fetchError;
             }
 
-            const existingIds = new Set(existing?.map(e => e.car_id) || []);
-
+            const existingIds = new Set(existing?.map((e: { car_id: number }) => e.car_id) || []);
             // Find new cars to sync
             const newIds = localIds.filter((id: number) => !existingIds.has(id));
 
