@@ -130,7 +130,7 @@ export default function RootLayout({
         <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
       </head>
-      <body className={inter.className}>
+      <body className={inter.className} cz-shortcut-listen="true">
         <StructuredData type="organization" />
         <StructuredData type="website" />
         <StructuredData type="search" />

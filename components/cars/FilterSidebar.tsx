@@ -33,13 +33,30 @@ interface FilterSidebarProps {
 // Quick filter presets
 const QUICK_FILTERS = [
     { id: 'german', label: 'Gjermane', icon: '🇩🇪', filter: { make: ['BMW', 'Audi', 'Mercedes-Benz', 'Volkswagen'].join(',') } },
-    { id: 'french', label: 'Franceze', icon: '🇫🇷', filter: { make: ['Renault', 'Peugeot', 'Citroën'].join(',') } },
+    { id: 'french', label: 'Franceze', icon: '🇫🇷', filter: { make: ['Renault', 'Peugeot', 'Citroen-DS'].join(',') } },
     { id: 'suv', label: 'SUV', icon: '🚙', filter: { bodyType: 'SUV' } },
     { id: 'diesel', label: 'Diesel', icon: '⛽', filter: { fuelType: 'Diesel' } },
     { id: 'electric', label: 'Elektrike', icon: '⚡', filter: { fuelType: 'Electric' } },
     { id: 'under-10k', label: 'Nën €10k', icon: '💰', filter: { maxPrice: 10000 } },
     { id: 'under-20k', label: 'Nën €20k', icon: '💰', filter: { maxPrice: 20000 } },
     { id: 'new', label: '2022+', icon: '🆕', filter: { minYear: 2022 } },
+];
+
+const POPULAR_BRANDS = [
+    { name: 'Volkswagen', icon: '🇩🇪', apiName: 'Volkswagen' },
+    { name: 'Audi', icon: '🇩🇪', apiName: 'Audi' },
+    { name: 'BMW', icon: '🇩🇪', apiName: 'BMW' },
+    { name: 'Mercedes-Benz', icon: '🇩🇪', apiName: 'Mercedes-Benz' },
+    { name: 'Opel', icon: '🇩🇪', apiName: 'Opel' },
+    { name: 'Ford', icon: '🇺🇸', apiName: 'Ford' },
+    { name: 'Renault', icon: '🇫🇷', apiName: 'Renault' },
+    { name: 'Peugeot', icon: '🇫🇷', apiName: 'Peugeot' },
+    { name: 'Fiat', icon: '🇮🇹', apiName: 'Fiat' },
+    { name: 'Hyundai', icon: '🇰🇷', apiName: 'Hyundai' },
+    { name: 'Kia', icon: '🇰🇷', apiName: 'Kia' },
+    { name: 'Citroën', icon: '🇫🇷', apiName: 'Citroen-DS' }, // Special case
+    { name: 'Toyota', icon: '🇯🇵', apiName: 'Toyota' },
+    { name: 'Honda', icon: '🇯🇵', apiName: 'Honda' },
 ];
 
 // Price ranges
@@ -468,7 +485,7 @@ export default function FilterSidebar({ className = '' }: FilterSidebarProps) {
     }
 
     return (
-        <div className={`bg-surface rounded-2xl shadow-lg border border-medium overflow-hidden sticky top-24 ${className}`}>
+        <div className={`bg-surface rounded-2xl shadow-lg border border-medium overflow-hidden sticky top-44 ${className}`}>
             {/* Header */}
             <div className="bg-ferrari-red p-4 text-white">
                 <div className="flex items-center justify-between">
@@ -558,17 +575,17 @@ export default function FilterSidebar({ className = '' }: FilterSidebarProps) {
                                 </h4>
                             </div>
                             <div className="grid grid-cols-2 gap-1.5">
-                                {makes.slice(0, 10).map((make) => (
+                                {POPULAR_BRANDS.map((brand) => (
                                     <button
-                                        key={make}
-                                        onClick={() => toggleMake(make)}
-                                        className={`px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-2 border ${selectedMakes.includes(make)
+                                        key={brand.name}
+                                        onClick={() => toggleMake(brand.name)}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-light transition-all flex items-center gap-2 border ${selectedMakes.includes(brand.name)
                                             ? 'bg-ferrari-red text-white border-ferrari-red'
                                             : 'bg-secondary text-primary hover:bg-tertiary border-medium'
                                             }`}
                                     >
-                                        <span>{make}</span>
-                                        {selectedMakes.includes(make) && <Check size={12} />}
+                                        <span className="flex-1 text-left truncate">{brand.name}</span>
+                                        {selectedMakes.includes(brand.name) && <Check size={12} className="shrink-0" />}
                                     </button>
                                 ))}
                             </div>

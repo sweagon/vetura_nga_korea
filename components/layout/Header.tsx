@@ -34,8 +34,8 @@ export default function Header() {
 
     return (
         <header className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled
-                ? 'bg-ferrari-dark/95 shadow-lg backdrop-blur-md border-b border-ferrari-red/20'
-                : 'bg-ferrari-dark'
+            ? 'bg-ferrari-dark/75 shadow-lg backdrop-blur-md'
+            : 'bg-ferrari-dark'
             }`}>
             {/* Subtle gradient line */}
             <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-ferrari-red/30 to-transparent" />
@@ -225,7 +225,7 @@ export default function Header() {
             </div>
 
             {/* Navigation Menu */}
-            <nav className="hidden md:block bg-ferrari-red/95 backdrop-blur-sm border-t border-ferrari-red/20">
+            <nav className="hidden md:block bg-ferrari-red/95 backdrop-blur-sm">
                 <div className="container-custom">
                     <ul className="flex items-center space-x-8 py-3">
                         {[
@@ -239,8 +239,8 @@ export default function Header() {
                                 <Link
                                     href={item.href}
                                     className={`relative text-sm font-medium transition-colors py-1.5 px-2 rounded-lg ${pathname === item.href
-                                            ? 'text-white bg-white/10'
-                                            : 'text-white/70 hover:text-white hover:bg-white/5'
+                                        ? 'text-white bg-ferrari-dark'
+                                        : 'text-white/70 hover:text-white hover:bg-white/5'
                                         }`}
                                 >
                                     {item.label}
