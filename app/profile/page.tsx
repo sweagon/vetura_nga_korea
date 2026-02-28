@@ -1,5 +1,6 @@
 // app/profile/page.tsx
 'use client';
+
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -34,105 +35,143 @@ export default function ProfilePage() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    const [authError, setAuthError] = useState(false);
+    const [savedCount, setSavedCount] = useState(0);
 
     const [editForm, setEditForm] = useState({
         full_name: '',
         phone: '',
     });
 
+    // Debug session
+    useEffect(() => {
+        console.log('Session status:', status);
+        console.log('Session data:', session);
+        console.log('NEXTAUTH_URL:', process.env.NEXTAUTH_URL);
+    }, [session, status]);
+
+    // Redirect if not authenticated
     useEffect(() => {
         if (status === 'unauthenticated') {
             router.push('/auth/signin');
             return;
         }
+    }, [status, router]);
 
-        if (session?.user?.id) {
-            // First, check if Supabase session exists
-            checkSupabaseSession();
-        }
-    }, [session, status, router]);
+    // Load profile when session is ready
+    useEffect(() => {
+        const loadUserData = async () => {
+            // Wait for session to be loaded
+            if (status === 'loading') return;
 
-    const checkSupabaseSession = async () => {
-        try {
-            const { data: { session: supabaseSession }, error } = await supabase.auth.getSession();
-
-            if (error || !supabaseSession) {
-                console.log('No valid Supabase session, attempting to sign out...');
-                // Clear invalid session
-                await supabase.auth.signOut();
-                setAuthError(true);
-                setError('Probleme me autentifikimin. Ju lutemi kyçuni përsëri.');
+            // Check if we have a session
+            if (!session?.user?.id) {
+                console.error('No user ID in session');
+                setError('Nuk u gjet ID e përdoruesit');
                 setLoading(false);
                 return;
             }
 
-            // Valid session, load profile
-            loadProfile();
+            try {
+                await loadProfile();
+                await fetchSavedCount();
+            } catch (err) {
+                console.error('Error loading user data:', err);
+                setError('Ndodhi një gabim gjatë ngarkimit të të dhënave');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadUserData();
+    }, [session, status]);
+
+    const fetchSavedCount = async () => {
+        if (!session?.user?.id) return;
+
+        try {
+            const { count, error } = await supabase
+                .from('saved_cars')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', session.user.id);
+
+            if (!error && count !== null) {
+                setSavedCount(count);
+            }
         } catch (err) {
-            console.error('Error checking session:', err);
-            setAuthError(true);
-            setLoading(false);
+            console.error('Error fetching saved count:', err);
         }
     };
 
     const loadProfile = async () => {
         try {
+            const userId = session?.user?.id;
+
+            if (!userId) {
+                console.error('No user ID found in session');
+                setError('Nuk u gjet ID e përdoruesit');
+                setLoading(false);
+                return;
+            }
+
+            console.log('Loading profile for user:', userId);
+
             const { data, error } = await supabase
                 .from('profiles')
                 .select('*')
-                .eq('id', session?.user?.id)
-                .single();
+                .eq('id', userId)
+                .maybeSingle();
 
             if (error) {
-                // Log the actual error
-                console.error('Error loading profile:', {
-                    message: error?.message || 'Unknown error',
-                    details: error?.details || null,
-                    code: error?.code || null
+                console.error('Supabase error details:', {
+                    message: error.message,
+                    code: error.code,
+                    details: error.details,
+                    hint: error.hint
                 });
 
-                // Handle specific error codes
                 if (error.code === 'PGRST116') {
-                    // Profile doesn't exist - try to create it
+                    // Profile doesn't exist - create it
+                    console.log('Profile not found, creating new one...');
                     await createProfile();
-                    return;
-                } else if (error.code === '42501' || error.message?.includes('JWT')) {
-                    // Auth error - session might be invalid
-                    setAuthError(true);
-                    setError('Sesioni juaj ka skaduar. Ju lutemi kyçuni përsëri.');
-                    setLoading(false);
                     return;
                 }
 
                 setError('Profili nuk u ngarkua. Provo përsëri.');
+                setLoading(false);
                 return;
             }
 
+            if (!data) {
+                // No profile found - create one
+                console.log('No profile data, creating new one...');
+                await createProfile();
+                return;
+            }
+
+            console.log('Profile loaded successfully:', data);
             setProfile(data);
             setEditForm({
                 full_name: data.full_name || '',
                 phone: data.phone || '',
             });
+            setLoading(false);
         } catch (error: any) {
-            console.error('Unexpected error:', {
-                message: error?.message || 'Unknown error'
+            console.error('Unexpected error in loadProfile:', {
+                message: error?.message,
+                stack: error?.stack
             });
             setError('Ndodhi një gabim i papritur.');
-        } finally {
             setLoading(false);
         }
     };
 
     const createProfile = async () => {
         try {
-            // Try to get the current Supabase user
-            const { data: { user: supabaseUser }, error: userError } = await supabase.auth.getUser();
+            const userId = session?.user?.id;
 
-            if (userError || !supabaseUser) {
-                console.error('No valid Supabase user');
-                setAuthError(true);
-                setError('Nuk mund të verifikohet përdoruesi. Ju lutemi kyçuni përsëri.');
+            if (!userId) {
+                console.error('No user ID found for profile creation');
+                setError('Nuk u gjet ID e përdoruesit');
                 setLoading(false);
                 return;
             }
@@ -141,23 +180,44 @@ export default function ProfilePage() {
                 session?.user?.email?.split('@')[0] ||
                 'User';
 
-            const { error } = await supabase
+            console.log('Creating profile for user:', userId, 'with name:', fullName);
+
+            // First check if profile already exists
+            const { data: existingProfile } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('id', userId)
+                .maybeSingle();
+
+            if (existingProfile) {
+                console.log('Profile already exists, loading instead');
+                await loadProfile();
+                return;
+            }
+
+            const { data, error } = await supabase
                 .from('profiles')
                 .insert({
-                    id: supabaseUser.id, // Use Supabase user ID, not NextAuth session ID
+                    id: userId,
                     email: session?.user?.email,
                     full_name: fullName,
-                });
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                })
+                .select()
+                .single();
 
             if (error) {
                 console.error('Error creating profile:', {
-                    message: error?.message || 'Unknown error',
-                    code: error?.code || null,
-                    details: error?.details || null
+                    message: error.message,
+                    code: error.code,
+                    details: error.details,
+                    hint: error.hint
                 });
 
-                if (error.code === '23505') { // Duplicate key
-                    // Profile already exists, try to load it
+                // Handle duplicate key error
+                if (error.code === '23505') {
+                    console.log('Profile already exists (duplicate key), loading instead');
                     await loadProfile();
                     return;
                 }
@@ -167,17 +227,22 @@ export default function ProfilePage() {
                 return;
             }
 
-            // Success - reload profile
-            await loadProfile();
+            console.log('Profile created successfully:', data);
+            setProfile(data);
+            setEditForm({
+                full_name: data.full_name || '',
+                phone: data.phone || '',
+            });
+            setLoading(false);
         } catch (error: any) {
-            console.error('Error in createProfile:', error?.message);
+            console.error('Error in createProfile:', {
+                message: error?.message,
+                stack: error?.stack
+            });
             setError('Profili nuk u krijua. Ju lutemi kontaktoni support.');
             setLoading(false);
         }
     };
-
-    // Rest of your component remains the same...
-    // (handleEdit, handleCancel, handleSave, handleSignOut functions)
 
     const handleEdit = () => {
         setEditing(true);
@@ -200,6 +265,12 @@ export default function ProfilePage() {
         setSuccess('');
 
         try {
+            const userId = session?.user?.id;
+
+            if (!userId) {
+                throw new Error('No user ID found');
+            }
+
             const { error } = await supabase
                 .from('profiles')
                 .update({
@@ -207,7 +278,7 @@ export default function ProfilePage() {
                     phone: editForm.phone,
                     updated_at: new Date().toISOString(),
                 })
-                .eq('id', session?.user?.id);
+                .eq('id', userId);
 
             if (error) throw error;
 
@@ -216,12 +287,13 @@ export default function ProfilePage() {
                 full_name: editForm.full_name,
                 phone: editForm.phone,
             });
+
             setSuccess('Profili u përditësua me sukses!');
             setEditing(false);
         } catch (error: any) {
             console.error('Error saving profile:', {
-                message: error?.message || 'Unknown error',
-                code: error?.code || null
+                message: error?.message,
+                code: error?.code
             });
             setError(error.message || 'Ndodhi një gabim gjatë përditësimit');
         } finally {
@@ -252,30 +324,6 @@ export default function ProfilePage() {
                                 <div key={i} className="h-12 bg-surface-2 rounded animate-pulse"></div>
                             ))}
                         </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    if (authError) {
-        return (
-            <div className="container-custom py-12">
-                <div className="max-w-md mx-auto text-center">
-                    <div className="bg-surface rounded-xl border border-medium p-8">
-                        <div className="w-20 h-20 bg-error-bg rounded-full flex items-center justify-center mx-auto mb-4">
-                            <AlertCircle size={32} className="text-error-text" />
-                        </div>
-                        <h1 className="text-2xl font-bold text-primary mb-2">Problem me autentifikimin</h1>
-                        <p className="text-secondary mb-6">
-                            {error || 'Sesioni juaj ka skaduar. Ju lutemi kyçuni përsëri.'}
-                        </p>
-                        <button
-                            onClick={() => router.push('/auth/signin')}
-                            className="btn-primary"
-                        >
-                            Kyçu përsëri
-                        </button>
                     </div>
                 </div>
             </div>
@@ -313,7 +361,7 @@ export default function ProfilePage() {
                     <div className="md:col-span-2">
                         <div className="bg-surface rounded-xl border border-medium shadow-sm overflow-hidden">
                             {/* Profile Header */}
-                            <div className="bg-linear-to-r from-ferrari-red to-ferrari-dark p-6 text-white">
+                            <div className="bg-gradient-to-r from-ferrari-red to-ferrari-dark p-6 text-white">
                                 <div className="flex items-center">
                                     <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-2xl font-bold text-white">
                                         {profile?.full_name?.charAt(0) || profile?.email?.charAt(0) || 'U'}
@@ -495,12 +543,12 @@ export default function ProfilePage() {
                         </div>
 
                         {/* Stats Card */}
-                        <div className="bg-linear-to-br from-ferrari-red to-ferrari-dark text-white rounded-xl border border-ferrari-red/20 shadow-lg p-6 mt-6">
+                        <div className="bg-gradient-to-br from-ferrari-red to-ferrari-dark text-white rounded-xl border border-ferrari-red/20 shadow-lg p-6 mt-6">
                             <h3 className="font-semibold mb-4">Statistikat</h3>
                             <div className="space-y-3">
                                 <div>
                                     <p className="text-white/80 text-sm">Makinat e ruajtura</p>
-                                    <p className="text-2xl font-bold">0</p>
+                                    <p className="text-2xl font-bold">{savedCount}</p>
                                 </div>
                                 <div>
                                     <p className="text-white/80 text-sm">Kërkimet e fundit</p>

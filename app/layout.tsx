@@ -9,7 +9,6 @@ import ScrollToTop from '@/components/ui/ScrollToTop';
 import Providers from './providers';
 import StructuredData from '@/components/seo/StructuredData';
 import PageTransition from '@/components/ui/PageTransition';
-import { GoogleAnalytics } from '@next/third-parties/google';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -69,13 +68,9 @@ export const metadata: Metadata = {
     },
   },
 
+  // Simplified verification - removed all placeholders
   verification: {
-    google: 'YOUR_GOOGLE_VERIFICATION_CODE',
-    yandex: 'YOUR_YANDEX_CODE',
-    other: {
-      'msvalidate.01': 'YOUR_BING_CODE',
-      'facebook-domain-verification': 'YOUR_FACEBOOK_CODE',
-    },
+    google: 'YOUR_GOOGLE_VERIFICATION_CODE', // Add this later when needed
   },
 
   alternates: {
@@ -87,8 +82,46 @@ export const metadata: Metadata = {
 
   category: 'automotive',
 
+  appleWebApp: {
+    capable: true,
+    title: 'Formula Export',
+    statusBarStyle: 'black-translucent',
+  },
+
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/icons/icon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/icons/icon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-384x384.png', sizes: '384x384', type: 'image/png' },
+      { url: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png' },
+      { url: '/icons/icon-57x57.png', sizes: '57x57' },
+      { url: '/icons/icon-60x60.png', sizes: '60x60' },
+      { url: '/icons/icon-72x72.png', sizes: '72x72' },
+      { url: '/icons/icon-76x76.png', sizes: '76x76' },
+      { url: '/icons/icon-114x114.png', sizes: '114x114' },
+      { url: '/icons/icon-120x120.png', sizes: '120x120' },
+      { url: '/icons/icon-144x144.png', sizes: '144x144' },
+      { url: '/icons/icon-152x152.png', sizes: '152x152' },
+      { url: '/icons/icon-180x180.png', sizes: '180x180' },
+    ],
+  },
+
+  manifest: '/manifest.json',
+
   other: {
-    'p:domain_verify': 'YOUR_PINTEREST_CODE',
+    'mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'black-translucent',
+    'apple-mobile-web-app-title': 'Formula Export',
+    'application-name': 'Formula Export',
+    'msapplication-TileColor': '#FF2800',
+    'msapplication-TileImage': '/icons/icon-144x144.png',
+    'msapplication-config': '/browserconfig.xml',
   },
 };
 
@@ -98,32 +131,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="sq">
+    <html lang="sq" dir="ltr">
       <head>
         {/* PWA Manifest */}
         <link rel="manifest" href="/manifest.json" />
 
-        {/* Favicon - Standard */}
-        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png" />
+        {/* Preconnect to important domains */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 
-        {/* Favicon - Apple */}
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="apple-touch-icon" sizes="57x57" href="/icons/icon-57x57.png" />
-        <link rel="apple-touch-icon" sizes="60x60" href="/icons/icon-60x60.png" />
-        <link rel="apple-touch-icon" sizes="72x72" href="/icons/icon-72x72.png" />
-        <link rel="apple-touch-icon" sizes="76x76" href="/icons/icon-76x76.png" />
-        <link rel="apple-touch-icon" sizes="114x114" href="/icons/icon-114x114.png" />
-        <link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-120x120.png" />
-        <link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144x144.png" />
-        <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180x180.png" />
+        {/* DNS Prefetch for performance */}
+        <link rel="dns-prefetch" href="https://autokoreakosova.com" />
+        <link rel="dns-prefetch" href="https://ci.encar.com" />
 
-        {/* Favicon - Android */}
-        <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
-        <link rel="icon" type="image/png" sizes="384x384" href="/icons/icon-384x384.png" />
-        <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png" />
+        {/* Theme color for browser UI */}
+        <meta name="theme-color" content="#FF2800" />
+
+        {/* Viewport for responsive design */}
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
+
+        {/* HandheldFriendly for older mobile devices */}
+        <meta name="HandheldFriendly" content="True" />
+        <meta name="MobileOptimized" content="width" />
 
         {/* Microsoft Tiles */}
         <meta name="msapplication-TileColor" content="#FF2800" />
@@ -131,10 +160,12 @@ export default function RootLayout({
         <meta name="msapplication-config" content="/browserconfig.xml" />
       </head>
       <body className={inter.className} cz-shortcut-listen="true">
+        {/* Structured Data */}
         <StructuredData type="organization" />
         <StructuredData type="website" />
         <StructuredData type="search" />
 
+        {/* Providers (Auth, Query, etc.) */}
         <Providers>
           <Header />
           <main className="min-h-screen">
@@ -147,34 +178,43 @@ export default function RootLayout({
           <ScrollToTop />
         </Providers>
 
-        {/* Google Analytics */}
-        <GoogleAnalytics gaId="G-0BSR9BPSWY" />
-
-        {/* Facebook Pixel */}
+        {/* Register Service Worker for PWA */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              !function(f,b,e,v,n,t,s)
-              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-              n.queue=[];t=b.createElement(e);t.async=!0;
-              t.src=v;s=b.getElementsByTagName(e)[0];
-              s.parentNode.insertBefore(t,s)}(window, document,'script',
-              'https://connect.facebook.net/en_US/fbevents.js');
-              fbq('init', 'YOUR_PIXEL_ID');
-              fbq('track', 'PageView');
+              (function() {
+                if ('serviceWorker' in navigator) {
+                  window.addEventListener('load', function() {
+                    navigator.serviceWorker.register('/sw.js').then(
+                      function(registration) {
+                        console.log('✅ ServiceWorker registered successfully');
+                        
+                        // Check for updates
+                        registration.addEventListener('updatefound', function() {
+                          const newWorker = registration.installing;
+                          console.log('🔄 New service worker installing...');
+                          
+                          newWorker.addEventListener('statechange', function() {
+                            if (newWorker.state === 'installed') {
+                              if (navigator.serviceWorker.controller) {
+                                console.log('📦 New content available - refresh to update');
+                              } else {
+                                console.log('✅ Content cached for offline use');
+                              }
+                            }
+                          });
+                        });
+                      },
+                      function(error) {
+                        console.log('❌ ServiceWorker registration failed: ', error);
+                      }
+                    );
+                  });
+                }
+              })();
             `
           }}
         />
-        <noscript>
-          <img
-            height="1"
-            width="1"
-            style={{ display: 'none' }}
-            src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"
-          />
-        </noscript>
       </body>
     </html>
   );

@@ -3,12 +3,11 @@ import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { SupabaseAdapter } from '@auth/supabase-adapter';
 import { createClient } from '@supabase/supabase-js';
-import bcrypt from 'bcryptjs';
 
 // Initialize Supabase admin client for database operations
 const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY! // You'll need to add this to .env.local
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export const authOptions: NextAuthOptions = {
@@ -61,7 +60,7 @@ export const authOptions: NextAuthOptions = {
                     return {
                         id: data.user.id,
                         email: data.user.email,
-                        name: profile?.full_name || data.user.email?.split('@')[0],
+                        name: profile?.full_name || data.user.email?.split('@')[0] || 'User',
                         image: profile?.avatar_url,
                     };
                 } catch (error) {
@@ -72,52 +71,72 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
     callbacks: {
-        async jwt({ token, user, account }) {
+        async jwt({ token, user }) {
             // Initial sign in
-            if (account && user) {
-                return {
-                    ...token,
-                    accessToken: account.access_token,
-                    userId: user.id,
-                };
+            if (user) {
+                token.id = user.id; // Store user ID in token.id
+                token.email = user.email;
+                token.name = user.name;
+                token.picture = user.image;
             }
             return token;
         },
         async session({ session, token }) {
             if (session?.user) {
-                session.user.id = token.userId as string;
+                // Use token.id consistently
+                session.user.id = token.id as string;
+                session.user.email = token.email as string;
+                session.user.name = token.name as string;
+                session.user.image = token.picture as string;
 
-                // Get fresh user data from database
-                const { data: profile } = await supabaseAdmin
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', token.userId as string)
-                    .single();
+                // Get fresh user data from database (optional - removes need for extra query)
+                try {
+                    const { data: profile } = await supabaseAdmin
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', token.id as string)
+                        .single();
 
-                if (profile) {
-                    session.user.name = profile.full_name || session.user.name;
-                    session.user.image = profile.avatar_url || session.user.image;
+                    if (profile) {
+                        session.user.name = profile.full_name || session.user.name;
+                        session.user.image = profile.avatar_url || session.user.image;
+                    }
+                } catch (error) {
+                    console.error('Error fetching profile in session:', error);
+                    // Continue with token data if profile fetch fails
                 }
             }
             return session;
         },
-        async signIn({ user, account, profile }) {
+        async signIn({ user, account }) {
             if (account?.provider === 'google') {
-                // Check if user exists in profiles table
-                const { data: existingProfile } = await supabaseAdmin
-                    .from('profiles')
-                    .select('id')
-                    .eq('id', user.id)
-                    .single();
+                try {
+                    // Check if user exists in profiles table
+                    const { data: existingProfile } = await supabaseAdmin
+                        .from('profiles')
+                        .select('id')
+                        .eq('id', user.id)
+                        .single();
 
-                if (!existingProfile) {
-                    // Create profile for Google user
-                    await supabaseAdmin.from('profiles').insert({
-                        id: user.id,
-                        email: user.email!,
-                        full_name: user.name,
-                        avatar_url: user.image,
-                    });
+                    if (!existingProfile) {
+                        // Create profile for Google user
+                        const { error: insertError } = await supabaseAdmin
+                            .from('profiles')
+                            .insert({
+                                id: user.id,
+                                email: user.email!,
+                                full_name: user.name,
+                                avatar_url: user.image,
+                            });
+
+                        if (insertError) {
+                            console.error('Error creating profile for Google user:', insertError);
+                            // Still allow sign in even if profile creation fails
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error in Google signIn callback:', error);
+                    // Allow sign in even if there's an error
                 }
             }
             return true;
@@ -127,8 +146,7 @@ export const authOptions: NextAuthOptions = {
         signIn: '/auth/signin',
         error: '/auth/error',
         verifyRequest: '/auth/verify',
-        newUser: '/auth/welcome',
-        // signUp is not a valid option - removed
+        newUser: '/profile', // Redirect to profile after first sign in
     },
     session: {
         strategy: 'jwt',
@@ -138,4 +156,5 @@ export const authOptions: NextAuthOptions = {
         maxAge: 30 * 24 * 60 * 60, // 30 days
     },
     secret: process.env.NEXTAUTH_SECRET,
+    debug: process.env.NODE_ENV === 'development', // Enable debug logs in development
 };

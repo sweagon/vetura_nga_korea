@@ -6,6 +6,7 @@ export type Profile = {
     avatar_url: string | null;
     created_at: string;
     updated_at: string;
+    saved_count?: number;
 };
 
 export type SavedCar = {
