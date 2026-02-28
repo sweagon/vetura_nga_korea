@@ -82,7 +82,7 @@ const getBaseUrl = (): string => {
     return 'http://localhost:3000';
 };
 
-// lib/api.ts - Fix getFullUrl
+// Helper to construct full URLs for server-side requests
 const getFullUrl = (path: string): string => {
     // If we're in the browser, a relative URL is perfect
     if (typeof window !== 'undefined') {
@@ -155,63 +155,67 @@ async function fetchCarByExternalId(externalId: string): Promise<Car | null> {
     }
 }
 
+// FIXED: fetchCars function now uses getFullUrl consistently
 export async function fetchCars(params: Record<string, any> = {}): Promise<FetchCarsResponse> {
     try {
-        const queryParams = new URLSearchParams();
-
-        // Handle 'make' parameter - it might be comma-separated
-        if (params.make) {
-            // If your API expects comma-separated values
-            queryParams.append('make', params.make);
-
-            // OR if it expects multiple make params:
-            // const makes = params.make.split(',');
-            // makes.forEach((make: string) => {
-            //     queryParams.append('make', make);
-            // });
-        }
-
-        // Handle other params
-        const paramMappings: Record<string, string> = {
-            search: 'search',
-            model: 'model',
-            minPrice: 'minPrice',
-            maxPrice: 'maxPrice',
-            minYear: 'minYear',
-            maxYear: 'maxYear',
-            fuelType: 'fuelType',
-            transmission: 'transmission',
-            sort: 'sort',
-            page: 'page',
-            limit: 'limit'
-        };
-
+        // Build query string
+        const queryString = new URLSearchParams();
         Object.entries(params).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== '' && key !== 'make') {
-                const paramKey = paramMappings[key] || key;
-                queryParams.append(paramKey, String(value));
+            if (value !== undefined && value !== null) {
+                queryString.append(key, String(value));
             }
         });
 
-        // Set defaults
-        if (!params.limit) queryParams.append('limit', '12');
-        if (!params.page) queryParams.append('page', '1');
-        if (!params.sort) queryParams.append('sort', 'price_desc');
+        // Construct the path
+        const path = `/api/proxy/cars${queryString.toString() ? `?${queryString.toString()}` : ''}`;
 
-        const url = `${API_BASE_URL}/cars${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+        // Use the existing getFullUrl helper which handles server/client correctly
+        const url = getFullUrl(path);
 
         console.log('📡 Fetching cars from:', url);
 
-        const response = await fetch(url);
+        const response = await fetchWithTimeout(url, {
+            ...(typeof window !== 'undefined'
+                ? { next: { revalidate: 3600 } }
+                : { cache: 'no-store' })
+        }, 15000); // 15 second timeout
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
+
+        // Handle both response formats (direct array or wrapped object)
+        if (Array.isArray(data)) {
+            return {
+                cars: data,
+                pagination: {
+                    page: 1,
+                    totalPages: 1,
+                    total: data.length
+                }
+            };
+        }
 
         return {
             cars: data.cars || [],
-            pagination: data.pagination || { page: 1, totalPages: 1, total: 0 }
+            pagination: data.pagination || {
+                page: 1,
+                totalPages: 1,
+                total: (data.cars || []).length
+            }
         };
     } catch (error) {
         console.error('Error fetching cars:', error);
-        return { cars: [], pagination: { page: 1, totalPages: 1, total: 0 } };
+        return {
+            cars: [],
+            pagination: {
+                page: 1,
+                totalPages: 0,
+                total: 0
+            }
+        };
     }
 }
 
