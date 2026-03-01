@@ -2,8 +2,7 @@
 import Link from 'next/link';
 import { Car } from 'lucide-react';
 
-// This MUST be a server component - NO 'use client' directive
-// NO useSearchParams, useState, useEffect, etc.
+// This is a server component - NO client hooks!
 export default function NotFound() {
     return (
         <div className="min-h-[80vh] flex items-center justify-center bg-primary">

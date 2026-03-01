@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation'; // Removed useSearchParams
 import SearchParamsWrapper from '@/components/SearchParamsWrapper';
 import {
     Search,
@@ -28,9 +28,9 @@ interface SearchFilters {
     priceTo: string;
 }
 
-export default function CompactSearch({ variant = 'header', onSearch }: CompactSearchProps) {
+// Inner component that uses searchParams
+function CompactSearchContent({ searchParams, variant, onSearch }: any) {
     const router = useRouter();
-    const searchParams = useSearchParams();
     const [loading, setLoading] = useState({
         manufacturers: false,
         models: false
@@ -252,30 +252,29 @@ export default function CompactSearch({ variant = 'header', onSearch }: CompactS
                         </button>
                     )}
 
-                    {/* Fixed Search Button - Matching header styles */}
                     <button
                         onClick={handleSearch}
                         className={`
-        h-9 px-4 rounded-lg text-sm font-medium transition-all duration-200 
-        flex items-center gap-1.5
-        focus:outline-none focus:ring-2 focus:ring-offset-2
-        ${isHero
+                            h-9 px-4 rounded-lg text-sm font-medium transition-all duration-200 
+                            flex items-center gap-1.5
+                            focus:outline-none focus:ring-2 focus:ring-offset-2
+                            ${isHero
                                 ? 'bg-white text-blue-950 hover:bg-white/90 focus:ring-white/50 focus:ring-offset-0'
                                 : 'bg-orange-500 text-white hover:bg-orange-600 focus:ring-orange-500/50 focus:ring-offset-surface'
                             }
-    `}
+                        `}
                         aria-label="Kërko"
                     >
                         <Search size={14} />
                         <span className="hidden sm:inline">Kërko</span>
                         {activeFilterCount > 0 && (
                             <span className={`
-            ml-0.5 px-1.5 py-0.5 text-xs rounded-full font-medium
-            ${isHero
+                                ml-0.5 px-1.5 py-0.5 text-xs rounded-full font-medium
+                                ${isHero
                                     ? 'bg-blue-950/10 text-blue-950'
                                     : 'bg-white/20 text-white'
                                 }
-        `}>
+                            `}>
                                 {activeFilterCount}
                             </span>
                         )}
@@ -283,5 +282,14 @@ export default function CompactSearch({ variant = 'header', onSearch }: CompactS
                 </div>
             </div>
         </div>
+    );
+}
+
+// Main export with Suspense wrapper
+export default function CompactSearch(props: CompactSearchProps) {
+    return (
+        <SearchParamsWrapper fallback={<div className="h-9 bg-surface-2 rounded animate-pulse w-full" />}>
+            {(searchParams) => <CompactSearchContent searchParams={searchParams} {...props} />}
+        </SearchParamsWrapper>
     );
 }
