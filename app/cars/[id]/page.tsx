@@ -1,29 +1,11 @@
-import { SocialShare } from '@/components/ui/Social';
+// app/cars/[id]/page.tsx
 import { notFound } from 'next/navigation';
-import { fetchCarDetails } from '@/lib/api';
+import { getCarByVin, formatPrice, formatMileage, extractVinFromParam } from '@/lib/api';
+import { translateFuel, translateTransmission, translateColor } from '@/lib/translations';
 import { Metadata } from 'next';
 import ImageGallery from '@/components/cars/ImageGallery';
 import CarSpecs from '@/components/cars/CarSpecs';
-import CostCalculator from '@/components/cars/CostCalculator';
-import ContactForm from '@/components/forms/ContactForm';
-import SellerInfo from '@/components/cars/SellerInfo';
-import WarrantyInfo from '@/components/cars/WarrantyInfo';
-import SimilarCars from '@/components/cars/SimilarCars';
-import WarrantyShowcase from '@/components/cars/WarrantyShowcase';
-import DealerBadge from '@/components/cars/DealerBadge';
-import PopularityMeter from '@/components/cars/PopularityMeter';
-import QuickActions from '@/components/cars/QuickActions';
 import {
-    Heart,
-    Share2,
-    ChevronRight,
-    CheckCircle,
-    AlertCircle,
-    MessageCircle,
-    Sparkles,
-    Shield,
-    Truck,
-    FileCheck,
     Calendar,
     Gauge,
     Fuel,
@@ -31,418 +13,357 @@ import {
     MapPin,
     Phone,
     Mail,
-    Building2
+    Building2,
+    Database,
+    Hash,
+    Tag,
+    AlertCircle,
+    ArrowLeft,
+    Car
 } from 'lucide-react';
 import Link from 'next/link';
-import CompareButton from '@/components/cars/CompareButton';
-import StructuredData from '@/components/seo/StructuredData';
 import RecentlyViewedTracker from '@/components/cars/RecentlyViewedTracker';
-import CarSaveButton from '@/components/cars/CarSaveButton';
-
 
 interface PageProps {
-    params: Promise<{
-        id: string;
-    }>;
+    params: Promise<{ id: string }>;
 }
 
-// Generate metadata dynamically for each car
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-    const { id } = await params;
-    const car = await fetchCarDetails(id);
+    try {
+        const { id } = await params;
+        const vin = extractVinFromParam(id);
+        const car = await getCarByVin(vin);
 
-    if (!car) {
+        if (!car) {
+            return {
+                title: 'Makina nuk u gjet | Vetura Nga Korea',
+            };
+        }
+
+        const lot = car.lots?.[0];
+        const price = lot?.buy_now || 0;
+        const mileage = lot?.odometer?.km || 0;
+
+        const manufacturerName = car.manufacturer?.name || 'Makina';
+        const modelName = car.model?.name || '';
+
         return {
-            title: 'Makina nuk u gjet | Formula Export',
-            description: 'Makina që po kërkoni nuk ekziston ose është shitur.',
+            title: `${manufacturerName} ${modelName} ${car.year || ''} | Vetura Nga Korea`,
+            description: `${manufacturerName} ${modelName} ${car.year || ''} me ${formatMileage(mileage)}. Çmimi: ${formatPrice(price)}`,
+            openGraph: {
+                title: `${manufacturerName} ${modelName} ${car.year || ''}`,
+                description: `${manufacturerName} ${modelName} ${car.year || ''} - ${formatPrice(price)}`,
+                images: lot?.images?.normal?.[0] ? [lot.images.normal[0]] : [],
+            },
+        };
+    } catch (error) {
+        return {
+            title: 'Makina nuk u gjet | Vetura Nga Korea',
         };
     }
-
-    const title = `${car.make} ${car.model} ${car.year} | Formula Export`;
-    const description = `${car.make} ${car.model} e vitit ${car.year} me ${car.mileage?.toLocaleString()} km. Çmimi: €${car.price?.toLocaleString()}. Makina nga Korea në Kosovë.`;
-    const images = car.images?.length ? [car.images[0]] : ['/og-image.jpg'];
-
-    return {
-        title,
-        description,
-        keywords: [`${car.make}`, `${car.model}`, 'makina', 'import', 'korea', 'kosovë', `${car.year}`],
-        openGraph: {
-            title: `${car.make} ${car.model} ${car.year}`,
-            description: `Viti: ${car.year}, Km: ${car.mileage?.toLocaleString()}, Çmimi: €${car.price?.toLocaleString()}`,
-            images: images.map(img => ({
-                url: img,
-                width: 1200,
-                height: 630,
-                alt: `${car.make} ${car.model} ${car.year}`,
-            })),
-            locale: 'sq_AL',
-            type: 'website',
-        },
-        twitter: {
-            card: 'summary_large_image',
-            title: `${car.make} ${car.model} ${car.year}`,
-            description: `Viti: ${car.year}, Km: ${car.mileage?.toLocaleString()}, Çmimi: €${car.price?.toLocaleString()}`,
-            images: images,
-        },
-    };
 }
 
 export default async function CarDetailPage({ params }: PageProps) {
-    const { id } = await params;
-    const car = await fetchCarDetails(id);
+    try {
+        const { id } = await params;
+        const vin = extractVinFromParam(id);
+        const car = await getCarByVin(vin);
 
-    if (!car) {
-        notFound();
-    }
+        if (!car) {
+            notFound();
+        }
 
-    return (
-        <>
-            <StructuredData
-                type="car"
-                data={{
-                    id: car.id,
-                    make: car.make,
-                    model: car.model,
-                    year: car.year,
-                    price: car.price,
-                    mileage: car.mileage,
-                    fuelType: car.fuelType,
-                    transmission: car.transmission,
-                    exteriorColor: car.exteriorColor,
-                    images: car.images,
-                    description: car.description,
-                    sellerName: car.sellerName
-                }}
-            />
-            <StructuredData
-                type="breadcrumb"
-                breadcrumbs={[
-                    { name: 'Formula Export', url: '/' },
-                    { name: 'Makina', url: '/cars' },
-                    { name: car.make, url: `/cars?make=${car.make}` },
-                    { name: `${car.make} ${car.model}`, url: `/cars/${car.id}` }
-                ]}
-            />
+        // Safely access nested properties
+        const lot = car.lots?.[0];
+        const price = lot?.buy_now || 0;
+        const mileage = lot?.odometer?.km || 0;
+        const images = lot?.images?.big || lot?.images?.normal || [];
+        const location = lot?.location?.city?.name || 'Korea';
+        const lotNumber = lot?.lot || null;
 
-            <RecentlyViewedTracker car={car} />
+        const manufacturerName = car.manufacturer?.name || 'Makina';
+        const modelName = car.model?.name || '';
+        const carTitle = car.title || `${manufacturerName} ${modelName}`.trim() || 'Makina pa emër';
 
-            <div className="min-h-screen bg-linear-to-b from-secondary to-primary">
-                {/* Breadcrumb */}
-                <div className="border-b border-medium bg-surface/80 backdrop-blur-sm sticky top-20 z-40">
-                    <div className="container-custom py-3">
-                        <div className="flex items-center text-sm">
-                            <Link href="/" className="text-muted hover:text-ferrari-red transition flex items-center gap-1">
-                                <span>Formula Export</span>
-                            </Link>
-                            <ChevronRight size={14} className="mx-2 text-muted" />
-                            <Link href="/cars" className="text-muted hover:text-ferrari-red transition">Makina</Link>
-                            <ChevronRight size={14} className="mx-2 text-muted" />
-                            <Link href={`/cars?make=${car.make}`} className="text-muted hover:text-ferrari-red transition">{car.make}</Link>
-                            <ChevronRight size={14} className="mx-2 text-muted" />
-                            <span className="text-ferrari-red font-medium truncate max-w-50">{car.full_name}</span>
-                        </div>
-                    </div>
-                </div>
+        // Check if we have essential data
+        const hasEssentialData = car.manufacturer?.name || car.model?.name || car.year;
 
-                <div className="container-custom py-8 lg:py-12">
-                    {/* Hero Section */}
-                    <div className="mb-8">
-                        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                            <div>
-                                {/* Badges */}
-                                <div className="flex flex-wrap items-center gap-3 mb-3">
-                                    {car.isFeatured && (
-                                        <span className="bg-linear-to-r from-ferrari-red to-ferrari-dark text-white px-4 py-1.5 rounded-full text-xs font-semibold inline-flex items-center gap-1 shadow-md">
-                                            <Sparkles size={14} />
-                                            E zgjedhur
+        return (
+            <>
+                <RecentlyViewedTracker car={car} />
+                <main className="min-h-screen bg-primary">
+                    {/* Breadcrumb */}
+                    <div className="border-b border-light bg-surface/80 sticky top-18 z-sticky backdrop-blur-sm">
+                        <div className="container-swiss py-3">
+                            <nav className="flex items-center gap-2 text-sm flex-wrap" aria-label="Breadcrumb">
+                                <Link href="/" className="text-muted hover:text-orange-primary transition focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
+                                    Vetura Nga Korea
+                                </Link>
+                                <span className="text-muted" aria-hidden="true">/</span>
+                                <Link href="/cars" className="text-muted hover:text-orange-primary transition focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
+                                    Makina
+                                </Link>
+                                {car.manufacturer?.id && (
+                                    <>
+                                        <span className="text-muted" aria-hidden="true">/</span>
+                                        <Link
+                                            href={`/cars?manufacturer_id=${car.manufacturer.id}`}
+                                            className="text-muted hover:text-orange-primary transition focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded"
+                                        >
+                                            {car.manufacturer.name}
+                                        </Link>
+                                    </>
+                                )}
+                                {car.model?.name && (
+                                    <>
+                                        <span className="text-muted" aria-hidden="true">/</span>
+                                        <span className="text-orange-primary" aria-current="page">
+                                            {car.model.name}
                                         </span>
-                                    )}
-                                    {car.sold ? (
-                                        <span className="bg-error-bg text-error-text px-4 py-1.5 rounded-full text-xs font-semibold inline-flex items-center gap-1">
-                                            <AlertCircle size={14} />
-                                            E shitur
-                                        </span>
-                                    ) : (
-                                        <span className="bg-success-bg text-success-text px-4 py-1.5 rounded-full text-xs font-semibold inline-flex items-center gap-1">
-                                            <CheckCircle size={14} />
-                                            Në dispozicion
-                                        </span>
-                                    )}
-                                    <span className="text-muted text-xs px-4 py-1.5 bg-secondary rounded-full">
-                                        ID: {car.car_id || car.id}
-                                    </span>
-                                </div>
-
-                                {/* Title */}
-                                <h1 className="text-3xl lg:text-4xl font-bold text-primary mb-2">
-                                    {car.full_name}
-                                </h1>
-
-                                {/* Quick location */}
-                                <div className="flex items-center text-muted text-sm">
-                                    <MapPin size={16} className="mr-1" />
-                                    <span>Makina në Kore • Gati për import</span>
-                                </div>
-                            </div>
-
-                            {/* Action Buttons - FIXED: Save button now uses CarSaveButton component */}
-                            <div className="flex items-center gap-3">
-                                <CarSaveButton car={car} />
-                                <CompareButton car={{ id: car.id, make: car.make, model: car.model }} variant="icon" />
-                                <SocialShare
-                                    url={`/cars/${car.id}`}
-                                    title={`${car.make} ${car.model} ${car.year}`}
-                                    description={`${car.make} ${car.model} - Viti: ${car.year}, Km: ${car.mileage?.toLocaleString()}, Çmimi: €${car.price?.toLocaleString()}`}
-                                    image={car.images?.[0]}
-                                />
-                            </div>
+                                    </>
+                                )}
+                            </nav>
                         </div>
                     </div>
 
-                    {/* Main Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* Left Column - Images & Details */}
-                        <div className="lg:col-span-2 space-y-8">
-                            {/* Image Gallery */}
-                            <div className="bg-surface rounded-2xl shadow-sm overflow-hidden border border-medium">
-                                <ImageGallery images={car.images} carName={car.full_name} />
+                    <div className="container-swiss py-8 lg:py-12">
+                        {/* Title Section */}
+                        <div className="mb-8">
+                            <h1 className="text-3xl lg:text-4xl font-bold mb-2">{carTitle}</h1>
+                            <div className="flex items-center gap-4 text-sm text-muted flex-wrap">
+                                <span className="flex items-center gap-1">
+                                    <MapPin size={16} className="shrink-0" />
+                                    {location}
+                                </span>
+                                <span className="w-1 h-1 rounded-full bg-muted" aria-hidden="true" />
+                                <span className="badge badge-success">Në dispozicion</span>
+                                {lotNumber && (
+                                    <>
+                                        <span className="w-1 h-1 rounded-full bg-muted" aria-hidden="true" />
+                                        <span className="flex items-center gap-1">
+                                            <Hash size={14} className="shrink-0" />
+                                            Lot: {lotNumber}
+                                        </span>
+                                    </>
+                                )}
+                                {car.vin && (
+                                    <>
+                                        <span className="w-1 h-1 rounded-full bg-muted" aria-hidden="true" />
+                                        <span className="flex items-center gap-1 font-mono text-xs">
+                                            VIN: {car.vin}
+                                        </span>
+                                    </>
+                                )}
                             </div>
+                        </div>
 
-                            {/* Quick Stats */}
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                <div className="bg-surface rounded-xl p-4 text-center border border-medium shadow-sm hover:shadow-md transition">
-                                    <div className="text-2xl font-bold text-ferrari-red mb-1">
-                                        €{car.price?.toLocaleString()}
-                                    </div>
-                                    <div className="text-xs text-muted">Çmimi në Kore</div>
-                                </div>
-                                <div className="bg-surface rounded-xl p-4 text-center border border-medium shadow-sm hover:shadow-md transition">
-                                    <div className="text-2xl font-bold text-primary mb-1">{car.year}</div>
-                                    <div className="text-xs text-muted">Viti</div>
-                                </div>
-                                <div className="bg-surface rounded-xl p-4 text-center border border-medium shadow-sm hover:shadow-md transition">
-                                    <div className="text-2xl font-bold text-primary mb-1">{car.mileage?.toLocaleString()} km</div>
-                                    <div className="text-xs text-muted">Kilometrazha</div>
-                                </div>
-                                <div className="bg-surface rounded-xl p-4 text-center border border-medium shadow-sm hover:shadow-md transition">
-                                    <div className="text-2xl font-bold text-primary mb-1">
-                                        {car.fuelType === 'Diesel' ? 'Naftë' : car.fuelType}
-                                    </div>
-                                    <div className="text-xs text-muted">Karburanti</div>
-                                </div>
+                        {/* Warning for incomplete data */}
+                        {!hasEssentialData && (
+                            <div className="mb-8 p-4 bg-warning-bg border border-warning-border rounded-lg flex items-center gap-3">
+                                <AlertCircle size={20} className="text-warning-text shrink-0" />
+                                <p className="text-sm text-warning-text">
+                                    Disa të dhëna të makinës nuk janë të plota. Informacioni mund të jetë i paplotë.
+                                </p>
                             </div>
+                        )}
 
-                            {/* Warranty Showcase */}
-                            {car.warranty && <WarrantyShowcase warranty={car.warranty} />}
+                        {/* Main Grid */}
+                        <div className="grid lg:grid-cols-3 gap-8">
+                            {/* Left Column - Images & Details */}
+                            <div className="lg:col-span-2 space-y-8">
+                                {/* Gallery */}
+                                <div className="card overflow-hidden">
+                                    <ImageGallery images={images} carName={carTitle} />
+                                </div>
 
-                            {/* Popularity Meter */}
-                            {(car.viewCount && car.viewCount > 0) || (car.subscriberCount && car.subscriberCount > 0) ? (
-                                <PopularityMeter
-                                    views={car.viewCount ?? 0}
-                                    subscribers={car.subscriberCount ?? 0}
-                                />
-                            ) : null}
-
-                            {/* Key Features */}
-                            <div className="bg-surface rounded-2xl p-6 border border-medium shadow-sm">
-                                <h2 className="text-lg font-semibold mb-4 text-primary">Karakteristikat kryesore</h2>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                    <div className="flex items-center gap-3 p-3 bg-secondary rounded-xl">
-                                        <Calendar size={20} className="text-ferrari-red" />
-                                        <div>
-                                            <p className="text-xs text-muted">Viti</p>
-                                            <p className="font-medium text-primary">{car.year}</p>
+                                {/* Quick Stats */}
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                    <div className="card p-4 text-center">
+                                        <div className="text-2xl font-semibold text-orange-primary mb-1">
+                                            {formatPrice(price)}
                                         </div>
+                                        <div className="text-xs text-muted">Çmimi</div>
                                     </div>
-                                    <div className="flex items-center gap-3 p-3 bg-secondary rounded-xl">
-                                        <Gauge size={20} className="text-ferrari-red" />
-                                        <div>
-                                            <p className="text-xs text-muted">Kilometrazha</p>
-                                            <p className="font-medium text-primary">{car.mileage?.toLocaleString()} km</p>
+                                    <div className="card p-4 text-center">
+                                        <div className="text-2xl font-semibold text-primary mb-1">
+                                            {car.year || 'N/A'}
                                         </div>
+                                        <div className="text-xs text-muted">Viti</div>
                                     </div>
-                                    <div className="flex items-center gap-3 p-3 bg-secondary rounded-xl">
-                                        <Fuel size={20} className="text-ferrari-red" />
-                                        <div>
-                                            <p className="text-xs text-muted">Karburanti</p>
-                                            <p className="font-medium text-primary">{car.fuelType === 'Diesel' ? 'Naftë' : car.fuelType}</p>
+                                    <div className="card p-4 text-center">
+                                        <div className="text-2xl font-semibold text-primary mb-1">
+                                            {formatMileage(mileage)}
                                         </div>
+                                        <div className="text-xs text-muted">Kilometrazha</div>
                                     </div>
-                                    <div className="flex items-center gap-3 p-3 bg-secondary rounded-xl">
-                                        <Settings size={20} className="text-ferrari-red" />
-                                        <div>
-                                            <p className="text-xs text-muted">Transmisioni</p>
-                                            <p className="font-medium text-primary">{car.transmission === 'Automatic' ? 'Automatik' : 'Manuel'}</p>
+                                    <div className="card p-4 text-center">
+                                        <div className="text-2xl font-semibold text-primary mb-1">
+                                            {car.fuel?.name ? translateFuel(car.fuel.name) : 'N/A'}
                                         </div>
-                                    </div>
-                                    <div className="flex items-center gap-3 p-3 bg-secondary rounded-xl">
-                                        <MapPin size={20} className="text-ferrari-red" />
-                                        <div>
-                                            <p className="text-xs text-muted">Ngjyra</p>
-                                            <p className="font-medium text-primary">{car.exteriorColor || 'N/A'}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3 p-3 bg-secondary rounded-xl">
-                                        <Shield size={20} className="text-ferrari-red" />
-                                        <div>
-                                            <p className="text-xs text-muted">Garancia</p>
-                                            <p className="font-medium text-primary">{car.warranty?.bodyMonth ? `${car.warranty.bodyMonth} muaj` : 'N/A'}</p>
-                                        </div>
+                                        <div className="text-xs text-muted">Karburanti</div>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Full Specifications */}
-                            <CarSpecs car={car} />
-
-                            {/* Description */}
-                            {car.description && (
-                                <div className="bg-surface rounded-2xl p-6 border border-medium shadow-sm">
-                                    <h2 className="text-lg font-semibold mb-4 text-primary">Përshkrimi i plotë</h2>
-                                    <div className="prose max-w-none text-secondary whitespace-pre-line leading-relaxed">
-                                        {car.description}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Features Grid */}
-                            {car.features && car.features.length > 0 && (
-                                <div className="bg-surface rounded-2xl p-6 border border-medium shadow-sm">
-                                    <h2 className="text-lg font-semibold mb-4 text-primary">Pajisjet dhe opsionet</h2>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                        {car.features.map((feature: string, index: number) => (
-                                            <div key={index} className="flex items-center gap-2 p-2">
-                                                <CheckCircle size={18} className="text-ferrari-red shrink-0" />
-                                                <span className="text-sm text-secondary">{feature}</span>
+                                {/* Key Features */}
+                                <div className="card p-6">
+                                    <h2 className="text-lg font-semibold mb-4">Karakteristikat kryesore</h2>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                        {car.year && (
+                                            <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
+                                                <Calendar size={20} className="text-orange-primary shrink-0" />
+                                                <div className="min-w-0">
+                                                    <p className="text-xs text-muted">Viti</p>
+                                                    <p className="font-medium text-primary truncate">{car.year}</p>
+                                                </div>
                                             </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Vehicle History */}
-                            {car.vin && (
-                                <div className="bg-surface rounded-2xl p-6 border border-medium shadow-sm">
-                                    <h2 className="text-lg font-semibold mb-4 text-primary">Historiku i makinës</h2>
-                                    <div className="space-y-3">
-                                        <div className="flex items-center justify-between p-3 bg-secondary rounded-xl">
-                                            <span className="text-muted">VIN:</span>
-                                            <span className="font-mono font-medium text-primary">{car.vin}</span>
+                                        )}
+                                        <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
+                                            <Gauge size={20} className="text-orange-primary shrink-0" />
+                                            <div className="min-w-0">
+                                                <p className="text-xs text-muted">Kilometrazha</p>
+                                                <p className="font-medium text-primary truncate">{formatMileage(mileage)}</p>
+                                            </div>
                                         </div>
-                                        {car.inspection && (
-                                            <div className="flex items-center justify-between p-3 bg-secondary rounded-xl">
-                                                <span className="text-muted">Inspektimi:</span>
-                                                <span className="text-success-text font-medium flex items-center gap-1">
-                                                    <CheckCircle size={16} />
-                                                    I kryer
-                                                </span>
+                                        {car.fuel?.name && (
+                                            <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
+                                                <Fuel size={20} className="text-orange-primary shrink-0" />
+                                                <div className="min-w-0">
+                                                    <p className="text-xs text-muted">Karburanti</p>
+                                                    <p className="font-medium text-primary truncate">{translateFuel(car.fuel.name)}</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                        {car.transmission?.name && (
+                                            <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
+                                                <Settings size={20} className="text-orange-primary shrink-0" />
+                                                <div className="min-w-0">
+                                                    <p className="text-xs text-muted">Transmisioni</p>
+                                                    <p className="font-medium text-primary truncate">{translateTransmission(car.transmission.name)}</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                        {car.engine?.name && (
+                                            <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
+                                                <Database size={20} className="text-orange-primary shrink-0" />
+                                                <div className="min-w-0">
+                                                    <p className="text-xs text-muted">Motori</p>
+                                                    <p className="font-medium text-primary truncate">{car.engine.name}</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                        {car.color?.name && (
+                                            <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
+                                                <Tag size={20} className="text-orange-primary shrink-0" />
+                                                <div className="min-w-0">
+                                                    <p className="text-xs text-muted">Ngjyra</p>
+                                                    <p className="font-medium text-primary truncate">{translateColor(car.color.name)}</p>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
                                 </div>
-                            )}
-                        </div>
 
-                        {/* Right Column - Price & Contact */}
-                        <div className="lg:col-span-1">
-                            <div className="sticky top-40 space-y-6">
-                                {/* Price Card */}
-                                <div className="bg-linear-to-br from-surface to-secondary rounded-2xl p-6 border border-medium shadow-lg">
-                                    <div className="text-4xl font-bold text-ferrari-red mb-2">
-                                        €{car.price?.toLocaleString()}
-                                    </div>
-                                    <div className="text-sm text-muted mb-6 flex items-center gap-1">
-                                        <MapPin size={14} />
-                                        Çmimi në Kore (pa shpenzime importi)
-                                    </div>
+                                {/* Full Specifications */}
+                                <CarSpecs car={car} />
+                            </div>
 
-                                    {/* Quick Actions */}
-                                    <QuickActions car={car} />
+                            {/* Right Column - Contact */}
+                            <div className="lg:col-span-1">
+                                <div className="sticky top-24 space-y-4">
+                                    {/* Price Card */}
+                                    <div className="card p-6">
+                                        <div className="text-3xl font-bold text-orange-primary mb-2">
+                                            {formatPrice(price)}
+                                        </div>
+                                        <p className="text-sm text-muted mb-4 flex items-center gap-1">
+                                            <MapPin size={14} className="shrink-0" />
+                                            Çmimi në {location}
+                                        </p>
 
-                                    {/* Trust Badges */}
-                                    <div className="mt-6 pt-6 border-t border-medium">
-                                        <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                                            <div className="flex flex-col items-center gap-1">
-                                                <div className="w-8 h-8 bg-info-bg rounded-full flex items-center justify-center">
-                                                    <Truck size={16} className="text-info-text" />
+                                        <div className="space-y-3">
+                                            <div className="p-4 bg-surface-2 rounded-lg">
+                                                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                                                    <Building2 size={18} className="text-orange-primary shrink-0" />
+                                                    Shitësi
+                                                </h3>
+                                                <div className="space-y-2 text-sm">
+                                                    <p className="text-secondary">
+                                                        Auto Korea Kosova Import
+                                                    </p>
+                                                    <p className="flex items-center gap-2 text-secondary hover:text-orange-primary transition-colors">
+                                                        <Phone size={14} className="text-orange-primary shrink-0" />
+                                                        <a href="tel:+38344123456" className="hover:underline focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
+                                                            +383 44 123 456
+                                                        </a>
+                                                    </p>
+                                                    <p className="flex items-center gap-2 text-secondary hover:text-orange-primary transition-colors">
+                                                        <Mail size={14} className="text-orange-primary shrink-0" />
+                                                        <a href="mailto:info@vetura-nga-korea.com" className="hover:underline focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
+                                                            info@vetura-nga-korea.com
+                                                        </a>
+                                                    </p>
                                                 </div>
-                                                <span className="text-muted">Import direkt</span>
                                             </div>
-                                            <div className="flex flex-col items-center gap-1">
-                                                <div className="w-8 h-8 bg-success-bg rounded-full flex items-center justify-center">
-                                                    <Shield size={16} className="text-success-text" />
-                                                </div>
-                                                <span className="text-muted">Inspektuar</span>
+
+                                            <a
+                                                href={`mailto:info@vetura-nga-korea.com?subject=Interest in ${car.vin} - ${carTitle}`}
+                                                className="btn-primary w-full"
+                                            >
+                                                Kontakto shitësin
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    {/* Cost Estimate */}
+                                    <div className="card p-6">
+                                        <h3 className="font-semibold mb-3">Shpenzime të përafërta</h3>
+                                        <div className="space-y-2 text-sm">
+                                            <div className="flex justify-between">
+                                                <span className="text-muted">Makina:</span>
+                                                <span className="font-medium text-primary">{formatPrice(price)}</span>
                                             </div>
-                                            <div className="flex flex-col items-center gap-1">
-                                                <div className="w-8 h-8 bg-warning-bg rounded-full flex items-center justify-center">
-                                                    <CheckCircle size={16} className="text-warning-text" />
+                                            <div className="flex justify-between">
+                                                <span className="text-muted">Transporti & taksa:</span>
+                                                <span className="font-medium text-primary">~€3,500</span>
+                                            </div>
+                                            <div className="border-t border-light my-2 pt-2">
+                                                <div className="flex justify-between font-semibold">
+                                                    <span>Totali:</span>
+                                                    <span className="text-orange-primary">
+                                                        {formatPrice(price + 3500)}
+                                                    </span>
                                                 </div>
-                                                <span className="text-muted">Garanci</span>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* Cost Calculator */}
-                                <CostCalculator carPrice={car.price} />
-
-                                {/* Dealer Badge */}
-                                {car.dealer && <DealerBadge dealer={car.dealer} />}
-
-                                {/* Seller Info */}
-                                <div className="bg-surface rounded-2xl p-6 border border-medium shadow-sm">
-                                    <h3 className="font-semibold mb-4 flex items-center gap-2 text-primary">
-                                        <Building2 size={18} className="text-ferrari-red" />
-                                        Shitësi
-                                    </h3>
-                                    <SellerInfo
-                                        dealer={car.dealer}
-                                        sellerName={car.sellerName}
-                                        sellerPhone={car.sellerPhone}
-                                        sellerEmail={car.sellerEmail}
-                                        sellerLocation={car.sellerLocation}
-                                    />
-                                </div>
-
-                                {/* Warranty */}
-                                {car.warranty && (
-                                    <WarrantyInfo warranty={car.warranty} />
-                                )}
-
-                                {/* Contact Form */}
-                                <div className="bg-surface rounded-2xl p-6 border border-medium shadow-sm">
-                                    <h3 className="font-semibold mb-4 flex items-center gap-2 text-primary">
-                                        <Mail size={18} className="text-ferrari-red" />
-                                        Pyet për këtë makinë
-                                    </h3>
-                                    <ContactForm
-                                        carId={car.id}
-                                        carName={car.full_name}
-                                    />
-                                </div>
-
-                                {/* Report */}
-                                <div className="text-center">
-                                    <button className="text-xs text-muted hover:text-ferrari-red transition">
-                                        📢 Raporto këtë makinë
-                                    </button>
+                                    {/* VIN Quick Reference */}
+                                    <div className="card p-4 bg-surface-2/50">
+                                        <div className="flex items-center gap-2 text-xs text-muted">
+                                            <Car size={14} className="shrink-0" />
+                                            <span className="truncate">VIN: {car.vin}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Similar Cars */}
-                    <div className="mt-16">
-                        <SimilarCars
-                            currentCarId={car.id}
-                            make={car.make}
-                            model={car.model}
-                            price={car.price}
-                        />
+                        {/* Back Link */}
+                        <div className="mt-12 text-center">
+                            <Link
+                                href="/cars"
+                                className="inline-flex items-center gap-2 text-muted hover:text-orange-primary transition-colors focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded-lg px-4 py-2"
+                            >
+                                <ArrowLeft size={16} />
+                                Kthehu te të gjitha makinat
+                            </Link>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </>
-    );
+                </main>
+            </>
+        );
+    } catch (error) {
+        console.error('Error in CarDetailPage:', error);
+        notFound();
+    }
 }

@@ -1,53 +1,41 @@
 // app/page.tsx
 import { Suspense } from 'react';
-import { Metadata } from 'next';
 import Hero from '@/components/home/Hero';
 import FeaturedCars from '@/components/home/FeaturedCars';
-import MatchmakerWidget from '@/components/matchmaker/MatchmakerWidget';
-import HowItWorks from '@/components/home/HowItWorks';
-import { fetchCars } from '@/lib/api';
 import RecentlyViewed from '@/components/cars/RecentlyViewed';
-import { GridSkeleton } from '@/components/ui/LoadingSkeleton';
 
-export const metadata: Metadata = {
-  title: 'Import Makina nga Korea | Formula Export',
-  description: 'Platforma më e madhe për import të makinave nga Korea në Kosovë. BMW, Audi, Mercedes-Benz dhe makina të tjera me çmime konkurruese.',
-  keywords: ['import makina', 'makina nga korea', 'BMW', 'Audi', 'Mercedes', 'makina ne kosove', 'cmime makina'],
-  openGraph: {
-    title: 'Formula Export - Import Makina nga Korea',
-    description: 'Makina cilësore nga Korea me çmime konkurruese',
-    images: ['/og-home.jpg'],
-  },
-};
-
-// Force dynamic rendering - homepage has dynamic content
-export const dynamic = 'force-dynamic';
-
-export default async function Home() {
-  const data = await fetchCars({ limit: 100, sort: 'price_desc' });
-  const allCars = data?.cars || [];
-
+export default function HomePage() {
   return (
-    <main>
+    <div className="min-h-screen">
       <Hero />
-      <section className="container-custom py-16">
-        <FeaturedCars />
-      </section>
-      <section className="container-custom py-8">
-        <RecentlyViewed />
-      </section>
-      {allCars.length > 0 && (
-        <section className="bg-secondary py-16">
-          <div className="container-custom">
-            <Suspense fallback={<GridSkeleton />}>
-              <MatchmakerWidget cars={allCars} />
-            </Suspense>
+
+      {/* Featured Cars Section - Wrap in Suspense if it uses search params */}
+      <Suspense fallback={
+        <div className="container-swiss py-20">
+          <div className="h-8 bg-surface-2 rounded w-48 mb-12 animate-pulse" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="card p-0">
+                <div className="aspect-[4/3] bg-surface-2 skeleton" />
+                <div className="p-5 space-y-4">
+                  <div className="h-5 bg-surface-2 skeleton rounded w-3/4" />
+                  <div className="space-y-2">
+                    <div className="h-4 bg-surface-2 skeleton rounded w-full" />
+                    <div className="h-4 bg-surface-2 skeleton rounded w-2/3" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        </section>
-      )}
-      <section className="container-custom py-16">
-        <HowItWorks />
-      </section>
-    </main>
+        </div>
+      }>
+        <FeaturedCars />
+      </Suspense>
+
+      {/* Recently Viewed Section */}
+      <Suspense fallback={null}>
+        <RecentlyViewed />
+      </Suspense>
+    </div>
   );
 }

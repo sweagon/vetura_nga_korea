@@ -1,9 +1,9 @@
 // components/cars/ImageGallery.tsx
 'use client';
 
-import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Maximize2, X } from 'lucide-react';
-import Image from 'next/image';
+import { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ImageGalleryProps {
     images: string[];
@@ -13,117 +13,156 @@ interface ImageGalleryProps {
 export default function ImageGallery({ images, carName }: ImageGalleryProps) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [showLightbox, setShowLightbox] = useState(false);
-    const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+    const [touchStart, setTouchStart] = useState(0);
+    const [touchEnd, setTouchEnd] = useState(0);
 
-    if (!images || images.length === 0) {
-        return (
-            <div className="aspect-video bg-surface-2 rounded-lg flex items-center justify-center">
-                <span className="text-muted">No images available</span>
-            </div>
-        );
-    }
+    const displayImages = images.length > 0 ? images : ['/placeholder-car.jpg'];
 
-    const handlePrevious = () => {
-        setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    // Handle keyboard navigation
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!showLightbox) return;
+
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevImage();
+            }
+            if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                nextImage();
+            }
+            if (e.key === 'Escape') {
+                setShowLightbox(false);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [showLightbox, currentIndex]);
+
+    // Prevent body scroll when lightbox is open
+    useEffect(() => {
+        if (showLightbox) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [showLightbox]);
+
+    const nextImage = (e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        setCurrentIndex((prev) => (prev + 1) % displayImages.length);
     };
 
-    const handleNext = () => {
-        setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    const prevImage = (e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        setCurrentIndex((prev) => (prev - 1 + displayImages.length) % displayImages.length);
     };
 
-    const handleImageError = (index: number) => {
-        setImageErrors(prev => new Set(prev).add(index));
+    const handleTouchStart = (e: React.TouchEvent) => {
+        setTouchStart(e.targetTouches[0].clientX);
     };
 
-    const validImages = images.filter((_, index) => !imageErrors.has(index));
+    const handleTouchMove = (e: React.TouchEvent) => {
+        setTouchEnd(e.targetTouches[0].clientX);
+    };
 
-    if (validImages.length === 0) {
-        return (
-            <div className="aspect-video bg-surface-2 rounded-lg flex items-center justify-center">
-                <span className="text-muted">No valid images</span>
-            </div>
-        );
-    }
+    const handleTouchEnd = () => {
+        if (!touchStart || !touchEnd) return;
+
+        const distance = touchStart - touchEnd;
+        const isLeftSwipe = distance > 50;
+        const isRightSwipe = distance < -50;
+
+        if (isLeftSwipe) {
+            nextImage();
+        }
+        if (isRightSwipe) {
+            prevImage();
+        }
+
+        setTouchStart(0);
+        setTouchEnd(0);
+    };
 
     return (
         <>
             {/* Main Gallery */}
-            <div className="relative bg-surface rounded-lg overflow-hidden">
+            <div className="relative group">
                 {/* Main Image */}
-                <div className="relative aspect-video bg-surface-2">
-                    {!imageErrors.has(currentIndex) ? (
-                        <img
-                            src={images[currentIndex]}
-                            alt={`${carName} - Image ${currentIndex + 1}`}
-                            className="w-full h-full object-cover cursor-pointer"
-                            onClick={() => setShowLightbox(true)}
-                            onError={() => handleImageError(currentIndex)}
-                        />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-surface-2">
-                            <span className="text-muted">Image failed to load</span>
+                <div
+                    onClick={() => setShowLightbox(true)}
+                    className="relative aspect-[16/9] bg-surface-2 cursor-pointer overflow-hidden rounded-t-xl"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            setShowLightbox(true);
+                        }
+                    }}
+                    aria-label={`Shiko imazhin kryesor të ${carName}`}
+                >
+                    <img
+                        src={displayImages[currentIndex]}
+                        alt={`${carName} - Image ${currentIndex + 1}`}
+                        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+                        loading="eager"
+                    />
+
+                    {/* Image counter */}
+                    {displayImages.length > 1 && (
+                        <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/50 text-white text-xs rounded backdrop-blur-sm">
+                            {currentIndex + 1} / {displayImages.length}
                         </div>
                     )}
-
-                    {/* Navigation Buttons */}
-                    {images.length > 1 && (
-                        <>
-                            <button
-                                onClick={handlePrevious}
-                                className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-surface/80 hover:bg-surface rounded-full shadow-lg backdrop-blur-sm transition-all group"
-                                aria-label="Previous image"
-                            >
-                                <ChevronLeft size={20} className="text-primary group-hover:text-ferrari-red transition-colors" />
-                            </button>
-                            <button
-                                onClick={handleNext}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-surface/80 hover:bg-surface rounded-full shadow-lg backdrop-blur-sm transition-all group"
-                                aria-label="Next image"
-                            >
-                                <ChevronRight size={20} className="text-primary group-hover:text-ferrari-red transition-colors" />
-                            </button>
-                        </>
-                    )}
-
-                    {/* Image Counter */}
-                    <div className="absolute bottom-4 right-4 px-3 py-1.5 bg-surface/90 backdrop-blur-sm rounded-full text-sm text-primary border border-medium">
-                        {currentIndex + 1} / {images.length}
-                    </div>
-
-                    {/* Fullscreen Button */}
-                    <button
-                        onClick={() => setShowLightbox(true)}
-                        className="absolute bottom-4 left-4 p-2 bg-surface/90 hover:bg-surface backdrop-blur-sm rounded-full shadow-md transition-colors group border border-medium"
-                        aria-label="View fullscreen"
-                    >
-                        <Maximize2 size={18} className="text-primary group-hover:text-ferrari-red transition-colors" />
-                    </button>
                 </div>
 
-                {/* Thumbnail Strip */}
-                {images.length > 1 && (
-                    <div className="flex gap-2 p-4 bg-surface border-t border-medium overflow-x-auto scrollbar-thin">
-                        {images.map((image, index) => (
+                {/* Navigation Arrows */}
+                {displayImages.length > 1 && (
+                    <>
+                        <button
+                            onClick={prevImage}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/30 hover:bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/50"
+                            aria-label="Previous image"
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                        <button
+                            onClick={nextImage}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black/30 hover:bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/50"
+                            aria-label="Next image"
+                        >
+                            <ChevronRight size={20} />
+                        </button>
+                    </>
+                )}
+
+                {/* Thumbnails */}
+                {displayImages.length > 1 && (
+                    <div className="flex gap-2 mt-3 overflow-x-auto pb-1 scrollbar-hide">
+                        {displayImages.map((image, index) => (
                             <button
                                 key={index}
                                 onClick={() => setCurrentIndex(index)}
-                                className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden transition-all ${currentIndex === index
-                                    ? 'ring-2 ring-ferrari-red ring-offset-2 ring-offset-surface'
-                                    : 'opacity-70 hover:opacity-100'
-                                    }`}
+                                className={`
+                                    flex-shrink-0 w-16 h-16 rounded overflow-hidden border-2 transition-all
+                                    ${index === currentIndex
+                                        ? 'border-orange-primary opacity-100'
+                                        : 'border-transparent opacity-60 hover:opacity-100'
+                                    }
+                                    focus:outline-none focus:ring-2 focus:ring-orange-primary/50
+                                `}
+                                aria-label={`Shiko imazhin ${index + 1}`}
+                                aria-current={index === currentIndex ? 'true' : undefined}
                             >
-                                {!imageErrors.has(index) ? (
-                                    <img
-                                        src={image}
-                                        alt={`${carName} - Thumbnail ${index + 1}`}
-                                        className="w-full h-full object-cover"
-                                        onError={() => handleImageError(index)}
-                                    />
-                                ) : (
-                                    <div className="w-full h-full bg-surface-2 flex items-center justify-center">
-                                        <span className="text-xs text-muted">Error</span>
-                                    </div>
-                                )}
+                                <img
+                                    src={image}
+                                    alt={`${carName} - Thumbnail ${index + 1}`}
+                                    className="w-full h-full object-cover"
+                                />
                             </button>
                         ))}
                     </div>
@@ -131,59 +170,104 @@ export default function ImageGallery({ images, carName }: ImageGalleryProps) {
             </div>
 
             {/* Lightbox */}
-            {showLightbox && (
-                <div className="fixed inset-0 z-50 bg-primary/95 backdrop-blur-xl flex items-center justify-center">
-                    <button
+            <AnimatePresence>
+                {showLightbox && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="fixed inset-0 z-modal bg-black/95 flex items-center justify-center"
                         onClick={() => setShowLightbox(false)}
-                        className="absolute top-6 right-6 p-3 bg-surface hover:bg-surface-2 rounded-full shadow-lg transition-colors group border border-medium"
-                        aria-label="Close fullscreen"
+                        role="dialog"
+                        aria-label="Image lightbox"
+                        aria-modal="true"
                     >
-                        <X size={24} className="text-primary group-hover:text-ferrari-red transition-colors" />
-                    </button>
+                        {/* Close button */}
+                        <button
+                            onClick={() => setShowLightbox(false)}
+                            className="absolute top-4 right-4 p-2 text-white/70 hover:text-white transition-colors z-10 focus:outline-none focus:ring-2 focus:ring-white/50 rounded-lg"
+                            aria-label="Mbyll"
+                        >
+                            <X size={24} />
+                        </button>
 
-                    <div className="relative w-full max-w-6xl mx-4">
-                        {/* Lightbox Image */}
-                        <div className="relative aspect-video bg-surface-2 rounded-lg overflow-hidden">
-                            {!imageErrors.has(currentIndex) ? (
-                                <img
-                                    src={images[currentIndex]}
-                                    alt={`${carName} - Fullscreen ${currentIndex + 1}`}
-                                    className="w-full h-full object-contain"
-                                />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                    <span className="text-muted">Image failed to load</span>
+                        {/* Image container */}
+                        <div
+                            className="relative w-full h-full flex items-center justify-center"
+                            onClick={(e) => e.stopPropagation()}
+                            onTouchStart={handleTouchStart}
+                            onTouchMove={handleTouchMove}
+                            onTouchEnd={handleTouchEnd}
+                        >
+                            <motion.img
+                                key={currentIndex}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                transition={{ duration: 0.2 }}
+                                src={displayImages[currentIndex]}
+                                alt={`${carName} - Lightbox ${currentIndex + 1}`}
+                                className="max-w-[90vw] max-h-[90vh] object-contain"
+                            />
+
+                            {/* Lightbox counter */}
+                            {displayImages.length > 1 && (
+                                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-black/50 text-white text-sm rounded-full backdrop-blur-sm">
+                                    {currentIndex + 1} / {displayImages.length}
                                 </div>
                             )}
 
-                            {/* Lightbox Navigation */}
-                            {images.length > 1 && (
+                            {/* Lightbox navigation */}
+                            {displayImages.length > 1 && (
                                 <>
                                     <button
-                                        onClick={handlePrevious}
-                                        className="absolute left-4 top-1/2 -translate-y-1/2 p-4 bg-surface/80 hover:bg-surface rounded-full shadow-lg backdrop-blur-sm transition-all group"
+                                        onClick={prevImage}
+                                        className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/50"
                                         aria-label="Previous image"
                                     >
-                                        <ChevronLeft size={24} className="text-primary group-hover:text-ferrari-red" />
+                                        <ChevronLeft size={24} />
                                     </button>
                                     <button
-                                        onClick={handleNext}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 p-4 bg-surface/80 hover:bg-surface rounded-full shadow-lg backdrop-blur-sm transition-all group"
+                                        onClick={nextImage}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/50"
                                         aria-label="Next image"
                                     >
-                                        <ChevronRight size={24} className="text-primary group-hover:text-ferrari-red" />
+                                        <ChevronRight size={24} />
                                     </button>
                                 </>
                             )}
-
-                            {/* Lightbox Counter */}
-                            <div className="absolute bottom-4 right-4 px-4 py-2 bg-surface/90 backdrop-blur-sm rounded-full text-primary border border-medium">
-                                {currentIndex + 1} / {images.length}
-                            </div>
                         </div>
-                    </div>
-                </div>
-            )}
+
+                        {/* Lightbox thumbnails */}
+                        {displayImages.length > 1 && (
+                            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex gap-2 px-4 py-3 bg-black/50 rounded-full backdrop-blur-sm">
+                                {displayImages.map((image, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => setCurrentIndex(index)}
+                                        className={`
+                                            w-12 h-12 rounded overflow-hidden border-2 transition-all
+                                            ${index === currentIndex
+                                                ? 'border-orange-primary opacity-100'
+                                                : 'border-transparent opacity-50 hover:opacity-100'
+                                            }
+                                            focus:outline-none focus:ring-2 focus:ring-white/50
+                                        `}
+                                        aria-label={`Shiko imazhin ${index + 1}`}
+                                    >
+                                        <img
+                                            src={image}
+                                            alt={`Thumbnail ${index + 1}`}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </>
     );
 }

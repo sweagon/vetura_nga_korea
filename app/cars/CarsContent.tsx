@@ -1,42 +1,104 @@
 // app/cars/CarsContent.tsx
 'use client';
 
-import { useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import FilterSidebar from '@/components/cars/FilterSidebar';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation'; // Removed useSearchParams
 import CarGrid from './CarGrid';
-import { SlidersHorizontal, Search, XCircle, ChevronDown } from 'lucide-react';
+import { Search, ChevronDown, Check, X, Filter, ArrowUpDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { type Car } from '@/lib/api';
+import MobileFilters from '@/components/ui/MobileFilters';
+import FilterSidebar from '@/components/filters/FilterSidebar';
 
-export default function CarsContent() {
+interface CarsContentProps {
+    searchParams: URLSearchParams;
+}
+
+interface SortOption {
+    value: string;
+    label: string;
+    sortFn: (a: Car, b: Car) => number;
+}
+
+export default function CarsContent({ searchParams }: CarsContentProps) {
     const router = useRouter();
-    const searchParams = useSearchParams();
     const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+    const [isSortOpen, setIsSortOpen] = useState(false);
+    const [currentSort, setCurrentSort] = useState('recommended');
+    const sortRef = useRef<HTMLDivElement>(null);
 
     const searchQuery = searchParams.get('search') || '';
-    const getActiveFilterCount = () => {
-        const params = new URLSearchParams(searchParams);
-        let count = 0;
 
-        if (params.get('make')) count += params.get('make')?.split(',').length || 0;
-        if (params.get('model')) count++;
-        if (params.get('fuelType')) count += params.get('fuelType')?.split(',').length || 0;
-        if (params.get('transmission')) count += params.get('transmission')?.split(',').length || 0;
-        if (params.get('minPrice') || params.get('maxPrice')) count++;
-        if (params.get('minYear') || params.get('maxYear')) count++;
-        if (params.get('minMileage') || params.get('maxMileage')) count++;
+    // Sort options with client-side sorting functions
+    const sortOptions: SortOption[] = [
+        {
+            value: 'recommended',
+            label: 'Më të përshtatshmet',
+            sortFn: (a, b) => 0
+        },
+        {
+            value: 'price_asc',
+            label: 'Çmimi: Nga më i ulëti',
+            sortFn: (a, b) => {
+                const priceA = a.lots?.[0]?.buy_now || 0;
+                const priceB = b.lots?.[0]?.buy_now || 0;
+                return priceA - priceB;
+            }
+        },
+        {
+            value: 'price_desc',
+            label: 'Çmimi: Nga më i larti',
+            sortFn: (a, b) => {
+                const priceA = a.lots?.[0]?.buy_now || 0;
+                const priceB = b.lots?.[0]?.buy_now || 0;
+                return priceB - priceA;
+            }
+        },
+        {
+            value: 'year_desc',
+            label: 'Viti: Më të rijtë',
+            sortFn: (a, b) => b.year - a.year
+        },
+        {
+            value: 'year_asc',
+            label: 'Viti: Më të vjetrit',
+            sortFn: (a, b) => a.year - b.year
+        },
+        {
+            value: 'mileage_asc',
+            label: 'Kilometrazha: Më e ulët',
+            sortFn: (a, b) => {
+                const kmA = a.lots?.[0]?.odometer?.km || 0;
+                const kmB = b.lots?.[0]?.odometer?.km || 0;
+                return kmA - kmB;
+            }
+        },
+        {
+            value: 'mileage_desc',
+            label: 'Kilometrazha: Më e lartë',
+            sortFn: (a, b) => {
+                const kmA = a.lots?.[0]?.odometer?.km || 0;
+                const kmB = b.lots?.[0]?.odometer?.km || 0;
+                return kmB - kmA;
+            }
+        },
+    ];
 
-        return count;
-    };
+    // Close sort dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
+                setIsSortOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const handleSortChange = (sort: string) => {
-        const params = new URLSearchParams(searchParams.toString());
-        params.set('sort', sort);
-        params.set('page', '1');
-        router.push(`/cars?${params.toString()}`);
-    };
-
-    const handleClearFilters = () => {
-        router.push('/cars');
+        setCurrentSort(sort);
+        setIsSortOpen(false);
+        sessionStorage.setItem('carSortPreference', sort);
     };
 
     const handleClearSearch = () => {
@@ -46,118 +108,209 @@ export default function CarsContent() {
         router.push(`/cars?${params.toString()}`);
     };
 
+    const handleClearAllFilters = () => {
+        router.push('/cars');
+        setMobileFilterOpen(false);
+        sessionStorage.removeItem('carSortPreference');
+        setCurrentSort('recommended');
+    };
+
+    const handleRemoveFilter = (key: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete(key);
+        params.set('page', '1');
+        router.push(`/cars?${params.toString()}`);
+    };
+
+    // Get current sort label
+    const currentSortLabel = sortOptions.find(opt => opt.value === currentSort)?.label || 'Më të përshtatshmet';
+
+    // Get active filters
+    const filterKeys = ['manufacturer_id', 'model_id', 'from_year', 'to_year', 'buy_now_price_to'];
+    const activeFilters = Array.from(searchParams.entries()).filter(([key]) => filterKeys.includes(key));
+    const activeFilterCount = activeFilters.length;
+
+    const filterLabels: Record<string, string> = {
+        'manufacturer_id': 'Prodhuesi',
+        'model_id': 'Modeli',
+        'from_year': 'Viti nga',
+        'to_year': 'Viti deri',
+        'buy_now_price_to': 'Çmimi max',
+    };
+
     return (
-        <div className="container-custom py-8">
+        <div className="container-swiss py-6 md:py-8">
             {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-primary mb-2">Të gjitha makinat</h1>
-                <p className="text-secondary">
-                    Makina të gatshme për import nga Korea
-                    {searchQuery && ` për "${searchQuery}"`}
+            <div className="mb-6 md:mb-8">
+                <h1 className="text-2xl md:text-3xl font-bold text-primary mb-2">
+                    Të gjitha makinat
+                </h1>
+                <p className="text-sm md:text-base text-secondary">
+                    {searchQuery
+                        ? `Rezultatet për "${searchQuery}"`
+                        : 'Makina të gatshme për import nga Korea'
+                    }
                 </p>
             </div>
 
             {/* Search Query Display */}
             {searchQuery && (
-                <div className="bg-ferrari-red/10 p-4 rounded-lg mb-6 flex items-center justify-between">
-                    <div className="flex items-center">
-                        <Search size={20} className="text-ferrari-red mr-2" />
-                        <span className="text-secondary">
-                            Duke kërkuar: <strong>"{searchQuery}"</strong>
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="bg-surface-2 border border-light/20 rounded-xl p-4 mb-6 flex items-center justify-between"
+                >
+                    <div className="flex items-center gap-2 min-w-0">
+                        <Search size={18} className="text-orange-primary shrink-0" />
+                        <span className="text-sm text-secondary truncate">
+                            Duke kërkuar: <span className="font-medium text-primary">"{searchQuery}"</span>
                         </span>
                     </div>
                     <button
                         onClick={handleClearSearch}
-                        className="text-sm text-ferrari-red hover:underline"
+                        className="text-sm text-orange-primary hover:text-orange-dark transition-colors flex items-center gap-1 shrink-0 ml-2"
+                        aria-label="Pastro kërkimin"
                     >
-                        Pastro kërkimin
+                        <X size={14} />
+                        <span className="hidden sm:inline">Pastro</span>
                     </button>
-                </div>
+                </motion.div>
             )}
 
             {/* Mobile Filter Button */}
-            <button
-                onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
-                className="lg:hidden w-full mb-4 btn-secondary flex items-center justify-center"
-            >
-                <SlidersHorizontal size={18} className="mr-2" />
-                Filtro makina
-            </button>
+            <div className="lg:hidden mb-4">
+                <button
+                    onClick={() => setMobileFilterOpen(true)}
+                    className="w-full bg-surface-2 border border-light/20 rounded-xl py-3 px-4 flex items-center justify-center gap-2 text-sm transition-colors hover:bg-surface-3 hover:text-primary focus:outline-none focus:ring-2 focus:ring-orange-primary/20"
+                    aria-label="Filtro makina"
+                    aria-expanded={mobileFilterOpen}
+                >
+                    <Filter size={18} />
+                    <span>Filtro makina</span>
+                    {activeFilterCount > 0 && (
+                        <span className="ml-1 px-2 py-0.5 bg-orange-primary text-white text-xs rounded-full">
+                            {activeFilterCount}
+                        </span>
+                    )}
+                </button>
+            </div>
 
-            <div className="flex flex-col lg:flex-row gap-8">
-                {/* Sidebar - WON'T re-render when URL changes */}
-                <div className={`lg:w-1/5 ${mobileFilterOpen ? 'block' : 'hidden lg:block'}`}>
-                    <FilterSidebar />
-                </div>
+            {/* Mobile Filters Modal */}
+            <MobileFilters
+                isOpen={mobileFilterOpen}
+                onClose={() => setMobileFilterOpen(false)}
+                activeFilterCount={activeFilterCount}
+                onClearAll={handleClearAllFilters}
+            />
 
-                {/* Main Content - WILL re-render when URL changes */}
-                <div className="lg:w-4/5">
-                    {/* Sort Bar - Enhanced with more options */}
-                    <div className="bg-surface rounded-xl shadow-sm border border-medium p-4 mb-6">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-2 text-muted">
-                                    <span className="text-sm">Rendit sipas:</span>
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                    {searchParams.get('fuelType') && (
-                                        <span className="bg-surface-2 text-secondary text-xs px-3 py-1.5 rounded-full border border-medium flex items-center gap-1">
-                                            <span>⛽</span>
-                                            {searchParams.get('fuelType') === 'Diesel' ? 'Naftë' :
-                                                searchParams.get('fuelType') === 'Gasoline' ? 'Benzinë' :
-                                                    searchParams.get('fuelType')}
-                                        </span>
-                                    )}
-                                    {searchParams.get('transmission') && (
-                                        <span className="bg-surface-2 text-secondary text-xs px-3 py-1.5 rounded-full border border-medium flex items-center gap-1">
-                                            <span>⚙️</span>
-                                            {searchParams.get('transmission') === 'Automatic' ? 'Automatik' : 'Manuel'}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
+            {/* Sort Bar */}
+            <div className="bg-surface-2 border border-light/20 rounded-xl p-3 md:p-4 mb-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <span className="text-xs md:text-sm text-muted flex items-center gap-1">
+                        <ArrowUpDown size={14} />
+                        Rendit sipas:
+                    </span>
 
-                            <div className="flex items-center gap-3 w-full sm:w-auto">
-                                <div className="relative w-full sm:w-64">
-                                    <select
-                                        className="w-full appearance-none px-4 py-2.5 bg-surface-2 border border-medium rounded-lg text-sm 
-                             focus:outline-none focus:border-ferrari-red focus:ring-1 focus:ring-ferrari-red/50 
-                             text-primary cursor-pointer pr-10"
-                                        value={searchParams.get('sort') || 'recommended'}
-                                        onChange={(e) => handleSortChange(e.target.value)}
-                                    >
-                                        <optgroup label="✨ Rekomanduar">
-                                            <option value="recommended" className="bg-surface">Më të përshtatshmet</option>
-                                            <option value="newest" className="bg-surface">Më të rejat</option>
-                                            <option value="popular" className="bg-surface">Më të kërkuarat</option>
-                                        </optgroup>
-                                        <optgroup label="💰 Çmimi">
-                                            <option value="price_asc" className="bg-surface">Nga më i ulëti</option>
-                                            <option value="price_desc" className="bg-surface">Nga më i larti</option>
-                                        </optgroup>
-                                        <optgroup label="📅 Viti">
-                                            <option value="year_desc" className="bg-surface">Më të rijtë</option>
-                                            <option value="year_asc" className="bg-surface">Më të vjetrit</option>
-                                        </optgroup>
-                                        <optgroup label="🛣️ Kilometrazha">
-                                            <option value="mileage_asc" className="bg-surface">Më e ulët</option>
-                                            <option value="mileage_desc" className="bg-surface">Më e lartë</option>
-                                        </optgroup>
-                                        <optgroup label="⚡ Performanca">
-                                            <option value="power_desc" className="bg-surface">Fuqia më e lartë</option>
-                                            <option value="engine_desc" className="bg-surface">Motorri më i madh</option>
-                                        </optgroup>
-                                    </select>
-                                    <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
-                                </div>
-                            </div>
-                        </div>
+                    {/* Custom Sort Dropdown */}
+                    <div className="relative w-full sm:w-56 z-10" ref={sortRef}>
+                        <button
+                            onClick={() => setIsSortOpen(!isSortOpen)}
+                            className="w-full flex items-center justify-between gap-2 px-4 py-2.5 bg-surface-2 border border-light/30 rounded-lg text-sm text-primary hover:border-orange-primary/50 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-primary/20"
+                            aria-label="Zgjidh renditjen"
+                            aria-expanded={isSortOpen}
+                        >
+                            <span className="truncate">{currentSortLabel}</span>
+                            <motion.div
+                                animate={{ rotate: isSortOpen ? 180 : 0 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <ChevronDown size={16} className="text-muted shrink-0" />
+                            </motion.div>
+                        </button>
+
+                        <AnimatePresence>
+                            {isSortOpen && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -5 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -5 }}
+                                    transition={{ duration: 0.15 }}
+                                    className="absolute top-full left-0 right-0 mt-1 bg-surface-2 border border-light/30 rounded-lg shadow-xl overflow-hidden z-dropdown"
+                                >
+                                    <div className="max-h-60 overflow-y-auto custom-scrollbar">
+                                        {sortOptions.map((option) => (
+                                            <button
+                                                key={option.value}
+                                                onClick={() => handleSortChange(option.value)}
+                                                className={`
+                                                    w-full px-4 py-3 text-left text-sm
+                                                    hover:bg-surface-3 transition-colors
+                                                    flex items-center justify-between gap-2
+                                                    ${currentSort === option.value
+                                                        ? 'bg-orange-100 text-orange-primary'
+                                                        : 'text-secondary hover:text-primary'
+                                                    }
+                                                    focus:outline-none focus:bg-surface-3
+                                                `}
+                                                aria-label={option.label}
+                                            >
+                                                <span>{option.label}</span>
+                                                {currentSort === option.value && (
+                                                    <Check size={14} className="text-orange-primary shrink-0" />
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
-
-                    {/* Car Grid - This component handles its own loading and data fetching */}
-                    <CarGrid />
                 </div>
             </div>
+
+            {/* Active Filters */}
+            {activeFilterCount > 0 && (
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="mb-6"
+                >
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                        <span className="text-xs text-muted shrink-0">Filtrat aktivë:</span>
+                        <div className="flex flex-wrap items-center gap-2">
+                            {activeFilters.map(([key, value]) => (
+                                <span
+                                    key={key}
+                                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-surface-2 border border-light/20 rounded-lg text-xs"
+                                >
+                                    <span className="text-muted">{filterLabels[key]}:</span>
+                                    <span className="text-primary font-medium">{value}</span>
+                                    <button
+                                        onClick={() => handleRemoveFilter(key)}
+                                        className="ml-1 p-0.5 hover:bg-surface-3 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-orange-primary/20"
+                                        aria-label={`Hiq filtrin ${filterLabels[key]}`}
+                                    >
+                                        <X size={10} className="text-muted hover:text-orange-primary" />
+                                    </button>
+                                </span>
+                            ))}
+                            <button
+                                onClick={handleClearAllFilters}
+                                className="text-xs text-orange-primary hover:text-orange-dark transition-colors flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded px-2 py-1"
+                                aria-label="Pastro të gjithë filtrat"
+                            >
+                                <X size={12} />
+                                <span>Pastro të gjitha</span>
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
+            )}
+
+            {/* Car Grid with sort prop */}
+            <CarGrid sortBy={currentSort} sortOptions={sortOptions} />
         </div>
     );
 }

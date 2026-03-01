@@ -1,218 +1,136 @@
+"use client";
 // components/layout/Footer.tsx
 import Link from 'next/link';
-import {
-    Facebook,
-    Instagram,
-    Mail,
-    Phone,
-    MapPin,
-    Clock,
-    ChevronRight,
-    Heart,
-    Car,
-    Scale,
-    Shield,
-    MessageCircle
-} from 'lucide-react';
-import Newsletter from '@/components/ui/Newsletter'; // Import the Newsletter component
-import Social from '../ui/Social';
+import { Car, Mail, Phone, MapPin, ArrowUp } from 'lucide-react';
 
 export default function Footer() {
     const currentYear = new Date().getFullYear();
 
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const navigation = {
+        main: [
+            { name: 'Home', href: '/' },
+            { name: 'Cars', href: '/cars' },
+            { name: 'Recently Viewed', href: '/recently-viewed' },
+        ],
+        legal: [
+            { name: 'Privacy Policy', href: '/privacy' },
+            { name: 'Terms of Service', href: '/terms' },
+            { name: 'Cookie Policy', href: '/cookies' },
+        ],
+    };
+
     return (
-        <footer className="bg-gradient-to-b from-primary to-gray-950 text-primary mt-20">
-            {/* Main Footer */}
-            <div className="container-custom py-16">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
-                    {/* Company Info - Largest Column */}
-                    <div className="lg:col-span-2">
-                        <div className="flex items-center gap-2 mb-6">
-                            <div className="w-10 h-10 bg-ferrari-red rounded-xl flex items-center justify-center">
-                                <span className="text-primary font-bold text-xl">F</span>
-                            </div>
-                            <span className="text-2xl font-bold">
-                                Formula<span className="text-ferrari-red">Export</span>
+        <footer className="bg-surface border-t border-light mt-20">
+            <div className="container-swiss py-16">
+                {/* Main Footer Content */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+                    {/* Brand */}
+                    <div className="lg:col-span-1">
+                        <div className="flex items-center space-x-2 mb-4">
+                            <Car className="w-8 h-8 text-orange-primary" />
+                            <span className="text-xl font-semibold text-primary">
+                                Vetura Nga Korea
                             </span>
                         </div>
-
-                        <p className="text-muted mb-6 leading-relaxed">
-                            Platforma më e madhe në Kosovë për import të makinave nga Korea.
-                            Ne ju ndihmojmë të gjeni makinën e ëndrrave tuaja me çmime konkurruese
-                            dhe proces të garantuar.
+                        <p className="text-secondary text-sm leading-relaxed mb-6">
+                            Importoni makina cilësore nga Korea me çmime konkurruese.
+                            BMW, Audi, Mercedes-Benz dhe makina të tjera direkt në Kosovë.
                         </p>
-
-                        {/* Trust Badges */}
-                        <div className="flex flex-wrap gap-3 mb-6">
-                            <span className="bg-surface/10 px-3 py-1.5 rounded-full text-xs flex items-center gap-1">
-                                <Shield size={12} className="text-ferrari-red" />
-                                Import direkt
-                            </span>
-                            <span className="bg-surface/10 px-3 py-1.5 rounded-full text-xs flex items-center gap-1">
-                                <Scale size={12} className="text-ferrari-red" />
-                                Garanci ligjore
-                            </span>
-                            <span className="bg-surface/10 px-3 py-1.5 rounded-full text-xs flex items-center gap-1">
-                                <Heart size={12} className="text-ferrari-red" />
-                                500+ klientë
-                            </span>
-                        </div>
-
-                        {/* Contact Info */}
-                        <div className="space-y-3">
-                            <div className="flex items-center gap-3 text-primary">
-                                <div className="w-8 h-8 bg-ferrari-red/10 rounded-lg flex items-center justify-center">
-                                    <Phone size={16} className="text-ferrari-red" />
-                                </div>
-                                <div>
-                                    <p className="text-sm text-secondary">Telefon</p>
-                                    <a href="tel:+38345255388" className="hover:text-ferrari-red transition">
-                                        +383 45 528 033
-                                    </a>
-                                </div>
+                        <div className="flex space-x-3">
+                            <div className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center hover:bg-orange-10 transition-colors cursor-pointer">
+                                <span className="text-xs font-medium text-secondary hover:text-orange-primary">FB</span>
                             </div>
-                            <div className="flex items-center gap-3 text-primary">
-                                <div className="w-8 h-8 bg-ferrari-red/10 rounded-lg flex items-center justify-center">
-                                    <Mail size={16} className="text-ferrari-red" />
-                                </div>
-                                <div>
-                                    <p className="text-sm text-secondary">Email</p>
-                                    <a href="mailto:info@formula-export.com" className="hover:text-ferrari-red transition">
-                                        info@formula-export.com
-                                    </a>
-                                </div>
+                            <div className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center hover:bg-orange-10 transition-colors cursor-pointer">
+                                <span className="text-xs font-medium text-secondary hover:text-orange-primary">IG</span>
                             </div>
-                            <div className="flex items-center gap-3 text-primary">
-                                <div className="w-8 h-8 bg-ferrari-red/10 rounded-lg flex items-center justify-center">
-                                    <MapPin size={16} className="text-ferrari-red" />
-                                </div>
-                                <div>
-                                    <p className="text-sm text-secondary">Adresa</p>
-                                    <p>Prishtinë, Kosovë</p>
-                                </div>
+                            <div className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center hover:bg-orange-10 transition-colors cursor-pointer">
+                                <span className="text-xs font-medium text-secondary hover:text-orange-primary">YT</span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Quick Links */}
+                    {/* Navigation */}
                     <div>
-                        <h4 className="text-lg font-semibold mb-6 relative">
-                            Linke të shpejta
-                            <span className="absolute -bottom-2 left-0 w-10 h-0.5 bg-ferrari-red"></span>
-                        </h4>
+                        <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-4">
+                            Navigation
+                        </h3>
                         <ul className="space-y-3">
-                            {[
-                                { href: '/cars', label: 'Të gjitha makinat' },
-                                { href: '/offers', label: 'Ofertat e javës' },
-                                { href: '/brands', label: 'Markat' },
-                                { href: '/how-it-works', label: 'Si funksionon' },
-                                { href: '/compare', label: 'Krahaso makina' },
-                            ].map((link) => (
-                                <li key={link.href}>
+                            {navigation.main.map((item) => (
+                                <li key={item.name}>
                                     <Link
-                                        href={link.href}
-                                        className="text-muted hover:text-ferrari-red transition flex items-center gap-2 group"
+                                        href={item.href}
+                                        className="text-secondary hover:text-orange-primary transition-colors text-sm"
                                     >
-                                        <ChevronRight size={14} className="group-hover:translate-x-1 transition" />
-                                        {link.label}
+                                        {item.name}
                                     </Link>
                                 </li>
                             ))}
                         </ul>
                     </div>
 
-                    {/* Support */}
+                    {/* Legal */}
                     <div>
-                        <h4 className="text-lg font-semibold mb-6 relative">
-                            Mbështetje
-                            <span className="absolute -bottom-2 left-0 w-10 h-0.5 bg-ferrari-red"></span>
-                        </h4>
+                        <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-4">
+                            Legal
+                        </h3>
                         <ul className="space-y-3">
-                            <li>
-                                <Link href="/faq" className="text-muted hover:text-ferrari-red transition flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 bg-ferrari-red rounded-full"></span>
-                                    Pyetje të shpeshta
-                                </Link>
+                            {navigation.legal.map((item) => (
+                                <li key={item.name}>
+                                    <Link
+                                        href={item.href}
+                                        className="text-secondary hover:text-orange-primary transition-colors text-sm"
+                                    >
+                                        {item.name}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {/* Contact */}
+                    <div>
+                        <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-4">
+                            Contact
+                        </h3>
+                        <ul className="space-y-3">
+                            <li className="flex items-start gap-3">
+                                <Mail size={16} className="text-muted mt-0.5" />
+                                <a href="mailto:info@vetura-nga-korea.com" className="text-secondary hover:text-orange-primary transition-colors text-sm">
+                                    info@vetura-nga-korea.com
+                                </a>
                             </li>
-                            <li>
-                                <Link href="/contact" className="text-muted hover:text-ferrari-red transition flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 bg-ferrari-red rounded-full"></span>
-                                    Na kontaktoni
-                                </Link>
+                            <li className="flex items-start gap-3">
+                                <Phone size={16} className="text-muted mt-0.5" />
+                                <a href="tel:+38344123456" className="text-secondary hover:text-orange-primary transition-colors text-sm">
+                                    +383 44 123 456
+                                </a>
                             </li>
-                            <li>
-                                <Link href="/privacy" className="text-muted hover:text-ferrari-red transition flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 bg-ferrari-red rounded-full"></span>
-                                    Politika e privatësisë
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/terms" className="text-muted hover:text-ferrari-red transition flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 bg-ferrari-red rounded-full"></span>
-                                    Termat e përdorimit
-                                </Link>
+                            <li className="flex items-start gap-3">
+                                <MapPin size={16} className="text-muted mt-0.5" />
+                                <span className="text-secondary text-sm">
+                                    Prishtinë, Kosovë
+                                </span>
                             </li>
                         </ul>
-
-                        {/* Working Hours */}
-                        <div className="mt-6 pt-6 border-t border-strong">
-                            <div className="flex items-center gap-2 text-muted mb-3">
-                                <Clock size={16} className="text-ferrari-red" />
-                                <span className="font-medium">Orari i punës</span>
-                            </div>
-                            <p className="text-sm text-secondary">Hënë - Premte: 09:00 - 18:00</p>
-                            <p className="text-sm text-secondary">Shtunë: 10:00 - 14:00</p>
-                        </div>
-                    </div>
-
-                    {/* Newsletter - Using the Newsletter component */}
-                    <div>
-                        <h4 className="text-lg font-semibold mb-6 relative">
-                            Na ndiqni
-                            <span className="absolute -bottom-2 left-0 w-10 h-0.5 bg-ferrari-red"></span>
-                        </h4>
-
-                        {/* Social Links */}
-                        <Social type="links" variant="minimal" />
-
-                        {/* Newsletter Component */}
-                        <Newsletter />
                     </div>
                 </div>
-            </div>
 
-            {/* Bottom Bar */}
-            <div className="border-t border-strong/60 bg-gray-950/50">
-                <div className="container-custom py-6">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                        {/* Copyright */}
-                        <p className="text-sm text-secondary">
-                            © {currentYear} Formula Export. Të gjitha të drejtat e rezervuara.
-                        </p>
-
-                        {/* Payment Methods */}
-                        <div className="flex items-center gap-4">
-                            <span className="text-xs text-secondary">Ne pranojmë:</span>
-                            <div className="flex gap-2">
-                                <span className="px-2 py-1 bg-surface/5 rounded text-xs text-muted">Visa</span>
-                                <span className="px-2 py-1 bg-surface/5 rounded text-xs text-muted">Mastercard</span>
-                                <span className="px-2 py-1 bg-surface/5 rounded text-xs text-muted">Bank Transfer</span>
-                            </div>
-                        </div>
-
-                        {/* Legal Links */}
-                        <div className="flex gap-6 text-xs">
-                            <Link href="/privacy" className="text-secondary hover:text-ferrari-red transition">
-                                Privatësia
-                            </Link>
-                            <Link href="/terms" className="text-secondary hover:text-ferrari-red transition">
-                                Termat
-                            </Link>
-                            <Link href="/cookies" className="text-secondary hover:text-ferrari-red transition">
-                                Cookies
-                            </Link>
-                        </div>
-                    </div>
+                {/* Bottom Bar */}
+                <div className="mt-16 pt-8 border-t border-light flex flex-col md:flex-row justify-between items-center gap-4">
+                    <p className="text-muted text-sm">
+                        © {currentYear} Vetura Nga Korea. Të gjitha të drejtat e rezervuara.
+                    </p>
+                    <button
+                        onClick={scrollToTop}
+                        className="flex items-center gap-2 text-sm text-secondary hover:text-orange-primary transition-colors group"
+                    >
+                        <span>Back to top</span>
+                        <ArrowUp size={16} className="group-hover:-translate-y-1 transition-transform" />
+                    </button>
                 </div>
             </div>
         </footer>

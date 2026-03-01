@@ -1,39 +1,49 @@
-import {
-    Calendar, Gauge, Fuel, Settings,
-    Droplets, Users, Palette, Wind,
-    Zap, Thermometer, Cog, Shield
-} from 'lucide-react';
+// components/cars/CarSpecs.tsx - FIXED
+'use client';
+
+import { useState, useEffect } from 'react';
+import { type Car, getFuelTypeAlbanian, getTransmissionAlbanian, getColorAlbanian, formatMileage } from '@/lib/api';
 
 interface CarSpecsProps {
-    car: any;
+    car: Car;
 }
 
 export default function CarSpecs({ car }: CarSpecsProps) {
+    const [mounted, setMounted] = useState(false);
+
+    // Prevent hydration mismatch by only rendering on client after mount
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    const lot = car.lots?.[0];
+    const mileage = lot?.odometer?.km || 0;
+    const location = lot?.location?.city?.name || 'N/A';
+
     const specs = [
-        { icon: Calendar, label: 'Viti i prodhimit', value: car.year },
-        { icon: Gauge, label: 'Kilometrazha', value: `${car.mileage?.toLocaleString()} km` },
-        { icon: Fuel, label: 'Karburanti', value: car.fuelType === 'Diesel' ? 'Naftë' : car.fuelType === 'Gasoline' ? 'Benzinë' : car.fuelType },
-        { icon: Settings, label: 'Transmisioni', value: car.transmission === 'Automatic' ? 'Automatik' : 'Manuel' },
-        { icon: Cog, label: 'Lëvizja', value: car.drivetrain === 'FWD' ? 'Para' : car.drivetrain === 'RWD' ? 'Pasme' : '4x4' },
-        { icon: Droplets, label: 'Kubikazha', value: car.displacement ? `${car.displacement} cm³` : 'N/A' },
-        { icon: Users, label: 'Vendet', value: car.seatCount || 'N/A' },
-        { icon: Palette, label: 'Ngjyra e jashtme', value: car.exteriorColor || 'N/A' },
-        { icon: Wind, label: 'Ngjyra e brendshme', value: car.interiorColor || 'N/A' },
-        { icon: Zap, label: 'Fuqia', value: car.engineDetails || 'N/A' },
+        { label: 'Marka', value: car.manufacturer?.name || 'N/A' },
+        { label: 'Modeli', value: car.model?.name || 'N/A' },
+        { label: 'Viti', value: car.year || 'N/A' },
+        { label: 'Kilometrazha', value: mounted ? formatMileage(mileage) : '...' }, // Show loading during SSR
+        { label: 'Karburanti', value: getFuelTypeAlbanian(car.fuel?.name || '') },
+        { label: 'Transmisioni', value: getTransmissionAlbanian(car.transmission?.name || '') },
+        { label: 'Motori', value: car.engine?.name || 'N/A' },
+        { label: 'Fuqia', value: car.hp ? `${car.hp} hp` : 'N/A' },
+        { label: 'Ngjyra', value: getColorAlbanian(car.color?.name || '') },
+        { label: 'Vendi', value: location },
+        { label: 'VIN', value: car.vin || 'N/A' },
     ];
 
     return (
-        <div className="bg-surface rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold mb-4">Specifikimet teknike</h2>
-
+        <div className="bg-surface rounded-2xl p-6 border border-medium shadow-sm">
+            <h2 className="text-lg font-semibold mb-4 text-primary">Specifikimet e plota</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {specs.map((spec, index) => (
-                    <div key={index} className="flex items-start space-x-3 p-3 bg-secondary rounded-lg">
-                        <spec.icon className="text-ferrari-red mt-1 flex-shrink-0" size={18} />
-                        <div>
-                            <p className="text-xs text-secondary">{spec.label}</p>
-                            <p className="font-medium">{spec.value}</p>
-                        </div>
+                    <div key={index} className="flex justify-between p-3 bg-surface-2 rounded-lg">
+                        <span className="text-muted">{spec.label}:</span>
+                        <span className="font-medium text-primary">
+                            {!mounted && spec.label === 'Kilometrazha' ? '...' : spec.value}
+                        </span>
                     </div>
                 ))}
             </div>

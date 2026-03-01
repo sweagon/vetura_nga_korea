@@ -1,77 +1,52 @@
 // lib/recentlyViewed.ts
-export interface RecentlyViewedCar {
-    id: number;
-    make: string;
-    model: string;
-    year: number;
-    price: number;
-    mileage: number;
-    fuelType: string;
-    transmission: string;
-    image?: string;
-    viewedAt: string;
-}
+// Simple localStorage-based recently viewed - NO JSX, just pure TypeScript
 
-const STORAGE_KEY = 'recentlyViewed';
+const STORAGE_KEY = 'recently-viewed';
 const MAX_ITEMS = 10;
 
-class RecentlyViewedService {
-    get(): RecentlyViewedCar[] {
-        try {
-            const stored = localStorage.getItem(STORAGE_KEY);
-            return stored ? JSON.parse(stored) : [];
-        } catch {
-            return [];
-        }
-    }
-
-    add(car: any): void {
-        try {
-            const recent = this.get();
-
-            // Create simplified car object
-            const viewedCar: RecentlyViewedCar = {
-                id: car.id,
-                make: car.make,
-                model: car.model,
-                year: car.year,
-                price: car.price,
-                mileage: car.mileage,
-                fuelType: car.fuelType,
-                transmission: car.transmission,
-                image: car.images?.[0],
-                viewedAt: new Date().toISOString()
-            };
-
-            // Remove if already exists
-            const filtered = recent.filter(c => c.id !== car.id);
-
-            // Add to beginning
-            const updated = [viewedCar, ...filtered].slice(0, MAX_ITEMS);
-
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        } catch (error) {
-            console.error('Error adding to recently viewed:', error);
-        }
-    }
-
-    remove(id: number): void {
-        try {
-            const recent = this.get();
-            const updated = recent.filter(c => c.id !== id);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        } catch (error) {
-            console.error('Error removing from recently viewed:', error);
-        }
-    }
-
-    clear(): void {
-        try {
-            localStorage.removeItem(STORAGE_KEY);
-        } catch (error) {
-            console.error('Error clearing recently viewed:', error);
-        }
-    }
+export interface RecentlyViewedItem {
+  id: string;
+  title: string;
+  image?: string;
+  price?: number;
+  viewedAt: number;
 }
 
-export const recentlyViewedService = new RecentlyViewedService();
+export function addToRecentlyViewed(item: Omit<RecentlyViewedItem, 'viewedAt'>): RecentlyViewedItem[] {
+  if (typeof window === 'undefined') return [];
+
+  const items = getRecentlyViewed();
+  const existingIndex = items.findIndex(i => i.id === item.id);
+
+  if (existingIndex !== -1) {
+    items.splice(existingIndex, 1);
+  }
+
+  const newItem = { ...item, viewedAt: Date.now() };
+  items.unshift(newItem);
+
+  if (items.length > MAX_ITEMS) {
+    items.pop();
+  }
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  return items;
+}
+
+export function getRecentlyViewed(): RecentlyViewedItem[] {
+  if (typeof window === 'undefined') return [];
+
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (!stored) return [];
+
+  try {
+    return JSON.parse(stored);
+  } catch {
+    return [];
+  }
+}
+
+export function clearRecentlyViewed(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(STORAGE_KEY);
+}

@@ -1,25 +1,22 @@
+// components/layout/Header.tsx
 'use client';
 
-import Link from 'next/link';
-import { Heart, User, Menu, X, LogIn } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useSession, signOut } from 'next-auth/react';
-import SearchBar from '@/components/search/SearchBar';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useSavedCars } from '@/hooks/useSavedCars';
-import ThemeToggle from '@/components/ui/ThemeToggle';
+import { Menu, X, Car } from 'lucide-react';
+import CompactSearch from '@/components/ui/CompactSearch';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isScrolled, setIsScrolled] = useState(false);
-    const [mounted, setMounted] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
     const pathname = usePathname();
-    const { data: session, status } = useSession();
-    const { savedCarIds, loading: savedLoading } = useSavedCars();
 
     useEffect(() => {
-        setMounted(true);
-        const handleScroll = () => setIsScrolled(window.scrollY > 10);
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 20);
+        };
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
@@ -28,227 +25,123 @@ export default function Header() {
         setIsMenuOpen(false);
     }, [pathname]);
 
-    if (!mounted) return null;
+    const navigation = [
+        { name: 'Ballina', href: '/' },
+        { name: 'Makina', href: '/cars' },
+        { name: 'Shikuar së fundmi', href: '/recently-viewed' },
+    ];
 
-    const savedCount = savedCarIds.size;
+    const isActive = (path: string) => pathname === path;
 
     return (
-        <header className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled
-            ? 'bg-ferrari-dark/75 shadow-lg backdrop-blur-md'
-            : 'bg-ferrari-dark'
-            }`}>
-            {/* Subtle gradient line */}
-            <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-ferrari-red/30 to-transparent" />
-
-            <div className="container-custom">
-                {/* Top Bar */}
-                <div className="flex items-center justify-between h-20">
-                    <Link href="/" className="group relative">
-                        <img src="/logo.webp" className='h-12 transition-transform group-hover:scale-105' alt="Formula Export" />
+        <header
+            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled || isMenuOpen
+                ? 'bg-transparent backdrop-blur-xl border-b border-light/10 py-3'
+                : 'bg-orange-500 py-4 md:py-5'
+                }`}
+        >
+            <nav className="container-swiss">
+                <div className="flex items-center justify-between gap-4">
+                    {/* Logo */}
+                    <Link
+                        href="/"
+                        className="flex items-center space-x-3 group shrink-0"
+                    >
+                        <div className="relative">
+                            <img src="/logo.webp" className='h-14' alt="Vetura Nga Korea" />
+                            <motion.div
+                                className="absolute inset-0 bg-orange-primary/20 blur-xl rounded-full"
+                                animate={{
+                                    scale: [1, 1.2, 1],
+                                    opacity: [0.3, 0.6, 0.3]
+                                }}
+                                transition={{
+                                    duration: 3,
+                                    repeat: Infinity,
+                                    ease: "easeInOut"
+                                }}
+                            />
+                        </div>
+                        <span className="text-base md:text-lg font-semibold tracking-tight text-primary hidden sm:block">
+                            Vetura Nga Korea
+                        </span>
                     </Link>
 
-                    <div className="hidden md:block flex-1 max-w-xl mx-8">
-                        <SearchBar />
+                    {/* Desktop Search */}
+                    <div className="hidden lg:block flex-1 max-w-2xl mx-4">
+                        <CompactSearch variant="header" />
                     </div>
 
-                    <div className="hidden md:flex items-center space-x-1">
-                        <ThemeToggle />
-
-                        <Link
-                            href="/saved"
-                            className="p-2 hover:bg-ferrari-red/10 rounded-lg transition-all duration-300 relative group"
-                            title="Të ruajtura"
-                        >
-                            <Heart size={20} className="text-white/70 group-hover:text-ferrari-red transition-colors" />
-                            {!savedLoading && savedCount > 0 && (
-                                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-ferrari-red text-white text-xs font-bold rounded-full flex items-center justify-center px-1 shadow-md animate-in zoom-in duration-200">
-                                    {savedCount > 99 ? '99+' : savedCount}
-                                </span>
-                            )}
-                        </Link>
-
-                        {status === 'authenticated' ? (
-                            <div className="relative group">
-                                <button className="p-1 hover:bg-ferrari-red/10 rounded-lg transition-all duration-300">
-                                    <div className="w-8 h-8 bg-gradient-to-br from-ferrari-red to-ferrari-dark rounded-lg flex items-center justify-center text-white font-semibold text-sm shadow-md group-hover:shadow-lg transition-all">
-                                        {session.user?.name?.charAt(0) || session.user?.email?.charAt(0) || 'U'}
-                                    </div>
-                                </button>
-
-                                <div className="absolute z-50 right-0 mt-2 w-56 bg-elevated rounded-xl shadow-xl border border-medium opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right">
-                                    <div className="py-2">
-                                        <Link
-                                            href="/profile"
-                                            className="block px-4 py-2.5 text-sm text-secondary hover:bg-ferrari-red/10 hover:text-ferrari-red transition-colors mx-2 rounded-lg"
-                                        >
-                                            Profili im
-                                        </Link>
-                                        <Link
-                                            href="/saved"
-                                            className="block px-4 py-2.5 text-sm text-secondary hover:bg-ferrari-red/10 hover:text-ferrari-red transition-colors mx-2 rounded-lg flex items-center justify-between"
-                                        >
-                                            <span>Makinat e ruajtura</span>
-                                            {savedCount > 0 && (
-                                                <span className="bg-ferrari-red text-white text-xs px-2 py-0.5 rounded-full">
-                                                    {savedCount}
-                                                </span>
-                                            )}
-                                        </Link>
-                                        <Link
-                                            href="/recently-viewed"
-                                            className="block px-4 py-2.5 text-sm text-secondary hover:bg-ferrari-red/10 hover:text-ferrari-red transition-colors mx-2 rounded-lg"
-                                        >
-                                            Shikuar së fundmi
-                                        </Link>
-                                    </div>
-                                    <div className="border-t border-medium py-2">
-                                        <button
-                                            onClick={() => signOut({ callbackUrl: '/' })}
-                                            className="block w-full text-left px-4 py-2.5 text-sm text-error-text hover:bg-error-bg transition-colors mx-2 rounded-lg"
-                                        >
-                                            Dil
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="flex items-center space-x-2 ml-2">
-                                <Link
-                                    href="/auth/signin"
-                                    className="px-4 py-2 text-sm font-medium text-white border border-white/30 rounded-lg hover:bg-ferrari-red hover:border-ferrari-red hover:text-white transition-all duration-300"
-                                >
-                                    Hyr
-                                </Link>
-                                <Link
-                                    href="/auth/signup"
-                                    className="px-4 py-2 text-sm font-medium bg-ferrari-red text-white rounded-lg hover:bg-ferrari-dark transition-all duration-300 shadow-md hover:shadow-lg"
-                                >
-                                    Regjistrohu
-                                </Link>
-                            </div>
-                        )}
+                    {/* Desktop Navigation */}
+                    <div className="hidden lg:flex items-center space-x-2 shrink-0">
+                        {navigation.map((item) => (
+                            <Link
+                                key={item.name}
+                                href={item.href}
+                                className={`relative px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${isActive(item.href)
+                                    ? 'text-orange-primary bg-orange-10'
+                                    : 'text-secondary hover:text-primary hover:bg-surface-2/50'
+                                    }`}
+                            >
+                                {item.name}
+                                {isActive(item.href) && (
+                                    <motion.div
+                                        layoutId="activeNav"
+                                        className="absolute bottom-0 left-2 right-2 h-0.5 bg-orange-primary rounded-full"
+                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                    />
+                                )}
+                            </Link>
+                        ))}
                     </div>
 
-                    {/* Mobile Menu Button */}
+                    {/* Mobile menu button */}
                     <button
-                        className="md:hidden p-2 hover:bg-ferrari-red/10 rounded-lg transition-colors relative"
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
+                        className="lg:hidden relative w-10 h-10 rounded-xl bg-surface-2/50 hover:bg-surface-2 transition-colors flex items-center justify-center"
+                        aria-label="Toggle menu"
                     >
-                        {!savedLoading && savedCount > 0 && !isMenuOpen && (
-                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-ferrari-red text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                                {savedCount > 9 ? '9+' : savedCount}
-                            </span>
+                        {isMenuOpen ? (
+                            <X className="w-5 h-5 text-primary" />
+                        ) : (
+                            <Menu className="w-5 h-5 text-primary" />
                         )}
-                        {isMenuOpen ? <X size={24} className="text-white/70" /> : <Menu size={24} className="text-white/70" />}
                     </button>
                 </div>
 
-                {/* Mobile Search */}
-                <div className="md:hidden pb-4">
-                    <SearchBar />
-                </div>
-
-                {/* Mobile Menu */}
-                {isMenuOpen && (
-                    <div className="md:hidden pb-6 animate-slideDown">
-                        <div className="bg-surface-2 rounded-xl p-3 border border-medium shadow-xl">
-                            <div className="flex items-center justify-between px-4 py-3 border-b border-medium mb-2">
-                                <span className="text-sm text-secondary">Tema</span>
-                                <ThemeToggle />
-                            </div>
-
-                            <Link
-                                href="/saved"
-                                className="flex items-center px-4 py-3 hover:bg-surface rounded-lg transition-colors group"
-                                onClick={() => setIsMenuOpen(false)}
-                            >
-                                <Heart size={18} className="mr-3 text-muted group-hover:text-ferrari-red" />
-                                <span className="text-secondary group-hover:text-ferrari-red flex-1">Të ruajtura</span>
-                                {savedCount > 0 && (
-                                    <span className="bg-ferrari-red text-white text-xs px-2 py-0.5 rounded-full">
-                                        {savedCount}
-                                    </span>
-                                )}
-                            </Link>
-
-                            <Link
-                                href="/recently-viewed"
-                                className="flex items-center px-4 py-3 hover:bg-surface rounded-lg transition-colors group"
-                                onClick={() => setIsMenuOpen(false)}
-                            >
-                                <span className="w-[18px] mr-3 text-muted group-hover:text-ferrari-red text-center">⌛</span>
-                                <span className="text-secondary group-hover:text-ferrari-red">Shikuar së fundmi</span>
-                            </Link>
-
-                            {status === 'authenticated' ? (
-                                <>
+                {/* Mobile Navigation */}
+                <AnimatePresence>
+                    {isMenuOpen && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="lg:hidden overflow-hidden"
+                        >
+                            <div className="py-4 mt-2 border-t border-light/10 space-y-2">
+                                {navigation.map((item) => (
                                     <Link
-                                        href="/profile"
-                                        className="flex items-center px-4 py-3 hover:bg-surface rounded-lg transition-colors group"
+                                        key={item.name}
+                                        href={item.href}
+                                        className={`block py-3 px-4 rounded-xl text-sm font-medium transition-all ${isActive(item.href)
+                                            ? 'bg-orange-10 text-orange-primary'
+                                            : 'text-secondary hover:text-primary hover:bg-surface-2/50'
+                                            }`}
                                         onClick={() => setIsMenuOpen(false)}
                                     >
-                                        <User size={18} className="mr-3 text-muted group-hover:text-ferrari-red" />
-                                        <span className="text-secondary group-hover:text-ferrari-red">Llogaria ime</span>
+                                        {item.name}
                                     </Link>
-                                    <button
-                                        onClick={() => {
-                                            signOut({ callbackUrl: '/' });
-                                            setIsMenuOpen(false);
-                                        }}
-                                        className="w-full flex items-center px-4 py-3 hover:bg-surface rounded-lg transition-colors group text-left"
-                                    >
-                                        <LogIn size={18} className="mr-3 text-error-text rotate-180" />
-                                        <span className="text-error-text">Dil</span>
-                                    </button>
-                                </>
-                            ) : (
-                                <div className="grid grid-cols-2 gap-2 pt-3 mt-2 border-t border-medium">
-                                    <Link
-                                        href="/auth/signin"
-                                        className="px-4 py-3 text-center text-ferrari-red border border-ferrari-red/30 rounded-lg hover:bg-ferrari-red hover:text-white transition-colors"
-                                        onClick={() => setIsMenuOpen(false)}
-                                    >
-                                        Hyr
-                                    </Link>
-                                    <Link
-                                        href="/auth/signup"
-                                        className="px-4 py-3 text-center bg-ferrari-red text-white rounded-lg hover:bg-ferrari-dark transition-colors shadow-md"
-                                        onClick={() => setIsMenuOpen(false)}
-                                    >
-                                        Regjistrohu
-                                    </Link>
+                                ))}
+
+                                {/* Mobile Search */}
+                                <div className="pt-4 mt-2 border-t border-light/10">
+                                    <CompactSearch variant="header" />
                                 </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* Navigation Menu */}
-            <nav className="hidden md:block bg-ferrari-red/95 backdrop-blur-sm">
-                <div className="container-custom">
-                    <ul className="flex items-center space-x-8 py-3">
-                        {[
-                            { href: '/cars', label: 'Të gjitha makinat' },
-                            { href: '/brands', label: 'Markat' },
-                            { href: '/offers', label: 'Ofertat e javës' },
-                            { href: '/how-it-works', label: 'Si funksionon' },
-                            { href: '/compare', label: 'Krahaso' },
-                        ].map((item) => (
-                            <li key={item.href}>
-                                <Link
-                                    href={item.href}
-                                    className={`relative text-sm font-medium transition-colors py-1.5 px-2 rounded-lg ${pathname === item.href
-                                        ? 'text-white bg-ferrari-dark'
-                                        : 'text-white/70 hover:text-white hover:bg-white/5'
-                                        }`}
-                                >
-                                    {item.label}
-                                </Link>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </nav>
         </header>
     );

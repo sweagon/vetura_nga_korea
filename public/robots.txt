@@ -17,10 +17,10 @@ Disallow: /*?*
 Crawl-delay: 5
 
 # Sitemap
-Sitemap: https://formula-export.com/sitemap.xml
+Sitemap: https://vetura-nga-korea.com/sitemap.xml
 
 # Host
-Host: https://formula-export.com
+Host: https://vetura-nga-korea.com
 
 # Google-specific
 User-agent: Googlebot

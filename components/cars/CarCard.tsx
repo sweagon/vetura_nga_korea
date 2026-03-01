@@ -2,155 +2,130 @@
 'use client';
 
 import Link from 'next/link';
-import { Heart, Fuel, Gauge, Calendar, Settings } from 'lucide-react';
-import { useState } from 'react';
-import { useSavedCars } from '@/hooks/useSavedCars';
-import CompareButton from './CompareButton';
-import { type Car } from '@/lib/api';
+import { Fuel, Gauge, Calendar, Settings } from 'lucide-react';
+import { type Car, formatPrice, formatMileage, getFuelTypeAlbanian, getTransmissionAlbanian } from '@/lib/api';
+import { addToRecentlyViewed } from '@/lib/recentlyViewed';
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
 
 interface CarCardProps {
     car: Car;
+    priority?: boolean;
 }
 
-export default function CarCard({ car }: CarCardProps) {
-    const [imageError, setImageError] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
-    const { isCarSaved, toggleSave } = useSavedCars();
-    const isSaved = isCarSaved(car.id);
+export default function CarCard({ car, priority = false }: CarCardProps) {
+    const [mounted, setMounted] = useState(false);
 
-    const handleSave = async (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
-        if (isSaving) return;
+    const lot = car.lots?.[0];
+    const price = lot?.buy_now || 0;
+    const mileage = lot?.odometer?.km || 0;
+    const image = lot?.images?.normal?.[0] || lot?.images?.downloaded?.[0] || '';
 
-        setIsSaving(true);
-        const wasSaved = isSaved;
+    // Safely get manufacturer and model names
+    const manufacturerName = car.manufacturer?.name || 'Unknown';
+    const modelName = car.model?.name || 'Unknown';
+    const fuelName = car.fuel?.name || '';
+    const transmissionName = car.transmission?.name || '';
 
-        try {
-            await toggleSave(car.id, {
-                make: car.make,
-                model: car.model,
-                year: car.year,
-                price: car.price,
-                image: car.images?.[0],
-            });
-
-            const event = new CustomEvent(wasSaved ? 'carUnsave' : 'carSave', {
-                detail: car
-            });
-            window.dispatchEvent(event);
-        } finally {
-            setIsSaving(false);
-        }
+    const handleClick = () => {
+        addToRecentlyViewed({
+            id: car.vin || car.id.toString(),
+            title: car.title || `${manufacturerName} ${modelName}`,
+            image: image,
+            price: price
+        });
     };
 
-    const handleView = () => {
-        const event = new CustomEvent('carView', { detail: car });
-        window.dispatchEvent(event);
-    };
+    const carTitle = car.title || `${manufacturerName} ${modelName}`;
+    const detailUrl = car.vin ? `/cars/${car.vin}` : `/cars/${car.id}`;
 
     return (
-        <Link href={`/cars/${car.id}`} onClick={handleView}>
-            <div className="bg-surface rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 group border border-medium">
+        <Link
+            href={detailUrl}
+            onClick={handleClick}
+            className="group block h-full focus:outline-none focus:ring-2 focus:ring-orange-primary/40 rounded-2xl"
+            aria-label={`Shiko detajet për ${carTitle}`}
+        >
+            <article className="card h-full flex flex-col">
                 {/* Image Container */}
-                <div className="relative h-48 bg-surface-2">
-                    {car.images && car.images.length > 0 && !imageError ? (
+                <div className="relative aspect-[4/3] overflow-hidden bg-surface-2">
+                    {image ? (
                         <img
-                            src={car.images[0]}
-                            alt={`${car.full_name}`}
-                            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                            onError={() => setImageError(true)}
+                            src={image}
+                            alt={carTitle}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            loading={priority ? 'eager' : 'lazy'}
+                            onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                                const fallback = e.currentTarget.parentElement?.querySelector('.fallback');
+                                if (fallback) {
+                                    (fallback as HTMLElement).style.display = 'flex';
+                                }
+                            }}
                         />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center text-muted">
-                            <span>No image</span>
-                        </div>
-                    )}
+                    ) : null}
 
-                    {/* Save Button */}
-                    <button
-                        onClick={handleSave}
-                        disabled={isSaving}
-                        className={`absolute top-3 right-3 p-2 bg-surface/90 backdrop-blur-sm rounded-full shadow-md hover:bg-surface transition-all z-10 border border-medium ${isSaving ? 'opacity-50 cursor-not-allowed' : ''
-                            }`}
-                        title={isSaved ? "Hiq nga të ruajturat" : "Ruaj makinën"}
+                    {/* Fallback when no image */}
+                    <div
+                        className="fallback absolute inset-0 flex items-center justify-center text-muted text-sm bg-surface-2"
+                        style={{ display: image ? 'none' : 'flex' }}
                     >
-                        <Heart
-                            size={18}
-                            className={`transition-colors ${isSaved
-                                ? 'fill-ferrari-red text-ferrari-red'
-                                : 'text-ferrari-red hover:text-ferrari-dark'
-                                }`}
-                        />
-                    </button>
+                        No image
+                    </div>
 
-                    {/* Featured Badge */}
-                    {car.isFeatured && (
-                        <div className="absolute top-3 left-3 bg-ferrari-red text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
-                            🔥 Featured
-                        </div>
-                    )}
-
-                    {/* Sold Badge */}
-                    {car.sold && (
-                        <div className="absolute top-3 left-3 bg-error-bg text-error-text px-3 py-1 rounded-full text-xs font-semibold shadow-md border border-error-border">
-                            Sold
+                    {/* VIN badge for development */}
+                    {process.env.NODE_ENV === 'development' && car.vin && (
+                        <div className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
+                            VIN: {car.vin.slice(0, 8)}...
                         </div>
                     )}
                 </div>
 
                 {/* Content */}
-                <div className="p-4">
-                    <h3 className="font-bold text-lg mb-1 line-clamp-1 text-primary">
-                        {car.full_name}
+                <div className="p-5 flex-1 flex flex-col">
+                    <h3 className="text-base font-medium text-primary mb-3 line-clamp-1 group-hover:text-orange-primary transition-colors">
+                        {carTitle}
                     </h3>
 
-                    <div className="flex items-baseline justify-between mb-3">
-                        <span className="text-2xl font-bold text-ferrari-red">
-                            €{car.price?.toLocaleString()}
-                        </span>
-                        <span className="text-sm text-secondary">{car.year}</span>
-                    </div>
-
                     {/* Specs Grid */}
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div className="flex items-center space-x-2 text-secondary">
-                            <Fuel size={16} className="text-ferrari-red flex-shrink-0" />
-                            <span className="truncate">
-                                {car.fuelType === 'Diesel' ? 'Naftë' :
-                                    car.fuelType === 'Gasoline' ? 'Benzinë' :
-                                        car.fuelType}
-                            </span>
+                    <div className="grid grid-cols-2 gap-y-2 gap-x-3 mb-4">
+                        <div className="flex items-center gap-2">
+                            <Calendar size={14} className="text-muted shrink-0" />
+                            <span className="text-sm text-secondary truncate">{car.year || 'N/A'}</span>
                         </div>
-                        <div className="flex items-center space-x-2 text-secondary">
-                            <Gauge size={16} className="text-ferrari-red flex-shrink-0" />
-                            <span className="truncate">{car.mileage?.toLocaleString()} km</span>
+                        <div className="flex items-center gap-2">
+                            <Gauge size={14} className="text-muted shrink-0" />
+                            <span className="text-sm text-secondary truncate">{mounted ? formatMileage(mileage) : '...'}</span>
                         </div>
-                        <div className="flex items-center space-x-2 text-secondary">
-                            <Settings size={16} className="text-ferrari-red flex-shrink-0" />
-                            <span className="truncate">
-                                {car.transmission === 'Automatic' ? 'Automatik' : 'Manuel'}
-                            </span>
+                        <div className="flex items-center gap-2">
+                            <Fuel size={14} className="text-muted shrink-0" />
+                            <span className="text-sm text-secondary truncate">{getFuelTypeAlbanian(fuelName)}</span>
                         </div>
-                        <div className="flex items-center space-x-2 text-secondary">
-                            <Calendar size={16} className="text-ferrari-red flex-shrink-0" />
-                            <span className="truncate">{car.year}</span>
+                        <div className="flex items-center gap-2">
+                            <Settings size={14} className="text-muted shrink-0" />
+                            <span className="text-sm text-secondary truncate">{getTransmissionAlbanian(transmissionName)}</span>
                         </div>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-medium">
-                        <CompareButton
-                            car={{ id: car.id, make: car.make, model: car.model }}
-                            variant="card"
-                        />
-                        <span className="text-xs text-muted">
-                            ID: {car.id}
-                        </span>
+                    {/* Price */}
+                    <div className="mt-auto pt-3 border-t border-light">
+                        <div className="flex items-baseline justify-between">
+                            <span className="text-xl font-semibold text-orange-primary">
+                                {formatPrice(price)}
+                            </span>
+                            {car.engine?.name && (
+                                <span className="text-xs text-muted">
+                                    {car.engine.name}
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
+            </article>
         </Link>
     );
 }

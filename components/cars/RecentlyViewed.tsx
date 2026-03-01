@@ -1,136 +1,63 @@
-// components/cars/RecentlyViewed.tsx - UPDATED WITH THEME VARIABLES
+// components/cars/RecentlyViewed.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Clock, X, ChevronRight, Eye } from 'lucide-react';
-import { recentlyViewedService, RecentlyViewedCar } from '@/lib/recentlyViewed';
+import { Clock, Eye } from 'lucide-react';
+import { getRecentlyViewed, RecentlyViewedItem } from '@/lib/recentlyViewed';
 
 export default function RecentlyViewed() {
-    const [recentCars, setRecentCars] = useState<RecentlyViewedCar[]>([]);
-    const [isVisible, setIsVisible] = useState(true);
+    const [recentCars, setRecentCars] = useState<RecentlyViewedItem[]>([]);
 
     useEffect(() => {
-        loadRecentlyViewed();
+        setRecentCars(getRecentlyViewed());
     }, []);
 
-    const loadRecentlyViewed = () => {
-        const cars = recentlyViewedService.get();
-        setRecentCars(cars);
-    };
-
-    const removeCar = (id: number, e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        recentlyViewedService.remove(id);
-        loadRecentlyViewed();
-    };
-
-    const clearAll = () => {
-        recentlyViewedService.clear();
-        setRecentCars([]);
-    };
-
-    if (!isVisible || recentCars.length === 0) {
-        return null;
-    }
+    if (recentCars.length === 0) return null;
 
     return (
-        <div className="bg-surface rounded-lg shadow-md p-6 mb-8 border border-medium">
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                    <Clock size={20} className="text-ferrari-red" />
-                    <h2 className="text-xl font-bold text-primary">Shikuar së fundmi</h2>
+        <div className="w-full max-w-7xl mx-auto px-4 py-12">
+            <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-orange-primary/10 rounded-lg">
+                    <Clock className="w-5 h-5 text-orange-primary" />
                 </div>
-                <div className="flex items-center gap-4">
-                    {recentCars.length > 0 && (
-                        <button
-                            onClick={clearAll}
-                            className="text-sm text-muted hover:text-ferrari-red transition"
-                        >
-                            Pastro të gjitha
-                        </button>
-                    )}
-                    <button
-                        onClick={() => setIsVisible(false)}
-                        className="text-muted hover:text-ferrari-red transition"
-                        title="Fshih"
-                    >
-                        <X size={18} />
-                    </button>
-                </div>
+                <h2 className="text-2xl font-semibold text-primary">Shikuar së fundmi</h2>
             </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                {recentCars.map((car) => (
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                {recentCars.slice(0, 5).map((car) => (
                     <Link
                         key={car.id}
                         href={`/cars/${car.id}`}
-                        className="group relative bg-surface-2 rounded-lg overflow-hidden hover:shadow-md transition border border-medium"
+                        className="group"
                     >
-                        {/* Remove button */}
-                        <button
-                            onClick={(e) => removeCar(car.id, e)}
-                            className="absolute top-2 right-2 z-10 p-1 bg-surface rounded-full shadow-md opacity-0 group-hover:opacity-100 transition hover:bg-surface-2"
-                        >
-                            <X size={14} className="text-muted" />
-                        </button>
-
-                        {/* Image */}
-                        <div className="aspect-video bg-surface-2 relative">
-                            {car.image ? (
-                                <img
-                                    src={car.image}
-                                    alt={`${car.make} ${car.model}`}
-                                    className="w-full h-full object-cover"
-                                />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-muted">
-                                    <Eye size={24} />
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Details */}
-                        <div className="p-3">
-                            <h3 className="font-semibold text-sm mb-1 line-clamp-1 text-primary">
-                                {car.make} {car.model}
-                            </h3>
-                            <div className="flex items-center justify-between">
-                                <span className="text-ferrari-red font-bold text-sm">
-                                    €{car.price?.toLocaleString()}
-                                </span>
-                                <span className="text-xs text-muted">
-                                    {car.year}
-                                </span>
+                        <div className="bg-surface rounded-xl overflow-hidden border border-medium hover:border-orange-primary/30 transition-all duration-300 hover:shadow-lg">
+                            <div className="relative h-28 bg-surface-2">
+                                {car.image ? (
+                                    <img
+                                        src={car.image}
+                                        alt={car.title}
+                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                        <Eye className="w-6 h-6 text-muted" />
+                                    </div>
+                                )}
                             </div>
-                            <div className="flex items-center gap-2 mt-2 text-xs text-muted">
-                                <span>{car.fuelType === 'Diesel' ? 'Naftë' : 'Benzinë'}</span>
-                                <span>•</span>
-                                <span>{car.mileage?.toLocaleString()} km</span>
+                            <div className="p-3">
+                                <h3 className="text-sm font-medium text-primary line-clamp-1 group-hover:text-orange-primary transition-colors">
+                                    {car.title}
+                                </h3>
+                                {car.price && (
+                                    <p className="text-sm font-semibold text-orange-primary mt-1">
+                                        {new Intl.NumberFormat('sq-AL', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(car.price)}
+                                    </p>
+                                )}
                             </div>
-                        </div>
-
-                        {/* View badge */}
-                        <div className="absolute bottom-2 left-2 bg-primary/70 text-primary text-[10px] px-2 py-1 rounded">
-                            {new Date(car.viewedAt).toLocaleDateString('sq-AL')}
                         </div>
                     </Link>
                 ))}
             </div>
-
-            {/* View all link */}
-            {recentCars.length >= 5 && (
-                <div className="text-right mt-4">
-                    <Link
-                        href="/recently-viewed"
-                        className="text-sm text-ferrari-red hover:underline inline-flex items-center"
-                    >
-                        Shiko të gjitha
-                        <ChevronRight size={16} className="ml-1" />
-                    </Link>
-                </div>
-            )}
         </div>
     );
 }

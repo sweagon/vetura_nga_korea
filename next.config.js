@@ -1,12 +1,11 @@
 // next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Image optimization
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'autokoreakosova.com',
+        hostname: 'api.bestautomarket.com',
         pathname: '/**',
       },
       {
@@ -14,28 +13,14 @@ const nextConfig = {
         hostname: 'ci.encar.com',
         pathname: '/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'formula-export.com',
-        pathname: '/**',
-      },
     ],
     formats: ['image/avif', 'image/webp'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60 * 60 * 24 * 60, // 60 days
   },
-
-  // Compression
   compress: true,
-
-  // Remove X-Powered-By header for security
   poweredByHeader: false,
-
-  // React strict mode for better development
   reactStrictMode: true,
-
-  // HTTP headers for security and caching
+  // Remove experimental features that might cause issues
+  experimental: {},
   async headers() {
     return [
       {
@@ -53,55 +38,9 @@ const nextConfig = {
             key: 'X-XSS-Protection',
             value: '1; mode=block',
           },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
-          },
-        ],
-      },
-      {
-        source: '/icons/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-      {
-        source: '/images/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=86400, stale-while-revalidate=604800',
-          },
-        ],
-      },
-      {
-        source: '/fonts/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
         ],
       },
     ];
-  },
-
-  // Redirects (optional)
-  async redirects() {
-    return [];
-  },
-
-  // Experimental features
-  experimental: {
-    optimizeCss: true,
-    scrollRestoration: true,
   },
 };
 

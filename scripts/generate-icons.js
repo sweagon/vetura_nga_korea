@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const sizes = [16, 32, 57, 60, 72, 76, 96, 114, 120, 128, 144, 152, 180, 192, 384, 512];
-const inputImage = path.join(__dirname, '../public/favicon.webp');
+const inputImage = path.join(__dirname, '../public/logo.webp');
 const outputDir = path.join(__dirname, '../public/icons');
 
 if (!fs.existsSync(outputDir)) {

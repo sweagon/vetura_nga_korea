@@ -1,23 +1,25 @@
+// app/not-found.tsx
 import Link from 'next/link';
-import { Car, Home } from 'lucide-react';
+import { Car } from 'lucide-react';
 
+// This MUST be a server component - NO 'use client' directive
+// NO useSearchParams, useState, useEffect, etc.
 export default function NotFound() {
     return (
-        <div className="min-h-[70vh] flex items-center justify-center">
-            <div className="text-center">
-                <div className="w-24 h-24 bg-ferrari-red/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Car className="text-ferrari-red" size={40} />
-                </div>
-                <h1 className="text-4xl font-bold mb-4">404 - Makina nuk u gjet</h1>
-                <p className="text-secondary mb-8 max-w-md">
-                    Makina që po kërkon nuk ekziston ose është shitur.
+        <div className="min-h-[80vh] flex items-center justify-center bg-primary">
+            <div className="container-swiss max-w-2xl text-center">
+                <Car className="w-24 h-24 text-orange-primary mx-auto mb-6" />
+                <h1 className="text-4xl md:text-5xl font-bold text-primary mb-4">
+                    404 - Faqja nuk u gjet
+                </h1>
+                <p className="text-lg text-secondary mb-8">
+                    Na vjen keq, faqja që po kërkoni nuk ekziston.
                 </p>
                 <Link
-                    href="/cars"
-                    className="btn-primary inline-flex items-center"
+                    href="/"
+                    className="inline-flex items-center justify-center px-6 py-3 bg-orange-primary text-white rounded-xl hover:bg-orange-dark transition-colors"
                 >
-                    <Home size={18} className="mr-2" />
-                    Shfleto makina të tjera
+                    Kthehu në fillim
                 </Link>
             </div>
         </div>

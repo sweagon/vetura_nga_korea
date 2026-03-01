@@ -1,455 +1,636 @@
 // lib/api.ts
 export interface Car {
+  id: number;
+  year: number;
+  title: string;
+  vin: string;
+  manufacturer: {
     id: number;
-    full_name: string;
-    make: string;
-    model: string;
-    grade?: string;
-    year: number;
-    price: number;
-    mileage: number;
-    fuelType: string;
-    transmission: string;
-    engineSize?: number;
-    displacement?: number;
-    images: string[];
-    exteriorColor?: string;
-    interiorColor?: string;
-    description?: string;
-    sellerName?: string;
-    sellerPhone?: string;
-    sellerEmail?: string;
-    sellerLocation?: string;
-    dealer?: {
-        name: string;
-        firm: string;
-        location: string;
-        phone: string;
+    name: string;
+  };
+  model: {
+    id: number;
+    name: string;
+    manufacturer_id: number;
+  };
+  generation?: {
+    id: number;
+    name: string;
+  };
+  body_type?: {
+    name: string;
+    id: number;
+  };
+  color: {
+    name: string;
+    id: number;
+  };
+  engine?: {
+    id: number;
+    name: string;
+  };
+  transmission: {
+    name: string;
+    id: number;
+  };
+  drive_wheel?: {
+    name: string;
+    id: number;
+  };
+  vehicle_type: {
+    name: string;
+    id: number;
+  };
+  fuel: {
+    name: string;
+    id: number;
+  };
+  cylinders: number | null;
+  lots: Lot[];
+  hp?: number;
+}
+
+export interface Lot {
+  id: number;
+  lot: string;
+  domain: {
+    name: string;
+    id: number;
+  };
+  odometer: {
+    km: number;
+    mi: number;
+    status: {
+      name: string;
+      id: number;
     };
-    warranty?: {
-        bodyMonth: number;
-        bodyMileage: number;
-        transmissionMonth: number;
-        transmissionMileage: number;
+  };
+  buy_now: number | null;
+  bid: number | null;
+  status: {
+    name: string;
+    id: number;
+  };
+  images: {
+    id: number;
+    normal: string[];
+    big: string[];
+    downloaded?: string[];
+  };
+  location: {
+    country: {
+      iso: string;
+      name: string;
     };
-    car_id?: string;
-    vehicle_id?: string;
-    isFeatured?: boolean;
-    sold?: boolean;
-    viewCount?: number;
-    subscriberCount?: number;
-    features?: string[];
-    vin?: string;
-    inspection?: any;
-    [key: string]: any;
+    city?: {
+      id: number;
+      name: string;
+    };
+  };
 }
 
 export interface FetchCarsResponse {
-    cars: Car[];
-    pagination: {
-        page: number;
-        totalPages: number;
-        total: number;
-    };
+  data: Car[];
+  links: {
+    first: string;
+    last: string | null;
+    prev: string | null;
+    next: string | null;
+  };
+  meta: {
+    current_page: number;
+    from: number;
+    path: string;
+    per_page: number;
+    to: number;
+    total: number;
+  };
+}
+
+export interface Manufacturer {
+  id: number;
+  name: string;
+  cars_qty?: number;
+  image?: string;
+  models_qty?: number;
+  cars?: boolean;
+  motorcycles?: boolean;
+}
+
+export interface Model {
+  id: number;
+  name: string;
+  manufacturer_id: number;
+  cars_qty?: number;
+  generations_qty?: number;
+}
+
+export interface Generation {
+  id: number;
+  name: string;
+  model_id: number;
+  manufacturer_id: number;
+  cars_qty?: number;
 }
 
 export interface FilterData {
-    makes: string[];
-    fuelTypes: string[];
-    transmissions: string[];
-    years: number[];
-    modelsByMake?: Record<string, string[]>;
+  manufacturers: Manufacturer[];
+  models: Model[];
+  generations: Generation[];
+  fuelTypes: Array<{ id: number; name: string }>;
+  transmissions: Array<{ id: number; name: string }>;
+  years: number[];
+  bodyTypes: Array<{ id: number; name: string }>;
+  colors: Array<{ id: number; name: string }>;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api/proxy';
-
-// Cache for ID mappings (internal ID -> external car_id)
-const idMappingCache = new Map<string, string>();
-// Cache for car details to avoid repeated fetching
-const carDetailsCache = new Map<string, Car>();
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://auctionsapi.com/api';
 
 // Helper to get the base URL for server-side requests
 const getBaseUrl = (): string => {
-    // 1. Check for explicitly set NEXTAUTH_URL (production)
-    if (process.env.NEXTAUTH_URL) {
-        return process.env.NEXTAUTH_URL;
-    }
-    // 2. Fallback for Vercel deployment
-    if (process.env.VERCEL_URL) {
-        return `https://${process.env.VERCEL_URL}`;
-    }
-    // 3. Final fallback for local development
-    return 'http://localhost:3000';
+  if (process.env.NEXTAUTH_URL) {
+    return process.env.NEXTAUTH_URL;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  return 'http://localhost:3000';
 };
 
 // Helper to construct full URLs for server-side requests
 const getFullUrl = (path: string): string => {
-    // If we're in the browser, a relative URL is perfect
-    if (typeof window !== 'undefined') {
-        return path;
-    }
+  if (typeof window !== 'undefined') {
+    return path;
+  }
 
-    // --- Server-side logic ---
-    // In development, ALWAYS use localhost
-    if (process.env.NODE_ENV === 'development') {
-        const baseUrl = 'http://localhost:3000';
-        const cleanBaseUrl = baseUrl.replace(/\/$/, '');
-        const cleanPath = path.startsWith('/') ? path : `/${path}`;
-        return `${cleanBaseUrl}${cleanPath}`;
-    }
-
-    // In production, use the actual domain
-    const baseUrl = process.env.NEXTAUTH_URL || 'https://formula-export.com';
+  if (process.env.NODE_ENV === 'development') {
+    const baseUrl = 'http://localhost:3000';
     const cleanBaseUrl = baseUrl.replace(/\/$/, '');
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
-
     return `${cleanBaseUrl}${cleanPath}`;
+  }
+
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://vetura-nga-korea.com';
+  const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${cleanBaseUrl}${cleanPath}`;
 };
 
 // Utility for fetch with timeout
 const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout = 15000) => {
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeout);
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
 
-    try {
-        const response = await fetch(url, {
-            ...options,
-            signal: controller.signal
-        });
-        clearTimeout(id);
-        return response;
-    } catch (error) {
-        clearTimeout(id);
-        throw error;
-    }
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+    throw error;
+  }
 };
 
-// Helper function to fetch by external ID
-async function fetchCarByExternalId(externalId: string): Promise<Car | null> {
-    // Check cache first
-    if (carDetailsCache.has(externalId)) {
-        console.log('📦 Using cached car details for external ID:', externalId);
-        return carDetailsCache.get(externalId) || null;
-    }
-
-    try {
-        const path = `/api/proxy/cars/${externalId}`;
-        const url = getFullUrl(path);
-
-        const response = await fetchWithTimeout(url, {
-            ...(typeof window !== 'undefined'
-                ? { next: { revalidate: 3600 } }
-                : { cache: 'no-store' })
-        }, 10000);
-
-        if (response.status === 200) {
-            const car = await response.json();
-            // Cache the result
-            carDetailsCache.set(externalId, car);
-            return car;
-        }
-        return null;
-    } catch (error) {
-        console.error('Error in fetchCarByExternalId:', error);
-        return null;
-    }
-}
-
-// FIXED: fetchCars function now uses getFullUrl consistently
+/**
+ * Fetch cars list with filters - Works for grid view
+ */
 export async function fetchCars(params: Record<string, any> = {}): Promise<FetchCarsResponse> {
-    try {
-        // Build query string
-        const queryString = new URLSearchParams();
-        Object.entries(params).forEach(([key, value]) => {
-            if (value !== undefined && value !== null) {
-                queryString.append(key, String(value));
-            }
-        });
+  try {
+    // Build query string with all possible filters from the docs
+    const queryParams: Record<string, string> = {};
 
-        // Construct the path
-        const path = `/api/proxy/cars${queryString.toString() ? `?${queryString.toString()}` : ''}`;
+    if (params.manufacturer_id) queryParams.manufacturer_id = params.manufacturer_id;
+    if (params.model_id) queryParams.model_id = params.model_id;
+    if (params.generation_id) queryParams.generation_id = params.generation_id;
+    if (params.from_year) queryParams.from_year = params.from_year;
+    if (params.to_year) queryParams.to_year = params.to_year;
+    if (params.year) queryParams.year = params.year;
+    if (params.vehicle_type) queryParams.vehicle_type = params.vehicle_type;
+    if (params.buy_now) queryParams.buy_now = params.buy_now;
+    if (params.domain_id) queryParams.domain_id = params.domain_id;
+    if (params.search_query) queryParams.search_query = params.search_query;
+    if (params.status) queryParams.status = params.status;
+    if (params.vin) queryParams.vin = params.vin;
+    if (params.name) queryParams.name = params.name;
+    if (params.cylinders) queryParams.cylinders = params.cylinders;
+    if (params.body_type) queryParams.body_type = params.body_type;
+    if (params.color) queryParams.color = params.color;
+    if (params.transmission) queryParams.transmission = params.transmission;
+    if (params.drive_wheel) queryParams.drive_wheel = params.drive_wheel;
+    if (params.country) queryParams.country = params.country;
+    if (params.fuel_type) queryParams.fuel_type = params.fuel_type;
+    if (params.condition) queryParams.condition = params.condition;
+    if (params.odometer_from_km) queryParams.odometer_from_km = params.odometer_from_km;
+    if (params.odometer_to_km) queryParams.odometer_to_km = params.odometer_to_km;
+    if (params.odometer_from_mi) queryParams.odometer_from_mi = params.odometer_from_mi;
+    if (params.odometer_to_mi) queryParams.odometer_to_mi = params.odometer_to_mi;
+    if (params.buy_now_price_from) queryParams.buy_now_price_from = params.buy_now_price_from;
+    if (params.buy_now_price_to) queryParams.buy_now_price_to = params.buy_now_price_to;
+    if (params.bid_price_from) queryParams.bid_price_from = params.bid_price_from;
+    if (params.bid_price_to) queryParams.bid_price_to = params.bid_price_to;
+    if (params.page) queryParams.page = params.page;
+    if (params.per_page) queryParams.per_page = params.per_page;
 
-        // Use the existing getFullUrl helper which handles server/client correctly
-        const url = getFullUrl(path);
+    // Default to 12 per page
+    if (!queryParams.per_page) queryParams.per_page = '12';
+    if (!queryParams.vehicle_type) queryParams.vehicle_type = '1'; // Default to cars
 
-        console.log('📡 Fetching cars from:', url);
+    const queryString = new URLSearchParams(queryParams).toString();
+    const path = `/api/proxy/cars${queryString ? `?${queryString}` : ''}`;
+    const url = getFullUrl(path);
 
-        const response = await fetchWithTimeout(url, {
-            ...(typeof window !== 'undefined'
-                ? { next: { revalidate: 3600 } }
-                : { cache: 'no-store' })
-        }, 15000); // 15 second timeout
+    console.log('📡 Fetching cars from proxy:', url);
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+    const response = await fetchWithTimeout(url, {
+      ...(typeof window !== 'undefined'
+        ? { next: { revalidate: 60 } }
+        : { cache: 'no-store' })
+    }, 15000);
 
-        const data = await response.json();
-
-        // Handle both response formats (direct array or wrapped object)
-        if (Array.isArray(data)) {
-            return {
-                cars: data,
-                pagination: {
-                    page: 1,
-                    totalPages: 1,
-                    total: data.length
-                }
-            };
-        }
-
-        return {
-            cars: data.cars || [],
-            pagination: data.pagination || {
-                page: 1,
-                totalPages: 1,
-                total: (data.cars || []).length
-            }
-        };
-    } catch (error) {
-        console.error('Error fetching cars:', error);
-        return {
-            cars: [],
-            pagination: {
-                page: 1,
-                totalPages: 0,
-                total: 0
-            }
-        };
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    const data = await response.json();
+
+    // ===== SIMPLIFIED ROBUST PAGINATION FIX =====
+    // If meta.total is missing, calculate it from the data we have
+    if (data.data && Array.isArray(data.data)) {
+      if (!data.meta) {
+        data.meta = {
+          current_page: Number(params.page) || 1,
+          from: 1,
+          path: '',
+          per_page: Number(params.per_page) || 12,
+          to: data.data.length,
+          total: data.data.length
+        };
+      } else if (!data.meta.total) {
+        // If total is missing, check if we have a next link
+        if (data.links && data.links.next) {
+          // We have a next link, so total must be greater than current page * per_page
+          // Set a reasonable estimate (current page + 1) * per_page
+          const currentPage = data.meta.current_page || Number(params.page) || 1;
+          const perPage = data.meta.per_page || Number(params.per_page) || 12;
+          data.meta.total = (currentPage + 1) * perPage;
+        } else {
+          // No next link, assume this is the last page
+          data.meta.total = data.data.length;
+        }
+      }
+
+      // Ensure other meta fields are set
+      data.meta.current_page = data.meta.current_page || Number(params.page) || 1;
+      data.meta.per_page = data.meta.per_page || Number(params.per_page) || 12;
+      data.meta.from = data.meta.from || ((data.meta.current_page - 1) * data.meta.per_page + 1);
+      data.meta.to = data.meta.to || Math.min(data.meta.current_page * data.meta.per_page, data.meta.total);
+    }
+
+    console.log('📊 Processed pagination meta:', data.meta);
+    console.log('📊 Processed pagination links:', data.links);
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching cars:', error);
+    return {
+      data: [],
+      links: { first: '', last: null, prev: null, next: null },
+      meta: {
+        current_page: Number(params.page) || 1,
+        from: 0,
+        path: '',
+        per_page: Number(params.per_page) || 12,
+        to: 0,
+        total: 0
+      },
+    };
+  }
 }
 
-export async function fetchCarDetails(carId: string): Promise<Car | null> {
-    console.log('🔍 fetchCarDetails called with ID:', carId);
+/**
+ * Get single car by VIN - The ONLY reliable method for car details
+ * API only works with search_query parameter
+ */
+export async function getCarByVin(vin: string): Promise<Car | null> {
+  try {
+    const path = `/api/proxy/cars?search_query=${encodeURIComponent(vin)}`;
+    const url = getFullUrl(path);
 
-    try {
-        // 1. Check if we already have a mapping for this internal ID
-        const mappedId = idMappingCache.get(carId);
-        if (mappedId) {
-            console.log('📦 Using cached ID mapping:', carId, '->', mappedId);
-            const car = await fetchCarByExternalId(mappedId);
-            if (car) return car;
-        }
+    console.log('📡 Fetching car by VIN:', vin);
 
-        // 2. Try to fetch using the provided ID directly (might be external ID)
-        console.log('📡 Trying direct fetch with ID:', carId);
-        const directResult = await fetchCarByExternalId(carId);
-        if (directResult) {
-            // If this worked, store the mapping (carId is the external ID)
-            if (directResult.car_id) {
-                idMappingCache.set(carId, directResult.car_id);
-            }
-            return directResult;
-        }
+    const response = await fetchWithTimeout(url, {
+      ...(typeof window !== 'undefined'
+        ? { next: { revalidate: 60 } }
+        : { cache: 'no-store' })
+    }, 10000);
 
-        // 3. If direct fetch fails, try to find the car in a batch of cars
-        console.log('🔍 ID not found directly, searching in cars list...');
-        try {
-            // Fetch a reasonable batch of cars
-            const { cars } = await fetchCars({ limit: 200 });
-
-            // Look for a car where either id or car_id matches
-            const foundCar = cars.find(c =>
-                c.id.toString() === carId ||
-                c.car_id?.toString() === carId
-            );
-
-            if (foundCar && foundCar.car_id) {
-                console.log('✅ Found car in list:', foundCar.id, 'with car_id:', foundCar.car_id);
-
-                // Store the mapping for future use
-                idMappingCache.set(carId, foundCar.car_id);
-
-                // If we already have the full car object, return it
-                if (carDetailsCache.has(foundCar.car_id)) {
-                    return carDetailsCache.get(foundCar.car_id) || null;
-                }
-
-                // Otherwise fetch using the correct external ID
-                return await fetchCarByExternalId(foundCar.car_id);
-            }
-        } catch (error) {
-            console.error('Error searching cars list:', error);
-        }
-
-        // 4. Final attempt: try fetching with the original ID without cleaning
-        // (sometimes the API expects the exact format)
-        try {
-            console.log('📡 Final attempt - trying original ID format:', carId);
-            const path = `/api/proxy/cars/${carId}`;
-            const url = getFullUrl(path);
-
-            const response = await fetchWithTimeout(url, {
-                ...(typeof window !== 'undefined'
-                    ? { next: { revalidate: 3600 } }
-                    : { cache: 'no-store' })
-            }, 10000);
-
-            if (response.status === 200) {
-                const car = await response.json();
-                console.log('✅ Car found with original ID format');
-                if (car.car_id) {
-                    idMappingCache.set(carId, car.car_id);
-                    carDetailsCache.set(car.car_id, car);
-                }
-                return car;
-            }
-        } catch (error) {
-            // Ignore, just means it didn't work
-        }
-
-        console.log('❌ Car not found with any method for ID:', carId);
-        return null;
-
-    } catch (error: any) {
-        if (error.name === 'AbortError') {
-            console.error(`❌ Request timeout for car ID: ${carId}`);
-        } else {
-            console.error('❌ Error in fetchCarDetails:', error);
-        }
-        return null;
+    if (!response.ok) {
+      console.log(`❌ API responded with status: ${response.status}`);
+      return null;
     }
+
+    const data = await response.json();
+
+    // The API returns { data: [...] } structure
+    if (data.data && data.data.length > 0) {
+      console.log('✅ Found car via VIN search');
+      return data.data[0];
+    }
+
+    console.log('🚗 Car not found for VIN:', vin);
+    return null;
+
+  } catch (error) {
+    console.error('Error fetching car by VIN:', error);
+    return null;
+  }
+}
+
+/**
+ * Helper to extract VIN from URL parameter
+ * VINs are 17 characters, alphanumeric (excluding I, O, Q)
+ */
+export function extractVinFromParam(param: string): string {
+  // VIN regex: 17 chars, alphanumeric, excluding I,O,Q
+  const vinRegex = /^[A-HJ-NPR-Z0-9]{17}$/i;
+
+  if (vinRegex.test(param)) {
+    return param; // It's already a VIN
+  }
+
+  // If it's a number (ID), log warning - API won't find it
+  if (/^\d+$/.test(param)) {
+    console.warn('⚠️ Using numeric ID for car lookup - this will not work. VIN required.');
+  }
+
+  return param; // Return as-is, API will return empty data
+}
+
+export async function fetchManufacturers(type: string = 'cars'): Promise<Manufacturer[]> {
+  try {
+    const path = `/api/proxy/manufacturers/${type}`;
+    const url = getFullUrl(path);
+
+    console.log('📡 Fetching manufacturers from proxy:', url);
+
+    const response = await fetchWithTimeout(url, {
+      ...(typeof window !== 'undefined'
+        ? { next: { revalidate: 3600 } }
+        : { cache: 'no-store' })
+    }, 10000);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.data || data || [];
+  } catch (error) {
+    console.error('Error fetching manufacturers:', error);
+    return [];
+  }
+}
+
+export async function fetchModels(manufacturerId: number, type: string = 'cars'): Promise<Model[]> {
+  try {
+    const path = `/api/proxy/models/${manufacturerId}/${type}`;
+    const url = getFullUrl(path);
+
+    console.log('📡 Fetching models from proxy:', url);
+
+    const response = await fetchWithTimeout(url, {
+      ...(typeof window !== 'undefined'
+        ? { next: { revalidate: 3600 } }
+        : { cache: 'no-store' })
+    }, 10000);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.data || data || [];
+  } catch (error) {
+    console.error('Error fetching models:', error);
+    return [];
+  }
+}
+
+export async function fetchGenerations(modelId: number, type: string = 'cars'): Promise<Generation[]> {
+  try {
+    const path = `/api/proxy/generations/${modelId}/${type}`;
+    const url = getFullUrl(path);
+
+    console.log('📡 Fetching generations from proxy:', url);
+
+    const response = await fetchWithTimeout(url, {
+      ...(typeof window !== 'undefined'
+        ? { next: { revalidate: 3600 } }
+        : { cache: 'no-store' })
+    }, 10000);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.data || data || [];
+  } catch (error) {
+    console.error('Error fetching generations:', error);
+    return [];
+  }
 }
 
 export async function fetchFilterData(): Promise<FilterData> {
-    try {
-        const path = `/api/proxy/cars/meta/types`;
-        const url = getFullUrl(path);
+  // Default fallback data
+  const defaultManufacturers: Manufacturer[] = [
+    { id: 16, name: 'BMW', cars_qty: 12375 },
+    { id: 147, name: 'Volkswagen', cars_qty: 1951 },
+    { id: 58, name: 'Hyundai', cars_qty: 45514 },
+    { id: 70, name: 'Kia', cars_qty: 41009 },
+    { id: 232, name: 'Genesis', cars_qty: 9310 },
+    { id: 26, name: 'Chevrolet', cars_qty: 7168 },
+    { id: 123, name: 'Renault Samsung', cars_qty: 5514 },
+    { id: 131, name: 'SsangYong', cars_qty: 6995 },
+    { id: 9, name: 'Audi', cars_qty: 0 },
+    { id: 3, name: 'Mercedes-Benz', cars_qty: 0 },
+    { id: 5, name: 'Toyota', cars_qty: 584 },
+    { id: 56, name: 'Honda', cars_qty: 437 },
+    { id: 48, name: 'Ford', cars_qty: 1203 },
+  ];
 
-        console.log(`🔍 [${typeof window === 'undefined' ? 'SERVER' : 'CLIENT'}] Fetching filter data from:`, url);
+  try {
+    // Fetch manufacturers from API
+    const manufacturers = await fetchManufacturers('cars');
 
-        const response = await fetchWithTimeout(url, {
-            ...(typeof window !== 'undefined'
-                ? { next: { revalidate: 300 } }
-                : { cache: 'no-store' })
-        }, 10000);
+    // Generate years from 1990 to current year
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: currentYear - 1989 }, (_, i) => currentYear - i);
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+    return {
+      manufacturers: manufacturers.length > 0 ? manufacturers : defaultManufacturers,
+      models: [],
+      generations: [],
+      fuelTypes: [
+        { id: 1, name: 'diesel' },
+        { id: 2, name: 'electric' },
+        { id: 3, name: 'hybrid' },
+        { id: 4, name: 'gasoline' }
+      ],
+      transmissions: [
+        { id: 1, name: 'automatic' },
+        { id: 2, name: 'manual' }
+      ],
+      years,
+      bodyTypes: [
+        { id: 1, name: 'sedan' },
+        { id: 2, name: 'wagon' },
+        { id: 3, name: 'coupe' },
+        { id: 5, name: 'suv' },
+        { id: 7, name: 'van' },
+        { id: 11, name: 'hatchback' }
+      ],
+      colors: [
+        { id: 1, name: 'silver' },
+        { id: 2, name: 'purple' },
+        { id: 3, name: 'orange' },
+        { id: 4, name: 'green' },
+        { id: 5, name: 'red' },
+        { id: 6, name: 'gold' },
+        { id: 8, name: 'brown' },
+        { id: 9, name: 'grey' },
+        { id: 11, name: 'blue' },
+        { id: 13, name: 'white' },
+        { id: 15, name: 'black' },
+        { id: 16, name: 'yellow' }
+      ]
+    };
+  } catch (error) {
+    console.error('Error in fetchFilterData:', error);
 
-        const data = await response.json();
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: currentYear - 1989 }, (_, i) => currentYear - i);
 
-        return {
-            makes: data.makes || [],
-            fuelTypes: data.fuelTypes || ['Diesel', 'Gasoline', 'Electric', 'Hybrid'],
-            transmissions: data.transmissions || ['Automatic', 'Manual'],
-            years: data.years || Array.from({ length: 10 }, (_, i) => 2026 - i),
-            modelsByMake: data.modelsByMake || {}
-        };
-    } catch (error: any) {
-        if (error.name === 'AbortError') {
-            console.error('❌ Request timeout for filter data');
-        } else {
-            console.error('❌ Error fetching filter data:', error);
-        }
-        // Return default data to prevent UI crashes
-        return {
-            makes: [],
-            fuelTypes: ['Diesel', 'Gasoline', 'Electric', 'Hybrid'],
-            transmissions: ['Automatic', 'Manual'],
-            years: Array.from({ length: 10 }, (_, i) => 2026 - i)
-        };
-    }
-}
-
-export async function fetchSoldStatus(carId: string): Promise<boolean> {
-    try {
-        const cleanId = carId.toString().replace(/\D/g, '');
-        const path = `/api/proxy/encar/sold-status?carId=${cleanId}`;
-        const url = getFullUrl(path);
-
-        const response = await fetchWithTimeout(url, {}, 5000);
-        const data = await response.json();
-        return data?.sold || false;
-    } catch (error) {
-        console.error('Error checking sold status:', error);
-        return false;
-    }
-}
-
-export async function fetchVehicleInfo(carId: string) {
-    try {
-        const cleanId = carId.toString().replace(/\D/g, '');
-        const path = `/api/proxy/encar/vehicle/${cleanId}`;
-        const url = getFullUrl(path);
-
-        const response = await fetchWithTimeout(url, {}, 5000);
-        return await response.json();
-    } catch (error) {
-        console.error('Error fetching vehicle info:', error);
-        return null;
-    }
-}
-
-// Helper function to check if API is healthy
-export async function checkApiHealth(): Promise<boolean> {
-    try {
-        const path = `/api/proxy/cars?limit=1`;
-        const url = getFullUrl(path);
-        const response = await fetchWithTimeout(url, {}, 5000);
-        return response.ok;
-    } catch {
-        return false;
-    }
-}
-
-// Helper function to get makes array from filter data
-export async function getMakesArray(): Promise<string[]> {
-    try {
-        const filterData = await fetchFilterData();
-        return filterData.makes;
-    } catch {
-        return [];
-    }
-}
-
-// Helper function to get models for a specific make
-export async function getModelsForMake(make: string): Promise<string[]> {
-    try {
-        const filterData = await fetchFilterData();
-        return filterData.modelsByMake?.[make] || [];
-    } catch {
-        return [];
-    }
+    return {
+      manufacturers: defaultManufacturers,
+      models: [],
+      generations: [],
+      fuelTypes: [
+        { id: 1, name: 'diesel' },
+        { id: 2, name: 'electric' },
+        { id: 3, name: 'hybrid' },
+        { id: 4, name: 'gasoline' }
+      ],
+      transmissions: [
+        { id: 1, name: 'automatic' },
+        { id: 2, name: 'manual' }
+      ],
+      years,
+      bodyTypes: [
+        { id: 1, name: 'sedan' },
+        { id: 2, name: 'wagon' },
+        { id: 3, name: 'coupe' },
+        { id: 5, name: 'suv' },
+        { id: 7, name: 'van' },
+        { id: 11, name: 'hatchback' }
+      ],
+      colors: [
+        { id: 1, name: 'silver' },
+        { id: 2, name: 'purple' },
+        { id: 3, name: 'orange' },
+        { id: 4, name: 'green' },
+        { id: 5, name: 'red' },
+        { id: 6, name: 'gold' },
+        { id: 8, name: 'brown' },
+        { id: 9, name: 'grey' },
+        { id: 11, name: 'blue' },
+        { id: 13, name: 'white' },
+        { id: 15, name: 'black' },
+        { id: 16, name: 'yellow' }
+      ]
+    };
+  }
 }
 
 // Helper function to format price
 export function formatPrice(price: number): string {
-    return new Intl.NumberFormat('sq-AL', {
-        style: 'currency',
-        currency: 'EUR',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-    }).format(price);
+  return new Intl.NumberFormat('sq-AL', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(price);
 }
 
 // Helper function to format mileage
 export function formatMileage(mileage: number): string {
-    return new Intl.NumberFormat('sq-AL').format(mileage) + ' km';
+  // Use a consistent format that doesn't change between server/client
+  // Simple approach: add a space every 3 digits from the right
+  if (!mileage && mileage !== 0) return 'N/A';
+
+  // Format with spaces as thousand separators (consistent everywhere)
+  const formatted = mileage.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+
+  return `${formatted} km`;
 }
 
 // Helper function to get fuel type in Albanian
 export function getFuelTypeAlbanian(fuelType: string): string {
-    const fuelMap: Record<string, string> = {
-        'Diesel': 'Naftë',
-        'Gasoline': 'Benzinë',
-        'Electric': 'Elektrik',
-        'Hybrid': 'Hibrid',
-        'LPG': 'LPG',
-        'CNG': 'CNG'
-    };
-    return fuelMap[fuelType] || fuelType;
+  const fuelMap: Record<string, string> = {
+    'diesel': 'Naftë',
+    'gasoline': 'Benzinë',
+    'petrol': 'Benzinë',
+    'electric': 'Elektrik',
+    'hybrid': 'Hibrid',
+    'gas': 'LPG'
+  };
+  return fuelMap[fuelType.toLowerCase()] || fuelType;
 }
 
 // Helper function to get transmission in Albanian
 export function getTransmissionAlbanian(transmission: string): string {
-    const transMap: Record<string, string> = {
-        'Automatic': 'Automatik',
-        'Manual': 'Manuel',
-        'CVT': 'CVT',
-        'Semi-Automatic': 'Gjysmë-automatik',
-        'Auto': 'Automatik'
-    };
-    return transMap[transmission] || transmission;
+  const transMap: Record<string, string> = {
+    'automatic': 'Automatik',
+    'manual': 'Manuel'
+  };
+  return transMap[transmission.toLowerCase()] || transmission;
+}
+
+// Helper function to get color in Albanian
+export function getColorAlbanian(color: string): string {
+  const colorMap: Record<string, string> = {
+    'black': 'Zi',
+    'white': 'Bardhë',
+    'silver': 'Argjend',
+    'grey': 'Gri',
+    'gray': 'Gri',
+    'blue': 'Kaltër',
+    'red': 'Kuq',
+    'green': 'Gjelbër',
+    'brown': 'Kafe',
+    'beige': 'Bezhë',
+    'yellow': 'Verdhë',
+    'orange': 'Portokalli',
+    'purple': 'Vjollcë',
+    'gold': 'Arë'
+  };
+  return colorMap[color.toLowerCase()] || color;
+}
+
+// Helper function to get body type in Albanian
+export function getBodyTypeAlbanian(bodyType: string): string {
+  const bodyMap: Record<string, string> = {
+    'sedan': 'Sedan',
+    'suv': 'SUV',
+    'coupe': 'Kupe',
+    'hatchback': 'Hatchback',
+    'wagon': 'Kombi',
+    'van': 'Furgon',
+    'pickup': 'Pickup',
+    'cabrio': 'Kabriolet'
+  };
+  return bodyMap[bodyType.toLowerCase()] || bodyType;
 }

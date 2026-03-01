@@ -1,89 +1,107 @@
+// components/home/Hero.tsx
 'use client';
 
-import { ChevronRight, Sparkles } from 'lucide-react';
+import { ChevronRight, Sparkles, Shield, Truck, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import CompactSearch from '@/components/ui/CompactSearch';
 
 export default function Hero() {
+    const fadeInUp = {
+        initial: { opacity: 0, y: 20 },
+        animate: { opacity: 1, y: 0 },
+        transition: { duration: 0.5 }
+    };
+
+    const staggerChildren = {
+        animate: {
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
+
     return (
-        <section className="bg-gradient-to-br from-primary to-primary/95 text-primary overflow-hidden relative">
-            {/* Background Image with Overlay */}
-            <div
-                className="absolute inset-0 bg-cover bg-center opacity-20"
+        <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-dark-blue via-dark-blue to-navy">
+            {/* Abstract Background Pattern */}
+            <div className="absolute inset-0 opacity-10">
+                <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_50%,rgba(255,107,0,0.1)_0%,transparent_50%)]" />
+                <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_80%,rgba(255,107,0,0.1)_0%,transparent_50%)]" />
+            </div>
+
+            {/* Grid Pattern */}
+            <div className="absolute inset-0 opacity-5"
                 style={{
-                    backgroundImage: 'url(https://png.pngtree.com/thumb_back/fw800/background/20251222/pngtree-sleek-red-sports-car-showcased-in-luxurious-showroom-reflected-on-glossy-image_20784512.webp)'
+                    backgroundImage: `linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                                    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)`,
+                    backgroundSize: '50px 50px'
                 }}
             />
 
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/95 to-transparent" />
-
-            {/* Decorative Elements */}
-            <div className="absolute top-20 left-10 w-72 h-72 bg-ferrari-red/10 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-20 right-10 w-96 h-96 bg-ferrari-red/20 rounded-full blur-3xl"></div>
-
-            <div className="container-custom relative py-20 md:py-28">
+            <div className="container-swiss relative">
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                    className="max-w-3xl"
+                    initial="initial"
+                    animate="animate"
+                    variants={staggerChildren}
+                    className="max-w-4xl"
                 >
                     {/* Badge */}
                     <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="inline-flex items-center gap-2 bg-ferrari-red/10 backdrop-blur-sm px-4 py-2 rounded-full border border-ferrari-red/20 mb-6"
+                        variants={fadeInUp}
+                        className="inline-flex items-center gap-2 bg-orange-10 backdrop-blur-sm px-4 py-2 rounded-full border border-orange-20 mb-6 md:mb-8"
                     >
-                        <Sparkles className="text-ferrari-red" size={18} />
-                        <span className="text-ferrari-red text-sm font-semibold tracking-wide">
+                        <Sparkles size={16} className="text-orange-primary" />
+                        <span className="text-orange-primary text-sm font-medium tracking-wide">
                             IMPORT DIREKT NGA KOREA
                         </span>
                     </motion.div>
 
                     {/* Main Heading */}
                     <motion.h1
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight"
+                        variants={fadeInUp}
+                        className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 tracking-tight"
                     >
-                        Makina cilësore nga Korea{' '}
-                        <span className="text-ferrari-red relative inline-block">
-                            në Kosovë
-                            <span className="absolute -bottom-2 left-0 right-0 h-1 bg-ferrari-red/30 rounded-full"></span>
+                        Makina cilësore{' '}
+                        <span className="text-orange-primary relative">
+                            nga Korea
+                            <span className="absolute -bottom-2 left-0 right-0 h-1 bg-orange-primary/30 rounded-full hidden md:block" />
                         </span>
+                        <br className="hidden md:block" />
+                        në Kosovë
                     </motion.h1>
 
                     {/* Description */}
                     <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 }}
-                        className="text-lg md:text-xl text-primary mb-8 max-w-2xl"
+                        variants={fadeInUp}
+                        className="text-base md:text-xl text-secondary mb-6 md:mb-8 max-w-2xl leading-relaxed"
                     >
-                        Formula Export ju sjell makinat më të mira nga Korea me çmime konkurruese.
+                        Vetura Nga Korea ju sjell makinat më të mira nga Korea me çmime konkurruese.
                         Inspektim të plotë, garanci dhe transport të sigurt.
                     </motion.p>
 
+                    {/* Mobile Search - Visible only on mobile */}
+                    <motion.div
+                        variants={fadeInUp}
+                        className="block lg:hidden mb-8"
+                    >
+                        <CompactSearch variant="hero" />
+                    </motion.div>
+
                     {/* CTA Buttons */}
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.5 }}
-                        className="flex flex-wrap gap-4"
+                        variants={fadeInUp}
+                        className="flex flex-wrap gap-3 md:gap-4 mb-12 md:mb-16"
                     >
                         <Link
                             href="/cars"
-                            className="group bg-ferrari-red hover:bg-ferrari-dark text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 inline-flex items-center"
+                            className="group btn-primary text-sm md:text-base"
                         >
                             Shfleto makinat
-                            <ChevronRight className="ml-2 group-hover:translate-x-1 transition-transform" size={20} />
+                            <ChevronRight size={16} className="md:w-[18px] group-hover:translate-x-1 transition-transform" />
                         </Link>
                         <Link
                             href="/how-it-works"
-                            className="group bg-transparent hover:bg-white/10 text-white border-2 border-white/30 hover:border-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 inline-flex items-center"
+                            className="group btn-secondary text-sm md:text-base"
                         >
                             Mëso më shumë
                         </Link>
@@ -91,48 +109,33 @@ export default function Hero() {
 
                     {/* Stats */}
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.6 }}
-                        className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 mt-16"
+                        variants={fadeInUp}
+                        className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8"
                     >
                         {[
-                            { value: '500+', label: 'Makina në stok' },
-                            { value: '98%', label: 'Klientë të kënaqur' },
-                            { value: '15 ditë', label: 'Transporti mesatar' }
+                            { icon: Truck, value: '500+', label: 'Makina në stok' },
+                            { icon: Shield, value: '98%', label: 'Klientë të kënaqur' },
+                            { icon: Clock, value: '15 ditë', label: 'Transporti' },
+                            { icon: Sparkles, value: '100%', label: 'Të inspektuara' }
                         ].map((stat, index) => (
                             <motion.div
                                 key={index}
-                                whileHover={{ scale: 1.05 }}
-                                className="text-center md:text-left"
+                                whileHover={{ y: -4 }}
+                                className="flex flex-col"
                             >
-                                <div className="text-2xl md:text-3xl font-bold text-ferrari-red mb-1">
-                                    {stat.value}
+                                <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+                                    <div className="p-1.5 md:p-2 bg-orange-10 rounded-lg">
+                                        <stat.icon size={16} className="md:w-5 md:h-5 text-orange-primary" />
+                                    </div>
+                                    <span className="text-lg md:text-2xl font-bold text-primary">
+                                        {stat.value}
+                                    </span>
                                 </div>
-                                <div className="text-sm text-muted">
+                                <span className="text-xs md:text-sm text-muted">
                                     {stat.label}
-                                </div>
+                                </span>
                             </motion.div>
                         ))}
-                    </motion.div>
-
-                    {/* Trust Badges */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.8 }}
-                        className="flex items-center gap-4 mt-12 pt-8 border-t border-white/10"
-                    >
-                        <div className="flex -space-x-2">
-                            {[1, 2, 3].map((i) => (
-                                <div key={i} className="w-8 h-8 rounded-full bg-ferrari-red/20 border-2 border-white/20 flex items-center justify-center text-xs text-white">
-                                    ✓
-                                </div>
-                            ))}
-                        </div>
-                        <p className="text-sm text-white/70">
-                            <span className="text-white font-semibold">1000+</span> makina të importuara me sukses
-                        </p>
                     </motion.div>
                 </motion.div>
             </div>

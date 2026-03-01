@@ -1,18 +1,36 @@
+// components/cars/RecentlyViewedTracker.tsx
 'use client';
 
 import { useEffect } from 'react';
-import { recentlyViewedService } from '@/lib/recentlyViewed';
+import { addToRecentlyViewed } from '@/lib/recentlyViewed';
+import type { Car } from '@/lib/api';
 
 interface RecentlyViewedTrackerProps {
-    car: any;
+    car: Car;
 }
 
 export default function RecentlyViewedTracker({ car }: RecentlyViewedTrackerProps) {
     useEffect(() => {
-        if (car) {
-            recentlyViewedService.add(car);
-        }
+        if (!car) return;
+
+        // Get the first lot for image and price
+        const lot = car.lots?.[0];
+        const image = lot?.images?.normal?.[0] || lot?.images?.downloaded?.[0] || '';
+        const price = lot?.buy_now || 0;
+
+        // Create title
+        const manufacturerName = car.manufacturer?.name || 'Makina';
+        const modelName = car.model?.name || '';
+        const title = car.title || `${manufacturerName} ${modelName}`.trim() || 'Makina pa emër';
+
+        // Add to recently viewed using the existing function
+        addToRecentlyViewed({
+            id: car.vin || car.id.toString(),
+            title: title,
+            image: image,
+            price: price
+        });
     }, [car]);
 
-    return null; // This component doesn't render anything
+    return null;
 }
