@@ -144,7 +144,7 @@ export interface FilterData {
   colors: Array<{ id: number; name: string }>;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://auctionsapi.com/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.bestautomarket.com/api';
 
 // Helper to get the base URL for server-side requests
 const getBaseUrl = (): string => {
