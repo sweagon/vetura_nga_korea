@@ -1,14 +1,13 @@
 // app/cars/CarsContent.tsx
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation'; // Removed useSearchParams
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import CarGrid from './CarGrid';
-import { Search, ChevronDown, Check, X, Filter, ArrowUpDown } from 'lucide-react';
+import { Search, X, Filter, ArrowUpDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { type Car } from '@/lib/api';
 import MobileFilters from '@/components/ui/MobileFilters';
-import FilterSidebar from '@/components/filters/FilterSidebar';
 import CustomSelect from '@/components/ui/CustomSelect';
 
 interface CarsContentProps {
@@ -24,11 +23,15 @@ interface SortOption {
 export default function CarsContent({ searchParams }: CarsContentProps) {
     const router = useRouter();
     const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
-    const [isSortOpen, setIsSortOpen] = useState(false);
     const [currentSort, setCurrentSort] = useState('recommended');
-    const sortRef = useRef<HTMLDivElement>(null);
+    const [gridKey, setGridKey] = useState(0); // Add key to force re-render
 
     const searchQuery = searchParams.get('search') || '';
+
+    // Force CarGrid to re-render when searchParams change
+    useEffect(() => {
+        setGridKey(prev => prev + 1);
+    }, [searchParams]);
 
     // Sort options with client-side sorting functions
     const sortOptions: SortOption[] = [
@@ -85,21 +88,9 @@ export default function CarsContent({ searchParams }: CarsContentProps) {
         },
     ];
 
-    // Close sort dropdown when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
-                setIsSortOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    const handleSortChange = (sort: string) => {
-        setCurrentSort(sort);
-        setIsSortOpen(false);
-        sessionStorage.setItem('carSortPreference', sort);
+    const handleSortChange = (value: string) => {
+        setCurrentSort(value);
+        sessionStorage.setItem('carSortPreference', value);
     };
 
     const handleClearSearch = () => {
@@ -107,10 +98,12 @@ export default function CarsContent({ searchParams }: CarsContentProps) {
         params.delete('search');
         params.set('page', '1');
         router.push(`/cars?${params.toString()}`);
+        router.refresh();
     };
 
     const handleClearAllFilters = () => {
         router.push('/cars');
+        router.refresh();
         setMobileFilterOpen(false);
         sessionStorage.removeItem('carSortPreference');
         setCurrentSort('recommended');
@@ -121,10 +114,8 @@ export default function CarsContent({ searchParams }: CarsContentProps) {
         params.delete(key);
         params.set('page', '1');
         router.push(`/cars?${params.toString()}`);
+        router.refresh();
     };
-
-    // Get current sort label
-    const currentSortLabel = sortOptions.find(opt => opt.value === currentSort)?.label || 'Më të përshtatshmet';
 
     // Get active filters
     const filterKeys = ['manufacturer_id', 'model_id', 'from_year', 'to_year', 'buy_now_price_to'];
@@ -138,6 +129,12 @@ export default function CarsContent({ searchParams }: CarsContentProps) {
         'to_year': 'Viti deri',
         'buy_now_price_to': 'Çmimi max',
     };
+
+    // Prepare sort options for CustomSelect
+    const sortSelectOptions = sortOptions.map(opt => ({
+        value: opt.value,
+        label: opt.label
+    }));
 
     return (
         <div className="container-swiss py-6 md:py-8">
@@ -179,18 +176,21 @@ export default function CarsContent({ searchParams }: CarsContentProps) {
                 </motion.div>
             )}
 
-            {/* Mobile Filter Button */}
-            <div className="lg:hidden mb-4">
+            {/* Mobile Filter Button - Visible on all screens now since no desktop sidebar */}
+            <div className="mb-4">
                 <button
                     onClick={() => setMobileFilterOpen(true)}
                     className={`
-            w-full bg-surface-2 border border-light/20 rounded-xl py-3 px-4
-            flex items-center justify-center gap-2 text-sm transition-colors
-            hover:bg-surface-3 hover:text-primary
-        `}
+                        w-full bg-surface-2 border border-light/20 rounded-xl py-3 px-4
+                        flex items-center justify-center gap-2 text-sm transition-colors
+                        hover:bg-surface-3 hover:text-primary
+                        ${activeFilterCount > 0 ? 'border-orange-primary/30 bg-orange-5' : ''}
+                    `}
                 >
-                    <Filter size={18} />
-                    <span>Filtro makina</span>
+                    <Filter size={18} className={activeFilterCount > 0 ? 'text-orange-primary' : ''} />
+                    <span className={activeFilterCount > 0 ? 'text-orange-primary font-medium' : ''}>
+                        Filtro makina
+                    </span>
                     {activeFilterCount > 0 && (
                         <span className="ml-1 px-2 py-0.5 bg-orange-primary text-white text-xs rounded-full">
                             {activeFilterCount}
@@ -205,7 +205,7 @@ export default function CarsContent({ searchParams }: CarsContentProps) {
                 onClose={() => setMobileFilterOpen(false)}
             />
 
-            {/* Sort Bar */}
+            {/* Sort Bar - Using CustomSelect */}
             <div className="bg-surface-2 border border-light/20 rounded-xl p-3 md:p-4 mb-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <span className="text-xs md:text-sm text-muted flex items-center gap-1">
@@ -213,15 +213,11 @@ export default function CarsContent({ searchParams }: CarsContentProps) {
                         Rendit sipas:
                     </span>
 
-                    {/* Sort Dropdown using CustomSelect */}
                     <div className="w-full sm:w-56">
                         <CustomSelect
                             value={currentSort}
                             onChange={handleSortChange}
-                            options={sortOptions.map(opt => ({
-                                value: opt.value,
-                                label: opt.label
-                            }))}
+                            options={sortSelectOptions}
                             placeholder="Zgjidh renditjen"
                             className="w-full"
                         />
@@ -249,7 +245,7 @@ export default function CarsContent({ searchParams }: CarsContentProps) {
                                     <span className="text-primary font-medium">{value}</span>
                                     <button
                                         onClick={() => handleRemoveFilter(key)}
-                                        className="ml-1 p-0.5 hover:bg-surface-3 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-orange-primary/20"
+                                        className="ml-1 p-0.5 hover:bg-surface-3 rounded-full transition-colors"
                                         aria-label={`Hiq filtrin ${filterLabels[key]}`}
                                     >
                                         <X size={10} className="text-muted hover:text-orange-primary" />
@@ -258,7 +254,7 @@ export default function CarsContent({ searchParams }: CarsContentProps) {
                             ))}
                             <button
                                 onClick={handleClearAllFilters}
-                                className="text-xs text-orange-primary hover:text-orange-dark transition-colors flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded px-2 py-1"
+                                className="text-xs text-orange-primary hover:text-orange-dark transition-colors flex items-center gap-1 rounded px-2 py-1"
                                 aria-label="Pastro të gjithë filtrat"
                             >
                                 <X size={12} />
@@ -269,8 +265,8 @@ export default function CarsContent({ searchParams }: CarsContentProps) {
                 </motion.div>
             )}
 
-            {/* Car Grid with sort prop */}
-            <CarGrid sortBy={currentSort} sortOptions={sortOptions} />
+            {/* Car Grid with sort prop and key to force re-render */}
+            <CarGrid key={gridKey} sortBy={currentSort} sortOptions={sortOptions} />
         </div>
     );
 }

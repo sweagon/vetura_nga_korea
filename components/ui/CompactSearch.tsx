@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation'; // Removed useSearchParams
+import { useRouter } from 'next/navigation';
 import SearchParamsWrapper from '@/components/SearchParamsWrapper';
 import {
     Search,
@@ -110,7 +110,9 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
         params.set('per_page', '12');
         params.set('vehicle_type', '1');
 
+        // Push the new URL and force a refresh
         router.push(`/cars?${params.toString()}`);
+        router.refresh(); // This forces the page to re-fetch data
         onSearch?.();
     };
 
@@ -166,18 +168,18 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
             <div className={`
                 flex items-center gap-2 
                 ${isHero
-                    ? 'bg-white/50 backdrop-blur-sm border border-white/10'
+                    ? 'bg-white/80 backdrop-blur-md border border-white/20 text-gray-900'
                     : 'bg-surface border border-light/20'
                 } 
                 rounded-xl p-1.5 shadow-lg
             `}>
                 {/* Search Icon */}
                 <div className="flex items-center justify-center w-9 h-9 shrink-0">
-                    <Search size={16} className={isHero ? 'text-white/60' : 'text-muted'} />
+                    <Search size={16} className={isHero ? 'text-gray-600' : 'text-muted'} />
                 </div>
 
                 {/* Filters */}
-                <div className="relative flex-1 flex items-center gap-1.5">
+                <div className="flex-1 flex flex-wrap items-center gap-1.5 min-w-0">
                     <CustomSelect
                         value={filters.manufacturerId}
                         onChange={(value) => updateFilter('manufacturerId', value)}
@@ -241,8 +243,8 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
                             className={`
                                 w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-200
                                 ${isHero
-                                    ? 'text-white/60 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30'
-                                    : 'text-muted hover:text-orange-primary hover:bg-surface-2 focus:outline-none focus:ring-2 focus:ring-orange-primary/30'
+                                    ? 'text-gray-600 hover:text-gray-900 hover:bg-white/20'
+                                    : 'text-muted hover:text-orange-primary hover:bg-surface-2'
                                 }
                             `}
                             title="Pastro filtrat"
@@ -256,11 +258,10 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
                         onClick={handleSearch}
                         className={`
                             h-9 px-4 rounded-lg text-sm font-medium transition-all duration-200 
-                            flex items-center gap-1.5
-                            focus:outline-none focus:ring-2 focus:ring-offset-2
+                            flex items-center gap-1.5 whitespace-nowrap
                             ${isHero
-                                ? 'bg-white text-blue-950 hover:bg-white/90 focus:ring-white/50 focus:ring-offset-0'
-                                : 'bg-orange-500 text-white hover:bg-orange-600 focus:ring-orange-500/50 focus:ring-offset-surface'
+                                ? 'bg-gray-900 text-white hover:bg-gray-800'
+                                : 'bg-orange-500 text-white hover:bg-orange-600'
                             }
                         `}
                         aria-label="Kërko"
@@ -270,10 +271,7 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
                         {activeFilterCount > 0 && (
                             <span className={`
                                 ml-0.5 px-1.5 py-0.5 text-xs rounded-full font-medium
-                                ${isHero
-                                    ? 'bg-blue-950/10 text-blue-950'
-                                    : 'bg-white/20 text-white'
-                                }
+                                ${isHero ? 'bg-white/20 text-white' : 'bg-white/20 text-white'}
                             `}>
                                 {activeFilterCount}
                             </span>
@@ -288,7 +286,7 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
 // Main export with Suspense wrapper
 export default function CompactSearch(props: CompactSearchProps) {
     return (
-        <SearchParamsWrapper fallback={<div className="h-9 bg-surface-2 rounded animate-pulse w-full" />}>
+        <SearchParamsWrapper fallback={<div className="h-11 bg-surface-2 rounded-xl animate-pulse w-full" />}>
             {(searchParams) => <CompactSearchContent searchParams={searchParams} {...props} />}
         </SearchParamsWrapper>
     );

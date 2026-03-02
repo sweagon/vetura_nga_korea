@@ -145,7 +145,7 @@ export interface FilterData {
 }
 
 // API Base URL - using NEXT_PUBLIC_ for client-side access
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.bestautomarket.com/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Helper to construct full URLs for server-side requests
 const getFullUrl = (path: string): string => {
@@ -297,37 +297,34 @@ export async function getCarByVin(vin: string): Promise<Car | null> {
     const url = getFullUrl(path);
 
     console.log('📡 Fetching car by VIN:', vin);
-    console.log('📡 Full URL:', url);
+
+    // Increased timeout to 25 seconds for production
+    const timeout = process.env.NODE_ENV === 'production' ? 25000 : 10000;
 
     const response = await fetchWithTimeout(url, {
       ...(typeof window !== 'undefined'
         ? { next: { revalidate: 60 } }
         : { cache: 'no-store' })
-    }, 10000);
-
-    console.log('📡 Response status:', response.status);
+    }, timeout);
 
     if (!response.ok) {
       console.log(`❌ API responded with status: ${response.status}`);
-
-      // Try to get error details
-      try {
-        const errorText = await response.text();
-        console.error('Error response text:', errorText.substring(0, 200));
-      } catch (e) {
-        // Ignore
-      }
-
       return null;
     }
 
     const data = await response.json();
-    console.log('📡 Response data structure:', Object.keys(data));
 
-    // The API returns { data: [...] } structure
+    // Handle different API response structures
     if (data.data && Array.isArray(data.data) && data.data.length > 0) {
-      console.log('✅ Found car via VIN search');
       return data.data[0];
+    }
+
+    if (data.id && data.vin) {
+      return data;
+    }
+
+    if (Array.isArray(data) && data.length > 0) {
+      return data[0];
     }
 
     console.log('🚗 Car not found for VIN:', vin);

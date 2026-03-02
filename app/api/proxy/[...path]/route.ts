@@ -22,18 +22,18 @@ export async function GET(
 
         console.log('🔁 Proxying to:', url);
 
-        // Add timeout to prevent hanging
+        // Increased timeout to 25 seconds for production
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), 25000);
 
         const response = await fetch(url, {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'User-Agent': 'VeturaNgaKorea/1.0', // Add user agent
+                'User-Agent': 'VeturaNgaKorea/1.0',
             },
             signal: controller.signal,
-            cache: 'no-store' // Don't cache in proxy
+            cache: 'no-store'
         }).finally(() => clearTimeout(timeoutId));
 
         const contentType = response.headers.get('content-type');
@@ -56,7 +56,10 @@ export async function GET(
         try {
             const data = JSON.parse(text);
             return NextResponse.json(data, {
-                status: response.status
+                status: response.status,
+                headers: {
+                    'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+                }
             });
         } catch (parseError) {
             console.error('❌ JSON parse error:', parseError);
