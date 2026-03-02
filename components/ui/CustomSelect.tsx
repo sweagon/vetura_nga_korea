@@ -3,7 +3,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { createPortal } from 'react-dom';
 
 export interface Option {
     value: string;
@@ -20,7 +20,6 @@ interface CustomSelectProps {
     disabled?: boolean;
     className?: string;
     variant?: 'default' | 'hero';
-    'aria-label'?: string;
 }
 
 export default function CustomSelect({
@@ -32,107 +31,145 @@ export default function CustomSelect({
     loading = false,
     disabled = false,
     className = '',
-    variant = 'default',
-    'aria-label': ariaLabel,
+    variant = 'default'
 }: CustomSelectProps) {
     const [isOpen, setIsOpen] = useState(false);
-    const selectRef = useRef<HTMLDivElement>(null);
+    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+    const buttonRef = useRef<HTMLButtonElement>(null);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const [mounted, setMounted] = useState(false);
 
     const selectedOption = options.find(opt => opt.value === value);
 
     useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (selectRef.current && !selectRef.current.contains(event.target as Node)) {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+
+    // Update position when opening
+    const openDropdown = () => {
+        if (disabled || loading) return;
+
+        if (buttonRef.current) {
+            const rect = buttonRef.current.getBoundingClientRect();
+            setDropdownPosition({
+                top: rect.bottom + window.scrollY,
+                left: rect.left + window.scrollX,
+                width: rect.width
+            });
+        }
+        setIsOpen(true);
+    };
+
+    // Close on click outside
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (!isOpen) return;
+
+            const target = e.target as Node;
+            const isButton = buttonRef.current?.contains(target);
+            const isDropdown = dropdownRef.current?.contains(target);
+
+            if (!isButton && !isDropdown) {
                 setIsOpen(false);
             }
         };
+
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+    }, [isOpen]);
+
+    // Close on scroll
+    useEffect(() => {
+        const handleScroll = () => {
+            if (isOpen) setIsOpen(false);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [isOpen]);
 
     const baseButtonClasses = variant === 'hero'
         ? 'bg-white/10 border border-white/20 text-white hover:bg-white/20'
         : 'bg-surface-2 border border-light/20 text-secondary hover:border-orange-primary/40 hover:text-primary';
 
     return (
-        <div className={`relative ${className}`} ref={selectRef}>
+        <div className={`relative ${className}`}>
             <button
+                ref={buttonRef}
                 type="button"
-                onClick={() => !disabled && !loading && setIsOpen(!isOpen)}
+                onClick={openDropdown}
                 className={`
-                    flex items-center gap-1.5 px-2.5 py-2
+                    flex items-center gap-2 px-3 py-2.5
                     ${baseButtonClasses}
-                    rounded-lg text-xs
-                    focus:outline-none focus:ring-2 focus:ring-orange-primary/20
+                    rounded-lg text-sm
                     transition-all duration-200
                     ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                    ${isOpen ? 'ring-2 ring-orange-primary/20' : ''}
                     w-full
-                    relative
-                    z-10
                 `}
                 disabled={disabled || loading}
-                aria-label={ariaLabel || placeholder}
-                aria-expanded={isOpen}
-                aria-haspopup="listbox"
             >
-                {icon && <span className="shrink-0 opacity-60">{icon}</span>}
-                <span className={`flex-1 text-left truncate ${selectedOption ? '' : 'opacity-60'}`}>
-                    {loading ? 'Duke ngarkuar...' : (selectedOption ? selectedOption.label : placeholder)}
+                {icon && <span className="shrink-0 text-muted">{icon}</span>}
+                <span className={`flex-1 text-left truncate ${selectedOption ? 'text-primary' : 'text-muted'}`}>
+                    {selectedOption ? selectedOption.label : placeholder}
                 </span>
-                <motion.div
-                    animate={{ rotate: isOpen ? 180 : 0 }}
-                    transition={{ duration: 0.2 }}
-                >
-                    <ChevronDown size={12} className="shrink-0 opacity-60" />
-                </motion.div>
+                <ChevronDown size={16} className={`shrink-0 text-muted transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 
-            <AnimatePresence>
-                {isOpen && !disabled && !loading && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -4 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute top-full left-0 right-0 mt-1 bg-primary border border-light/20 rounded-lg shadow-lg overflow-hidden z-dropdown"
-                        role="listbox"
-                    >
-                        <div className="max-h-60 overflow-y-auto custom-scrollbar">
+            {isOpen && mounted && createPortal(
+                <div
+                    ref={dropdownRef}
+                    style={{
+                        position: 'absolute',
+                        top: dropdownPosition.top,
+                        left: dropdownPosition.left,
+                        width: dropdownPosition.width,
+                        zIndex: 999999,
+                        pointerEvents: 'auto'
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div className="bg-primary border border-light/20 rounded-lg shadow-xl overflow-hidden">
+                        <div className="overflow-y-auto max-h-[300px]">
                             {options.length > 0 ? (
-                                options.map((option) => (
+                                options.map((option, idx) => (
                                     <button
                                         key={option.value}
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
                                             onChange(option.value);
                                             setIsOpen(false);
                                         }}
                                         className={`
-                                            w-full px-3 py-2 text-left text-xs
-                                            bg-orange-500 transition-colors
-                                            hover:bg-orange-400
-                                            flex items-center justify-between gap-2
-                                            ${value === option.value ? 'text-orange-primary bg-orange-300' : 'text-secondary'}
-                                            focus:outline-none focus:bg-surface-2
+                                            bg-blue-950
+                                            w-full px-4 py-3 text-left text-sm
+                                            hover:bg-surface-2 transition-colors
+                                            cursor-pointer
+                                            ${idx !== options.length - 1 ? 'border-b border-light/10' : ''}
+                                            ${value === option.value
+                                                ? 'bg-orange-5 text-orange-primary font-medium'
+                                                : 'text-secondary hover:text-primary'
+                                            }
                                         `}
-                                        role="option"
-                                        aria-selected={value === option.value}
                                     >
-                                        <span className="truncate">{option.label}</span>
-                                        {value === option.value && (
-                                            <Check size={12} className="text-orange-primary shrink-0" />
-                                        )}
+                                        <div className="flex items-center justify-between">
+                                            <span>{option.label}</span>
+                                            {value === option.value && (
+                                                <Check size={14} className="text-orange-primary" />
+                                            )}
+                                        </div>
                                     </button>
                                 ))
                             ) : (
-                                <div className="px-3 py-3 text-xs text-muted text-center">
+                                <div className="px-4 py-6 text-sm text-muted text-center">
                                     Nuk ka opsione
                                 </div>
                             )}
                         </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 }

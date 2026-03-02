@@ -1,12 +1,12 @@
 // components/cars/CarCard.tsx
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Fuel, Gauge, Calendar, Settings } from 'lucide-react';
-import { type Car, formatPrice, formatMileage, getFuelTypeAlbanian, getTransmissionAlbanian } from '@/lib/api';
+import { type Car, formatMileage, getFuelTypeAlbanian, getTransmissionAlbanian } from '@/lib/api';
 import { addToRecentlyViewed } from '@/lib/recentlyViewed';
-import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useConfig } from '@/lib/ConfigContext';
 
 interface CarCardProps {
     car: Car;
@@ -14,12 +14,14 @@ interface CarCardProps {
 }
 
 export default function CarCard({ car, priority = false }: CarCardProps) {
+    const { formatPrice } = useConfig();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
+    // Safely access nested properties with optional chaining and fallbacks
     const lot = car.lots?.[0];
     const price = lot?.buy_now || 0;
     const mileage = lot?.odometer?.km || 0;
@@ -78,11 +80,11 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
                     </div>
 
                     {/* VIN badge for development */}
-                    {process.env.NODE_ENV === 'development' && car.vin && (
+                    {/* {process.env.NODE_ENV === 'development' && car.vin && (
                         <div className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
                             VIN: {car.vin.slice(0, 8)}...
                         </div>
-                    )}
+                    )} */}
                 </div>
 
                 {/* Content */}
@@ -99,7 +101,9 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
                         </div>
                         <div className="flex items-center gap-2">
                             <Gauge size={14} className="text-muted shrink-0" />
-                            <span className="text-sm text-secondary truncate">{mounted ? formatMileage(mileage) : '...'}</span>
+                            <span className="text-sm text-secondary truncate">
+                                {mounted ? formatMileage(mileage) : '...'}
+                            </span>
                         </div>
                         <div className="flex items-center gap-2">
                             <Fuel size={14} className="text-muted shrink-0" />

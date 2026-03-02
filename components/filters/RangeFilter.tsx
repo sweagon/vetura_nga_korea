@@ -61,7 +61,7 @@ export default function RangeFilter({
                         min={min}
                         max={max}
                         step={step}
-                        className="input text-sm"
+                        className="input text-sm w-full"
                     />
                 </div>
                 <div className="relative">
@@ -73,16 +73,25 @@ export default function RangeFilter({
                         min={min}
                         max={max}
                         step={step}
-                        className="input text-sm"
+                        className="input text-sm w-full"
                     />
                 </div>
             </div>
 
             {/* Quick range buttons */}
-            <div className="flex gap-1 pt-1">
+            <div className="flex flex-wrap gap-1 pt-1">
                 <button
                     onClick={() => {
                         onFromChange(min.toString());
+                        onToChange('');
+                    }}
+                    className="px-2 py-1 text-xs bg-surface-2 border border-light/20 rounded hover:border-orange-primary/30 transition-colors"
+                >
+                    Të gjitha
+                </button>
+                <button
+                    onClick={() => {
+                        onFromChange('');
                         onToChange('5000');
                     }}
                     className="px-2 py-1 text-xs bg-surface-2 border border-light/20 rounded hover:border-orange-primary/30 transition-colors"

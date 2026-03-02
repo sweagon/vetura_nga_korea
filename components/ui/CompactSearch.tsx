@@ -177,7 +177,7 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
                 </div>
 
                 {/* Filters */}
-                <div className="flex-1 flex items-center gap-1.5">
+                <div className="relative flex-1 flex items-center gap-1.5">
                     <CustomSelect
                         value={filters.manufacturerId}
                         onChange={(value) => updateFilter('manufacturerId', value)}

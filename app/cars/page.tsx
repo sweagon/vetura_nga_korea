@@ -4,7 +4,7 @@ import CarsContentWrapper from './CarsContentWrapper';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Makina për Shitje | Formula Export',
+    title: 'Makina për Shitje | Vetura Nga Korea',
     description: 'Shfleto makinat më të mira nga Korea.',
 };
 

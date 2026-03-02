@@ -316,6 +316,12 @@ export async function fetchCars(params: Record<string, any> = {}): Promise<Fetch
  */
 export async function getCarByVin(vin: string): Promise<Car | null> {
   try {
+    // Validate VIN format
+    if (!vin || vin.length < 10) {
+      console.error('Invalid VIN provided:', vin);
+      return null;
+    }
+
     const path = `/api/proxy/cars?search_query=${encodeURIComponent(vin)}`;
     const url = getFullUrl(path);
 
@@ -329,18 +335,39 @@ export async function getCarByVin(vin: string): Promise<Car | null> {
 
     if (!response.ok) {
       console.log(`❌ API responded with status: ${response.status}`);
+
+      // Try to get error details
+      try {
+        const errorData = await response.text();
+        console.error('Error response:', errorData);
+      } catch (e) {
+        // Ignore
+      }
+
       return null;
     }
 
     const data = await response.json();
 
-    // The API returns { data: [...] } structure
-    if (data.data && data.data.length > 0) {
+    // Check different API response structures
+    if (data.data && Array.isArray(data.data) && data.data.length > 0) {
       console.log('✅ Found car via VIN search');
       return data.data[0];
     }
 
-    console.log('🚗 Car not found for VIN:', vin);
+    // Some APIs return the car directly
+    if (data.id && data.vin) {
+      console.log('✅ Found car (direct response)');
+      return data;
+    }
+
+    // Check if data is an array
+    if (Array.isArray(data) && data.length > 0) {
+      console.log('✅ Found car (array response)');
+      return data[0];
+    }
+
+    console.log('🚗 Car not found for VIN:', vin, 'Response structure:', Object.keys(data));
     return null;
 
   } catch (error) {
@@ -556,14 +583,14 @@ export async function fetchFilterData(): Promise<FilterData> {
 }
 
 // Helper function to format price
-export function formatPrice(price: number): string {
-  return new Intl.NumberFormat('sq-AL', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(price);
-}
+// export function formatPrice(price: number): string {
+//   return new Intl.NumberFormat('sq-AL', {
+//     style: 'currency',
+//     currency: 'EUR',
+//     minimumFractionDigits: 0,
+//     maximumFractionDigits: 0
+//   }).format(price);
+// }
 
 // Helper function to format mileage
 export function formatMileage(mileage: number): string {

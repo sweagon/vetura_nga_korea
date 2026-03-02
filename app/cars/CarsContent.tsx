@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { type Car } from '@/lib/api';
 import MobileFilters from '@/components/ui/MobileFilters';
 import FilterSidebar from '@/components/filters/FilterSidebar';
+import CustomSelect from '@/components/ui/CustomSelect';
 
 interface CarsContentProps {
     searchParams: URLSearchParams;
@@ -182,9 +183,11 @@ export default function CarsContent({ searchParams }: CarsContentProps) {
             <div className="lg:hidden mb-4">
                 <button
                     onClick={() => setMobileFilterOpen(true)}
-                    className="w-full bg-surface-2 border border-light/20 rounded-xl py-3 px-4 flex items-center justify-center gap-2 text-sm transition-colors hover:bg-surface-3 hover:text-primary focus:outline-none focus:ring-2 focus:ring-orange-primary/20"
-                    aria-label="Filtro makina"
-                    aria-expanded={mobileFilterOpen}
+                    className={`
+            w-full bg-surface-2 border border-light/20 rounded-xl py-3 px-4
+            flex items-center justify-center gap-2 text-sm transition-colors
+            hover:bg-surface-3 hover:text-primary
+        `}
                 >
                     <Filter size={18} />
                     <span>Filtro makina</span>
@@ -200,8 +203,6 @@ export default function CarsContent({ searchParams }: CarsContentProps) {
             <MobileFilters
                 isOpen={mobileFilterOpen}
                 onClose={() => setMobileFilterOpen(false)}
-                activeFilterCount={activeFilterCount}
-                onClearAll={handleClearAllFilters}
             />
 
             {/* Sort Bar */}
@@ -212,59 +213,18 @@ export default function CarsContent({ searchParams }: CarsContentProps) {
                         Rendit sipas:
                     </span>
 
-                    {/* Custom Sort Dropdown */}
-                    <div className="relative w-full sm:w-56 z-10" ref={sortRef}>
-                        <button
-                            onClick={() => setIsSortOpen(!isSortOpen)}
-                            className="w-full flex items-center justify-between gap-2 px-4 py-2.5 bg-surface-2 border border-light/30 rounded-lg text-sm text-primary hover:border-orange-primary/50 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-primary/20"
-                            aria-label="Zgjidh renditjen"
-                            aria-expanded={isSortOpen}
-                        >
-                            <span className="truncate">{currentSortLabel}</span>
-                            <motion.div
-                                animate={{ rotate: isSortOpen ? 180 : 0 }}
-                                transition={{ duration: 0.2 }}
-                            >
-                                <ChevronDown size={16} className="text-muted shrink-0" />
-                            </motion.div>
-                        </button>
-
-                        <AnimatePresence>
-                            {isSortOpen && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: -5 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -5 }}
-                                    transition={{ duration: 0.15 }}
-                                    className="absolute top-full left-0 right-0 mt-1 bg-surface-2 border border-light/30 rounded-lg shadow-xl overflow-hidden z-dropdown"
-                                >
-                                    <div className="max-h-60 overflow-y-auto custom-scrollbar">
-                                        {sortOptions.map((option) => (
-                                            <button
-                                                key={option.value}
-                                                onClick={() => handleSortChange(option.value)}
-                                                className={`
-                                                    w-full px-4 py-3 text-left text-sm
-                                                    hover:bg-surface-3 transition-colors
-                                                    flex items-center justify-between gap-2
-                                                    ${currentSort === option.value
-                                                        ? 'bg-orange-100 text-orange-primary'
-                                                        : 'text-secondary hover:text-primary'
-                                                    }
-                                                    focus:outline-none focus:bg-surface-3
-                                                `}
-                                                aria-label={option.label}
-                                            >
-                                                <span>{option.label}</span>
-                                                {currentSort === option.value && (
-                                                    <Check size={14} className="text-orange-primary shrink-0" />
-                                                )}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                    {/* Sort Dropdown using CustomSelect */}
+                    <div className="w-full sm:w-56">
+                        <CustomSelect
+                            value={currentSort}
+                            onChange={handleSortChange}
+                            options={sortOptions.map(opt => ({
+                                value: opt.value,
+                                label: opt.label
+                            }))}
+                            placeholder="Zgjidh renditjen"
+                            className="w-full"
+                        />
                     </div>
                 </div>
             </div>

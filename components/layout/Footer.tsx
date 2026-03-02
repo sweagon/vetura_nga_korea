@@ -1,9 +1,12 @@
-"use client";
 // components/layout/Footer.tsx
+'use client';
+
 import Link from 'next/link';
 import { Car, Mail, Phone, MapPin, ArrowUp } from 'lucide-react';
+import { useConfig } from '@/lib/ConfigContext';
 
 export default function Footer() {
+    const { config } = useConfig();
     const currentYear = new Date().getFullYear();
 
     const scrollToTop = () => {
@@ -12,14 +15,14 @@ export default function Footer() {
 
     const navigation = {
         main: [
-            { name: 'Home', href: '/' },
-            { name: 'Cars', href: '/cars' },
-            { name: 'Recently Viewed', href: '/recently-viewed' },
+            { name: 'Ballina', href: '/' },
+            { name: 'Makina', href: '/cars' },
+            { name: 'Shikuar së fundmi', href: '/recently-viewed' },
         ],
         legal: [
-            { name: 'Privacy Policy', href: '/privacy' },
-            { name: 'Terms of Service', href: '/terms' },
-            { name: 'Cookie Policy', href: '/cookies' },
+            { name: 'Privatësia', href: '/privacy' },
+            { name: 'Kushtet', href: '/terms' },
+            { name: 'Cookies', href: '/cookies' },
         ],
     };
 
@@ -33,7 +36,7 @@ export default function Footer() {
                         <div className="flex items-center space-x-2 mb-4">
                             <Car className="w-8 h-8 text-orange-primary" />
                             <span className="text-xl font-semibold text-primary">
-                                Vetura Nga Korea
+                                {config.siteName}
                             </span>
                         </div>
                         <p className="text-secondary text-sm leading-relaxed mb-6">
@@ -56,7 +59,7 @@ export default function Footer() {
                     {/* Navigation */}
                     <div>
                         <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-4">
-                            Navigation
+                            Navigimi
                         </h3>
                         <ul className="space-y-3">
                             {navigation.main.map((item) => (
@@ -75,7 +78,7 @@ export default function Footer() {
                     {/* Legal */}
                     <div>
                         <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-4">
-                            Legal
+                            Ligjore
                         </h3>
                         <ul className="space-y-3">
                             {navigation.legal.map((item) => (
@@ -94,19 +97,26 @@ export default function Footer() {
                     {/* Contact */}
                     <div>
                         <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-4">
-                            Contact
+                            Kontakti
                         </h3>
                         <ul className="space-y-3">
+                            {process.env.NODE_ENV === 'development' && (
+                                <li>
+                                    <Link href="/admin" className="text-secondary hover:text-orange-primary transition-colors text-sm">
+                                        Admin
+                                    </Link>
+                                </li>
+                            )}
                             <li className="flex items-start gap-3">
                                 <Mail size={16} className="text-muted mt-0.5" />
-                                <a href="mailto:info@vetura-nga-korea.com" className="text-secondary hover:text-orange-primary transition-colors text-sm">
-                                    info@vetura-nga-korea.com
+                                <a href={`mailto:${config.contactEmail}`} className="text-secondary hover:text-orange-primary transition-colors text-sm">
+                                    {config.contactEmail}
                                 </a>
                             </li>
                             <li className="flex items-start gap-3">
                                 <Phone size={16} className="text-muted mt-0.5" />
-                                <a href="tel:+38344123456" className="text-secondary hover:text-orange-primary transition-colors text-sm">
-                                    +383 44 123 456
+                                <a href={`tel:${config.contactPhone}`} className="text-secondary hover:text-orange-primary transition-colors text-sm">
+                                    {config.contactPhone}
                                 </a>
                             </li>
                             <li className="flex items-start gap-3">
@@ -122,13 +132,13 @@ export default function Footer() {
                 {/* Bottom Bar */}
                 <div className="mt-16 pt-8 border-t border-light flex flex-col md:flex-row justify-between items-center gap-4">
                     <p className="text-muted text-sm">
-                        © {currentYear} Vetura Nga Korea. Të gjitha të drejtat e rezervuara.
+                        © {currentYear} {config.siteName}. Të gjitha të drejtat e rezervuara.
                     </p>
                     <button
                         onClick={scrollToTop}
                         className="flex items-center gap-2 text-sm text-secondary hover:text-orange-primary transition-colors group"
                     >
-                        <span>Back to top</span>
+                        <span>Kthehu lart</span>
                         <ArrowUp size={16} className="group-hover:-translate-y-1 transition-transform" />
                     </button>
                 </div>

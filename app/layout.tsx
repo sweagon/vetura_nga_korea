@@ -6,6 +6,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import PageTransition from '@/components/ui/PageTransition';
 import ScrollToTop from '@/components/ui/ScrollToTop';
+import { ConfigProvider } from '@/lib/ConfigContext';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
     default: 'Vetura Nga Korea - Makina nga Korea në Kosovë',
     template: '%s | Vetura Nga Korea'
   },
-  description: 'Importoni makina cilësore nga Korea me çmime konkurruese. BMW, Audi, Mercedes-Benz dhe makina të tjera direkt në Kosovë.',
+  description: 'Importoni makina cilësore nga Korea me çmime konkurruese.',
 };
 
 export default function RootLayout({
@@ -29,16 +30,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="sq" dir="ltr" className={inter.variable}>
-      <body className="min-h-screen bg-primary antialiased" suppressHydrationWarning={true}
-      >
-        <Header />
-        <main className="pt-16 md:pt-20 min-h-[calc(100vh-64px)] md:min-h-[calc(100vh-80px)]">
-          <PageTransition>
-            {children}
-          </PageTransition>
-        </main>
-        <Footer />
-        <ScrollToTop />
+      <body className="min-h-screen bg-primary antialiased">
+        <ConfigProvider>
+          <Header />
+          <main className="pt-16 md:pt-20 min-h-[calc(100vh-64px)] md:min-h-[calc(100vh-80px)]">
+            <PageTransition>
+              {children}
+            </PageTransition>
+          </main>
+          <Footer />
+          <ScrollToTop />
+        </ConfigProvider>
       </body>
     </html>
   );
