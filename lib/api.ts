@@ -292,19 +292,16 @@ export async function getCarByVin(vin: string): Promise<Car | null> {
       return null;
     }
 
+    // For client-side, use relative path
     const path = `/api/proxy/cars?search_query=${encodeURIComponent(vin)}`;
-    const url = getFullUrl(path);
 
     console.log('📡 Fetching car by VIN:', vin);
 
-    // Increased timeout to 25 seconds for production
-    const timeout = process.env.NODE_ENV === 'production' ? 25000 : 10000;
-
-    const response = await fetchWithTimeout(url, {
+    const response = await fetch(path, {
       ...(typeof window !== 'undefined'
         ? { next: { revalidate: 60 } }
         : { cache: 'no-store' })
-    }, timeout);
+    });
 
     if (!response.ok) {
       console.log(`❌ API responded with status: ${response.status}`);
@@ -313,22 +310,11 @@ export async function getCarByVin(vin: string): Promise<Car | null> {
 
     const data = await response.json();
 
-    // Handle different API response structures
     if (data.data && Array.isArray(data.data) && data.data.length > 0) {
       return data.data[0];
     }
 
-    if (data.id && data.vin) {
-      return data;
-    }
-
-    if (Array.isArray(data) && data.length > 0) {
-      return data[0];
-    }
-
-    console.log('🚗 Car not found for VIN:', vin);
     return null;
-
   } catch (error) {
     console.error('Error fetching car by VIN:', error);
     return null;

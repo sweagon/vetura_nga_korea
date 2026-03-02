@@ -50,7 +50,7 @@ export const FilterSkeleton = () => (
 );
 
 export const DetailSkeleton = () => (
-    <div className="space-y-6 md:space-y-8">
+    <div className="container-swiss space-y-6 md:space-y-8">
         {/* Breadcrumb skeleton */}
         <div className="h-4 bg-surface-2 rounded w-48 md:w-64"></div>
 
