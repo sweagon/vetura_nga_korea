@@ -22,15 +22,19 @@ export async function GET(
 
         console.log('🔁 Proxying to:', url);
 
+        // Add timeout to prevent hanging
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
         const response = await fetch(url, {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
+                'User-Agent': 'VeturaNgaKorea/1.0', // Add user agent
             },
-            next: {
-                revalidate: 60 // Cache for 60 seconds
-            }
-        });
+            signal: controller.signal,
+            cache: 'no-store' // Don't cache in proxy
+        }).finally(() => clearTimeout(timeoutId));
 
         const contentType = response.headers.get('content-type');
         const text = await response.text();
@@ -44,46 +48,15 @@ export async function GET(
                     status: response.status,
                     url
                 },
-                {
-                    status: 404,
-                    headers: {
-                        'Access-Control-Allow-Origin': '*',
-                        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-                        'Access-Control-Allow-Headers': 'Content-Type',
-                        'Cache-Control': 'no-cache',
-                    }
-                }
+                { status: 404 }
             );
         }
 
         // Try to parse JSON
         try {
             const data = JSON.parse(text);
-
-            // Handle empty/not found responses
-            if (!data || (Array.isArray(data) && data.length === 0)) {
-                return NextResponse.json(
-                    { error: 'Car not found' },
-                    {
-                        status: 404,
-                        headers: {
-                            'Access-Control-Allow-Origin': '*',
-                            'Access-Control-Allow-Methods': 'GET, OPTIONS',
-                            'Access-Control-Allow-Headers': 'Content-Type',
-                            'Cache-Control': 'no-cache',
-                        }
-                    }
-                );
-            }
-
             return NextResponse.json(data, {
-                status: response.status,
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-                    'Access-Control-Allow-Headers': 'Content-Type',
-                    'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
-                },
+                status: response.status
             });
         } catch (parseError) {
             console.error('❌ JSON parse error:', parseError);
@@ -91,33 +64,27 @@ export async function GET(
                 {
                     error: 'Invalid JSON response',
                     status: response.status,
-                    contentType
+                    contentType,
+                    preview: text.substring(0, 200)
                 },
-                {
-                    status: 500,
-                    headers: {
-                        'Access-Control-Allow-Origin': '*',
-                        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-                        'Access-Control-Allow-Headers': 'Content-Type',
-                        'Cache-Control': 'no-cache',
-                    }
-                }
+                { status: 500 }
             );
         }
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Proxy error:', error);
+
+        // Handle timeout specifically
+        if (error.name === 'AbortError') {
+            return NextResponse.json(
+                { error: 'Request timeout - API took too long to respond' },
+                { status: 504 }
+            );
+        }
+
         return NextResponse.json(
-            { error: 'Failed to fetch data', details: error instanceof Error ? error.message : 'Unknown error' },
-            {
-                status: 500,
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-                    'Access-Control-Allow-Headers': 'Content-Type',
-                    'Cache-Control': 'no-cache',
-                }
-            }
+            { error: 'Failed to fetch data', details: error.message },
+            { status: 500 }
         );
     }
 }
@@ -129,7 +96,6 @@ export async function OPTIONS() {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'GET, OPTIONS',
             'Access-Control-Allow-Headers': 'Content-Type',
-            'Access-Control-Max-Age': '86400',
         },
     });
 }
