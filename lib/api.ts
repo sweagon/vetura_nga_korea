@@ -149,23 +149,22 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Helper to construct full URLs for server-side requests
 const getFullUrl = (path: string): string => {
-  // In browser, always use relative paths
+  // In browser, use relative paths
   if (typeof window !== 'undefined') {
     return path;
   }
 
-  // In development, use localhost
+  // Server-side: always use absolute URL
   if (process.env.NODE_ENV === 'development') {
     return `http://localhost:3000${path}`;
   }
 
-  // In production on Vercel, use the VERCEL_URL
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}${path}`;
-  }
+  // In production, use the VERCEL_URL or construct from host
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : process.env.NEXTAUTH_URL || 'https://vetura-nga-korea.vercel.app';
 
-  // Final fallback - relative path (works on Vercel)
-  return path;
+  return `${baseUrl}${path}`;
 };
 
 // Utility for fetch with timeout
