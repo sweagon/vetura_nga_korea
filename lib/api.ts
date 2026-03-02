@@ -144,36 +144,28 @@ export interface FilterData {
   colors: Array<{ id: number; name: string }>;
 }
 
+// API Base URL - using NEXT_PUBLIC_ for client-side access
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.bestautomarket.com/api';
-
-// Helper to get the base URL for server-side requests
-const getBaseUrl = (): string => {
-  if (process.env.NEXTAUTH_URL) {
-    return process.env.NEXTAUTH_URL;
-  }
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-  return 'http://localhost:3000';
-};
 
 // Helper to construct full URLs for server-side requests
 const getFullUrl = (path: string): string => {
+  // In browser, always use relative paths
   if (typeof window !== 'undefined') {
     return path;
   }
 
+  // In development, use localhost
   if (process.env.NODE_ENV === 'development') {
-    const baseUrl = 'http://localhost:3000';
-    const cleanBaseUrl = baseUrl.replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${cleanBaseUrl}${cleanPath}`;
+    return `http://localhost:3000${path}`;
   }
 
-  const baseUrl = process.env.NEXTAUTH_URL || 'https://vetura-nga-korea.com';
-  const cleanBaseUrl = baseUrl.replace(/\/$/, '');
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  return `${cleanBaseUrl}${cleanPath}`;
+  // In production on Vercel, use the VERCEL_URL
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}${path}`;
+  }
+
+  // Final fallback - relative path (works on Vercel)
+  return path;
 };
 
 // Utility for fetch with timeout
@@ -199,7 +191,7 @@ const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout 
  */
 export async function fetchCars(params: Record<string, any> = {}): Promise<FetchCarsResponse> {
   try {
-    // Build query string with all possible filters from the docs
+    // Build query string with all possible filters
     const queryParams: Record<string, string> = {};
 
     if (params.manufacturer_id) queryParams.manufacturer_id = params.manufacturer_id;
@@ -225,18 +217,14 @@ export async function fetchCars(params: Record<string, any> = {}): Promise<Fetch
     if (params.condition) queryParams.condition = params.condition;
     if (params.odometer_from_km) queryParams.odometer_from_km = params.odometer_from_km;
     if (params.odometer_to_km) queryParams.odometer_to_km = params.odometer_to_km;
-    if (params.odometer_from_mi) queryParams.odometer_from_mi = params.odometer_from_mi;
-    if (params.odometer_to_mi) queryParams.odometer_to_mi = params.odometer_to_mi;
     if (params.buy_now_price_from) queryParams.buy_now_price_from = params.buy_now_price_from;
     if (params.buy_now_price_to) queryParams.buy_now_price_to = params.buy_now_price_to;
-    if (params.bid_price_from) queryParams.bid_price_from = params.bid_price_from;
-    if (params.bid_price_to) queryParams.bid_price_to = params.bid_price_to;
     if (params.page) queryParams.page = params.page;
     if (params.per_page) queryParams.per_page = params.per_page;
 
-    // Default to 12 per page
+    // Default values
     if (!queryParams.per_page) queryParams.per_page = '12';
-    if (!queryParams.vehicle_type) queryParams.vehicle_type = '1'; // Default to cars
+    if (!queryParams.vehicle_type) queryParams.vehicle_type = '1';
 
     const queryString = new URLSearchParams(queryParams).toString();
     const path = `/api/proxy/cars${queryString ? `?${queryString}` : ''}`;
@@ -256,8 +244,7 @@ export async function fetchCars(params: Record<string, any> = {}): Promise<Fetch
 
     const data = await response.json();
 
-    // ===== SIMPLIFIED ROBUST PAGINATION FIX =====
-    // If meta.total is missing, calculate it from the data we have
+    // Process pagination data
     if (data.data && Array.isArray(data.data)) {
       if (!data.meta) {
         data.meta = {
@@ -268,29 +255,15 @@ export async function fetchCars(params: Record<string, any> = {}): Promise<Fetch
           to: data.data.length,
           total: data.data.length
         };
-      } else if (!data.meta.total) {
-        // If total is missing, check if we have a next link
-        if (data.links && data.links.next) {
-          // We have a next link, so total must be greater than current page * per_page
-          // Set a reasonable estimate (current page + 1) * per_page
-          const currentPage = data.meta.current_page || Number(params.page) || 1;
-          const perPage = data.meta.per_page || Number(params.per_page) || 12;
-          data.meta.total = (currentPage + 1) * perPage;
-        } else {
-          // No next link, assume this is the last page
-          data.meta.total = data.data.length;
-        }
+      } else {
+        // Ensure all meta fields exist
+        data.meta.current_page = data.meta.current_page || Number(params.page) || 1;
+        data.meta.per_page = data.meta.per_page || Number(params.per_page) || 12;
+        data.meta.from = data.meta.from || ((data.meta.current_page - 1) * data.meta.per_page + 1);
+        data.meta.to = data.meta.to || Math.min(data.meta.current_page * data.meta.per_page, data.meta.total || data.data.length);
+        data.meta.total = data.meta.total || data.data.length;
       }
-
-      // Ensure other meta fields are set
-      data.meta.current_page = data.meta.current_page || Number(params.page) || 1;
-      data.meta.per_page = data.meta.per_page || Number(params.per_page) || 12;
-      data.meta.from = data.meta.from || ((data.meta.current_page - 1) * data.meta.per_page + 1);
-      data.meta.to = data.meta.to || Math.min(data.meta.current_page * data.meta.per_page, data.meta.total);
     }
-
-    console.log('📊 Processed pagination meta:', data.meta);
-    console.log('📊 Processed pagination links:', data.links);
 
     return data;
   } catch (error) {
@@ -311,12 +284,10 @@ export async function fetchCars(params: Record<string, any> = {}): Promise<Fetch
 }
 
 /**
- * Get single car by VIN - The ONLY reliable method for car details
- * API only works with search_query parameter
+ * Get single car by VIN - API only works with search_query parameter
  */
 export async function getCarByVin(vin: string): Promise<Car | null> {
   try {
-    // Validate VIN format
     if (!vin || vin.length < 10) {
       console.error('Invalid VIN provided:', vin);
       return null;
@@ -335,39 +306,25 @@ export async function getCarByVin(vin: string): Promise<Car | null> {
 
     if (!response.ok) {
       console.log(`❌ API responded with status: ${response.status}`);
-
-      // Try to get error details
-      try {
-        const errorData = await response.text();
-        console.error('Error response:', errorData);
-      } catch (e) {
-        // Ignore
-      }
-
       return null;
     }
 
     const data = await response.json();
 
-    // Check different API response structures
+    // Handle different API response structures
     if (data.data && Array.isArray(data.data) && data.data.length > 0) {
-      console.log('✅ Found car via VIN search');
       return data.data[0];
     }
 
-    // Some APIs return the car directly
     if (data.id && data.vin) {
-      console.log('✅ Found car (direct response)');
       return data;
     }
 
-    // Check if data is an array
     if (Array.isArray(data) && data.length > 0) {
-      console.log('✅ Found car (array response)');
       return data[0];
     }
 
-    console.log('🚗 Car not found for VIN:', vin, 'Response structure:', Object.keys(data));
+    console.log('🚗 Car not found for VIN:', vin);
     return null;
 
   } catch (error) {
@@ -378,22 +335,20 @@ export async function getCarByVin(vin: string): Promise<Car | null> {
 
 /**
  * Helper to extract VIN from URL parameter
- * VINs are 17 characters, alphanumeric (excluding I, O, Q)
  */
 export function extractVinFromParam(param: string): string {
-  // VIN regex: 17 chars, alphanumeric, excluding I,O,Q
+  // VINs are 17 characters, alphanumeric (excluding I, O, Q)
   const vinRegex = /^[A-HJ-NPR-Z0-9]{17}$/i;
 
   if (vinRegex.test(param)) {
-    return param; // It's already a VIN
+    return param;
   }
 
-  // If it's a number (ID), log warning - API won't find it
   if (/^\d+$/.test(param)) {
-    console.warn('⚠️ Using numeric ID for car lookup - this will not work. VIN required.');
+    console.warn('⚠️ Using numeric ID - this will not work. VIN required.');
   }
 
-  return param; // Return as-is, API will return empty data
+  return param;
 }
 
 export async function fetchManufacturers(type: string = 'cars'): Promise<Manufacturer[]> {
@@ -472,7 +427,6 @@ export async function fetchGenerations(modelId: number, type: string = 'cars'): 
 }
 
 export async function fetchFilterData(): Promise<FilterData> {
-  // Default fallback data
   const defaultManufacturers: Manufacturer[] = [
     { id: 16, name: 'BMW', cars_qty: 12375 },
     { id: 147, name: 'Volkswagen', cars_qty: 1951 },
@@ -490,10 +444,7 @@ export async function fetchFilterData(): Promise<FilterData> {
   ];
 
   try {
-    // Fetch manufacturers from API
     const manufacturers = await fetchManufacturers('cars');
-
-    // Generate years from 1990 to current year
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: currentYear - 1989 }, (_, i) => currentYear - i);
 
@@ -582,25 +533,10 @@ export async function fetchFilterData(): Promise<FilterData> {
   }
 }
 
-// Helper function to format price
-// export function formatPrice(price: number): string {
-//   return new Intl.NumberFormat('sq-AL', {
-//     style: 'currency',
-//     currency: 'EUR',
-//     minimumFractionDigits: 0,
-//     maximumFractionDigits: 0
-//   }).format(price);
-// }
-
 // Helper function to format mileage
 export function formatMileage(mileage: number): string {
-  // Use a consistent format that doesn't change between server/client
-  // Simple approach: add a space every 3 digits from the right
   if (!mileage && mileage !== 0) return 'N/A';
-
-  // Format with spaces as thousand separators (consistent everywhere)
   const formatted = mileage.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-
   return `${formatted} km`;
 }
 

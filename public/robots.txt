@@ -17,10 +17,10 @@ Disallow: /*?*
 Crawl-delay: 5
 
 # Sitemap
-Sitemap: https://vetura-nga-korea.com/sitemap.xml
+Sitemap: https://vetura-nga-korea.vercel.app/sitemap.xml
 
 # Host
-Host: https://vetura-nga-korea.com
+Host: https://vetura-nga-korea.vercel.app
 
 # Google-specific
 User-agent: Googlebot

@@ -13,13 +13,17 @@ const nextConfig = {
         hostname: 'ci.encar.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'cars.import-motor.com',
+        pathname: '/**',
+      },
     ],
     formats: ['image/avif', 'image/webp'],
   },
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
-  // Remove experimental features that might cause issues
   experimental: {},
   async headers() {
     return [
