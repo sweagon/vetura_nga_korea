@@ -82,14 +82,6 @@ export default function Header() {
                                     }`}
                             >
                                 {item.name}
-                                {isActive(item.href) && (
-                                    <motion.div
-                                        layoutId="activeNav"
-                                        className={`absolute bottom-0 left-2 right-2 h-0.5 rounded-full ${scrolled ? 'bg-orange-primary' : 'bg-white'
-                                            }`}
-                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                                    />
-                                )}
                             </Link>
                         ))}
                     </div>
