@@ -9,7 +9,6 @@ import {
     DollarSign,
     Truck,
     Percent,
-    Globe,
     LogIn,
     Lock,
     Shield,
@@ -17,13 +16,24 @@ import {
     LogOut,
     Mail,
     Phone,
-    Building2
+    Building2,
+    ChevronDown,
+    ChevronUp,
+    Car,
+    ToggleLeft,
+    ToggleRight
 } from 'lucide-react';
 import { useConfig } from '@/lib/ConfigContext';
 
 // Maximum number of login attempts
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minuta
+
+// Vehicle types - Simplified to only SUV and Default
+const VEHICLE_TYPES = [
+    { id: 'suv', label: 'SUV', description: 'Automjete të mëdha, kamioneta' },
+    { id: 'default', label: 'Default (Të gjitha të tjerat)', description: 'Sedan, hatchback, coupe, van, pickup, etj.' }
+];
 
 export default function AdminPage() {
     const router = useRouter();
@@ -35,6 +45,7 @@ export default function AdminPage() {
     const [password, setPassword] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [saveMessage, setSaveMessage] = useState({ text: '', type: '' });
+    const [expandedVehicleType, setExpandedVehicleType] = useState<string | null>(null);
 
     // Security state
     const [loginAttempts, setLoginAttempts] = useState(0);
@@ -144,14 +155,6 @@ export default function AdminPage() {
             return;
         }
 
-        // Additional business logic checks
-        if (localConfig.markupPercentage === 0 && localConfig.minimumMarkup === 0) {
-            if (!confirm('Jeni duke vendosur marzhë 0%. Vazhdoni?')) {
-                setIsSaving(false);
-                return;
-            }
-        }
-
         // Update config in context
         updateConfig(localConfig);
 
@@ -169,7 +172,11 @@ export default function AdminPage() {
                 contactEmail: 'info@vetura-nga-korea.com',
                 contactPhone: '+383 44 123 456',
                 siteName: 'Vetura Nga Korea',
-                currency: 'EUR' as const
+                currency: 'EUR' as const,
+                vehicleTypes: {
+                    suv: { shippingCost: 4500, markupPercentage: 18, minimumMarkup: 1500, enabled: false },
+                    default: { shippingCost: 3500, markupPercentage: 15, minimumMarkup: 1000, enabled: true }
+                }
             };
             setLocalConfig(defaultConfig);
             updateConfig(defaultConfig);
@@ -181,9 +188,48 @@ export default function AdminPage() {
         setLocalConfig(prev => ({ ...prev, [field]: value }));
     };
 
+    const updateVehicleType = (type: string, field: string, value: any) => {
+        setLocalConfig(prev => ({
+            ...prev,
+            vehicleTypes: {
+                ...prev.vehicleTypes,
+                [type]: {
+                    ...(prev.vehicleTypes[type as keyof typeof prev.vehicleTypes] || {
+                        shippingCost: 3500,
+                        markupPercentage: 15,
+                        minimumMarkup: 1000,
+                        enabled: false
+                    }),
+                    [field]: value
+                }
+            }
+        }));
+    };
+
+    const toggleVehicleType = (type: string) => {
+        setLocalConfig(prev => {
+            const currentConfig = prev.vehicleTypes[type as keyof typeof prev.vehicleTypes];
+            return {
+                ...prev,
+                vehicleTypes: {
+                    ...prev.vehicleTypes,
+                    [type]: {
+                        ...(currentConfig || {
+                            shippingCost: 3500,
+                            markupPercentage: 15,
+                            minimumMarkup: 1000,
+                            enabled: false
+                        }),
+                        enabled: !(currentConfig?.enabled || false)
+                    }
+                }
+            };
+        });
+    };
+
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-dark-blue via-dark-blue to-navy flex items-center justify-center">
+            <div className="min-h-screen bg-linear-to-br from-dark-blue via-dark-blue to-navy flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-primary border-t-transparent"></div>
             </div>
         );
@@ -192,7 +238,7 @@ export default function AdminPage() {
     // Login Screen - Albanian
     if (!isAuthenticated) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-dark-blue via-dark-blue to-navy flex items-center justify-center p-4">
+            <div className="min-h-screen bg-linear-to-br from-dark-blue via-dark-blue to-navy flex items-center justify-center p-4">
                 <div className="bg-surface/50 backdrop-blur-xl border border-light/20 rounded-2xl p-8 w-full max-w-md relative">
                     {/* Security Badge */}
                     <div className="absolute -top-3 -right-3 bg-orange-primary text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
@@ -271,7 +317,7 @@ export default function AdminPage() {
 
     // Main Admin Panel - Albanian
     return (
-        <div className="min-h-screen bg-gradient-to-br from-dark-blue via-dark-blue to-navy py-12">
+        <div className="min-h-screen bg-linear-to-br from-dark-blue via-dark-blue to-navy py-12">
             <div className="container-swiss max-w-4xl">
                 {/* Header with Logout */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
@@ -289,8 +335,8 @@ export default function AdminPage() {
                         </div>
                     </div>
 
-                    {/* Buttons - Stack vertically on mobile, horizontal on desktop */}
-                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    {/* Buttons */}
+                    <div className="flex sm:flex-row gap-2 w-full sm:w-auto">
                         <button
                             onClick={handleReset}
                             className="px-3 py-2 sm:px-4 sm:py-2 text-sm text-secondary hover:text-primary border border-light/20 rounded-lg hover:bg-surface-2 transition flex items-center justify-center gap-2"
@@ -326,85 +372,213 @@ export default function AdminPage() {
                     </div>
                 )}
 
-                {/* Pricing Cards */}
-                {/* Pricing Cards - Fully Responsive */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
-                    {/* Transporti Card */}
-                    <div className="bg-surface/30 backdrop-blur-sm border border-light/20 rounded-xl p-4 sm:p-5 md:p-6">
-                        <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                            <div className="p-1.5 sm:p-2 bg-orange-primary/10 rounded-lg">
-                                <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-orange-primary" />
+                {/* Default Pricing Cards */}
+                <div className="mb-8">
+                    <h2 className="text-xl font-semibold text-primary mb-4 flex items-center gap-2">
+                        <DollarSign className="text-orange-primary" size={24} />
+                        <span>Cilësimet Bazë të Çmimeve</span>
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                        {/* Transporti Card */}
+                        <div className="bg-surface/30 backdrop-blur-sm border border-light/20 rounded-xl p-4 sm:p-5 md:p-6">
+                            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                                <div className="p-1.5 sm:p-2 bg-orange-primary/10 rounded-lg">
+                                    <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-orange-primary" />
+                                </div>
+                                <h3 className="text-sm sm:text-base font-medium text-primary">Transporti Bazë</h3>
                             </div>
-                            <h3 className="text-sm sm:text-base font-medium text-primary">Transporti</h3>
+                            <div className="relative">
+                                <span className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 text-xs sm:text-sm text-muted">€</span>
+                                <input
+                                    type="number"
+                                    value={localConfig.shippingCost}
+                                    onChange={(e) => updateField('shippingCost', Number(e.target.value))}
+                                    className="input pl-6 sm:pl-8 text-base sm:text-lg font-semibold"
+                                    step="100"
+                                    min="0"
+                                />
+                            </div>
+                            <p className="text-xs text-muted mt-2">Kosto bazë për të gjitha automjetet (përveç SUV)</p>
                         </div>
-                        <div className="relative">
-                            <span className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 text-xs sm:text-sm text-muted">€</span>
-                            <input
-                                type="number"
-                                value={localConfig.shippingCost}
-                                onChange={(e) => updateField('shippingCost', Number(e.target.value))}
-                                className="input pl-6 sm:pl-8 text-base sm:text-lg font-semibold"
-                                step="100"
-                                min="0"
-                            />
-                        </div>
-                        <p className="text-xs text-muted mt-2 leading-relaxed">Kosto fikse e transportit për makinë</p>
-                    </div>
 
-                    {/* Marzha % Card */}
-                    <div className="bg-surface/30 backdrop-blur-sm border border-light/20 rounded-xl p-4 sm:p-5 md:p-6">
-                        <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                            <div className="p-1.5 sm:p-2 bg-orange-primary/10 rounded-lg">
-                                <Percent className="w-4 h-4 sm:w-5 sm:h-5 text-orange-primary" />
+                        {/* Marzha % Card */}
+                        <div className="bg-surface/30 backdrop-blur-sm border border-light/20 rounded-xl p-4 sm:p-5 md:p-6">
+                            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                                <div className="p-1.5 sm:p-2 bg-orange-primary/10 rounded-lg">
+                                    <Percent className="w-4 h-4 sm:w-5 sm:h-5 text-orange-primary" />
+                                </div>
+                                <h3 className="text-sm sm:text-base font-medium text-primary">Marzha Bazë %</h3>
                             </div>
-                            <h3 className="text-sm sm:text-base font-medium text-primary">Marzha %</h3>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    value={localConfig.markupPercentage}
+                                    onChange={(e) => updateField('markupPercentage', Number(e.target.value))}
+                                    className="input text-base sm:text-lg font-semibold pr-8"
+                                    step="0.5"
+                                    min="0"
+                                    max="100"
+                                />
+                                <span className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-xs sm:text-sm text-muted">%</span>
+                            </div>
+                            <p className="text-xs text-muted mt-2">Përqindja e marzhës për të gjitha automjetet</p>
                         </div>
-                        <div className="relative">
-                            <input
-                                type="number"
-                                value={localConfig.markupPercentage}
-                                onChange={(e) => updateField('markupPercentage', Number(e.target.value))}
-                                className="input text-base sm:text-lg font-semibold pr-8"
-                                step="0.5"
-                                min="0"
-                                max="100"
-                            />
-                            <span className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-xs sm:text-sm text-muted">%</span>
-                        </div>
-                        <p className="text-xs text-muted mt-2 leading-relaxed">Përqindja që shtohet në total</p>
-                    </div>
 
-                    {/* Marzha Minimale Card */}
-                    <div className="bg-surface/30 backdrop-blur-sm border border-light/20 rounded-xl p-4 sm:p-5 md:p-6 sm:col-span-2 lg:col-span-1">
-                        <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                            <div className="p-1.5 sm:p-2 bg-orange-primary/10 rounded-lg">
-                                <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-orange-primary" />
+                        {/* Marzha Minimale Card */}
+                        <div className="bg-surface/30 backdrop-blur-sm border border-light/20 rounded-xl p-4 sm:p-5 md:p-6">
+                            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                                <div className="p-1.5 sm:p-2 bg-orange-primary/10 rounded-lg">
+                                    <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-orange-primary" />
+                                </div>
+                                <h3 className="text-sm sm:text-base font-medium text-primary">Marzha Minimale Bazë</h3>
                             </div>
-                            <h3 className="text-sm sm:text-base font-medium text-primary">Marzha Minimale</h3>
+                            <div className="relative">
+                                <span className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 text-xs sm:text-sm text-muted">€</span>
+                                <input
+                                    type="number"
+                                    value={localConfig.minimumMarkup}
+                                    onChange={(e) => updateField('minimumMarkup', Number(e.target.value))}
+                                    className="input pl-6 sm:pl-8 text-base sm:text-lg font-semibold"
+                                    step="100"
+                                    min="0"
+                                />
+                            </div>
+                            <p className="text-xs text-muted mt-2">Fitimi minimal për të gjitha automjetet</p>
                         </div>
-                        <div className="relative">
-                            <span className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 text-xs sm:text-sm text-muted">€</span>
-                            <input
-                                type="number"
-                                value={localConfig.minimumMarkup}
-                                onChange={(e) => updateField('minimumMarkup', Number(e.target.value))}
-                                className="input pl-6 sm:pl-8 text-base sm:text-lg font-semibold"
-                                step="100"
-                                min="0"
-                            />
-                        </div>
-                        <p className="text-xs text-muted mt-2 leading-relaxed">Fitimi minimal për makinë</p>
                     </div>
                 </div>
 
-                {/* Contact Information - Responsive */}
+                {/* Vehicle Type Pricing - Simplified */}
+                <div className="mb-8">
+                    <h2 className="text-xl font-semibold text-primary mb-4 flex items-center gap-2">
+                        <Car className="text-orange-primary" size={24} />
+                        <span>Çmime për SUV</span>
+                    </h2>
+                    <p className="text-sm text-secondary mb-4">
+                        Aktivizoni çmime të veçanta për automjetet e tipit SUV. Të gjitha tipet e tjera do të përdorin vlerat bazë.
+                    </p>
+
+                    <div className="space-y-3">
+                        {VEHICLE_TYPES.map((type) => {
+                            const typeConfig = localConfig.vehicleTypes[type.id as keyof typeof localConfig.vehicleTypes];
+                            const isExpanded = expandedVehicleType === type.id;
+
+                            return (
+                                <div
+                                    key={type.id}
+                                    className="bg-surface/30 backdrop-blur-sm border border-light/20 rounded-xl overflow-hidden"
+                                >
+                                    {/* Header */}
+                                    <div
+                                        className="flex items-center justify-between p-4 cursor-pointer hover:bg-surface-2/50 transition-colors"
+                                        onClick={() => setExpandedVehicleType(isExpanded ? null : type.id)}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    toggleVehicleType(type.id);
+                                                }}
+                                                className="focus:outline-none"
+                                            >
+                                                {typeConfig?.enabled ? (
+                                                    <ToggleRight className="w-6 h-6 text-orange-primary" />
+                                                ) : (
+                                                    <ToggleLeft className="w-6 h-6 text-muted" />
+                                                )}
+                                            </button>
+                                            <div>
+                                                <span className="font-medium text-primary">{type.label}</span>
+                                                <p className="text-xs text-muted mt-0.5">{type.description}</p>
+                                            </div>
+                                            {typeConfig?.enabled && (
+                                                <span className="text-xs bg-orange-primary/10 text-orange-primary px-2 py-0.5 rounded-full">
+                                                    Aktiv
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            {typeConfig?.enabled && (
+                                                <span className="text-sm text-secondary hidden sm:block">
+                                                    Transport: €{typeConfig.shippingCost} | Marzha: {typeConfig.markupPercentage}% | Min: €{typeConfig.minimumMarkup}
+                                                </span>
+                                            )}
+                                            {isExpanded ? (
+                                                <ChevronUp className="w-5 h-5 text-muted" />
+                                            ) : (
+                                                <ChevronDown className="w-5 h-5 text-muted" />
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Expanded Content */}
+                                    {isExpanded && typeConfig && (
+                                        <div className="p-4 border-t border-light/20 bg-surface-2/20">
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                                {/* Shipping Cost */}
+                                                <div>
+                                                    <label className="block text-xs text-muted mb-1">Transporti (€)</label>
+                                                    <input
+                                                        type="number"
+                                                        value={typeConfig.shippingCost}
+                                                        onChange={(e) => updateVehicleType(type.id, 'shippingCost', Number(e.target.value))}
+                                                        className="input text-sm w-full"
+                                                        step="100"
+                                                        min="0"
+                                                        disabled={!typeConfig.enabled}
+                                                    />
+                                                </div>
+
+                                                {/* Markup Percentage */}
+                                                <div>
+                                                    <label className="block text-xs text-muted mb-1">Marzha (%)</label>
+                                                    <input
+                                                        type="number"
+                                                        value={typeConfig.markupPercentage}
+                                                        onChange={(e) => updateVehicleType(type.id, 'markupPercentage', Number(e.target.value))}
+                                                        className="input text-sm w-full"
+                                                        step="0.5"
+                                                        min="0"
+                                                        max="100"
+                                                        disabled={!typeConfig.enabled}
+                                                    />
+                                                </div>
+
+                                                {/* Minimum Markup */}
+                                                <div>
+                                                    <label className="block text-xs text-muted mb-1">Marzha Minimale (€)</label>
+                                                    <input
+                                                        type="number"
+                                                        value={typeConfig.minimumMarkup}
+                                                        onChange={(e) => updateVehicleType(type.id, 'minimumMarkup', Number(e.target.value))}
+                                                        className="input text-sm w-full"
+                                                        step="100"
+                                                        min="0"
+                                                        disabled={!typeConfig.enabled}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {type.id === 'default' && (
+                                                <p className="text-xs text-muted mt-3 bg-surface-2 p-2 rounded-lg">
+                                                    ⚡ Këto vlera përdoren për të gjitha automjetet që nuk janë SUV (sedan, hatchback, coupe, van, pickup, etj.)
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Contact Information */}
                 <div className="bg-surface/30 backdrop-blur-sm border border-light/20 rounded-xl p-4 sm:p-5 md:p-6 mb-8">
                     <h2 className="text-lg sm:text-xl font-semibold text-primary mb-4 sm:mb-6 flex items-center gap-2">
                         <Building2 className="text-orange-primary w-5 h-5 sm:w-6 sm:h-6" size={20} />
                         <span>Informacionet e Kontaktit</span>
                     </h2>
 
-                    {/* Form fields - Stack on mobile, 2 columns on tablet+ */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
                         <div className="space-y-1.5">
                             <label className="block text-xs sm:text-sm text-muted">Emri i Faqes</label>
@@ -460,91 +634,87 @@ export default function AdminPage() {
                     </div>
                 </div>
 
-                {/* Live Preview - Responsive */}
+                {/* Live Preview */}
                 <div className="bg-surface/30 backdrop-blur-sm border border-light/20 rounded-xl p-4 sm:p-5 md:p-6 mb-8">
                     <h2 className="text-base sm:text-lg font-semibold text-primary mb-3 sm:mb-4">Parapamje e Çmimeve</h2>
 
                     <div className="bg-surface-2/50 rounded-lg p-4 sm:p-5 md:p-6">
-                        {/* Base Price Display */}
-                        <div className="text-center mb-4 sm:mb-6">
-                            <span className="text-xl sm:text-2xl md:text-3xl font-bold text-orange-primary">
-                                {new Intl.NumberFormat('sq-AL', {
-                                    style: 'currency',
-                                    currency: localConfig.currency,
-                                    minimumFractionDigits: 0,
-                                    maximumFractionDigits: 0
-                                }).format(15000)}
-                            </span>
-                            <span className="text-xs sm:text-sm text-muted block sm:inline sm:ml-2 mt-1 sm:mt-0">
-                                çmimi bazë
-                            </span>
-                        </div>
-
-                        {/* Price Breakdown - Responsive layout */}
-                        <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm max-w-md mx-auto">
-                            {/* Base Price */}
-                            <div className="flex justify-between items-center py-1.5 sm:py-2 border-b border-light/20">
-                                <span className="text-muted">Çmimi Bazë:</span>
-                                <span className="text-primary font-medium">
-                                    {new Intl.NumberFormat('sq-AL', {
-                                        style: 'currency',
-                                        currency: localConfig.currency,
-                                        minimumFractionDigits: 0
-                                    }).format(15000)}
-                                </span>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Default Vehicle Example */}
+                            <div className="border-r border-light/20 pr-6">
+                                <h3 className="text-sm font-medium text-primary mb-3">Shembull: Sedan / Hatchback / Të tjera</h3>
+                                <div className="space-y-2 text-xs sm:text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-muted">Çmimi Bazë:</span>
+                                        <span className="text-primary font-medium">€15,000</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted">Transporti (Default):</span>
+                                        <span className="text-primary font-medium">€{localConfig.vehicleTypes.default?.shippingCost || localConfig.shippingCost}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted">Marzha:</span>
+                                        <span className="text-primary font-medium">{localConfig.vehicleTypes.default?.markupPercentage || localConfig.markupPercentage}%</span>
+                                    </div>
+                                    <div className="flex justify-between font-bold pt-2 border-t border-light/20">
+                                        <span>Totali:</span>
+                                        <span className="text-orange-primary">
+                                            €{(15000 + (localConfig.vehicleTypes.default?.shippingCost || localConfig.shippingCost) +
+                                                Math.max(
+                                                    (15000 + (localConfig.vehicleTypes.default?.shippingCost || localConfig.shippingCost)) * (localConfig.vehicleTypes.default?.markupPercentage || localConfig.markupPercentage) / 100,
+                                                    localConfig.vehicleTypes.default?.minimumMarkup || localConfig.minimumMarkup
+                                                )).toLocaleString()}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
 
-                            {/* Shipping */}
-                            <div className="flex justify-between items-center py-1.5 sm:py-2 border-b border-light/20">
-                                <span className="text-muted">Transporti:</span>
-                                <span className="text-primary font-medium">
-                                    {new Intl.NumberFormat('sq-AL', {
-                                        style: 'currency',
-                                        currency: localConfig.currency,
-                                        minimumFractionDigits: 0
-                                    }).format(localConfig.shippingCost)}
-                                </span>
-                            </div>
-
-                            {/* Markup */}
-                            <div className="flex justify-between items-center py-1.5 sm:py-2 border-b border-light/20">
-                                <span className="text-muted">Marzha ({localConfig.markupPercentage}%):</span>
-                                <span className="text-primary font-medium">
-                                    {new Intl.NumberFormat('sq-AL', {
-                                        style: 'currency',
-                                        currency: localConfig.currency,
-                                        minimumFractionDigits: 0
-                                    }).format(Math.round((15000 + localConfig.shippingCost) * localConfig.markupPercentage / 100))}
-                                </span>
-                            </div>
-
-                            {/* Total */}
-                            <div className="flex justify-between items-center py-2 sm:py-3 font-bold">
-                                <span className="text-primary">Totali:</span>
-                                <span className="text-orange-primary text-base sm:text-lg md:text-xl">
-                                    {new Intl.NumberFormat('sq-AL', {
-                                        style: 'currency',
-                                        currency: localConfig.currency,
-                                        minimumFractionDigits: 0
-                                    }).format(
-                                        Math.max(
-                                            15000 + localConfig.shippingCost +
-                                            Math.round((15000 + localConfig.shippingCost) * localConfig.markupPercentage / 100),
-                                            15000 + localConfig.minimumMarkup
-                                        )
-                                    )}
-                                </span>
+                            {/* SUV Example */}
+                            <div>
+                                <h3 className="text-sm font-medium text-primary mb-3">Shembull: SUV</h3>
+                                <div className="space-y-2 text-xs sm:text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-muted">Çmimi Bazë:</span>
+                                        <span className="text-primary font-medium">€15,000</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted">Transporti (SUV):</span>
+                                        <span className="text-primary font-medium">
+                                            €{localConfig.vehicleTypes.suv?.enabled ? localConfig.vehicleTypes.suv.shippingCost : localConfig.shippingCost}
+                                            {!localConfig.vehicleTypes.suv?.enabled && <span className="text-xs text-muted ml-1">(bazë)</span>}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted">Marzha:</span>
+                                        <span className="text-primary font-medium">
+                                            {localConfig.vehicleTypes.suv?.enabled ? localConfig.vehicleTypes.suv.markupPercentage : localConfig.markupPercentage}%
+                                            {!localConfig.vehicleTypes.suv?.enabled && <span className="text-xs text-muted ml-1">(bazë)</span>}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between font-bold pt-2 border-t border-light/20">
+                                        <span>Totali:</span>
+                                        <span className="text-orange-primary">
+                                            €{(
+                                                15000 +
+                                                (localConfig.vehicleTypes.suv?.enabled ? localConfig.vehicleTypes.suv.shippingCost : localConfig.shippingCost) +
+                                                Math.max(
+                                                    (15000 + (localConfig.vehicleTypes.suv?.enabled ? localConfig.vehicleTypes.suv.shippingCost : localConfig.shippingCost)) *
+                                                    (localConfig.vehicleTypes.suv?.enabled ? localConfig.vehicleTypes.suv.markupPercentage : localConfig.markupPercentage) / 100,
+                                                    (localConfig.vehicleTypes.suv?.enabled ? localConfig.vehicleTypes.suv.minimumMarkup : localConfig.minimumMarkup)
+                                                )
+                                            ).toLocaleString()}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-
-                        {/* Helper text */}
-                        <p className="text-xs text-center text-muted mt-4 sm:mt-6 px-2">
-                            Ky është shembull se si do të duken çmimet për klientët
+                        <p className="text-xs text-center text-muted mt-4 bg-surface-2 p-2 rounded-lg">
+                            💡 Aktivizoni SUV për të aplikuar çmime të veçanta. Të gjitha automjetet e tjera përdorin vlerat bazë.
                         </p>
                     </div>
                 </div>
 
-                {/* Security Notice - Albanian */}
+                {/* Security Notice */}
                 <div className="mt-8 p-4 bg-surface-2/30 rounded-lg border border-light/20">
                     <div className="flex items-start gap-3">
                         <Shield className="w-5 h-5 text-orange-primary shrink-0 mt-0.5" />
@@ -561,14 +731,6 @@ export default function AdminPage() {
                             </p>
                         </div>
                     </div>
-                </div>
-
-                {/* Simple Instructions in Albanian */}
-                <div className="mt-4 p-4 bg-surface-2/30 rounded-lg border border-light/20">
-                    <p className="text-sm text-secondary">
-                        <span className="font-medium text-orange-primary">💡 Si të përdorni:</span> Ndryshoni vlerat më lart dhe klikoni "Ruaj Ndryshimet".
-                        Të gjitha cilësimet do të ruhen menjëherë dhe do të aplikohen në faqe.
-                    </p>
                 </div>
             </div>
         </div>

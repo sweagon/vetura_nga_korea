@@ -31,7 +31,7 @@ interface CarDetailClientProps {
 }
 
 export function CarDetailClient({ car }: CarDetailClientProps) {
-    const { config, formatPrice, calculateFinalPrice } = useConfig();
+    const { config, formatPrice, calculateFinalPrice, getVehicleTypeLabel } = useConfig();
     const [mounted, setMounted] = useState(false);
     const [imageLoadError, setImageLoadError] = useState(false);
 
@@ -43,16 +43,6 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
     // Safely access nested properties
     const lot = car.lots?.[0];
     const price = lot?.buy_now || 0;
-
-    // Calculate price details using the new object return type
-    const priceDetails = mounted ? calculateFinalPrice(price) : {
-        basePrice: price,
-        shippingCost: config.shippingCost,
-        markupAmount: 0,
-        finalPrice: price,
-        appliedMarkup: 'percentage' as const
-    };
-
     const mileage = lot?.odometer?.km || 0;
 
     // Filter valid images
@@ -65,6 +55,36 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
     const manufacturerName = car.manufacturer?.name || 'Makina';
     const modelName = car.model?.name || '';
     const carTitle = car.title || `${manufacturerName} ${modelName}`.trim() || 'Makina pa emër';
+
+    // Get vehicle type from car data - THIS IS THE KEY FIX
+    // The API returns body_type.name which could be "Suv", "Sedan", etc.
+    const rawBodyType = car.body_type?.name || '';
+
+    // Normalize to lowercase for comparison with config keys
+    const vehicleType = rawBodyType.toLowerCase();
+
+    // Check if this vehicle type exists in our config and is enabled
+    const hasTypeConfig = vehicleType &&
+        Object.keys(config.vehicleTypes).includes(vehicleType) &&
+        config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes]?.enabled;
+
+    // Use the vehicle type if available and enabled, otherwise use 'default'
+    const effectiveVehicleType = hasTypeConfig ? vehicleType : 'default';
+
+    // Calculate price details with the correct vehicle type
+    const priceDetails = mounted ? calculateFinalPrice(price, effectiveVehicleType) : {
+        basePrice: price,
+        shippingCost: config.shippingCost,
+        markupAmount: 0,
+        finalPrice: price,
+        appliedMarkup: 'percentage' as const,
+        vehicleTypeUsed: effectiveVehicleType
+    };
+
+    // For display, use the original API name with proper capitalization
+    const displayBodyType = rawBodyType
+        ? rawBodyType.charAt(0).toUpperCase() + rawBodyType.slice(1).toLowerCase()
+        : null;
 
     // Check if we have essential data
     const hasEssentialData = car.manufacturer?.name || car.model?.name || car.year;
@@ -162,6 +182,23 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                             </span>
                             <span className="w-1 h-1 rounded-full bg-muted" aria-hidden="true" />
                             <span className="badge badge-success">Në dispozicion</span>
+
+                            {/* Vehicle Type Badge */}
+                            {/* {displayBodyType && (
+                                <>
+                                    <span className="w-1 h-1 rounded-full bg-muted" aria-hidden="true" />
+                                    <span className="flex items-center gap-1">
+                                        <CarIcon size={14} className="shrink-0" />
+                                        {displayBodyType}
+                                        {hasTypeConfig && (
+                                            <span className="text-xs bg-orange-100 text-orange-primary px-1.5 py-0.5 rounded-full ml-1">
+                                                Aktive
+                                            </span>
+                                        )}
+                                    </span>
+                                </>
+                            )} */}
+
                             {lotNumber && (
                                 <>
                                     <span className="w-1 h-1 rounded-full bg-muted" aria-hidden="true" />
@@ -182,7 +219,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                         </div>
                     </div>
 
-                    {/* Warning for incomplete data - USING hasEssentialData */}
+                    {/* Warning for incomplete data */}
                     {!hasEssentialData && (
                         <div className="mb-8 p-4 bg-warning-bg border border-warning-border rounded-lg flex items-center gap-3">
                             <AlertCircle size={20} className="text-warning-text shrink-0" />
@@ -196,7 +233,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                     <div className="grid lg:grid-cols-3 gap-8">
                         {/* Left Column - Images & Details */}
                         <div className="lg:col-span-2 space-y-8">
-                            {/* Gallery - USING validImages and imageLoadError */}
+                            {/* Gallery */}
                             <div className="card overflow-hidden">
                                 <ImageGallery images={images} carName={carTitle} />
                                 {imageLoadError && validImages.length === 0 && (
@@ -305,6 +342,19 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                     <div className="text-3xl font-bold text-orange-primary mb-2">
                                         {formatPrice(priceDetails.finalPrice)}
                                     </div>
+
+                                    {/* Vehicle Type Pricing Badge */}
+                                    {displayBodyType && (
+                                        <div className="mb-3 inline-flex items-center gap-1 px-2 py-1 bg-orange-5 text-orange-primary rounded-lg text-xs">
+                                            <CarIcon size={12} />
+                                            <span>
+                                                {hasTypeConfig
+                                                    ? `Çmimi për ${displayBodyType} (i personalizuar)`
+                                                    : `Çmimi për ${displayBodyType} (bazë)`}
+                                            </span>
+                                        </div>
+                                    )}
+
                                     <p className="text-xs text-muted mb-4">
                                         Çmimi përfundimtar (përfshirë transportin dhe marzhën)
                                     </p>

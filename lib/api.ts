@@ -244,6 +244,7 @@ export async function fetchCars(params: Record<string, any> = {}): Promise<Fetch
     const data = await response.json();
 
     // Process pagination data
+    // Process pagination data
     if (data.data && Array.isArray(data.data)) {
       if (!data.meta) {
         data.meta = {
@@ -260,7 +261,15 @@ export async function fetchCars(params: Record<string, any> = {}): Promise<Fetch
         data.meta.per_page = data.meta.per_page || Number(params.per_page) || 12;
         data.meta.from = data.meta.from || ((data.meta.current_page - 1) * data.meta.per_page + 1);
         data.meta.to = data.meta.to || Math.min(data.meta.current_page * data.meta.per_page, data.meta.total || data.data.length);
-        data.meta.total = data.meta.total || data.data.length;
+
+        // CRITICAL FIX: If there's a next link but total is only 12, it's wrong
+        if (data.links?.next && (!data.meta.total || data.meta.total <= data.data.length)) {
+          // Estimate total based on next link
+          // This is a reasonable estimate - you have at least one more page
+          data.meta.total = (data.meta.current_page + 1) * data.meta.per_page;
+        } else {
+          data.meta.total = data.meta.total || data.data.length;
+        }
       }
     }
 

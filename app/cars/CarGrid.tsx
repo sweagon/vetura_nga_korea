@@ -43,6 +43,7 @@ export default function CarGrid({ sortBy = 'recommended', sortOptions = [] }: Ca
         fetchData();
     }, [searchParams]);
 
+
     // Apply client-side sorting
     useEffect(() => {
         if (data?.data) {
@@ -89,6 +90,15 @@ export default function CarGrid({ sortBy = 'recommended', sortOptions = [] }: Ca
     // Calculate pagination
     const totalPages = data.meta ? Math.ceil(data.meta.total / data.meta.per_page) : 1;
     const shouldShowPagination = data.meta && totalPages > 1;
+
+    console.log('🔍 Pagination Debug:', {
+        total: data?.meta?.total,
+        per_page: data?.meta?.per_page,
+        totalPages,
+        shouldShowPagination,
+        currentPage: data?.meta?.current_page,
+        hasMeta: !!data?.meta
+    });
 
     return (
         <div className="space-y-8">

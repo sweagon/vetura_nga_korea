@@ -7,14 +7,14 @@ interface PaginationProps {
     currentPage: number;
     totalPages: number;
     onPageChange: (page: number) => void;
-    maxVisiblePages?: number; // Optional prop to control visible page buttons
+    maxVisiblePages?: number;
 }
 
 export default function Pagination({
     currentPage,
     totalPages,
     onPageChange,
-    maxVisiblePages = 5 // Default to showing 5 page buttons
+    maxVisiblePages = 5
 }: PaginationProps) {
     // Don't render if invalid
     if (!totalPages || totalPages <= 1) {
@@ -32,7 +32,8 @@ export default function Pagination({
         let end = Math.min(totalPages - 1, start + maxVisiblePages - 1);
 
         // Adjust if we're near the end
-        if (end === totalPages - 1) {
+        if (end >= totalPages - 1) {
+            end = totalPages - 1;
             start = Math.max(2, totalPages - maxVisiblePages);
         }
 
@@ -62,7 +63,7 @@ export default function Pagination({
     const pageNumbers = getPageNumbers();
 
     return (
-        <nav className="flex items-center justify-center gap-2 py-6" aria-label="Pagination">
+        <nav className="flex items-center justify-center gap-2 py-8" aria-label="Pagination">
             {/* Previous Button */}
             <button
                 onClick={() => onPageChange(currentPage - 1)}
@@ -80,8 +81,8 @@ export default function Pagination({
                 <ChevronLeft size={18} />
             </button>
 
-            {/* Page Numbers - Now handles many pages gracefully */}
-            <div className="flex items-center gap-1">
+            {/* Page Numbers */}
+            <div className="flex items-center gap-1.5">
                 {pageNumbers.map((page, index) => (
                     typeof page === 'number' ? (
                         <button
@@ -102,7 +103,7 @@ export default function Pagination({
                             {page}
                         </button>
                     ) : (
-                        <span key={index} className="w-10 h-10 flex items-center justify-center text-muted">
+                        <span key={index} className="w-10 h-10 flex items-center justify-center text-muted select-none">
                             {page}
                         </span>
                     )

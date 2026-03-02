@@ -3,6 +3,13 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+export interface VehicleTypeConfig {
+    shippingCost: number;
+    markupPercentage: number;
+    minimumMarkup: number;
+    enabled: boolean;
+}
+
 export interface SiteConfig {
     shippingCost: number;
     markupPercentage: number;
@@ -11,6 +18,18 @@ export interface SiteConfig {
     contactPhone: string;
     siteName: string;
     currency: 'EUR' | 'USD' | 'ALL';
+    vehicleTypes: {
+        suv?: VehicleTypeConfig;
+        default?: VehicleTypeConfig;
+        // Make other types optional
+        sedan?: VehicleTypeConfig;
+        hatchback?: VehicleTypeConfig;
+        wagon?: VehicleTypeConfig;
+        coupe?: VehicleTypeConfig;
+        convertible?: VehicleTypeConfig;
+        van?: VehicleTypeConfig;
+        pickup?: VehicleTypeConfig;
+    };
 }
 
 const defaultConfig: SiteConfig = {
@@ -20,21 +39,27 @@ const defaultConfig: SiteConfig = {
     contactEmail: 'info@vetura-nga-korea.com',
     contactPhone: '+383 44 123 456',
     siteName: 'Vetura Nga Korea',
-    currency: 'EUR'
+    currency: 'EUR',
+    vehicleTypes: {
+        suv: { shippingCost: 4500, markupPercentage: 18, minimumMarkup: 1500, enabled: false },
+        default: { shippingCost: 3500, markupPercentage: 15, minimumMarkup: 1000, enabled: true }
+    }
 };
 
 interface ConfigContextType {
     config: SiteConfig;
     updateConfig: (newConfig: SiteConfig) => void;
-    calculateFinalPrice: (basePrice: number) => {
+    calculateFinalPrice: (basePrice: number, vehicleType?: string) => {
         basePrice: number;
         shippingCost: number;
         markupAmount: number;
         finalPrice: number;
         appliedMarkup: 'percentage' | 'minimum';
+        vehicleTypeUsed: string;
     };
     formatPrice: (price: number) => string;
     validateConfig: (config: Partial<SiteConfig>) => { valid: boolean; errors: string[] };
+    getVehicleTypeLabel: (type: string) => string;
 }
 
 const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
@@ -88,6 +113,19 @@ const validateConfigValues = (config: Partial<SiteConfig>): { valid: boolean; er
     return { valid: errors.length === 0, errors };
 };
 
+// Vehicle type labels in Albanian
+const vehicleTypeLabels: Record<string, string> = {
+    sedan: 'Sedan',
+    suv: 'SUV',
+    hatchback: 'Hatchback',
+    wagon: 'Kombi',
+    coupe: 'Kupe',
+    convertible: 'Kabriolet',
+    van: 'Furgon',
+    pickup: 'Pickup',
+    default: 'Tjetër'
+};
+
 export function ConfigProvider({ children }: { children: React.ReactNode }) {
     const [config, setConfig] = useState<SiteConfig>(defaultConfig);
     const [isClient, setIsClient] = useState(false);
@@ -97,6 +135,10 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
 
         const stored = getStorageConfig();
         if (stored) {
+            // Ensure stored config has vehicleTypes (for backward compatibility)
+            if (!stored.vehicleTypes) {
+                stored.vehicleTypes = defaultConfig.vehicleTypes;
+            }
             const { valid } = validateConfigValues(stored);
             if (valid) {
                 setConfig(stored);
@@ -123,19 +165,38 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    const calculateFinalPrice = (basePrice: number) => {
+    const calculateFinalPrice = (basePrice: number, vehicleType?: string) => {
         const validBasePrice = Math.max(0, basePrice || 0);
-        const shipping = Math.max(0, config.shippingCost || 0);
-        const markupPercent = Math.max(0, Math.min(100, config.markupPercentage || 0));
-        const minMarkup = Math.max(0, config.minimumMarkup || 0);
+
+        // Determine which config to use
+        let shipping = config.shippingCost;
+        let markupPercent = config.markupPercentage;
+        let minMarkup = config.minimumMarkup;
+        let usedType = 'default';
+
+        // Check if vehicle type is provided and exists in config
+        if (vehicleType && config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes]) {
+            const typeConfig = config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes];
+            if (typeConfig?.enabled) {
+                shipping = typeConfig.shippingCost;
+                markupPercent = typeConfig.markupPercentage;
+                minMarkup = typeConfig.minimumMarkup;
+                usedType = vehicleType;
+            }
+        }
+
+        // If no type-specific config or not enabled, use default if available
+        if (usedType === 'default' && config.vehicleTypes.default?.enabled) {
+            shipping = config.vehicleTypes.default.shippingCost;
+            markupPercent = config.vehicleTypes.default.markupPercentage;
+            minMarkup = config.vehicleTypes.default.minimumMarkup;
+        }
 
         const withShipping = validBasePrice + shipping;
         const percentageMarkup = withShipping * (markupPercent / 100);
 
         const useMinimumMarkup = percentageMarkup < minMarkup;
         const markupAmount = useMinimumMarkup ? minMarkup : percentageMarkup;
-
-        // Fix: Explicitly type the appliedMarkup as 'percentage' | 'minimum'
         const appliedMarkup: 'percentage' | 'minimum' = useMinimumMarkup ? 'minimum' : 'percentage';
 
         return {
@@ -143,7 +204,8 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
             shippingCost: shipping,
             markupAmount: Math.round(markupAmount),
             finalPrice: Math.round(withShipping + markupAmount),
-            appliedMarkup: appliedMarkup
+            appliedMarkup,
+            vehicleTypeUsed: usedType
         };
     };
 
@@ -164,13 +226,18 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
         return validateConfigValues(configToValidate);
     };
 
+    const getVehicleTypeLabel = (type: string): string => {
+        return vehicleTypeLabels[type] || type;
+    };
+
     return (
         <ConfigContext.Provider value={{
             config,
             updateConfig,
             calculateFinalPrice,
             formatPrice,
-            validateConfig
+            validateConfig,
+            getVehicleTypeLabel
         }}>
             {children}
         </ConfigContext.Provider>

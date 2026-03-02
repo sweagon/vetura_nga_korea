@@ -137,7 +137,7 @@ export default function CarsContent({ searchParams }: CarsContentProps) {
     }));
 
     return (
-        <div className="container-swiss pt-16 md:py-8">
+        <div className="container-swiss pt-12">
             {/* Header */}
             <div className="mb-6 md:mb-8">
                 <h1 className="text-2xl md:text-3xl font-bold text-primary mb-2">
