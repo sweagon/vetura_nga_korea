@@ -20,6 +20,7 @@ interface CustomSelectProps {
     disabled?: boolean;
     className?: string;
     variant?: 'default' | 'hero';
+    fullWidth?: boolean; // Add this prop
 }
 
 export default function CustomSelect({
@@ -31,7 +32,8 @@ export default function CustomSelect({
     loading = false,
     disabled = false,
     className = '',
-    variant = 'default'
+    variant = 'default',
+    fullWidth = false // Add this with default false
 }: CustomSelectProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
@@ -93,7 +95,7 @@ export default function CustomSelect({
         : 'bg-surface-2 border border-light/20 text-secondary hover:border-orange-primary/40 hover:text-primary';
 
     return (
-        <div className={`relative ${className}`}>
+        <div className={`relative ${fullWidth ? 'w-full' : ''} ${className}`}>
             <button
                 ref={buttonRef}
                 type="button"

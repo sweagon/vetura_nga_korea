@@ -149,17 +149,14 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Helper to construct full URLs for server-side requests
 const getFullUrl = (path: string): string => {
-  // In browser, use relative paths
   if (typeof window !== 'undefined') {
     return path;
   }
 
-  // Server-side: always use absolute URL
   if (process.env.NODE_ENV === 'development') {
     return `http://localhost:3000${path}`;
   }
 
-  // In production, use the VERCEL_URL or construct from host
   const baseUrl = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
     : process.env.NEXTAUTH_URL || 'https://vetura-nga-korea.vercel.app';
@@ -167,8 +164,8 @@ const getFullUrl = (path: string): string => {
   return `${baseUrl}${path}`;
 };
 
-// Utility for fetch with timeout
-const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout = 15000) => {
+// Fetch with timeout - increased to 30 seconds for slow API
+const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout = 30000) => {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
 
@@ -181,45 +178,46 @@ const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout 
     return response;
   } catch (error) {
     clearTimeout(id);
+
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        throw new Error(`Kërkesa zgjati shumë (${timeout / 1000} sekonda). Provo përsëri.`);
+      }
+    }
+
     throw error;
   }
 };
 
+// List of filters that the API actually supports
+const API_SUPPORTED_FILTERS = [
+  'manufacturer_id',
+  'model_id',
+  'from_year',
+  'to_year',
+  'buy_now_price_from',
+  'buy_now_price_to',
+  'odometer_from_km',
+  'odometer_to_km',
+  'page',
+  'per_page',
+  'vehicle_type'
+];
+
 /**
- * Fetch cars list with filters - Works for grid view
+ * Fetch cars list with filters - Only uses API-supported filters
  */
 export async function fetchCars(params: Record<string, any> = {}): Promise<FetchCarsResponse> {
   try {
-    // Build query string with all possible filters
+    // Build query string with ONLY supported filters
     const queryParams: Record<string, string> = {};
 
-    if (params.manufacturer_id) queryParams.manufacturer_id = params.manufacturer_id;
-    if (params.model_id) queryParams.model_id = params.model_id;
-    if (params.generation_id) queryParams.generation_id = params.generation_id;
-    if (params.from_year) queryParams.from_year = params.from_year;
-    if (params.to_year) queryParams.to_year = params.to_year;
-    if (params.year) queryParams.year = params.year;
-    if (params.vehicle_type) queryParams.vehicle_type = params.vehicle_type;
-    if (params.buy_now) queryParams.buy_now = params.buy_now;
-    if (params.domain_id) queryParams.domain_id = params.domain_id;
-    if (params.search_query) queryParams.search_query = params.search_query;
-    if (params.status) queryParams.status = params.status;
-    if (params.vin) queryParams.vin = params.vin;
-    if (params.name) queryParams.name = params.name;
-    if (params.cylinders) queryParams.cylinders = params.cylinders;
-    if (params.body_type) queryParams.body_type = params.body_type;
-    if (params.color) queryParams.color = params.color;
-    if (params.transmission) queryParams.transmission = params.transmission;
-    if (params.drive_wheel) queryParams.drive_wheel = params.drive_wheel;
-    if (params.country) queryParams.country = params.country;
-    if (params.fuel_type) queryParams.fuel_type = params.fuel_type;
-    if (params.condition) queryParams.condition = params.condition;
-    if (params.odometer_from_km) queryParams.odometer_from_km = params.odometer_from_km;
-    if (params.odometer_to_km) queryParams.odometer_to_km = params.odometer_to_km;
-    if (params.buy_now_price_from) queryParams.buy_now_price_from = params.buy_now_price_from;
-    if (params.buy_now_price_to) queryParams.buy_now_price_to = params.buy_now_price_to;
-    if (params.page) queryParams.page = params.page;
-    if (params.per_page) queryParams.per_page = params.per_page;
+    // Only add supported params that have values
+    Object.entries(params).forEach(([key, value]) => {
+      if (value && API_SUPPORTED_FILTERS.includes(key)) {
+        queryParams[key] = value.toString();
+      }
+    });
 
     // Default values
     if (!queryParams.per_page) queryParams.per_page = '12';
@@ -229,13 +227,13 @@ export async function fetchCars(params: Record<string, any> = {}): Promise<Fetch
     const path = `/api/proxy/cars${queryString ? `?${queryString}` : ''}`;
     const url = getFullUrl(path);
 
-    console.log('📡 Fetching cars from proxy:', url);
+    console.log('📡 Fetching cars from proxy with API params:', queryParams);
 
     const response = await fetchWithTimeout(url, {
       ...(typeof window !== 'undefined'
         ? { next: { revalidate: 60 } }
         : { cache: 'no-store' })
-    }, 15000);
+    }, 30000);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -243,7 +241,6 @@ export async function fetchCars(params: Record<string, any> = {}): Promise<Fetch
 
     const data = await response.json();
 
-    // Process pagination data
     // Process pagination data
     if (data.data && Array.isArray(data.data)) {
       if (!data.meta) {
@@ -256,20 +253,11 @@ export async function fetchCars(params: Record<string, any> = {}): Promise<Fetch
           total: data.data.length
         };
       } else {
-        // Ensure all meta fields exist
         data.meta.current_page = data.meta.current_page || Number(params.page) || 1;
         data.meta.per_page = data.meta.per_page || Number(params.per_page) || 12;
         data.meta.from = data.meta.from || ((data.meta.current_page - 1) * data.meta.per_page + 1);
         data.meta.to = data.meta.to || Math.min(data.meta.current_page * data.meta.per_page, data.meta.total || data.data.length);
-
-        // CRITICAL FIX: If there's a next link but total is only 12, it's wrong
-        if (data.links?.next && (!data.meta.total || data.meta.total <= data.data.length)) {
-          // Estimate total based on next link
-          // This is a reasonable estimate - you have at least one more page
-          data.meta.total = (data.meta.current_page + 1) * data.meta.per_page;
-        } else {
-          data.meta.total = data.meta.total || data.data.length;
-        }
+        data.meta.total = data.meta.total || data.data.length;
       }
     }
 
@@ -292,38 +280,37 @@ export async function fetchCars(params: Record<string, any> = {}): Promise<Fetch
 }
 
 /**
- * Get single car by VIN - API only works with search_query parameter
+ * Fetch car by VIN - Uses dedicated endpoint
  */
-export async function getCarByVin(vin: string): Promise<Car | null> {
+export async function fetchCarByVin(vin: string): Promise<Car | null> {
   try {
     if (!vin || vin.length < 10) {
       console.error('Invalid VIN provided:', vin);
       return null;
     }
 
-    // For client-side, use relative path
-    const path = `/api/proxy/cars?search_query=${encodeURIComponent(vin)}`;
+    const path = `/api/proxy/vin/${encodeURIComponent(vin)}`;
+    const url = getFullUrl(path);
 
-    console.log('📡 Fetching car by VIN:', vin);
+    console.log('📡 Fetching car by VIN from proxy:', url);
 
-    const response = await fetch(path, {
+    const response = await fetchWithTimeout(url, {
       ...(typeof window !== 'undefined'
-        ? { next: { revalidate: 60 } }
+        ? { next: { revalidate: 3600 } } // Cache for 1 hour
         : { cache: 'no-store' })
-    });
+    }, 10000);
 
-    if (!response.ok) {
-      console.log(`❌ API responded with status: ${response.status}`);
+    if (response.status === 200) {
+      const data = await response.json();
+      return data;
+    }
+
+    if (response.status === 404) {
+      console.log('❌ Car not found for VIN:', vin);
       return null;
     }
 
-    const data = await response.json();
-
-    if (data.data && Array.isArray(data.data) && data.data.length > 0) {
-      return data.data[0];
-    }
-
-    return null;
+    throw new Error(`HTTP error! status: ${response.status}`);
   } catch (error) {
     console.error('Error fetching car by VIN:', error);
     return null;

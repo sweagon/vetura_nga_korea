@@ -1,6 +1,11 @@
+// app/api/proxy/[...path]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 
 const API_BASE_URL = process.env.API_BASE_URL || 'https://api.bestautomarket.com/api';
+
+// Simple in-memory cache
+const cache: Record<string, { data: any; timestamp: number }> = {};
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export async function GET(
     request: NextRequest,
@@ -8,23 +13,33 @@ export async function GET(
 ) {
     try {
         const { path } = await params;
+        const searchParams = request.nextUrl.searchParams;
+        const cacheKey = `${path.join('/')}?${searchParams.toString()}`;
+
+        // Check cache first
+        const cached = cache[cacheKey];
+        if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+            console.log('📦 Proxy cache hit for:', cacheKey);
+            return NextResponse.json(cached.data, {
+                headers: {
+                    'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+                    'X-Cache': 'HIT'
+                }
+            });
+        }
 
         if (!path || path.length === 0) {
-            return NextResponse.json(
-                { error: 'No path provided' },
-                { status: 404 }
-            );
+            return NextResponse.json({ error: 'No path provided' }, { status: 404 });
         }
 
         const pathString = path.join('/');
-        const searchParams = request.nextUrl.searchParams;
         const url = `${API_BASE_URL}/${pathString}${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
 
         console.log('🔁 Proxying to:', url);
 
-        // Increased timeout to 25 seconds for production
+        // Increase timeout to 45 seconds for slow API
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 25000);
+        const timeoutId = setTimeout(() => controller.abort(), 45000);
 
         const response = await fetch(url, {
             headers: {
@@ -33,51 +48,40 @@ export async function GET(
                 'User-Agent': 'VeturaNgaKorea/1.0',
             },
             signal: controller.signal,
-            cache: 'no-store'
+            cache: 'force-cache' // Use fetch cache
         }).finally(() => clearTimeout(timeoutId));
 
-        const contentType = response.headers.get('content-type');
         const text = await response.text();
 
         // Check if response is HTML (error page)
         if (text.trim().startsWith('<!DOCTYPE')) {
             console.error(`⚠️ API returned HTML for ${url}`);
             return NextResponse.json(
-                {
-                    error: 'API returned HTML instead of JSON',
-                    status: response.status,
-                    url
-                },
+                { error: 'API returned HTML instead of JSON' },
                 { status: 404 }
             );
         }
 
-        // Try to parse JSON
-        try {
-            const data = JSON.parse(text);
-            return NextResponse.json(data, {
-                status: response.status,
-                headers: {
-                    'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
-                }
-            });
-        } catch (parseError) {
-            console.error('❌ JSON parse error:', parseError);
-            return NextResponse.json(
-                {
-                    error: 'Invalid JSON response',
-                    status: response.status,
-                    contentType,
-                    preview: text.substring(0, 200)
-                },
-                { status: 500 }
-            );
-        }
+        // Parse JSON
+        const data = JSON.parse(text);
+
+        // Store in cache
+        cache[cacheKey] = {
+            data,
+            timestamp: Date.now()
+        };
+
+        return NextResponse.json(data, {
+            status: response.status,
+            headers: {
+                'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+                'X-Cache': 'MISS'
+            }
+        });
 
     } catch (error: any) {
         console.error('Proxy error:', error);
 
-        // Handle timeout specifically
         if (error.name === 'AbortError') {
             return NextResponse.json(
                 { error: 'Request timeout - API took too long to respond' },
@@ -86,7 +90,7 @@ export async function GET(
         }
 
         return NextResponse.json(
-            { error: 'Failed to fetch data', details: error.message },
+            { error: 'Failed to fetch data' },
             { status: 500 }
         );
     }

@@ -7,12 +7,18 @@ import { Filter } from 'lucide-react';
 import { useCarFilters } from '@/hooks/useCarFilters';
 import FilterSection from './FilterSection';
 import MobileSelect from '@/components/ui/MobileSelect';
+import RangeFilter from './RangeFilter';
+import {
+    translateFuel,
+    translateTransmission,
+    translateColor,
+    getTranslatedManufacturers
+} from '@/lib/translations';
 
 interface FilterSidebarProps {
     onApply?: () => void;
 }
 
-// Define local filter type that matches what we use
 interface LocalFilters {
     manufacturerId: string;
     modelId: string;
@@ -22,9 +28,6 @@ interface LocalFilters {
     priceTo: string;
     odometerFrom: string;
     odometerTo: string;
-    transmissionId: string;
-    fuelId: string;
-    colorId: string;
 }
 
 export default function FilterSidebar({ onApply }: FilterSidebarProps) {
@@ -41,9 +44,6 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
         priceTo: filters.priceTo,
         odometerFrom: filters.odometerFrom,
         odometerTo: filters.odometerTo,
-        transmissionId: filters.transmissionId,
-        fuelId: filters.fuelId,
-        colorId: filters.colorId,
     });
 
     const [expandedSections, setExpandedSections] = useState({
@@ -68,9 +68,6 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
             priceTo: filters.priceTo,
             odometerFrom: filters.odometerFrom,
             odometerTo: filters.odometerTo,
-            transmissionId: filters.transmissionId,
-            fuelId: filters.fuelId,
-            colorId: filters.colorId,
         });
     }, [filters]);
 
@@ -83,18 +80,18 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
 
     const updateFilter = (key: keyof LocalFilters, value: string) => {
         setLocalFilters(prev => ({ ...prev, [key]: value }));
-
-        // Clear model when manufacturer changes
         if (key === 'manufacturerId') {
             setLocalFilters(prev => ({ ...prev, modelId: '' }));
         }
     };
 
     const applyFilters = () => {
-        const params = new URLSearchParams(searchParams.toString());
+        const params = new URLSearchParams();
 
-        // Map local filter keys to API parameter names
-        const filterMapping: Record<keyof LocalFilters, string> = {
+        // Map local filter keys to URL parameter names
+        // ALL filters are now applied via URL - API filters work server-side,
+        // client-side filters work via CarGrid
+        const filterMapping = {
             manufacturerId: 'manufacturer_id',
             modelId: 'model_id',
             fromYear: 'from_year',
@@ -103,25 +100,19 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
             priceTo: 'buy_now_price_to',
             odometerFrom: 'odometer_from_km',
             odometerTo: 'odometer_to_km',
-            transmissionId: 'transmission_id',
-            fuelId: 'fuel_id',
-            colorId: 'color_id',
+            transmissionId: 'transmission_id', // Will be handled client-side
+            fuelId: 'fuel_id',                  // Will be handled client-side
+            colorId: 'color_id',                 // Will be handled client-side
         };
 
-        // First, remove all existing filter params
-        Object.values(filterMapping).forEach(param => {
-            params.delete(param);
-        });
-
-        // Then add all non-empty filters
+        // Add all non-empty filters to URL
         Object.entries(localFilters).forEach(([key, value]) => {
             if (value && value !== '') {
-                const paramName = filterMapping[key as keyof LocalFilters];
+                const paramName = filterMapping[key as keyof typeof filterMapping];
                 params.set(paramName, value.toString());
             }
         });
 
-        // Always set page to 1 when filters change
         params.set('page', '1');
         params.set('per_page', '12');
         params.set('vehicle_type', '1');
@@ -143,12 +134,8 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
             priceTo: '',
             odometerFrom: '',
             odometerTo: '',
-            transmissionId: '',
-            fuelId: '',
-            colorId: '',
         });
 
-        // Also clear URL
         const params = new URLSearchParams();
         params.set('page', '1');
         params.set('per_page', '12');
@@ -156,10 +143,10 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
         router.push(`/cars?${params.toString()}`);
     };
 
-    // Prepare options
-    const manufacturerOptions = filterData.manufacturers.map(m => ({
-        value: m.id.toString(),
-        label: m.name
+    // Prepare options with translations
+    const manufacturerOptions = getTranslatedManufacturers(filterData.manufacturers).map(({ id, translated }) => ({
+        value: id.toString(),
+        label: translated
     }));
 
     const modelOptions = filterData.models.map(m => ({
@@ -169,32 +156,25 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
 
     const transmissionOptions = filterData.transmissions.map(t => ({
         value: t.id.toString(),
-        label: t.name === 'automatic' ? 'Automatik' : 'Manuel'
+        label: translateTransmission(t.name)
     }));
 
     const fuelOptions = filterData.fuelTypes.map(f => ({
         value: f.id.toString(),
-        label: f.name === 'diesel' ? 'Naftë' :
-            f.name === 'gasoline' ? 'Benzinë' :
-                f.name === 'electric' ? 'Elektrik' :
-                    f.name === 'hybrid' ? 'Hibrid' : f.name
+        label: translateFuel(f.name)
     }));
 
     const colorOptions = filterData.colors.map(c => ({
         value: c.id.toString(),
-        label: c.name
+        label: translateColor(c.name)
     }));
 
-    const yearOptions = [
-        { value: '', label: 'Viti' },
-        ...filterData.years.map(year => ({
-            value: year.toString(),
-            label: year.toString()
-        }))
-    ];
+    const yearOptions = filterData.years.map(year => ({
+        value: year.toString(),
+        label: year.toString()
+    }));
 
     const priceOptions = [
-        { value: '', label: 'Çmimi' },
         { value: '5000', label: '€5,000' },
         { value: '10000', label: '€10,000' },
         { value: '15000', label: '€15,000' },
@@ -215,7 +195,6 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
     ];
 
     const mileageOptions = [
-        { value: '', label: 'km' },
         { value: '50000', label: '50,000 km' },
         { value: '100000', label: '100,000 km' },
         { value: '150000', label: '150,000 km' },
@@ -223,6 +202,18 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
         { value: '250000', label: '250,000 km' },
         { value: '300000', label: '300,000 km' },
     ];
+
+    // Helper to get display label for active filters
+    const getFilterDisplayLabel = (key: keyof LocalFilters, value: string): string => {
+        switch (key) {
+            case 'manufacturerId':
+                return manufacturerOptions.find(o => o.value === value)?.label || value;
+            case 'modelId':
+                return modelOptions.find(o => o.value === value)?.label || value;
+            default:
+                return value;
+        }
+    };
 
     return (
         <div className="w-full bg-surface border border-light/20 rounded-xl p-5">
@@ -247,7 +238,14 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
                 )}
             </div>
 
-            {/* Filter Sections - All using MobileSelect for push-down */}
+            {/* Info message about client-side filters */}
+            <div className="mb-4 p-3 bg-orange-5 border border-orange-primary/20 rounded-lg">
+                <p className="text-xs text-muted">
+                    <span className="font-medium text-orange-primary">Informacion:</span> Disa filtra (transmisioni, karburanti, ngjyra) aplikohen pas ngarkimit të rezultateve.
+                </p>
+            </div>
+
+            {/* Filter Sections */}
             <div className="space-y-4">
                 {/* Manufacturer Filter */}
                 <FilterSection
@@ -258,14 +256,14 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
                     <MobileSelect
                         value={localFilters.manufacturerId}
                         onChange={(value) => updateFilter('manufacturerId', value)}
-                        options={manufacturerOptions}
+                        options={[{ value: '', label: 'Të gjithë prodhuesit' }, ...manufacturerOptions]}
                         placeholder="Zgjidh prodhuesin"
                         loading={loading.filters}
                         className="w-full"
                     />
                 </FilterSection>
 
-                {/* Model Filter - Shows only when manufacturer selected */}
+                {/* Model Filter */}
                 {localFilters.manufacturerId && (
                     <FilterSection
                         title="Modeli"
@@ -275,7 +273,7 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
                         <MobileSelect
                             value={localFilters.modelId}
                             onChange={(value) => updateFilter('modelId', value)}
-                            options={modelOptions}
+                            options={[{ value: '', label: 'Të gjitha modelet' }, ...modelOptions]}
                             placeholder="Zgjidh modelin"
                             loading={loading.models}
                             className="w-full"
@@ -293,14 +291,14 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
                         <MobileSelect
                             value={localFilters.fromYear}
                             onChange={(value) => updateFilter('fromYear', value)}
-                            options={yearOptions}
+                            options={[{ value: '', label: 'Nga' }, ...yearOptions.map(y => ({ value: y.value, label: y.label }))]}
                             placeholder="Nga"
                             className="w-full"
                         />
                         <MobileSelect
                             value={localFilters.toYear}
                             onChange={(value) => updateFilter('toYear', value)}
-                            options={yearOptions}
+                            options={[{ value: '', label: 'Deri' }, ...yearOptions.map(y => ({ value: y.value, label: y.label }))]}
                             placeholder="Deri"
                             className="w-full"
                         />
@@ -315,16 +313,16 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
                 >
                     <div className="grid grid-cols-2 gap-3">
                         <MobileSelect
-                            value={localFilters.priceFrom || ''}
+                            value={localFilters.priceFrom}
                             onChange={(value) => updateFilter('priceFrom', value)}
-                            options={priceOptions}
+                            options={[{ value: '', label: 'Nga' }, ...priceOptions]}
                             placeholder="Nga"
                             className="w-full"
                         />
                         <MobileSelect
-                            value={localFilters.priceTo || ''}
+                            value={localFilters.priceTo}
                             onChange={(value) => updateFilter('priceTo', value)}
-                            options={priceOptions}
+                            options={[{ value: '', label: 'Deri' }, ...priceOptions]}
                             placeholder="Deri"
                             className="w-full"
                         />
@@ -339,121 +337,55 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
                 >
                     <div className="grid grid-cols-2 gap-3">
                         <MobileSelect
-                            value={localFilters.odometerFrom || ''}
+                            value={localFilters.odometerFrom}
                             onChange={(value) => updateFilter('odometerFrom', value)}
-                            options={mileageOptions}
+                            options={[{ value: '', label: 'Nga' }, ...mileageOptions]}
                             placeholder="Nga"
                             className="w-full"
                         />
                         <MobileSelect
-                            value={localFilters.odometerTo || ''}
+                            value={localFilters.odometerTo}
                             onChange={(value) => updateFilter('odometerTo', value)}
-                            options={mileageOptions}
+                            options={[{ value: '', label: 'Deri' }, ...mileageOptions]}
                             placeholder="Deri"
                             className="w-full"
                         />
                     </div>
                 </FilterSection>
-
-                {/* Transmission Filter */}
-                <FilterSection
-                    title="Transmisioni"
-                    isExpanded={expandedSections.transmission}
-                    onToggle={() => toggleSection('transmission')}
-                >
-                    <div className="space-y-2">
-                        {transmissionOptions.map(option => (
-                            <label key={option.value} className="flex items-center gap-3 cursor-pointer group">
-                                <input
-                                    type="radio"
-                                    name="transmission"
-                                    value={option.value}
-                                    checked={localFilters.transmissionId === option.value}
-                                    onChange={(e) => updateFilter('transmissionId', e.target.value)}
-                                    className="sr-only"
-                                />
-                                <div className={`
-                                    w-4 h-4 rounded-full border-2 transition-colors
-                                    ${localFilters.transmissionId === option.value
-                                        ? 'border-orange-primary bg-orange-primary'
-                                        : 'border-light group-hover:border-orange-primary/50'
-                                    }
-                                `}>
-                                    {localFilters.transmissionId === option.value && (
-                                        <div className="w-2 h-2 bg-white rounded-full m-0.5" />
-                                    )}
-                                </div>
-                                <span className="text-sm text-secondary group-hover:text-primary">
-                                    {option.label}
-                                </span>
-                            </label>
-                        ))}
-                        <button
-                            onClick={() => updateFilter('transmissionId', '')}
-                            className="text-xs text-muted hover:text-orange-primary mt-2"
-                        >
-                            Pastro
-                        </button>
-                    </div>
-                </FilterSection>
-
-                {/* Fuel Filter */}
-                <FilterSection
-                    title="Karburanti"
-                    isExpanded={expandedSections.fuel}
-                    onToggle={() => toggleSection('fuel')}
-                >
-                    <div className="space-y-2">
-                        {fuelOptions.map(option => (
-                            <label key={option.value} className="flex items-center gap-3 cursor-pointer group">
-                                <input
-                                    type="radio"
-                                    name="fuel"
-                                    value={option.value}
-                                    checked={localFilters.fuelId === option.value}
-                                    onChange={(e) => updateFilter('fuelId', e.target.value)}
-                                    className="sr-only"
-                                />
-                                <div className={`
-                                    w-4 h-4 rounded-full border-2 transition-colors
-                                    ${localFilters.fuelId === option.value
-                                        ? 'border-orange-primary bg-orange-primary'
-                                        : 'border-light group-hover:border-orange-primary/50'
-                                    }
-                                `}>
-                                    {localFilters.fuelId === option.value && (
-                                        <div className="w-2 h-2 bg-white rounded-full m-0.5" />
-                                    )}
-                                </div>
-                                <span className="text-sm text-secondary group-hover:text-primary">
-                                    {option.label}
-                                </span>
-                            </label>
-                        ))}
-                        <button
-                            onClick={() => updateFilter('fuelId', '')}
-                            className="text-xs text-muted hover:text-orange-primary mt-2"
-                        >
-                            Pastro
-                        </button>
-                    </div>
-                </FilterSection>
-
-                {/* Color Filter */}
-                <FilterSection
-                    title="Ngjyra"
-                    isExpanded={expandedSections.color}
-                    onToggle={() => toggleSection('color')}
-                >
-                    <MobileSelect
-                        value={localFilters.colorId}
-                        onChange={(value) => updateFilter('colorId', value)}
-                        options={colorOptions}
-                        placeholder="Zgjidh ngjyrën"
-                        className="w-full"
-                    />
-                </FilterSection>
             </div>
+
+            {/* Active Filters Summary */}
+            {activeFilterCount > 0 && (
+                <div className="mt-4 pt-4 border-t border-light/20">
+                    <h3 className="text-xs font-medium text-muted mb-2">Filtrat aktivë:</h3>
+                    <div className="flex flex-wrap gap-2">
+                        {Object.entries(localFilters).map(([key, value]) => {
+                            if (!value) return null;
+                            let label = '';
+                            switch (key) {
+                                case 'manufacturerId': label = 'Prodhuesi'; break;
+                                case 'modelId': label = 'Modeli'; break;
+                                case 'fromYear': label = 'Viti nga'; break;
+                                case 'toYear': label = 'Viti deri'; break;
+                                case 'priceFrom': label = 'Çmimi nga'; break;
+                                case 'priceTo': label = 'Çmimi deri'; break;
+                                case 'odometerFrom': label = 'Km nga'; break;
+                                case 'odometerTo': label = 'Km deri'; break;
+                                case 'transmissionId': label = 'Transmisioni'; break;
+                                case 'fuelId': label = 'Karburanti'; break;
+                                case 'colorId': label = 'Ngjyra'; break;
+                                default: return null;
+                            }
+                            return (
+                                <span key={key} className="inline-flex items-center gap-1 px-2 py-1 bg-surface-2 rounded-lg text-xs">
+                                    <span className="text-muted">{label}:</span>
+                                    <span className="text-primary font-medium">{getFilterDisplayLabel(key as keyof LocalFilters, value)}</span>
+                                </span>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
             {/* Apply Button */}
             <button

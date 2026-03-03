@@ -1,5 +1,5 @@
 // hooks/useCarFilters.ts
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { fetchFilterData, fetchModels, fetchGenerations, type FilterData } from '@/lib/api';
 
@@ -13,11 +13,6 @@ export interface FilterState {
     odometerTo: string;
     priceFrom: string;
     priceTo: string;
-    transmissionId: string;
-    fuelId: string;
-    bodyTypeId: string;
-    colorId: string;
-    inStock: boolean;
 }
 
 export function useCarFilters() {
@@ -40,7 +35,7 @@ export function useCarFilters() {
         generations: false
     });
 
-    // Initialize filters from URL
+    // Initialize filters from URL - using ID parameters directly
     const [filters, setFilters] = useState<FilterState>(() => ({
         manufacturerId: searchParams.get('manufacturer_id') || '',
         modelId: searchParams.get('model_id') || '',
@@ -55,10 +50,9 @@ export function useCarFilters() {
         fuelId: searchParams.get('fuel_id') || '',
         bodyTypeId: searchParams.get('body_type_id') || '',
         colorId: searchParams.get('color_id') || '',
-        inStock: searchParams.get('in_stock') === 'true',
     }));
 
-    // Update filters when URL changes
+    // Update filters when URL changes - using ID parameters directly
     useEffect(() => {
         setFilters({
             manufacturerId: searchParams.get('manufacturer_id') || '',
@@ -70,11 +64,6 @@ export function useCarFilters() {
             odometerTo: searchParams.get('odometer_to_km') || '',
             priceFrom: searchParams.get('buy_now_price_from') || '',
             priceTo: searchParams.get('buy_now_price_to') || '',
-            transmissionId: searchParams.get('transmission_id') || '',
-            fuelId: searchParams.get('fuel_id') || '',
-            bodyTypeId: searchParams.get('body_type_id') || '',
-            colorId: searchParams.get('color_id') || '',
-            inStock: searchParams.get('in_stock') === 'true',
         });
     }, [searchParams]);
 

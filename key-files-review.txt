@@ -1,0 +1,2641 @@
+========================================
+KEY FILES FOR REVIEW - Performance & Filter Issues
+Generated: Tue, Mar  3, 2026  7:28:10 PM
+========================================
+
+
+========================================
+FILE: app/cars/CarGrid.tsx
+DESCRIPTION: Main filtering logic - CLIENT-SIDE FILTERS
+========================================
+// app/cars/CarGrid.tsx - Optimized version
+'use client';
+
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import CarCard from '@/components/cars/CarCard';
+import { fetchCars, type Car, type FetchCarsResponse } from '@/lib/api';
+import { CarCardSkeleton } from '@/components/ui/LoadingSkeleton';
+import Pagination from '@/components/ui/Pagination';
+import { AlertCircle } from 'lucide-react';
+
+interface CarGridProps {
+    sortBy?: string;
+    sortOptions?: Array<{ value: string; sortFn: (a: Car, b: Car) => number }>;
+}
+
+// Cache for API responses
+const cache: Record<string, { data: Car[], timestamp: number, total: number }> = {};
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+export default function CarGrid({ sortBy = 'recommended', sortOptions = [] }: CarGridProps) {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [allCars, setAllCars] = useState<Car[]>([]);
+    const [filteredCars, setFilteredCars] = useState<Car[]>([]);
+    const [displayedCars, setDisplayedCars] = useState<Car[]>([]);
+    const [totalCount, setTotalCount] = useState(0);
+    const [hasMore, setHasMore] = useState(false);
+    const [currentApiPage, setCurrentApiPage] = useState(1);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+    const currentPage = Number(searchParams.get('page')) || 1;
+    const perPage = Number(searchParams.get('per_page')) || 12;
+
+    // Get all filter values from URL
+    const filters = useMemo(() => ({
+        manufacturerId: searchParams.get('manufacturer_id') || '',
+        modelId: searchParams.get('model_id') || '',
+        fromYear: searchParams.get('from_year') || '',
+        toYear: searchParams.get('to_year') || '',
+        priceFrom: searchParams.get('buy_now_price_from') || '',
+        priceTo: searchParams.get('buy_now_price_to') || '',
+        odometerFrom: searchParams.get('odometer_from_km') || '',
+        odometerTo: searchParams.get('odometer_to_km') || '',
+        transmissionId: searchParams.get('transmission_id') || '',
+        fuelId: searchParams.get('fuel_id') || '',
+        colorId: searchParams.get('color_id') || '',
+    }), [searchParams]);
+
+    // Build cache key
+    const cacheKey = useMemo(() => {
+        return `${filters.manufacturerId}-${filters.modelId}-${filters.fromYear}-${filters.toYear}-${filters.priceFrom}-${filters.priceTo}-${filters.odometerFrom}-${filters.odometerTo}`;
+    }, [filters]);
+
+    // Apply client-side filters
+    const applyClientFilters = useCallback((cars: Car[]): Car[] => {
+        return cars.filter(car => {
+            if (filters.transmissionId && car.transmission?.id.toString() !== filters.transmissionId) return false;
+            if (filters.fuelId && car.fuel?.id.toString() !== filters.fuelId) return false;
+            if (filters.colorId && car.color?.id.toString() !== filters.colorId) return false;
+            return true;
+        });
+    }, [filters]);
+
+    // Fetch a single page from API
+    const fetchPage = useCallback(async (page: number): Promise<{ cars: Car[], total: number } | null> => {
+        try {
+            const params: Record<string, any> = {
+                page,
+                per_page: 50, // Fetch 50 cars per page - good balance
+                vehicle_type: '1'
+            };
+
+            if (filters.manufacturerId) params.manufacturer_id = filters.manufacturerId;
+            if (filters.modelId) params.model_id = filters.modelId;
+            if (filters.fromYear) params.from_year = filters.fromYear;
+            if (filters.toYear) params.to_year = filters.toYear;
+            if (filters.priceFrom) params.buy_now_price_from = filters.priceFrom;
+            if (filters.priceTo) params.buy_now_price_to = filters.priceTo;
+            if (filters.odometerFrom) params.odometer_from_km = filters.odometerFrom;
+            if (filters.odometerTo) params.odometer_to_km = filters.odometerTo;
+
+            console.log(`📡 Fetching page ${page} with 50 cars`);
+
+            const response = await fetchCars(params);
+
+            return {
+                cars: response.data || [],
+                total: response.meta?.total || 0
+            };
+        } catch (error) {
+            console.error(`Error fetching page ${page}:`, error);
+            return null;
+        }
+    }, [filters]);
+
+    // Load initial data (first few pages)
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadInitialData = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                // Check cache
+                const cached = cache[cacheKey];
+                if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+                    console.log('📦 Using cached data');
+                    setAllCars(cached.data);
+                    setTotalCount(cached.total);
+                    setHasMore(cached.data.length < cached.total);
+                    setCurrentApiPage(Math.ceil(cached.data.length / 50) + 1);
+                    setLoading(false);
+                    return;
+                }
+
+                // Fetch first 3 pages (150 cars) - enough for client-side filtering
+                const pagesToFetch = 3;
+                const promises = [];
+
+                for (let i = 1; i <= pagesToFetch; i++) {
+                    promises.push(fetchPage(i));
+                }
+
+                const results = await Promise.all(promises);
+
+                if (!isMounted) return;
+
+                let allFetchedCars: Car[] = [];
+                let totalFromApi = 0;
+
+                results.forEach((result, index) => {
+                    if (result) {
+                        allFetchedCars = [...allFetchedCars, ...result.cars];
+                        totalFromApi = result.total;
+                    }
+                });
+
+                console.log(`📦 Loaded ${allFetchedCars.length} cars from first ${pagesToFetch} pages`);
+
+                // Cache the results
+                cache[cacheKey] = {
+                    data: allFetchedCars,
+                    timestamp: Date.now(),
+                    total: totalFromApi
+                };
+
+                setAllCars(allFetchedCars);
+                setTotalCount(totalFromApi);
+                setHasMore(allFetchedCars.length < totalFromApi);
+                setCurrentApiPage(pagesToFetch + 1);
+
+            } catch (err) {
+                console.error('Error loading initial data:', err);
+                setError('Ndodhi një gabim gjatë ngarkimit të makinave.');
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        loadInitialData();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [cacheKey, fetchPage]);
+
+    // Load more pages when needed (triggered by pagination)
+    const loadMorePages = useCallback(async () => {
+        if (isLoadingMore || !hasMore) return;
+
+        try {
+            setIsLoadingMore(true);
+
+            // Fetch next 2 pages
+            const pagesToFetch = 2;
+            const promises = [];
+
+            for (let i = 0; i < pagesToFetch; i++) {
+                promises.push(fetchPage(currentApiPage + i));
+            }
+
+            const results = await Promise.all(promises);
+
+            let newCars: Car[] = [];
+            results.forEach(result => {
+                if (result) {
+                    newCars = [...newCars, ...result.cars];
+                }
+            });
+
+            if (newCars.length > 0) {
+                const updatedCars = [...allCars, ...newCars];
+                setAllCars(updatedCars);
+                setCurrentApiPage(prev => prev + pagesToFetch);
+                setHasMore(updatedCars.length < totalCount);
+
+                // Update cache
+                cache[cacheKey] = {
+                    data: updatedCars,
+                    timestamp: Date.now(),
+                    total: totalCount
+                };
+            }
+
+        } catch (error) {
+            console.error('Error loading more pages:', error);
+        } finally {
+            setIsLoadingMore(false);
+        }
+    }, [allCars, currentApiPage, hasMore, totalCount, cacheKey, fetchPage, isLoadingMore]);
+
+    // Apply client-side filters whenever filters or allCars change
+    useEffect(() => {
+        if (allCars.length === 0) {
+            setFilteredCars([]);
+            setDisplayedCars([]);
+            return;
+        }
+
+        const filtered = applyClientFilters(allCars);
+        setFilteredCars(filtered);
+
+        // Apply pagination
+        const start = (currentPage - 1) * perPage;
+        const end = start + perPage;
+        setDisplayedCars(filtered.slice(start, end));
+
+        console.log('🔍 Filtering results:', {
+            total: allCars.length,
+            filtered: filtered.length,
+            displayed: filtered.slice(start, end).length,
+            page: currentPage
+        });
+
+        // If we don't have enough filtered cars for the current page, load more
+        if (filtered.length < currentPage * perPage && hasMore && !isLoadingMore) {
+            loadMorePages();
+        }
+
+    }, [allCars, filters, currentPage, perPage, applyClientFilters, hasMore, isLoadingMore, loadMorePages]);
+
+    const handlePageChange = useCallback((page: number) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('page', page.toString());
+        router.push(`/cars?${params.toString()}`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [router, searchParams]);
+
+    const totalPages = Math.ceil(filteredCars.length / perPage);
+    const shouldShowPagination = totalPages > 1;
+
+    // Loading state
+    if (loading) {
+        return (
+            <div className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                    {[...Array(perPage)].map((_, i) => (
+                        <CarCardSkeleton key={i} />
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    // Error state
+    if (error) {
+        return (
+            <div className="text-center py-16 bg-surface-2/30 rounded-2xl border border-light/20">
+                <AlertCircle className="w-12 h-12 text-orange-primary mx-auto mb-4" />
+                <p className="text-secondary mb-2">{error}</p>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="btn-primary mt-4"
+                >
+                    Provo përsëri
+                </button>
+            </div>
+        );
+    }
+
+    // Empty state
+    if (!displayedCars.length) {
+        return (
+            <div className="text-center py-16 bg-surface-2/30 rounded-2xl border border-light/20">
+                <p className="text-secondary mb-2">Nuk u gjet asnjë makinë.</p>
+                <p className="text-sm text-muted">Provo të ndryshosh kriteret e kërkimit.</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-8">
+            {/* Results count */}
+            {filteredCars.length > 0 && (
+                <div className="flex justify-between items-center px-2">
+                    <div className="text-sm text-muted">
+                        Duke shfaqur {((currentPage - 1) * perPage) + 1} - {Math.min(currentPage * perPage, filteredCars.length)} nga {filteredCars.length} makina
+                    </div>
+                    {shouldShowPagination && (
+                        <div className="text-sm text-muted">
+                            Faqja {currentPage} nga {totalPages}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Car grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                {displayedCars.map((car) => (
+                    <CarCard key={car.id} car={car} />
+                ))}
+            </div>
+
+            {/* Loading more indicator */}
+            {isLoadingMore && (
+                <div className="text-center py-4">
+                    <div className="inline-flex items-center gap-2 text-sm text-muted">
+                        <div className="w-4 h-4 border-2 border-orange-primary border-t-transparent rounded-full animate-spin" />
+                        Duke ngarkuar më shumë makina...
+                    </div>
+                </div>
+            )}
+
+            {/* Pagination */}
+            {shouldShowPagination && !isLoadingMore && (
+                <div className="mt-8 pt-4 border-t border-light/20">
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                    />
+                </div>
+            )}
+        </div>
+    );
+}
+
+========================================
+FILE: lib/api.ts
+DESCRIPTION: API calls and timeouts - SLOW API ISSUES
+========================================
+// lib/api.ts
+export interface Car {
+  id: number;
+  year: number;
+  title: string;
+  vin: string;
+  manufacturer: {
+    id: number;
+    name: string;
+  };
+  model: {
+    id: number;
+    name: string;
+    manufacturer_id: number;
+  };
+  generation?: {
+    id: number;
+    name: string;
+  };
+  body_type?: {
+    name: string;
+    id: number;
+  };
+  color: {
+    name: string;
+    id: number;
+  };
+  engine?: {
+    id: number;
+    name: string;
+  };
+  transmission: {
+    name: string;
+    id: number;
+  };
+  drive_wheel?: {
+    name: string;
+    id: number;
+  };
+  vehicle_type: {
+    name: string;
+    id: number;
+  };
+  fuel: {
+    name: string;
+    id: number;
+  };
+  cylinders: number | null;
+  lots: Lot[];
+  hp?: number;
+}
+
+export interface Lot {
+  id: number;
+  lot: string;
+  domain: {
+    name: string;
+    id: number;
+  };
+  odometer: {
+    km: number;
+    mi: number;
+    status: {
+      name: string;
+      id: number;
+    };
+  };
+  buy_now: number | null;
+  bid: number | null;
+  status: {
+    name: string;
+    id: number;
+  };
+  images: {
+    id: number;
+    normal: string[];
+    big: string[];
+    downloaded?: string[];
+  };
+  location: {
+    country: {
+      iso: string;
+      name: string;
+    };
+    city?: {
+      id: number;
+      name: string;
+    };
+  };
+}
+
+export interface FetchCarsResponse {
+  data: Car[];
+  links: {
+    first: string;
+    last: string | null;
+    prev: string | null;
+    next: string | null;
+  };
+  meta: {
+    current_page: number;
+    from: number;
+    path: string;
+    per_page: number;
+    to: number;
+    total: number;
+  };
+}
+
+export interface Manufacturer {
+  id: number;
+  name: string;
+  cars_qty?: number;
+  image?: string;
+  models_qty?: number;
+  cars?: boolean;
+  motorcycles?: boolean;
+}
+
+export interface Model {
+  id: number;
+  name: string;
+  manufacturer_id: number;
+  cars_qty?: number;
+  generations_qty?: number;
+}
+
+export interface Generation {
+  id: number;
+  name: string;
+  model_id: number;
+  manufacturer_id: number;
+  cars_qty?: number;
+}
+
+export interface FilterData {
+  manufacturers: Manufacturer[];
+  models: Model[];
+  generations: Generation[];
+  fuelTypes: Array<{ id: number; name: string }>;
+  transmissions: Array<{ id: number; name: string }>;
+  years: number[];
+  bodyTypes: Array<{ id: number; name: string }>;
+  colors: Array<{ id: number; name: string }>;
+}
+
+// API Base URL - using NEXT_PUBLIC_ for client-side access
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+// Helper to construct full URLs for server-side requests
+const getFullUrl = (path: string): string => {
+  if (typeof window !== 'undefined') {
+    return path;
+  }
+
+  if (process.env.NODE_ENV === 'development') {
+    return `http://localhost:3000${path}`;
+  }
+
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : process.env.NEXTAUTH_URL || 'https://vetura-nga-korea.vercel.app';
+
+  return `${baseUrl}${path}`;
+};
+
+// Fetch with timeout - increased to 30 seconds for slow API
+const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout = 30000) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        throw new Error(`Kërkesa zgjati shumë (${timeout / 1000} sekonda). Provo përsëri.`);
+      }
+    }
+
+    throw error;
+  }
+};
+
+// List of filters that the API actually supports
+const API_SUPPORTED_FILTERS = [
+  'manufacturer_id',
+  'model_id',
+  'from_year',
+  'to_year',
+  'buy_now_price_from',
+  'buy_now_price_to',
+  'odometer_from_km',
+  'odometer_to_km',
+  'page',
+  'per_page',
+  'vehicle_type'
+];
+
+/**
+ * Fetch cars list with filters - Only uses API-supported filters
+ */
+export async function fetchCars(params: Record<string, any> = {}): Promise<FetchCarsResponse> {
+  try {
+    // Build query string with ONLY supported filters
+    const queryParams: Record<string, string> = {};
+
+    // Only add supported params that have values
+    Object.entries(params).forEach(([key, value]) => {
+      if (value && API_SUPPORTED_FILTERS.includes(key)) {
+        queryParams[key] = value.toString();
+      }
+    });
+
+    // Default values
+    if (!queryParams.per_page) queryParams.per_page = '12';
+    if (!queryParams.vehicle_type) queryParams.vehicle_type = '1';
+
+    const queryString = new URLSearchParams(queryParams).toString();
+    const path = `/api/proxy/cars${queryString ? `?${queryString}` : ''}`;
+    const url = getFullUrl(path);
+
+    console.log('📡 Fetching cars from proxy with API params:', queryParams);
+
+    const response = await fetchWithTimeout(url, {
+      ...(typeof window !== 'undefined'
+        ? { next: { revalidate: 60 } }
+        : { cache: 'no-store' })
+    }, 30000);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Process pagination data
+    if (data.data && Array.isArray(data.data)) {
+      if (!data.meta) {
+        data.meta = {
+          current_page: Number(params.page) || 1,
+          from: 1,
+          path: '',
+          per_page: Number(params.per_page) || 12,
+          to: data.data.length,
+          total: data.data.length
+        };
+      } else {
+        data.meta.current_page = data.meta.current_page || Number(params.page) || 1;
+        data.meta.per_page = data.meta.per_page || Number(params.per_page) || 12;
+        data.meta.from = data.meta.from || ((data.meta.current_page - 1) * data.meta.per_page + 1);
+        data.meta.to = data.meta.to || Math.min(data.meta.current_page * data.meta.per_page, data.meta.total || data.data.length);
+        data.meta.total = data.meta.total || data.data.length;
+      }
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching cars:', error);
+    return {
+      data: [],
+      links: { first: '', last: null, prev: null, next: null },
+      meta: {
+        current_page: Number(params.page) || 1,
+        from: 0,
+        path: '',
+        per_page: Number(params.per_page) || 12,
+        to: 0,
+        total: 0
+      },
+    };
+  }
+}
+
+/**
+ * Fetch car by VIN - Uses dedicated endpoint
+ */
+export async function fetchCarByVin(vin: string): Promise<Car | null> {
+  try {
+    if (!vin || vin.length < 10) {
+      console.error('Invalid VIN provided:', vin);
+      return null;
+    }
+
+    const path = `/api/proxy/vin/${encodeURIComponent(vin)}`;
+    const url = getFullUrl(path);
+
+    console.log('📡 Fetching car by VIN from proxy:', url);
+
+    const response = await fetchWithTimeout(url, {
+      ...(typeof window !== 'undefined'
+        ? { next: { revalidate: 3600 } } // Cache for 1 hour
+        : { cache: 'no-store' })
+    }, 10000);
+
+    if (response.status === 200) {
+      const data = await response.json();
+      return data;
+    }
+
+    if (response.status === 404) {
+      console.log('❌ Car not found for VIN:', vin);
+      return null;
+    }
+
+    throw new Error(`HTTP error! status: ${response.status}`);
+  } catch (error) {
+    console.error('Error fetching car by VIN:', error);
+    return null;
+  }
+}
+
+/**
+ * Helper to extract VIN from URL parameter
+ */
+export function extractVinFromParam(param: string): string {
+  // VINs are 17 characters, alphanumeric (excluding I, O, Q)
+  const vinRegex = /^[A-HJ-NPR-Z0-9]{17}$/i;
+
+  if (vinRegex.test(param)) {
+    return param;
+  }
+
+  if (/^\d+$/.test(param)) {
+    console.warn('⚠️ Using numeric ID - this will not work. VIN required.');
+  }
+
+  return param;
+}
+
+export async function fetchManufacturers(type: string = 'cars'): Promise<Manufacturer[]> {
+  try {
+    const path = `/api/proxy/manufacturers/${type}`;
+    const url = getFullUrl(path);
+
+    console.log('📡 Fetching manufacturers from proxy:', url);
+
+    const response = await fetchWithTimeout(url, {
+      ...(typeof window !== 'undefined'
+        ? { next: { revalidate: 3600 } }
+        : { cache: 'no-store' })
+    }, 10000);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.data || data || [];
+  } catch (error) {
+    console.error('Error fetching manufacturers:', error);
+    return [];
+  }
+}
+
+export async function fetchModels(manufacturerId: number, type: string = 'cars'): Promise<Model[]> {
+  try {
+    const path = `/api/proxy/models/${manufacturerId}/${type}`;
+    const url = getFullUrl(path);
+
+    console.log('📡 Fetching models from proxy:', url);
+
+    const response = await fetchWithTimeout(url, {
+      ...(typeof window !== 'undefined'
+        ? { next: { revalidate: 3600 } }
+        : { cache: 'no-store' })
+    }, 10000);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.data || data || [];
+  } catch (error) {
+    console.error('Error fetching models:', error);
+    return [];
+  }
+}
+
+export async function fetchGenerations(modelId: number, type: string = 'cars'): Promise<Generation[]> {
+  try {
+    const path = `/api/proxy/generations/${modelId}/${type}`;
+    const url = getFullUrl(path);
+
+    console.log('📡 Fetching generations from proxy:', url);
+
+    const response = await fetchWithTimeout(url, {
+      ...(typeof window !== 'undefined'
+        ? { next: { revalidate: 3600 } }
+        : { cache: 'no-store' })
+    }, 10000);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.data || data || [];
+  } catch (error) {
+    console.error('Error fetching generations:', error);
+    return [];
+  }
+}
+
+export async function fetchFilterData(): Promise<FilterData> {
+  const defaultManufacturers: Manufacturer[] = [
+    { id: 16, name: 'BMW', cars_qty: 12375 },
+    { id: 147, name: 'Volkswagen', cars_qty: 1951 },
+    { id: 58, name: 'Hyundai', cars_qty: 45514 },
+    { id: 70, name: 'Kia', cars_qty: 41009 },
+    { id: 232, name: 'Genesis', cars_qty: 9310 },
+    { id: 26, name: 'Chevrolet', cars_qty: 7168 },
+    { id: 123, name: 'Renault Samsung', cars_qty: 5514 },
+    { id: 131, name: 'SsangYong', cars_qty: 6995 },
+    { id: 9, name: 'Audi', cars_qty: 0 },
+    { id: 3, name: 'Mercedes-Benz', cars_qty: 0 },
+    { id: 5, name: 'Toyota', cars_qty: 584 },
+    { id: 56, name: 'Honda', cars_qty: 437 },
+    { id: 48, name: 'Ford', cars_qty: 1203 },
+  ];
+
+  try {
+    const manufacturers = await fetchManufacturers('cars');
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: currentYear - 1989 }, (_, i) => currentYear - i);
+
+    return {
+      manufacturers: manufacturers.length > 0 ? manufacturers : defaultManufacturers,
+      models: [],
+      generations: [],
+      fuelTypes: [
+        { id: 1, name: 'diesel' },
+        { id: 2, name: 'electric' },
+        { id: 3, name: 'hybrid' },
+        { id: 4, name: 'gasoline' }
+      ],
+      transmissions: [
+        { id: 1, name: 'automatic' },
+        { id: 2, name: 'manual' }
+      ],
+      years,
+      bodyTypes: [
+        { id: 1, name: 'sedan' },
+        { id: 2, name: 'wagon' },
+        { id: 3, name: 'coupe' },
+        { id: 5, name: 'suv' },
+        { id: 7, name: 'van' },
+        { id: 11, name: 'hatchback' }
+      ],
+      colors: [
+        { id: 1, name: 'silver' },
+        { id: 2, name: 'purple' },
+        { id: 3, name: 'orange' },
+        { id: 4, name: 'green' },
+        { id: 5, name: 'red' },
+        { id: 6, name: 'gold' },
+        { id: 8, name: 'brown' },
+        { id: 9, name: 'grey' },
+        { id: 11, name: 'blue' },
+        { id: 13, name: 'white' },
+        { id: 15, name: 'black' },
+        { id: 16, name: 'yellow' }
+      ]
+    };
+  } catch (error) {
+    console.error('Error in fetchFilterData:', error);
+
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: currentYear - 1989 }, (_, i) => currentYear - i);
+
+    return {
+      manufacturers: defaultManufacturers,
+      models: [],
+      generations: [],
+      fuelTypes: [
+        { id: 1, name: 'diesel' },
+        { id: 2, name: 'electric' },
+        { id: 3, name: 'hybrid' },
+        { id: 4, name: 'gasoline' }
+      ],
+      transmissions: [
+        { id: 1, name: 'automatic' },
+        { id: 2, name: 'manual' }
+      ],
+      years,
+      bodyTypes: [
+        { id: 1, name: 'sedan' },
+        { id: 2, name: 'wagon' },
+        { id: 3, name: 'coupe' },
+        { id: 5, name: 'suv' },
+        { id: 7, name: 'van' },
+        { id: 11, name: 'hatchback' }
+      ],
+      colors: [
+        { id: 1, name: 'silver' },
+        { id: 2, name: 'purple' },
+        { id: 3, name: 'orange' },
+        { id: 4, name: 'green' },
+        { id: 5, name: 'red' },
+        { id: 6, name: 'gold' },
+        { id: 8, name: 'brown' },
+        { id: 9, name: 'grey' },
+        { id: 11, name: 'blue' },
+        { id: 13, name: 'white' },
+        { id: 15, name: 'black' },
+        { id: 16, name: 'yellow' }
+      ]
+    };
+  }
+}
+
+// Helper function to format mileage
+export function formatMileage(mileage: number): string {
+  if (!mileage && mileage !== 0) return 'N/A';
+  const formatted = mileage.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  return `${formatted} km`;
+}
+
+// Helper function to get fuel type in Albanian
+export function getFuelTypeAlbanian(fuelType: string): string {
+  const fuelMap: Record<string, string> = {
+    'diesel': 'Naftë',
+    'gasoline': 'Benzinë',
+    'petrol': 'Benzinë',
+    'electric': 'Elektrik',
+    'hybrid': 'Hibrid',
+    'gas': 'LPG'
+  };
+  return fuelMap[fuelType.toLowerCase()] || fuelType;
+}
+
+// Helper function to get transmission in Albanian
+export function getTransmissionAlbanian(transmission: string): string {
+  const transMap: Record<string, string> = {
+    'automatic': 'Automatik',
+    'manual': 'Manuel'
+  };
+  return transMap[transmission.toLowerCase()] || transmission;
+}
+
+// Helper function to get color in Albanian
+export function getColorAlbanian(color: string): string {
+  const colorMap: Record<string, string> = {
+    'black': 'Zi',
+    'white': 'Bardhë',
+    'silver': 'Argjend',
+    'grey': 'Gri',
+    'gray': 'Gri',
+    'blue': 'Kaltër',
+    'red': 'Kuq',
+    'green': 'Gjelbër',
+    'brown': 'Kafe',
+    'beige': 'Bezhë',
+    'yellow': 'Verdhë',
+    'orange': 'Portokalli',
+    'purple': 'Vjollcë',
+    'gold': 'Arë'
+  };
+  return colorMap[color.toLowerCase()] || color;
+}
+
+// Helper function to get body type in Albanian
+export function getBodyTypeAlbanian(bodyType: string): string {
+  const bodyMap: Record<string, string> = {
+    'sedan': 'Sedan',
+    'suv': 'SUV',
+    'coupe': 'Kupe',
+    'hatchback': 'Hatchback',
+    'wagon': 'Kombi',
+    'van': 'Furgon',
+    'pickup': 'Pickup',
+    'cabrio': 'Kabriolet'
+  };
+  return bodyMap[bodyType.toLowerCase()] || bodyType;
+}
+
+========================================
+FILE: app/cars/CarsContent.tsx
+DESCRIPTION: Filter management and UI
+========================================
+// app/cars/CarsContent.tsx
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import CarGrid from './CarGrid';
+import { Search, X, Filter, ArrowUpDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { type Car } from '@/lib/api';
+import MobileFilters from '@/components/ui/MobileFilters';
+import CustomSelect from '@/components/ui/CustomSelect';
+
+interface CarsContentProps {
+    searchParams: URLSearchParams;
+}
+
+interface SortOption {
+    value: string;
+    label: string;
+    sortFn: (a: Car, b: Car) => number;
+}
+
+export default function CarsContent({ searchParams }: CarsContentProps) {
+    const router = useRouter();
+    const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+    const [currentSort, setCurrentSort] = useState('recommended');
+    const [gridKey, setGridKey] = useState(0); // Add key to force re-render
+
+    const searchQuery = searchParams.get('search') || '';
+
+    // Force CarGrid to re-render when searchParams change
+    useEffect(() => {
+        setGridKey(prev => prev + 1);
+    }, [searchParams]);
+
+    // Sort options with client-side sorting functions
+    const sortOptions: SortOption[] = [
+        {
+            value: 'recommended',
+            label: 'Më të përshtatshmet',
+            sortFn: (a, b) => 0
+        },
+        {
+            value: 'price_asc',
+            label: 'Çmimi: Nga më i ulëti',
+            sortFn: (a, b) => {
+                const priceA = a.lots?.[0]?.buy_now || 0;
+                const priceB = b.lots?.[0]?.buy_now || 0;
+                return priceA - priceB;
+            }
+        },
+        {
+            value: 'price_desc',
+            label: 'Çmimi: Nga më i larti',
+            sortFn: (a, b) => {
+                const priceA = a.lots?.[0]?.buy_now || 0;
+                const priceB = b.lots?.[0]?.buy_now || 0;
+                return priceB - priceA;
+            }
+        },
+        {
+            value: 'year_desc',
+            label: 'Viti: Më të rijtë',
+            sortFn: (a, b) => b.year - a.year
+        },
+        {
+            value: 'year_asc',
+            label: 'Viti: Më të vjetrit',
+            sortFn: (a, b) => a.year - b.year
+        },
+        {
+            value: 'mileage_asc',
+            label: 'Kilometrazha: Më e ulët',
+            sortFn: (a, b) => {
+                const kmA = a.lots?.[0]?.odometer?.km || 0;
+                const kmB = b.lots?.[0]?.odometer?.km || 0;
+                return kmA - kmB;
+            }
+        },
+        {
+            value: 'mileage_desc',
+            label: 'Kilometrazha: Më e lartë',
+            sortFn: (a, b) => {
+                const kmA = a.lots?.[0]?.odometer?.km || 0;
+                const kmB = b.lots?.[0]?.odometer?.km || 0;
+                return kmB - kmA;
+            }
+        },
+    ];
+
+    const handleSortChange = (value: string) => {
+        setCurrentSort(value);
+        sessionStorage.setItem('carSortPreference', value);
+    };
+
+    const handleClearSearch = () => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete('search');
+        params.set('page', '1');
+        router.push(`/cars?${params.toString()}`);
+        router.refresh();
+    };
+
+    const handleClearAllFilters = () => {
+        router.push('/cars');
+        router.refresh();
+        setMobileFilterOpen(false);
+        sessionStorage.removeItem('carSortPreference');
+        setCurrentSort('recommended');
+    };
+
+    const handleRemoveFilter = (key: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete(key);
+        params.set('page', '1');
+        router.push(`/cars?${params.toString()}`);
+        router.refresh();
+    };
+
+    // Get active filters
+    // app/cars/CarsContent.tsx - Update the filterKeys array
+
+    // Add all possible filter parameters
+    const filterKeys = [
+        'manufacturer_id',
+        'model_id',
+        'from_year',
+        'to_year',
+        'buy_now_price_from',
+        'buy_now_price_to',
+        'odometer_from_km',
+        'odometer_to_km',
+        'transmission',
+        'fuel',
+        'color'
+    ];
+
+    const activeFilters = Array.from(searchParams.entries()).filter(([key]) => filterKeys.includes(key));
+    const activeFilterCount = activeFilters.length;
+
+    const filterLabels: Record<string, string> = {
+        'manufacturer_id': 'Prodhuesi',
+        'model_id': 'Modeli',
+        'from_year': 'Viti nga',
+        'to_year': 'Viti deri',
+        'buy_now_price_from': 'Çmimi nga',
+        'buy_now_price_to': 'Çmimi deri',
+        'odometer_from_km': 'Km nga',
+        'odometer_to_km': 'Km deri',
+        'transmission': 'Transmisioni',
+        'fuel': 'Karburanti',
+        'color': 'Ngjyra',
+    };
+
+    // Prepare sort options for CustomSelect
+    const sortSelectOptions = sortOptions.map(opt => ({
+        value: opt.value,
+        label: opt.label
+    }));
+
+    return (
+        <div className="container-swiss pt-12">
+            {/* Header */}
+            <div className="mb-6 md:mb-8">
+                <h1 className="text-2xl md:text-3xl font-bold text-primary mb-2">
+                    Të gjitha makinat
+                </h1>
+                <p className="text-sm md:text-base text-secondary">
+                    {searchQuery
+                        ? `Rezultatet për "${searchQuery}"`
+                        : 'Makina të gatshme për import nga Korea'
+                    }
+                </p>
+            </div>
+
+            {/* Search Query Display */}
+            {searchQuery && (
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="bg-surface-2 border border-light/20 rounded-xl p-4 mb-6 flex items-center justify-between"
+                >
+                    <div className="flex items-center gap-2 min-w-0">
+                        <Search size={18} className="text-orange-primary shrink-0" />
+                        <span className="text-sm text-secondary truncate">
+                            Duke kërkuar: <span className="font-medium text-primary">"{searchQuery}"</span>
+                        </span>
+                    </div>
+                    <button
+                        onClick={handleClearSearch}
+                        className="text-sm text-orange-primary hover:text-orange-dark transition-colors flex items-center gap-1 shrink-0 ml-2"
+                        aria-label="Pastro kërkimin"
+                    >
+                        <X size={14} />
+                        <span className="hidden sm:inline">Pastro</span>
+                    </button>
+                </motion.div>
+            )}
+
+            {/* Mobile Filter Button - Visible on all screens now since no desktop sidebar */}
+            <div className="mb-4">
+                <button
+                    onClick={() => setMobileFilterOpen(true)}
+                    className={`
+                        w-full bg-surface-2 border border-light/20 rounded-xl py-3 px-4
+                        flex items-center justify-center gap-2 text-sm transition-colors
+                        hover:bg-surface-3 hover:text-primary
+                        ${activeFilterCount > 0 ? 'border-orange-primary/30 bg-orange-5' : ''}
+                    `}
+                >
+                    <Filter size={18} className={activeFilterCount > 0 ? 'text-orange-primary' : ''} />
+                    <span className={activeFilterCount > 0 ? 'text-orange-primary font-medium' : ''}>
+                        Filtro makina
+                    </span>
+                    {activeFilterCount > 0 && (
+                        <span className="ml-1 px-2 py-0.5 bg-orange-primary text-white text-xs rounded-full">
+                            {activeFilterCount}
+                        </span>
+                    )}
+                </button>
+            </div>
+
+            {/* Mobile Filters Modal */}
+            <MobileFilters
+                isOpen={mobileFilterOpen}
+                onClose={() => setMobileFilterOpen(false)}
+            />
+
+            {/* Sort Bar - Using CustomSelect */}
+            <div className="bg-surface-2 border border-light/20 rounded-xl p-3 md:p-4 mb-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <span className="text-xs md:text-sm text-muted flex items-center gap-1">
+                        <ArrowUpDown size={14} />
+                        Rendit sipas:
+                    </span>
+
+                    <div className="w-full sm:w-56">
+                        <CustomSelect
+                            value={currentSort}
+                            onChange={handleSortChange}
+                            options={sortSelectOptions}
+                            placeholder="Zgjidh renditjen"
+                            className="w-full"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Active Filters */}
+            {activeFilterCount > 0 && (
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="mb-6"
+                >
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                        <span className="text-xs text-muted shrink-0">Filtrat aktivë:</span>
+                        <div className="flex flex-wrap items-center gap-2">
+                            {activeFilters.map(([key, value]) => (
+                                <span
+                                    key={key}
+                                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-surface-2 border border-light/20 rounded-lg text-xs"
+                                >
+                                    <span className="text-muted">{filterLabels[key]}:</span>
+                                    <span className="text-primary font-medium">{value}</span>
+                                    <button
+                                        onClick={() => handleRemoveFilter(key)}
+                                        className="ml-1 p-0.5 hover:bg-surface-3 rounded-full transition-colors"
+                                        aria-label={`Hiq filtrin ${filterLabels[key]}`}
+                                    >
+                                        <X size={10} className="text-muted hover:text-orange-primary" />
+                                    </button>
+                                </span>
+                            ))}
+                            <button
+                                onClick={handleClearAllFilters}
+                                className="text-xs text-orange-primary hover:text-orange-dark transition-colors flex items-center gap-1 rounded px-2 py-1"
+                                aria-label="Pastro të gjithë filtrat"
+                            >
+                                <X size={12} />
+                                <span>Pastro të gjitha</span>
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
+            )}
+
+            {/* Car Grid with sort prop and key to force re-render */}
+            <CarGrid key={gridKey} sortBy={currentSort} sortOptions={sortOptions} />
+        </div>
+    );
+}
+
+========================================
+FILE: components/filters/FilterSidebar.tsx
+DESCRIPTION: Desktop filter UI
+========================================
+// components/filters/FilterSidebar.tsx
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Filter } from 'lucide-react';
+import { useCarFilters } from '@/hooks/useCarFilters';
+import FilterSection from './FilterSection';
+import MobileSelect from '@/components/ui/MobileSelect';
+import RangeFilter from './RangeFilter';
+import {
+    translateFuel,
+    translateTransmission,
+    translateColor,
+    getTranslatedManufacturers
+} from '@/lib/translations';
+
+interface FilterSidebarProps {
+    onApply?: () => void;
+}
+
+interface LocalFilters {
+    manufacturerId: string;
+    modelId: string;
+    fromYear: string;
+    toYear: string;
+    priceFrom: string;
+    priceTo: string;
+    odometerFrom: string;
+    odometerTo: string;
+    transmissionId: string;
+    fuelId: string;
+    colorId: string;
+}
+
+export default function FilterSidebar({ onApply }: FilterSidebarProps) {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const { filters, filterData, loading, activeFilterCount } = useCarFilters();
+
+    const [localFilters, setLocalFilters] = useState<LocalFilters>({
+        manufacturerId: filters.manufacturerId,
+        modelId: filters.modelId,
+        fromYear: filters.fromYear,
+        toYear: filters.toYear,
+        priceFrom: filters.priceFrom,
+        priceTo: filters.priceTo,
+        odometerFrom: filters.odometerFrom,
+        odometerTo: filters.odometerTo,
+        transmissionId: filters.transmissionId,
+        fuelId: filters.fuelId,
+        colorId: filters.colorId,
+    });
+
+    const [expandedSections, setExpandedSections] = useState({
+        manufacturer: true,
+        model: false,
+        year: true,
+        price: true,
+        mileage: false,
+        transmission: false,
+        fuel: false,
+        color: false,
+    });
+
+    // Update local filters when URL changes
+    useEffect(() => {
+        setLocalFilters({
+            manufacturerId: filters.manufacturerId,
+            modelId: filters.modelId,
+            fromYear: filters.fromYear,
+            toYear: filters.toYear,
+            priceFrom: filters.priceFrom,
+            priceTo: filters.priceTo,
+            odometerFrom: filters.odometerFrom,
+            odometerTo: filters.odometerTo,
+            transmissionId: filters.transmissionId,
+            fuelId: filters.fuelId,
+            colorId: filters.colorId,
+        });
+    }, [filters]);
+
+    const toggleSection = (section: keyof typeof expandedSections) => {
+        setExpandedSections(prev => ({
+            ...prev,
+            [section]: !prev[section]
+        }));
+    };
+
+    const updateFilter = (key: keyof LocalFilters, value: string) => {
+        setLocalFilters(prev => ({ ...prev, [key]: value }));
+        if (key === 'manufacturerId') {
+            setLocalFilters(prev => ({ ...prev, modelId: '' }));
+        }
+    };
+
+    const applyFilters = () => {
+        const params = new URLSearchParams();
+
+        // Map local filter keys to URL parameter names
+        // ALL filters are now applied via URL - API filters work server-side,
+        // client-side filters work via CarGrid
+        const filterMapping = {
+            manufacturerId: 'manufacturer_id',
+            modelId: 'model_id',
+            fromYear: 'from_year',
+            toYear: 'to_year',
+            priceFrom: 'buy_now_price_from',
+            priceTo: 'buy_now_price_to',
+            odometerFrom: 'odometer_from_km',
+            odometerTo: 'odometer_to_km',
+            transmissionId: 'transmission_id', // Will be handled client-side
+            fuelId: 'fuel_id',                  // Will be handled client-side
+            colorId: 'color_id',                 // Will be handled client-side
+        };
+
+        // Add all non-empty filters to URL
+        Object.entries(localFilters).forEach(([key, value]) => {
+            if (value && value !== '') {
+                const paramName = filterMapping[key as keyof typeof filterMapping];
+                params.set(paramName, value.toString());
+            }
+        });
+
+        params.set('page', '1');
+        params.set('per_page', '12');
+        params.set('vehicle_type', '1');
+
+        router.push(`/cars?${params.toString()}`);
+
+        if (onApply) {
+            onApply();
+        }
+    };
+
+    const clearFilters = () => {
+        setLocalFilters({
+            manufacturerId: '',
+            modelId: '',
+            fromYear: '',
+            toYear: '',
+            priceFrom: '',
+            priceTo: '',
+            odometerFrom: '',
+            odometerTo: '',
+            transmissionId: '',
+            fuelId: '',
+            colorId: '',
+        });
+
+        const params = new URLSearchParams();
+        params.set('page', '1');
+        params.set('per_page', '12');
+        params.set('vehicle_type', '1');
+        router.push(`/cars?${params.toString()}`);
+    };
+
+    // Prepare options with translations
+    const manufacturerOptions = getTranslatedManufacturers(filterData.manufacturers).map(({ id, translated }) => ({
+        value: id.toString(),
+        label: translated
+    }));
+
+    const modelOptions = filterData.models.map(m => ({
+        value: m.id.toString(),
+        label: m.name
+    }));
+
+    const transmissionOptions = filterData.transmissions.map(t => ({
+        value: t.id.toString(),
+        label: translateTransmission(t.name)
+    }));
+
+    const fuelOptions = filterData.fuelTypes.map(f => ({
+        value: f.id.toString(),
+        label: translateFuel(f.name)
+    }));
+
+    const colorOptions = filterData.colors.map(c => ({
+        value: c.id.toString(),
+        label: translateColor(c.name)
+    }));
+
+    const yearOptions = filterData.years.map(year => ({
+        value: year.toString(),
+        label: year.toString()
+    }));
+
+    const priceOptions = [
+        { value: '5000', label: '€5,000' },
+        { value: '10000', label: '€10,000' },
+        { value: '15000', label: '€15,000' },
+        { value: '20000', label: '€20,000' },
+        { value: '25000', label: '€25,000' },
+        { value: '30000', label: '€30,000' },
+        { value: '35000', label: '€35,000' },
+        { value: '40000', label: '€40,000' },
+        { value: '45000', label: '€45,000' },
+        { value: '50000', label: '€50,000' },
+        { value: '60000', label: '€60,000' },
+        { value: '70000', label: '€70,000' },
+        { value: '80000', label: '€80,000' },
+        { value: '90000', label: '€90,000' },
+        { value: '100000', label: '€100,000' },
+        { value: '125000', label: '€125,000' },
+        { value: '150000', label: '€150,000' },
+    ];
+
+    const mileageOptions = [
+        { value: '50000', label: '50,000 km' },
+        { value: '100000', label: '100,000 km' },
+        { value: '150000', label: '150,000 km' },
+        { value: '200000', label: '200,000 km' },
+        { value: '250000', label: '250,000 km' },
+        { value: '300000', label: '300,000 km' },
+    ];
+
+    // Helper to get display label for active filters
+    const getFilterDisplayLabel = (key: keyof LocalFilters, value: string): string => {
+        switch (key) {
+            case 'transmissionId':
+                return transmissionOptions.find(o => o.value === value)?.label || value;
+            case 'fuelId':
+                return fuelOptions.find(o => o.value === value)?.label || value;
+            case 'colorId':
+                return colorOptions.find(o => o.value === value)?.label || value;
+            case 'manufacturerId':
+                return manufacturerOptions.find(o => o.value === value)?.label || value;
+            case 'modelId':
+                return modelOptions.find(o => o.value === value)?.label || value;
+            default:
+                return value;
+        }
+    };
+
+    return (
+        <div className="w-full bg-surface border border-light/20 rounded-xl p-5">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-light/20">
+                <h2 className="text-lg font-semibold text-primary flex items-center gap-2">
+                    <Filter size={18} className="text-orange-primary" />
+                    Filtrat
+                    {activeFilterCount > 0 && (
+                        <span className="px-2 py-0.5 text-xs bg-orange-primary text-white rounded-full">
+                            {activeFilterCount}
+                        </span>
+                    )}
+                </h2>
+                {activeFilterCount > 0 && (
+                    <button
+                        onClick={clearFilters}
+                        className="text-sm text-muted hover:text-orange-primary transition-colors"
+                    >
+                        Pastro të gjitha
+                    </button>
+                )}
+            </div>
+
+            {/* Info message about client-side filters */}
+            <div className="mb-4 p-3 bg-orange-5 border border-orange-primary/20 rounded-lg">
+                <p className="text-xs text-muted">
+                    <span className="font-medium text-orange-primary">Informacion:</span> Disa filtra (transmisioni, karburanti, ngjyra) aplikohen pas ngarkimit të rezultateve.
+                </p>
+            </div>
+
+            {/* Filter Sections */}
+            <div className="space-y-4">
+                {/* Manufacturer Filter */}
+                <FilterSection
+                    title="Prodhuesi"
+                    isExpanded={expandedSections.manufacturer}
+                    onToggle={() => toggleSection('manufacturer')}
+                >
+                    <MobileSelect
+                        value={localFilters.manufacturerId}
+                        onChange={(value) => updateFilter('manufacturerId', value)}
+                        options={[{ value: '', label: 'Të gjithë prodhuesit' }, ...manufacturerOptions]}
+                        placeholder="Zgjidh prodhuesin"
+                        loading={loading.filters}
+                        className="w-full"
+                    />
+                </FilterSection>
+
+                {/* Model Filter */}
+                {localFilters.manufacturerId && (
+                    <FilterSection
+                        title="Modeli"
+                        isExpanded={expandedSections.model}
+                        onToggle={() => toggleSection('model')}
+                    >
+                        <MobileSelect
+                            value={localFilters.modelId}
+                            onChange={(value) => updateFilter('modelId', value)}
+                            options={[{ value: '', label: 'Të gjitha modelet' }, ...modelOptions]}
+                            placeholder="Zgjidh modelin"
+                            loading={loading.models}
+                            className="w-full"
+                        />
+                    </FilterSection>
+                )}
+
+                {/* Year Filter */}
+                <FilterSection
+                    title="Viti"
+                    isExpanded={expandedSections.year}
+                    onToggle={() => toggleSection('year')}
+                >
+                    <div className="grid grid-cols-2 gap-3">
+                        <MobileSelect
+                            value={localFilters.fromYear}
+                            onChange={(value) => updateFilter('fromYear', value)}
+                            options={[{ value: '', label: 'Nga' }, ...yearOptions.map(y => ({ value: y.value, label: y.label }))]}
+                            placeholder="Nga"
+                            className="w-full"
+                        />
+                        <MobileSelect
+                            value={localFilters.toYear}
+                            onChange={(value) => updateFilter('toYear', value)}
+                            options={[{ value: '', label: 'Deri' }, ...yearOptions.map(y => ({ value: y.value, label: y.label }))]}
+                            placeholder="Deri"
+                            className="w-full"
+                        />
+                    </div>
+                </FilterSection>
+
+                {/* Price Filter */}
+                <FilterSection
+                    title="Çmimi (€)"
+                    isExpanded={expandedSections.price}
+                    onToggle={() => toggleSection('price')}
+                >
+                    <div className="grid grid-cols-2 gap-3">
+                        <MobileSelect
+                            value={localFilters.priceFrom}
+                            onChange={(value) => updateFilter('priceFrom', value)}
+                            options={[{ value: '', label: 'Nga' }, ...priceOptions]}
+                            placeholder="Nga"
+                            className="w-full"
+                        />
+                        <MobileSelect
+                            value={localFilters.priceTo}
+                            onChange={(value) => updateFilter('priceTo', value)}
+                            options={[{ value: '', label: 'Deri' }, ...priceOptions]}
+                            placeholder="Deri"
+                            className="w-full"
+                        />
+                    </div>
+                </FilterSection>
+
+                {/* Mileage Filter */}
+                <FilterSection
+                    title="Kilometrazha"
+                    isExpanded={expandedSections.mileage}
+                    onToggle={() => toggleSection('mileage')}
+                >
+                    <div className="grid grid-cols-2 gap-3">
+                        <MobileSelect
+                            value={localFilters.odometerFrom}
+                            onChange={(value) => updateFilter('odometerFrom', value)}
+                            options={[{ value: '', label: 'Nga' }, ...mileageOptions]}
+                            placeholder="Nga"
+                            className="w-full"
+                        />
+                        <MobileSelect
+                            value={localFilters.odometerTo}
+                            onChange={(value) => updateFilter('odometerTo', value)}
+                            options={[{ value: '', label: 'Deri' }, ...mileageOptions]}
+                            placeholder="Deri"
+                            className="w-full"
+                        />
+                    </div>
+                </FilterSection>
+
+                {/* Transmission Filter - Client-side */}
+                <FilterSection
+                    title="Transmisioni"
+                    isExpanded={expandedSections.transmission}
+                    onToggle={() => toggleSection('transmission')}
+                >
+                    <div className="space-y-2">
+                        {transmissionOptions.map(option => (
+                            <label key={option.value} className="flex items-center gap-3 cursor-pointer group">
+                                <input
+                                    type="radio"
+                                    name="transmission"
+                                    value={option.value}
+                                    checked={localFilters.transmissionId === option.value}
+                                    onChange={(e) => updateFilter('transmissionId', e.target.value)}
+                                    className="sr-only"
+                                />
+                                <div className={`
+                                    w-4 h-4 rounded-full border-2 transition-colors
+                                    ${localFilters.transmissionId === option.value
+                                        ? 'border-orange-primary bg-orange-primary'
+                                        : 'border-light group-hover:border-orange-primary/50'
+                                    }
+                                `}>
+                                    {localFilters.transmissionId === option.value && (
+                                        <div className="w-2 h-2 bg-white rounded-full m-0.5" />
+                                    )}
+                                </div>
+                                <span className="text-sm text-secondary group-hover:text-primary">
+                                    {option.label}
+                                </span>
+                            </label>
+                        ))}
+                        <button
+                            onClick={() => updateFilter('transmissionId', '')}
+                            className="text-xs text-muted hover:text-orange-primary mt-2"
+                        >
+                            Pastro
+                        </button>
+                    </div>
+                    <p className="text-xs text-muted mt-2">*Filtrohet pas ngarkimit</p>
+                </FilterSection>
+
+                {/* Fuel Filter - Client-side */}
+                <FilterSection
+                    title="Karburanti"
+                    isExpanded={expandedSections.fuel}
+                    onToggle={() => toggleSection('fuel')}
+                >
+                    <div className="space-y-2">
+                        {fuelOptions.map(option => (
+                            <label key={option.value} className="flex items-center gap-3 cursor-pointer group">
+                                <input
+                                    type="radio"
+                                    name="fuel"
+                                    value={option.value}
+                                    checked={localFilters.fuelId === option.value}
+                                    onChange={(e) => updateFilter('fuelId', e.target.value)}
+                                    className="sr-only"
+                                />
+                                <div className={`
+                                    w-4 h-4 rounded-full border-2 transition-colors
+                                    ${localFilters.fuelId === option.value
+                                        ? 'border-orange-primary bg-orange-primary'
+                                        : 'border-light group-hover:border-orange-primary/50'
+                                    }
+                                `}>
+                                    {localFilters.fuelId === option.value && (
+                                        <div className="w-2 h-2 bg-white rounded-full m-0.5" />
+                                    )}
+                                </div>
+                                <span className="text-sm text-secondary group-hover:text-primary">
+                                    {option.label}
+                                </span>
+                            </label>
+                        ))}
+                        <button
+                            onClick={() => updateFilter('fuelId', '')}
+                            className="text-xs text-muted hover:text-orange-primary mt-2"
+                        >
+                            Pastro
+                        </button>
+                    </div>
+                    <p className="text-xs text-muted mt-2">*Filtrohet pas ngarkimit</p>
+                </FilterSection>
+
+                {/* Color Filter - Client-side */}
+                <FilterSection
+                    title="Ngjyra"
+                    isExpanded={expandedSections.color}
+                    onToggle={() => toggleSection('color')}
+                >
+                    <MobileSelect
+                        value={localFilters.colorId}
+                        onChange={(value) => updateFilter('colorId', value)}
+                        options={[{ value: '', label: 'Të gjitha ngjyrat' }, ...colorOptions]}
+                        placeholder="Zgjidh ngjyrën"
+                        className="w-full"
+                    />
+                    <p className="text-xs text-muted mt-2">*Filtrohet pas ngarkimit</p>
+                </FilterSection>
+            </div>
+
+            {/* Active Filters Summary */}
+            {activeFilterCount > 0 && (
+                <div className="mt-4 pt-4 border-t border-light/20">
+                    <h3 className="text-xs font-medium text-muted mb-2">Filtrat aktivë:</h3>
+                    <div className="flex flex-wrap gap-2">
+                        {Object.entries(localFilters).map(([key, value]) => {
+                            if (!value) return null;
+                            let label = '';
+                            switch (key) {
+                                case 'manufacturerId': label = 'Prodhuesi'; break;
+                                case 'modelId': label = 'Modeli'; break;
+                                case 'fromYear': label = 'Viti nga'; break;
+                                case 'toYear': label = 'Viti deri'; break;
+                                case 'priceFrom': label = 'Çmimi nga'; break;
+                                case 'priceTo': label = 'Çmimi deri'; break;
+                                case 'odometerFrom': label = 'Km nga'; break;
+                                case 'odometerTo': label = 'Km deri'; break;
+                                case 'transmissionId': label = 'Transmisioni'; break;
+                                case 'fuelId': label = 'Karburanti'; break;
+                                case 'colorId': label = 'Ngjyra'; break;
+                                default: return null;
+                            }
+                            return (
+                                <span key={key} className="inline-flex items-center gap-1 px-2 py-1 bg-surface-2 rounded-lg text-xs">
+                                    <span className="text-muted">{label}:</span>
+                                    <span className="text-primary font-medium">{getFilterDisplayLabel(key as keyof LocalFilters, value)}</span>
+                                </span>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            {/* Apply Button */}
+            <button
+                onClick={applyFilters}
+                className="w-full btn-primary mt-6"
+            >
+                Apliko filtrat
+                {activeFilterCount > 0 && (
+                    <span className="ml-2 px-2 py-0.5 bg-white/20 text-white text-xs rounded-full">
+                        {activeFilterCount}
+                    </span>
+                )}
+            </button>
+        </div>
+    );
+}
+
+========================================
+FILE: components/ui/MobileFilters.tsx
+DESCRIPTION: Mobile filter UI
+========================================
+// components/ui/MobileFilters.tsx
+'use client';
+
+import { Fragment, useState, useEffect } from 'react';
+import { Dialog, Transition } from '@headlessui/react';
+import { X } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useCarFilters } from '@/hooks/useCarFilters';
+import FilterSection from '@/components/filters/FilterSection';
+import MobileSelect from '@/components/ui/MobileSelect';
+import { fetchModels } from '@/lib/api';
+import {
+    translateFuel,
+    translateTransmission,
+    translateColor,
+    getTranslatedManufacturers
+} from '@/lib/translations';
+
+interface MobileFiltersProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+interface LocalFilters {
+    manufacturerId: string;
+    modelId: string;
+    fromYear: string;
+    toYear: string;
+    priceFrom: string;
+    priceTo: string;
+    odometerFrom: string;
+    odometerTo: string;
+    transmissionId: string;
+    fuelId: string;
+    colorId: string;
+}
+
+export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const { filters, filterData, loading, activeFilterCount } = useCarFilters();
+
+    const [localFilters, setLocalFilters] = useState<LocalFilters>({
+        manufacturerId: filters.manufacturerId,
+        modelId: filters.modelId,
+        fromYear: filters.fromYear,
+        toYear: filters.toYear,
+        priceFrom: filters.priceFrom,
+        priceTo: filters.priceTo,
+        odometerFrom: filters.odometerFrom,
+        odometerTo: filters.odometerTo,
+        transmissionId: filters.transmissionId,
+        fuelId: filters.fuelId,
+        colorId: filters.colorId,
+    });
+
+    const [localModels, setLocalModels] = useState<Array<{ id: number; name: string }>>([]);
+    const [loadingModels, setLoadingModels] = useState(false);
+    const [expandedSections, setExpandedSections] = useState({
+        manufacturer: true,
+        model: false,
+        year: true,
+        price: true,
+        mileage: false,
+        transmission: false,
+        fuel: false,
+        color: false,
+    });
+
+    // Update local filters when URL changes
+    useEffect(() => {
+        setLocalFilters({
+            manufacturerId: filters.manufacturerId,
+            modelId: filters.modelId,
+            fromYear: filters.fromYear,
+            toYear: filters.toYear,
+            priceFrom: filters.priceFrom,
+            priceTo: filters.priceTo,
+            odometerFrom: filters.odometerFrom,
+            odometerTo: filters.odometerTo,
+            transmissionId: filters.transmissionId,
+            fuelId: filters.fuelId,
+            colorId: filters.colorId,
+        });
+    }, [filters]);
+
+    // Load models when manufacturer changes
+    useEffect(() => {
+        const loadModels = async () => {
+            if (!localFilters.manufacturerId) {
+                setLocalModels([]);
+                return;
+            }
+
+            try {
+                setLoadingModels(true);
+                const models = await fetchModels(parseInt(localFilters.manufacturerId), 'cars');
+                setLocalModels(models);
+                console.log('📱 Loaded models for manufacturer:', localFilters.manufacturerId, models);
+            } catch (error) {
+                console.error('Error loading models:', error);
+                setLocalModels([]);
+            } finally {
+                setLoadingModels(false);
+            }
+        };
+
+        loadModels();
+    }, [localFilters.manufacturerId]);
+
+    const toggleSection = (section: keyof typeof expandedSections) => {
+        setExpandedSections(prev => ({
+            ...prev,
+            [section]: !prev[section]
+        }));
+    };
+
+    const updateFilter = (key: keyof LocalFilters, value: string) => {
+        setLocalFilters(prev => ({ ...prev, [key]: value }));
+        if (key === 'manufacturerId') {
+            setLocalFilters(prev => ({ ...prev, modelId: '' }));
+        }
+    };
+
+    const applyFilters = () => {
+        const params = new URLSearchParams();
+
+        // Map local filter keys to URL parameter names
+        const filterMapping = {
+            manufacturerId: 'manufacturer_id',
+            modelId: 'model_id',
+            fromYear: 'from_year',
+            toYear: 'to_year',
+            priceFrom: 'buy_now_price_from',
+            priceTo: 'buy_now_price_to',
+            odometerFrom: 'odometer_from_km',
+            odometerTo: 'odometer_to_km',
+            transmissionId: 'transmission_id',
+            fuelId: 'fuel_id',
+            colorId: 'color_id',
+        };
+
+        // Add all non-empty filters
+        Object.entries(localFilters).forEach(([key, value]) => {
+            if (value && value !== '') {
+                const paramName = filterMapping[key as keyof typeof filterMapping];
+                params.set(paramName, value.toString());
+            }
+        });
+
+        params.set('page', '1');
+        params.set('per_page', '12');
+        params.set('vehicle_type', '1');
+
+        router.push(`/cars?${params.toString()}`);
+        onClose();
+    };
+
+    const clearFilters = () => {
+        setLocalFilters({
+            manufacturerId: '',
+            modelId: '',
+            fromYear: '',
+            toYear: '',
+            priceFrom: '',
+            priceTo: '',
+            odometerFrom: '',
+            odometerTo: '',
+            transmissionId: '',
+            fuelId: '',
+            colorId: '',
+        });
+        setLocalModels([]);
+
+        const params = new URLSearchParams();
+        params.set('page', '1');
+        params.set('per_page', '12');
+        params.set('vehicle_type', '1');
+        router.push(`/cars?${params.toString()}`);
+        onClose();
+    };
+
+    // Prepare options with translations
+    const manufacturerOptions = getTranslatedManufacturers(filterData.manufacturers).map(({ id, translated }) => ({
+        value: id.toString(),
+        label: translated
+    }));
+
+    const modelOptions = localModels.map(m => ({
+        value: m.id.toString(),
+        label: m.name
+    }));
+
+    const transmissionOptions = filterData.transmissions.map(t => ({
+        value: t.id.toString(),
+        label: translateTransmission(t.name)
+    }));
+
+    const fuelOptions = filterData.fuelTypes.map(f => ({
+        value: f.id.toString(),
+        label: translateFuel(f.name)
+    }));
+
+    const colorOptions = filterData.colors.map(c => ({
+        value: c.id.toString(),
+        label: translateColor(c.name)
+    }));
+
+    const yearOptions = [
+        { value: '', label: 'Viti' },
+        ...filterData.years.map(year => ({
+            value: year.toString(),
+            label: year.toString()
+        }))
+    ];
+
+    const priceOptions = [
+        { value: '', label: 'Çmimi' },
+        { value: '5000', label: '€5,000' },
+        { value: '10000', label: '€10,000' },
+        { value: '15000', label: '€15,000' },
+        { value: '20000', label: '€20,000' },
+        { value: '25000', label: '€25,000' },
+        { value: '30000', label: '€30,000' },
+        { value: '35000', label: '€35,000' },
+        { value: '40000', label: '€40,000' },
+        { value: '45000', label: '€45,000' },
+        { value: '50000', label: '€50,000' },
+        { value: '60000', label: '€60,000' },
+        { value: '70000', label: '€70,000' },
+        { value: '80000', label: '€80,000' },
+        { value: '90000', label: '€90,000' },
+        { value: '100000', label: '€100,000' },
+        { value: '125000', label: '€125,000' },
+        { value: '150000', label: '€150,000' },
+    ];
+
+    const mileageOptions = [
+        { value: '', label: 'km' },
+        { value: '50000', label: '50,000 km' },
+        { value: '100000', label: '100,000 km' },
+        { value: '150000', label: '150,000 km' },
+        { value: '200000', label: '200,000 km' },
+        { value: '250000', label: '250,000 km' },
+        { value: '300000', label: '300,000 km' },
+    ];
+
+    return (
+        <Transition.Root show={isOpen} as={Fragment}>
+            <Dialog as="div" className="relative z-50" onClose={onClose}>
+                <Transition.Child
+                    as={Fragment}
+                    enter="ease-in-out duration-300"
+                    enterFrom="opacity-0"
+                    enterTo="opacity-100"
+                    leave="ease-in-out duration-300"
+                    leaveFrom="opacity-100"
+                    leaveTo="opacity-0"
+                >
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-lg transition-opacity" />
+                </Transition.Child>
+
+                <div className="fixed inset-0 overflow-hidden">
+                    <div className="absolute inset-0 overflow-hidden">
+                        <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full">
+                            <Transition.Child
+                                as={Fragment}
+                                enter="transform transition ease-in-out duration-300"
+                                enterFrom="translate-x-full"
+                                enterTo="translate-x-0"
+                                leave="transform transition ease-in-out duration-300"
+                                leaveFrom="translate-x-0"
+                                leaveTo="translate-x-full"
+                            >
+                                <Dialog.Panel className="pointer-events-auto w-screen max-w-md">
+                                    <div className="flex h-full flex-col overflow-hidden bg-primary border-l border-light/20">
+                                        {/* Header */}
+                                        <div className="sticky top-0 z-20 bg-primary/80 backdrop-blur-sm px-6 py-4 border-b border-light/20">
+                                            <div className="flex items-center justify-between">
+                                                <Dialog.Title className="text-lg font-semibold text-primary flex items-center gap-2">
+                                                    Filtrat
+                                                    {activeFilterCount > 0 && (
+                                                        <span className="px-2 py-0.5 text-xs bg-orange-primary text-white rounded-full">
+                                                            {activeFilterCount}
+                                                        </span>
+                                                    )}
+                                                </Dialog.Title>
+                                                <div className="flex items-center gap-2">
+                                                    {activeFilterCount > 0 && (
+                                                        <button
+                                                            onClick={clearFilters}
+                                                            className="text-sm text-muted hover:text-orange-primary transition-colors"
+                                                        >
+                                                            Pastro
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        onClick={onClose}
+                                                        className="rounded-lg p-2 text-muted hover:text-primary hover:bg-surface-2 transition-colors"
+                                                        aria-label="Mbyll"
+                                                    >
+                                                        <X size={20} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Info message about client-side filters */}
+                                        <div className="px-6 py-3 bg-orange-5 border-b border-orange-primary/20">
+                                            <p className="text-xs text-muted">
+                                                <span className="font-medium text-orange-primary">Informacion:</span> Disa filtra (transmisioni, karburanti, ngjyra) aplikohen pas ngarkimit të rezultateve.
+                                            </p>
+                                        </div>
+
+                                        {/* Filter Content */}
+                                        <div className="flex-1 overflow-y-auto px-6 py-4">
+                                            <div className="space-y-4 divide-y divide-light/20">
+                                                {/* Manufacturer Filter */}
+                                                <FilterSection
+                                                    title="Prodhuesi"
+                                                    isExpanded={expandedSections.manufacturer}
+                                                    onToggle={() => toggleSection('manufacturer')}
+                                                >
+                                                    <MobileSelect
+                                                        value={localFilters.manufacturerId}
+                                                        onChange={(value) => updateFilter('manufacturerId', value)}
+                                                        options={[{ value: '', label: 'Të gjithë prodhuesit' }, ...manufacturerOptions]}
+                                                        placeholder="Zgjidh prodhuesin"
+                                                        loading={loading.filters}
+                                                        className="w-full"
+                                                    />
+                                                </FilterSection>
+
+                                                {/* Model Filter */}
+                                                {localFilters.manufacturerId && (
+                                                    <FilterSection
+                                                        title="Modeli"
+                                                        isExpanded={expandedSections.model}
+                                                        onToggle={() => toggleSection('model')}
+                                                    >
+                                                        <MobileSelect
+                                                            value={localFilters.modelId}
+                                                            onChange={(value) => updateFilter('modelId', value)}
+                                                            options={[{ value: '', label: 'Të gjitha modelet' }, ...modelOptions]}
+                                                            placeholder="Zgjidh modelin"
+                                                            loading={loadingModels}
+                                                            className="w-full"
+                                                        />
+                                                    </FilterSection>
+                                                )}
+
+                                                {/* Year Filter */}
+                                                <FilterSection
+                                                    title="Viti"
+                                                    isExpanded={expandedSections.year}
+                                                    onToggle={() => toggleSection('year')}
+                                                >
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <MobileSelect
+                                                            value={localFilters.fromYear}
+                                                            onChange={(value) => updateFilter('fromYear', value)}
+                                                            options={[{ value: '', label: 'Nga' }, ...yearOptions.slice(1)]}
+                                                            placeholder="Nga"
+                                                            className="w-full"
+                                                        />
+                                                        <MobileSelect
+                                                            value={localFilters.toYear}
+                                                            onChange={(value) => updateFilter('toYear', value)}
+                                                            options={[{ value: '', label: 'Deri' }, ...yearOptions.slice(1)]}
+                                                            placeholder="Deri"
+                                                            className="w-full"
+                                                        />
+                                                    </div>
+                                                </FilterSection>
+
+                                                {/* Price Filter */}
+                                                <FilterSection
+                                                    title="Çmimi (€)"
+                                                    isExpanded={expandedSections.price}
+                                                    onToggle={() => toggleSection('price')}
+                                                >
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <MobileSelect
+                                                            value={localFilters.priceFrom}
+                                                            onChange={(value) => updateFilter('priceFrom', value)}
+                                                            options={[{ value: '', label: 'Nga' }, ...priceOptions.slice(1)]}
+                                                            placeholder="Nga"
+                                                            className="w-full"
+                                                        />
+                                                        <MobileSelect
+                                                            value={localFilters.priceTo}
+                                                            onChange={(value) => updateFilter('priceTo', value)}
+                                                            options={[{ value: '', label: 'Deri' }, ...priceOptions.slice(1)]}
+                                                            placeholder="Deri"
+                                                            className="w-full"
+                                                        />
+                                                    </div>
+                                                </FilterSection>
+
+                                                {/* Mileage Filter */}
+                                                <FilterSection
+                                                    title="Kilometrazha"
+                                                    isExpanded={expandedSections.mileage}
+                                                    onToggle={() => toggleSection('mileage')}
+                                                >
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <MobileSelect
+                                                            value={localFilters.odometerFrom}
+                                                            onChange={(value) => updateFilter('odometerFrom', value)}
+                                                            options={[{ value: '', label: 'Nga' }, ...mileageOptions.slice(1)]}
+                                                            placeholder="Nga"
+                                                            className="w-full"
+                                                        />
+                                                        <MobileSelect
+                                                            value={localFilters.odometerTo}
+                                                            onChange={(value) => updateFilter('odometerTo', value)}
+                                                            options={[{ value: '', label: 'Deri' }, ...mileageOptions.slice(1)]}
+                                                            placeholder="Deri"
+                                                            className="w-full"
+                                                        />
+                                                    </div>
+                                                </FilterSection>
+
+                                                {/* Transmission Filter - Client-side */}
+                                                <FilterSection
+                                                    title="Transmisioni"
+                                                    isExpanded={expandedSections.transmission}
+                                                    onToggle={() => toggleSection('transmission')}
+                                                >
+                                                    <div className="space-y-2">
+                                                        {transmissionOptions.map(option => (
+                                                            <label key={option.value} className="flex items-center gap-3 cursor-pointer group">
+                                                                <input
+                                                                    type="radio"
+                                                                    name="transmission"
+                                                                    value={option.value}
+                                                                    checked={localFilters.transmissionId === option.value}
+                                                                    onChange={(e) => updateFilter('transmissionId', e.target.value)}
+                                                                    className="sr-only"
+                                                                />
+                                                                <div className={`
+                                                                    w-4 h-4 rounded-full border-2 transition-colors
+                                                                    ${localFilters.transmissionId === option.value
+                                                                        ? 'border-orange-primary bg-orange-primary'
+                                                                        : 'border-light group-hover:border-orange-primary/50'
+                                                                    }
+                                                                `}>
+                                                                    {localFilters.transmissionId === option.value && (
+                                                                        <div className="w-2 h-2 bg-white rounded-full m-0.5" />
+                                                                    )}
+                                                                </div>
+                                                                <span className="text-sm text-secondary group-hover:text-primary">
+                                                                    {option.label}
+                                                                </span>
+                                                            </label>
+                                                        ))}
+                                                        <button
+                                                            onClick={() => updateFilter('transmissionId', '')}
+                                                            className="text-xs text-muted hover:text-orange-primary mt-2"
+                                                        >
+                                                            Pastro
+                                                        </button>
+                                                    </div>
+                                                    <p className="text-xs text-muted mt-2">*Filtrohet pas ngarkimit</p>
+                                                </FilterSection>
+
+                                                {/* Fuel Filter - Client-side */}
+                                                <FilterSection
+                                                    title="Karburanti"
+                                                    isExpanded={expandedSections.fuel}
+                                                    onToggle={() => toggleSection('fuel')}
+                                                >
+                                                    <div className="space-y-2">
+                                                        {fuelOptions.map(option => (
+                                                            <label key={option.value} className="flex items-center gap-3 cursor-pointer group">
+                                                                <input
+                                                                    type="radio"
+                                                                    name="fuel"
+                                                                    value={option.value}
+                                                                    checked={localFilters.fuelId === option.value}
+                                                                    onChange={(e) => updateFilter('fuelId', e.target.value)}
+                                                                    className="sr-only"
+                                                                />
+                                                                <div className={`
+                                                                    w-4 h-4 rounded-full border-2 transition-colors
+                                                                    ${localFilters.fuelId === option.value
+                                                                        ? 'border-orange-primary bg-orange-primary'
+                                                                        : 'border-light group-hover:border-orange-primary/50'
+                                                                    }
+                                                                `}>
+                                                                    {localFilters.fuelId === option.value && (
+                                                                        <div className="w-2 h-2 bg-white rounded-full m-0.5" />
+                                                                    )}
+                                                                </div>
+                                                                <span className="text-sm text-secondary group-hover:text-primary">
+                                                                    {option.label}
+                                                                </span>
+                                                            </label>
+                                                        ))}
+                                                        <button
+                                                            onClick={() => updateFilter('fuelId', '')}
+                                                            className="text-xs text-muted hover:text-orange-primary mt-2"
+                                                        >
+                                                            Pastro
+                                                        </button>
+                                                    </div>
+                                                    <p className="text-xs text-muted mt-2">*Filtrohet pas ngarkimit</p>
+                                                </FilterSection>
+
+                                                {/* Color Filter - Client-side */}
+                                                <FilterSection
+                                                    title="Ngjyra"
+                                                    isExpanded={expandedSections.color}
+                                                    onToggle={() => toggleSection('color')}
+                                                >
+                                                    <MobileSelect
+                                                        value={localFilters.colorId}
+                                                        onChange={(value) => updateFilter('colorId', value)}
+                                                        options={[{ value: '', label: 'Të gjitha ngjyrat' }, ...colorOptions]}
+                                                        placeholder="Zgjidh ngjyrën"
+                                                        className="w-full"
+                                                    />
+                                                    <p className="text-xs text-muted mt-2">*Filtrohet pas ngarkimit</p>
+                                                </FilterSection>
+                                            </div>
+                                        </div>
+
+                                        {/* Bottom Button */}
+                                        <div className="sticky bottom-0 bg-primary/80 backdrop-blur-sm border-t border-light/20 px-6 py-4">
+                                            <button
+                                                onClick={applyFilters}
+                                                className="w-full btn-primary"
+                                            >
+                                                Shfaq rezultatet
+                                                {activeFilterCount > 0 && (
+                                                    <span className="ml-2 px-2 py-0.5 bg-white/20 text-white text-xs rounded-full">
+                                                        {activeFilterCount}
+                                                    </span>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </Dialog.Panel>
+                            </Transition.Child>
+                        </div>
+                    </div>
+                </div>
+            </Dialog>
+        </Transition.Root>
+    );
+}
+
+========================================
+FILE: hooks/useCarFilters.ts
+DESCRIPTION: Filter state management
+========================================
+// hooks/useCarFilters.ts
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { fetchFilterData, fetchModels, fetchGenerations, type FilterData } from '@/lib/api';
+
+export interface FilterState {
+    manufacturerId: string;
+    modelId: string;
+    generationId: string;
+    fromYear: string;
+    toYear: string;
+    odometerFrom: string;
+    odometerTo: string;
+    priceFrom: string;
+    priceTo: string;
+    transmissionId: string;
+    fuelId: string;
+    bodyTypeId: string;
+    colorId: string;
+    inStock: boolean;
+}
+
+export function useCarFilters() {
+    const searchParams = useSearchParams();
+
+    const [filterData, setFilterData] = useState<FilterData>({
+        manufacturers: [],
+        models: [],
+        generations: [],
+        fuelTypes: [],
+        transmissions: [],
+        years: [],
+        bodyTypes: [],
+        colors: []
+    });
+
+    const [loading, setLoading] = useState({
+        filters: false,
+        models: false,
+        generations: false
+    });
+
+    // Initialize filters from URL - using ID parameters directly
+    const [filters, setFilters] = useState<FilterState>(() => ({
+        manufacturerId: searchParams.get('manufacturer_id') || '',
+        modelId: searchParams.get('model_id') || '',
+        generationId: searchParams.get('generation_id') || '',
+        fromYear: searchParams.get('from_year') || '',
+        toYear: searchParams.get('to_year') || '',
+        odometerFrom: searchParams.get('odometer_from_km') || '',
+        odometerTo: searchParams.get('odometer_to_km') || '',
+        priceFrom: searchParams.get('buy_now_price_from') || '',
+        priceTo: searchParams.get('buy_now_price_to') || '',
+        transmissionId: searchParams.get('transmission_id') || '',
+        fuelId: searchParams.get('fuel_id') || '',
+        bodyTypeId: searchParams.get('body_type_id') || '',
+        colorId: searchParams.get('color_id') || '',
+        inStock: searchParams.get('in_stock') === 'true',
+    }));
+
+    // Update filters when URL changes - using ID parameters directly
+    useEffect(() => {
+        setFilters({
+            manufacturerId: searchParams.get('manufacturer_id') || '',
+            modelId: searchParams.get('model_id') || '',
+            generationId: searchParams.get('generation_id') || '',
+            fromYear: searchParams.get('from_year') || '',
+            toYear: searchParams.get('to_year') || '',
+            odometerFrom: searchParams.get('odometer_from_km') || '',
+            odometerTo: searchParams.get('odometer_to_km') || '',
+            priceFrom: searchParams.get('buy_now_price_from') || '',
+            priceTo: searchParams.get('buy_now_price_to') || '',
+            transmissionId: searchParams.get('transmission_id') || '',
+            fuelId: searchParams.get('fuel_id') || '',
+            bodyTypeId: searchParams.get('body_type_id') || '',
+            colorId: searchParams.get('color_id') || '',
+            inStock: searchParams.get('in_stock') === 'true',
+        });
+    }, [searchParams]);
+
+    // Load initial filter data
+    useEffect(() => {
+        const loadFilters = async () => {
+            try {
+                setLoading(prev => ({ ...prev, filters: true }));
+                const data = await fetchFilterData();
+                setFilterData(data);
+            } catch (error) {
+                console.error('Error loading filters:', error);
+            } finally {
+                setLoading(prev => ({ ...prev, filters: false }));
+            }
+        };
+        loadFilters();
+    }, []);
+
+    // Load models when manufacturer changes
+    useEffect(() => {
+        const loadModels = async () => {
+            if (!filters.manufacturerId) {
+                setFilterData(prev => ({ ...prev, models: [] }));
+                return;
+            }
+
+            try {
+                setLoading(prev => ({ ...prev, models: true }));
+                const models = await fetchModels(parseInt(filters.manufacturerId), 'cars');
+                setFilterData(prev => ({ ...prev, models }));
+            } catch (error) {
+                console.error('Error loading models:', error);
+            } finally {
+                setLoading(prev => ({ ...prev, models: false }));
+            }
+        };
+        loadModels();
+    }, [filters.manufacturerId]);
+
+    // Load generations when model changes
+    useEffect(() => {
+        const loadGenerations = async () => {
+            if (!filters.modelId) {
+                setFilterData(prev => ({ ...prev, generations: [] }));
+                return;
+            }
+
+            try {
+                setLoading(prev => ({ ...prev, generations: true }));
+                const generations = await fetchGenerations(parseInt(filters.modelId), 'cars');
+                setFilterData(prev => ({ ...prev, generations }));
+            } catch (error) {
+                console.error('Error loading generations:', error);
+            } finally {
+                setLoading(prev => ({ ...prev, generations: false }));
+            }
+        };
+        loadGenerations();
+    }, [filters.modelId]);
+
+    const activeFilterCount = Object.values(filters).filter(v => v && v !== '').length;
+
+    return {
+        filters,
+        filterData,
+        loading,
+        activeFilterCount
+    };
+}
+
+========================================
+FILE: app/api/proxy/[...path]/route.ts
+DESCRIPTION: Proxy request handling
+========================================
+import { NextRequest, NextResponse } from 'next/server';
+
+const API_BASE_URL = process.env.API_BASE_URL || 'https://api.bestautomarket.com/api';
+
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ path: string[] }> }
+) {
+    try {
+        const { path } = await params;
+
+        if (!path || path.length === 0) {
+            return NextResponse.json(
+                { error: 'No path provided' },
+                { status: 404 }
+            );
+        }
+
+        const pathString = path.join('/');
+        const searchParams = request.nextUrl.searchParams;
+        const url = `${API_BASE_URL}/${pathString}${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+
+        console.log('🔁 Proxying to:', url);
+
+        // Increased timeout to 25 seconds for production
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+        const response = await fetch(url, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'User-Agent': 'VeturaNgaKorea/1.0',
+            },
+            signal: controller.signal,
+            cache: 'no-store'
+        }).finally(() => clearTimeout(timeoutId));
+
+        const contentType = response.headers.get('content-type');
+        const text = await response.text();
+
+        // Check if response is HTML (error page)
+        if (text.trim().startsWith('<!DOCTYPE')) {
+            console.error(`⚠️ API returned HTML for ${url}`);
+            return NextResponse.json(
+                {
+                    error: 'API returned HTML instead of JSON',
+                    status: response.status,
+                    url
+                },
+                { status: 404 }
+            );
+        }
+
+        // Try to parse JSON
+        try {
+            const data = JSON.parse(text);
+            return NextResponse.json(data, {
+                status: response.status,
+                headers: {
+                    'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+                }
+            });
+        } catch (parseError) {
+            console.error('❌ JSON parse error:', parseError);
+            return NextResponse.json(
+                {
+                    error: 'Invalid JSON response',
+                    status: response.status,
+                    contentType,
+                    preview: text.substring(0, 200)
+                },
+                { status: 500 }
+            );
+        }
+
+    } catch (error: any) {
+        console.error('Proxy error:', error);
+
+        // Handle timeout specifically
+        if (error.name === 'AbortError') {
+            return NextResponse.json(
+                { error: 'Request timeout - API took too long to respond' },
+                { status: 504 }
+            );
+        }
+
+        return NextResponse.json(
+            { error: 'Failed to fetch data', details: error.message },
+            { status: 500 }
+        );
+    }
+}
+
+export async function OPTIONS() {
+    return new NextResponse(null, {
+        status: 204,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+        },
+    });
+}
+
+========================================
+FILE: next.config.js
+DESCRIPTION: Proxy and image optimization config
+========================================
+// next.config.js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'api.bestautomarket.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'ci.encar.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cars.import-motor.com',
+        pathname: '/**',
+      },
+    ],
+    formats: ['image/avif', 'image/webp'],
+  },
+  compress: true,
+  poweredByHeader: false,
+  reactStrictMode: true,
+  experimental: {},
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+        ],
+      },
+    ];
+  },
+};
+
+module.exports = nextConfig;

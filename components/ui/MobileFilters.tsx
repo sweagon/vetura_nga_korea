@@ -5,17 +5,22 @@ import { Fragment, useState, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { X } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useCarFilters, type FilterState } from '@/hooks/useCarFilters'; // Import type
+import { useCarFilters } from '@/hooks/useCarFilters';
 import FilterSection from '@/components/filters/FilterSection';
 import MobileSelect from '@/components/ui/MobileSelect';
 import { fetchModels } from '@/lib/api';
+import {
+    translateFuel,
+    translateTransmission,
+    translateColor,
+    getTranslatedManufacturers
+} from '@/lib/translations';
 
 interface MobileFiltersProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
-// Define the local filter type that matches what we use
 interface LocalFilters {
     manufacturerId: string;
     modelId: string;
@@ -25,9 +30,6 @@ interface LocalFilters {
     priceTo: string;
     odometerFrom: string;
     odometerTo: string;
-    transmissionId: string;
-    fuelId: string;
-    colorId: string;
 }
 
 export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
@@ -44,22 +46,16 @@ export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
         priceTo: filters.priceTo,
         odometerFrom: filters.odometerFrom,
         odometerTo: filters.odometerTo,
-        transmissionId: filters.transmissionId,
-        fuelId: filters.fuelId,
-        colorId: filters.colorId,
     });
 
     const [localModels, setLocalModels] = useState<Array<{ id: number; name: string }>>([]);
     const [loadingModels, setLoadingModels] = useState(false);
     const [expandedSections, setExpandedSections] = useState({
         manufacturer: true,
-        model: false,
+        model: true,
         year: true,
         price: true,
-        mileage: false,
-        transmission: false,
-        fuel: false,
-        color: false,
+        mileage: true,
     });
 
     // Update local filters when URL changes
@@ -73,9 +69,6 @@ export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
             priceTo: filters.priceTo,
             odometerFrom: filters.odometerFrom,
             odometerTo: filters.odometerTo,
-            transmissionId: filters.transmissionId,
-            fuelId: filters.fuelId,
-            colorId: filters.colorId,
         });
     }, [filters]);
 
@@ -112,8 +105,6 @@ export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
 
     const updateFilter = (key: keyof LocalFilters, value: string) => {
         setLocalFilters(prev => ({ ...prev, [key]: value }));
-
-        // Clear model when manufacturer changes
         if (key === 'manufacturerId') {
             setLocalFilters(prev => ({ ...prev, modelId: '' }));
         }
@@ -122,7 +113,7 @@ export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
     const applyFilters = () => {
         const params = new URLSearchParams();
 
-        // Map local filter keys to API parameter names
+        // Map local filter keys to URL parameter names
         const filterMapping = {
             manufacturerId: 'manufacturer_id',
             modelId: 'model_id',
@@ -139,15 +130,12 @@ export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
 
         // Add all non-empty filters
         Object.entries(localFilters).forEach(([key, value]) => {
-            if (value && value !== '' && value !== 'false') {
+            if (value && value !== '') {
                 const paramName = filterMapping[key as keyof typeof filterMapping];
-                if (paramName) {
-                    params.set(paramName, value.toString());
-                }
+                params.set(paramName, value.toString());
             }
         });
 
-        // Always set page and per_page
         params.set('page', '1');
         params.set('per_page', '12');
         params.set('vehicle_type', '1');
@@ -166,17 +154,21 @@ export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
             priceTo: '',
             odometerFrom: '',
             odometerTo: '',
-            transmissionId: '',
-            fuelId: '',
-            colorId: '',
         });
         setLocalModels([]);
+
+        const params = new URLSearchParams();
+        params.set('page', '1');
+        params.set('per_page', '12');
+        params.set('vehicle_type', '1');
+        router.push(`/cars?${params.toString()}`);
+        onClose();
     };
 
-    // Prepare options
-    const manufacturerOptions = filterData.manufacturers.map(m => ({
-        value: m.id.toString(),
-        label: m.name
+    // Prepare options with translations
+    const manufacturerOptions = getTranslatedManufacturers(filterData.manufacturers).map(({ id, translated }) => ({
+        value: id.toString(),
+        label: translated
     }));
 
     const modelOptions = localModels.map(m => ({
@@ -186,20 +178,17 @@ export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
 
     const transmissionOptions = filterData.transmissions.map(t => ({
         value: t.id.toString(),
-        label: t.name === 'automatic' ? 'Automatik' : 'Manuel'
+        label: translateTransmission(t.name)
     }));
 
     const fuelOptions = filterData.fuelTypes.map(f => ({
         value: f.id.toString(),
-        label: f.name === 'diesel' ? 'Naftë' :
-            f.name === 'gasoline' ? 'Benzinë' :
-                f.name === 'electric' ? 'Elektrik' :
-                    f.name === 'hybrid' ? 'Hibrid' : f.name
+        label: translateFuel(f.name)
     }));
 
     const colorOptions = filterData.colors.map(c => ({
         value: c.id.toString(),
-        label: c.name
+        label: translateColor(c.name)
     }));
 
     const yearOptions = [
@@ -270,7 +259,7 @@ export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
                             >
                                 <Dialog.Panel className="pointer-events-auto w-screen max-w-md">
                                     <div className="flex h-full flex-col overflow-hidden bg-primary border-l border-light/20">
-                                        {/* Header - sticky */}
+                                        {/* Header */}
                                         <div className="sticky top-0 z-20 bg-primary/80 backdrop-blur-sm px-6 py-4 border-b border-light/20">
                                             <div className="flex items-center justify-between">
                                                 <Dialog.Title className="text-lg font-semibold text-primary flex items-center gap-2">
@@ -301,6 +290,13 @@ export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
                                             </div>
                                         </div>
 
+                                        {/* Info message about client-side filters */}
+                                        <div className="px-6 py-3 bg-orange-5 border-b border-orange-primary/20">
+                                            <p className="text-xs text-muted">
+                                                <span className="font-medium text-orange-primary">Informacion:</span> Disa filtra (transmisioni, karburanti, ngjyra) aplikohen pas ngarkimit të rezultateve.
+                                            </p>
+                                        </div>
+
                                         {/* Filter Content */}
                                         <div className="flex-1 overflow-y-auto px-6 py-4">
                                             <div className="space-y-4 divide-y divide-light/20">
@@ -313,14 +309,14 @@ export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
                                                     <MobileSelect
                                                         value={localFilters.manufacturerId}
                                                         onChange={(value) => updateFilter('manufacturerId', value)}
-                                                        options={manufacturerOptions}
+                                                        options={[{ value: '', label: 'Të gjithë prodhuesit' }, ...manufacturerOptions]}
                                                         placeholder="Zgjidh prodhuesin"
                                                         loading={loading.filters}
                                                         className="w-full"
                                                     />
                                                 </FilterSection>
 
-                                                {/* Model Filter - Shows only when manufacturer selected */}
+                                                {/* Model Filter */}
                                                 {localFilters.manufacturerId && (
                                                     <FilterSection
                                                         title="Modeli"
@@ -330,7 +326,7 @@ export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
                                                         <MobileSelect
                                                             value={localFilters.modelId}
                                                             onChange={(value) => updateFilter('modelId', value)}
-                                                            options={modelOptions}
+                                                            options={[{ value: '', label: 'Të gjitha modelet' }, ...modelOptions]}
                                                             placeholder="Zgjidh modelin"
                                                             loading={loadingModels}
                                                             className="w-full"
@@ -348,14 +344,14 @@ export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
                                                         <MobileSelect
                                                             value={localFilters.fromYear}
                                                             onChange={(value) => updateFilter('fromYear', value)}
-                                                            options={yearOptions}
+                                                            options={[{ value: '', label: 'Nga' }, ...yearOptions.slice(1)]}
                                                             placeholder="Nga"
                                                             className="w-full"
                                                         />
                                                         <MobileSelect
                                                             value={localFilters.toYear}
                                                             onChange={(value) => updateFilter('toYear', value)}
-                                                            options={yearOptions}
+                                                            options={[{ value: '', label: 'Deri' }, ...yearOptions.slice(1)]}
                                                             placeholder="Deri"
                                                             className="w-full"
                                                         />
@@ -370,16 +366,16 @@ export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
                                                 >
                                                     <div className="grid grid-cols-2 gap-3">
                                                         <MobileSelect
-                                                            value={localFilters.priceFrom || ''}
+                                                            value={localFilters.priceFrom}
                                                             onChange={(value) => updateFilter('priceFrom', value)}
-                                                            options={priceOptions}
+                                                            options={[{ value: '', label: 'Nga' }, ...priceOptions.slice(1)]}
                                                             placeholder="Nga"
                                                             className="w-full"
                                                         />
                                                         <MobileSelect
-                                                            value={localFilters.priceTo || ''}
+                                                            value={localFilters.priceTo}
                                                             onChange={(value) => updateFilter('priceTo', value)}
-                                                            options={priceOptions}
+                                                            options={[{ value: '', label: 'Deri' }, ...priceOptions.slice(1)]}
                                                             placeholder="Deri"
                                                             className="w-full"
                                                         />
@@ -394,119 +390,20 @@ export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
                                                 >
                                                     <div className="grid grid-cols-2 gap-3">
                                                         <MobileSelect
-                                                            value={localFilters.odometerFrom || ''}
+                                                            value={localFilters.odometerFrom}
                                                             onChange={(value) => updateFilter('odometerFrom', value)}
-                                                            options={mileageOptions}
+                                                            options={[{ value: '', label: 'Nga' }, ...mileageOptions.slice(1)]}
                                                             placeholder="Nga"
                                                             className="w-full"
                                                         />
                                                         <MobileSelect
-                                                            value={localFilters.odometerTo || ''}
+                                                            value={localFilters.odometerTo}
                                                             onChange={(value) => updateFilter('odometerTo', value)}
-                                                            options={mileageOptions}
+                                                            options={[{ value: '', label: 'Deri' }, ...mileageOptions.slice(1)]}
                                                             placeholder="Deri"
                                                             className="w-full"
                                                         />
                                                     </div>
-                                                </FilterSection>
-
-                                                {/* Transmission Filter */}
-                                                <FilterSection
-                                                    title="Transmisioni"
-                                                    isExpanded={expandedSections.transmission}
-                                                    onToggle={() => toggleSection('transmission')}
-                                                >
-                                                    <div className="space-y-2">
-                                                        {transmissionOptions.map(option => (
-                                                            <label key={option.value} className="flex items-center gap-3 cursor-pointer group">
-                                                                <input
-                                                                    type="radio"
-                                                                    name="transmission"
-                                                                    value={option.value}
-                                                                    checked={localFilters.transmissionId === option.value}
-                                                                    onChange={(e) => updateFilter('transmissionId', e.target.value)}
-                                                                    className="sr-only"
-                                                                />
-                                                                <div className={`
-                                                                    w-4 h-4 rounded-full border-2 transition-colors
-                                                                    ${localFilters.transmissionId === option.value
-                                                                        ? 'border-orange-primary bg-orange-primary'
-                                                                        : 'border-light group-hover:border-orange-primary/50'
-                                                                    }
-                                                                `}>
-                                                                    {localFilters.transmissionId === option.value && (
-                                                                        <div className="w-2 h-2 bg-white rounded-full m-0.5" />
-                                                                    )}
-                                                                </div>
-                                                                <span className="text-sm text-secondary group-hover:text-primary">
-                                                                    {option.label}
-                                                                </span>
-                                                            </label>
-                                                        ))}
-                                                        <button
-                                                            onClick={() => updateFilter('transmissionId', '')}
-                                                            className="text-xs text-muted hover:text-orange-primary mt-2"
-                                                        >
-                                                            Pastro
-                                                        </button>
-                                                    </div>
-                                                </FilterSection>
-
-                                                {/* Fuel Filter */}
-                                                <FilterSection
-                                                    title="Karburanti"
-                                                    isExpanded={expandedSections.fuel}
-                                                    onToggle={() => toggleSection('fuel')}
-                                                >
-                                                    <div className="space-y-2">
-                                                        {fuelOptions.map(option => (
-                                                            <label key={option.value} className="flex items-center gap-3 cursor-pointer group">
-                                                                <input
-                                                                    type="radio"
-                                                                    name="fuel"
-                                                                    value={option.value}
-                                                                    checked={localFilters.fuelId === option.value}
-                                                                    onChange={(e) => updateFilter('fuelId', e.target.value)}
-                                                                    className="sr-only"
-                                                                />
-                                                                <div className={`
-                                                                    w-4 h-4 rounded-full border-2 transition-colors
-                                                                    ${localFilters.fuelId === option.value
-                                                                        ? 'border-orange-primary bg-orange-primary'
-                                                                        : 'border-light group-hover:border-orange-primary/50'
-                                                                    }
-                                                                `}>
-                                                                    {localFilters.fuelId === option.value && (
-                                                                        <div className="w-2 h-2 bg-white rounded-full m-0.5" />
-                                                                    )}
-                                                                </div>
-                                                                <span className="text-sm text-secondary group-hover:text-primary">
-                                                                    {option.label}
-                                                                </span>
-                                                            </label>
-                                                        ))}
-                                                        <button
-                                                            onClick={() => updateFilter('fuelId', '')}
-                                                            className="text-xs text-muted hover:text-orange-primary mt-2"
-                                                        >
-                                                            Pastro
-                                                        </button>
-                                                    </div>
-                                                </FilterSection>
-
-                                                {/* Color Filter */}
-                                                <FilterSection
-                                                    title="Ngjyra"
-                                                    isExpanded={expandedSections.color}
-                                                    onToggle={() => toggleSection('color')}
-                                                >
-                                                    <MobileSelect
-                                                        value={localFilters.colorId}
-                                                        onChange={(value) => updateFilter('colorId', value)}
-                                                        options={colorOptions}
-                                                        placeholder="Zgjidh ngjyrën"
-                                                        className="w-full"
-                                                    />
                                                 </FilterSection>
                                             </div>
                                         </div>

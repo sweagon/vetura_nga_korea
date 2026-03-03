@@ -4,8 +4,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Car } from 'lucide-react';
-import CompactSearch from '@/components/ui/CompactSearch';
+import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useConfig } from '@/lib/ConfigContext';
 
@@ -39,7 +38,7 @@ export default function Header() {
         <header
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled || isMenuOpen
                 ? 'bg-surface/95 backdrop-blur-xl border-b border-light/10 py-3'
-                : 'bg-orange-500 py-4 md:py-5'
+                : 'bg-transparent py-4 md:py-5'
                 }`}
         >
             <nav className="container-swiss">
@@ -58,20 +57,15 @@ export default function Header() {
                         </span>
                     </Link>
 
-                    {/* Desktop Search */}
-                    <div className="hidden lg:block flex-1 max-w-2xl mx-4">
-                        <CompactSearch variant="header" />
-                    </div>
-
-                    {/* Desktop Navigation */}
-                    <div className="hidden lg:flex items-center space-x-2 shrink-0">
+                    {/* Desktop Navigation - Centered */}
+                    <div className="hidden lg:flex items-center justify-center space-x-2">
                         {navigation.map((item) => (
                             <Link
                                 key={item.name}
                                 href={item.href}
                                 className={`relative px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${scrolled
                                     ? 'focus:ring-orange-primary/50 focus:ring-offset-surface'
-                                    : 'focus:ring-white/50 focus:ring-offset-orange-500'
+                                    : 'focus:ring-white/50 focus:ring-offset-transparent'
                                     } ${isActive(item.href)
                                         ? scrolled
                                             ? 'text-orange-primary bg-orange-10'
@@ -91,7 +85,7 @@ export default function Header() {
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
                         className={`lg:hidden relative w-10 h-10 rounded-xl transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-offset-2 ${scrolled
                             ? 'bg-surface-2/50 hover:bg-surface-2 focus:ring-orange-primary/50 focus:ring-offset-surface'
-                            : 'bg-white/10 hover:bg-white/20 focus:ring-white/50 focus:ring-offset-orange-500'
+                            : 'bg-white/10 hover:bg-white/20 focus:ring-white/50 focus:ring-offset-transparent'
                             }`}
                         aria-label="Toggle menu"
                     >
@@ -131,11 +125,6 @@ export default function Header() {
                                         {item.name}
                                     </Link>
                                 ))}
-
-                                {/* Mobile Search */}
-                                <div className="pt-4 mt-2 border-t border-light/10">
-                                    <CompactSearch variant="header" />
-                                </div>
                             </div>
                         </motion.div>
                     )}

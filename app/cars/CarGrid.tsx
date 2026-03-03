@@ -1,12 +1,13 @@
-// app/cars/CarGrid.tsx - KEEP THIS VERSION (YOUR CURRENT CODE)
+// app/cars/CarGrid.tsx - Simplified version
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import CarCard from '@/components/cars/CarCard';
 import { fetchCars, type Car, type FetchCarsResponse } from '@/lib/api';
 import { CarCardSkeleton } from '@/components/ui/LoadingSkeleton';
 import Pagination from '@/components/ui/Pagination';
+import { AlertCircle } from 'lucide-react';
 
 interface CarGridProps {
     sortBy?: string;
@@ -17,32 +18,90 @@ export default function CarGrid({ sortBy = 'recommended', sortOptions = [] }: Ca
     const router = useRouter();
     const searchParams = useSearchParams();
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [data, setData] = useState<FetchCarsResponse | null>(null);
     const [sortedCars, setSortedCars] = useState<Car[]>([]);
 
     const currentPage = Number(searchParams.get('page')) || 1;
     const perPage = Number(searchParams.get('per_page')) || 12;
 
-    // Fetch cars when search params change
+    // Get all filter values from URL (only API-supported filters)
+    const filters = useMemo(() => ({
+        manufacturerId: searchParams.get('manufacturer_id') || '',
+        modelId: searchParams.get('model_id') || '',
+        fromYear: searchParams.get('from_year') || '',
+        toYear: searchParams.get('to_year') || '',
+        priceFrom: searchParams.get('buy_now_price_from') || '',
+        priceTo: searchParams.get('buy_now_price_to') || '',
+        odometerFrom: searchParams.get('odometer_from_km') || '',
+        odometerTo: searchParams.get('odometer_to_km') || '',
+    }), [searchParams]);
+
     useEffect(() => {
+        console.log('Filters changed:', filters);
+    }, [filters]);
+
+    // Fetch cars when filters or page change
+    useEffect(() => {
+        let isMounted = true;
+        let timeoutId: NodeJS.Timeout;
+
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const params = Object.fromEntries(searchParams.entries());
+                setError(null);
+
+                timeoutId = setTimeout(() => {
+                    if (isMounted) {
+                        console.log('⚠️ Request is taking longer than expected...');
+                    }
+                }, 5000);
+
+                // Build params with only API-supported filters
+                const params: Record<string, any> = {
+                    page: currentPage,
+                    per_page: perPage,
+                    vehicle_type: '1'
+                };
+
+                if (filters.manufacturerId) params.manufacturer_id = filters.manufacturerId;
+                if (filters.modelId) params.model_id = filters.modelId;
+                if (filters.fromYear) params.from_year = filters.fromYear;
+                if (filters.toYear) params.to_year = filters.toYear;
+                if (filters.priceFrom) params.buy_now_price_from = filters.priceFrom;
+                if (filters.priceTo) params.buy_now_price_to = filters.priceTo;
+                if (filters.odometerFrom) params.odometer_from_km = filters.odometerFrom;
+                if (filters.odometerTo) params.odometer_to_km = filters.odometerTo;
+
                 console.log('📡 Fetching cars with params:', params);
                 const response = await fetchCars(params);
-                console.log('📦 API Response:', response);
+
+                if (!isMounted) return;
+                clearTimeout(timeoutId);
+
+                console.log('✅ Response received:', {
+                    total: response.meta?.total,
+                    count: response.data?.length
+                });
+
                 setData(response);
-            } catch (error) {
-                console.error('Error fetching cars:', error);
+
+            } catch (err) {
+                if (!isMounted) return;
+                clearTimeout(timeoutId);
+                console.error('Error fetching cars:', err);
             } finally {
-                setLoading(false);
+                if (isMounted) setLoading(false);
             }
         };
 
         fetchData();
-    }, [searchParams]);
 
+        return () => {
+            isMounted = false;
+            clearTimeout(timeoutId);
+        };
+    }, [filters, currentPage, perPage]);
 
     // Apply client-side sorting
     useEffect(() => {
@@ -57,14 +116,17 @@ export default function CarGrid({ sortBy = 'recommended', sortOptions = [] }: Ca
         }
     }, [data, sortBy, sortOptions]);
 
-    const handlePageChange = (page: number) => {
+    const handlePageChange = useCallback((page: number) => {
         const params = new URLSearchParams(searchParams.toString());
         params.set('page', page.toString());
         router.push(`/cars?${params.toString()}`);
         window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
+    }, [router, searchParams]);
 
-    // Loading state
+    const hasNextPage = data?.links?.next !== null;
+    const hasPrevPage = data?.links?.prev !== null;
+    const shouldShowPagination = hasNextPage || hasPrevPage;
+
     if (loading) {
         return (
             <div className="space-y-8">
@@ -77,8 +139,24 @@ export default function CarGrid({ sortBy = 'recommended', sortOptions = [] }: Ca
         );
     }
 
+    // Error state
+    if (error) {
+        return (
+            <div className="text-center py-16 bg-surface-2/30 rounded-2xl border border-light/20">
+                <AlertCircle className="w-12 h-12 text-orange-primary mx-auto mb-4" />
+                <p className="text-secondary mb-2">{error}</p>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="btn-primary mt-4"
+                >
+                    Provo përsëri
+                </button>
+            </div>
+        );
+    }
+
     // Empty state
-    if (!data?.data.length) {
+    if (!sortedCars.length) {
         return (
             <div className="text-center py-16 bg-surface-2/30 rounded-2xl border border-light/20">
                 <p className="text-secondary mb-2">Nuk u gjet asnjë makinë.</p>
@@ -87,30 +165,19 @@ export default function CarGrid({ sortBy = 'recommended', sortOptions = [] }: Ca
         );
     }
 
-    // Calculate pagination
-    const totalPages = data.meta ? Math.ceil(data.meta.total / data.meta.per_page) : 1;
-    const shouldShowPagination = data.meta && totalPages > 1;
-
-    console.log('🔍 Pagination Debug:', {
-        total: data?.meta?.total,
-        per_page: data?.meta?.per_page,
-        totalPages,
-        shouldShowPagination,
-        currentPage: data?.meta?.current_page,
-        hasMeta: !!data?.meta
-    });
-
     return (
         <div className="space-y-8">
             {/* Results count */}
-            {data.meta && (
+            {data?.meta && data.meta.total > 0 && (
                 <div className="flex justify-between items-center px-2">
                     <div className="text-sm text-muted">
-                        Duke shfaqur {data.meta.from} - {data.meta.to} nga {data.meta.total} makina
+                        Duke shfaqur {data.meta.from} - {data.meta.to}
+                        {data.meta.total ? ` nga ${data.meta.total} makina` : ''}
                     </div>
                     {shouldShowPagination && (
                         <div className="text-sm text-muted">
-                            Faqja {data.meta.current_page} nga {totalPages}
+                            Faqja {data.meta.current_page}
+                            {hasNextPage && " +"}
                         </div>
                     )}
                 </div>
@@ -124,12 +191,13 @@ export default function CarGrid({ sortBy = 'recommended', sortOptions = [] }: Ca
             </div>
 
             {/* Pagination */}
-            {shouldShowPagination && (
+            {shouldShowPagination && data?.meta && (
                 <div className="mt-8 pt-4 border-t border-light/20">
                     <Pagination
-                        currentPage={data.meta!.current_page}
-                        totalPages={totalPages}
+                        currentPage={data.meta.current_page}
                         onPageChange={handlePageChange}
+                        hasNextPage={hasNextPage}
+                        hasPrevPage={hasPrevPage}
                     />
                 </div>
             )}

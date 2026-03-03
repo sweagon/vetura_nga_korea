@@ -118,7 +118,20 @@ export default function CarsContent({ searchParams }: CarsContentProps) {
     };
 
     // Get active filters
-    const filterKeys = ['manufacturer_id', 'model_id', 'from_year', 'to_year', 'buy_now_price_to'];
+    // app/cars/CarsContent.tsx - Update the filterKeys array
+
+    // app/cars/CarsContent.tsx - Update filterKeys
+    const filterKeys = [
+        'manufacturer_id',
+        'model_id',
+        'from_year',
+        'to_year',
+        'buy_now_price_from',
+        'buy_now_price_to',
+        'odometer_from_km',
+        'odometer_to_km',
+    ];
+
     const activeFilters = Array.from(searchParams.entries()).filter(([key]) => filterKeys.includes(key));
     const activeFilterCount = activeFilters.length;
 
@@ -127,7 +140,10 @@ export default function CarsContent({ searchParams }: CarsContentProps) {
         'model_id': 'Modeli',
         'from_year': 'Viti nga',
         'to_year': 'Viti deri',
-        'buy_now_price_to': 'Çmimi max',
+        'buy_now_price_from': 'Çmimi nga',
+        'buy_now_price_to': 'Çmimi deri',
+        'odometer_from_km': 'Km nga',
+        'odometer_to_km': 'Km deri',
     };
 
     // Prepare sort options for CustomSelect
