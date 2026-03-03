@@ -18,7 +18,7 @@ const defaultConfig: SiteConfig = {
     markupPercentage: 15,
     minimumMarkup: 1000,
     contactEmail: 'info@vetura-korea-kosove.com',
-    contactPhone: '+383 44 123 456',
+    contactPhone: '+383 49 195 414',
     siteName: 'Vetura Nga Korea',
     currency: 'EUR'
 };

@@ -1,4 +1,4 @@
-// components/home/Hero.tsx
+// components/home/Hero.tsx (simplified)
 'use client';
 
 import { Sparkles, Shield, Truck, Clock } from 'lucide-react';
@@ -24,30 +24,16 @@ export default function Hero() {
         <section className="relative min-h-[90vh] flex items-center overflow-hidden">
             {/* Background Image with Overlay */}
             <div className="absolute inset-0">
-                {/* Background Image */}
                 <img
                     src="https://images.pexels.com/photos/220309/pexels-photo-220309.jpeg"
                     alt="Luxury cars background"
                     className="absolute inset-0 w-full h-full object-cover brightness-50"
                 />
-
-                {/* Dark Overlay for text readability */}
-                <div className="absolute inset-0 bg-gradient-to-r from-dark-blue/95 via-dark-blue/90 to-dark-blue/80" />
-
-                {/* Abstract Pattern Overlay */}
-                <div className="absolute inset-0 opacity-20 mix-blend-overlay">
-                    <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_50%,rgba(255,107,0,0.3)_0%,transparent_50%)]" />
-                    <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_80%,rgba(255,107,0,0.3)_0%,transparent_50%)]" />
+                <div className="absolute inset-0 bg-gradient-to-r from-dark-blue/70 via-dark-blue/60 to-dark-blue/50" />
+                <div className="absolute inset-0 opacity-30 mix-blend-overlay">
+                    <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_50%,rgba(255,107,0,0.4)_0%,transparent_50%)]" />
+                    <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_80%,rgba(255,107,0,0.4)_0%,transparent_50%)]" />
                 </div>
-
-                {/* Grid Pattern */}
-                <div className="absolute inset-0 opacity-10"
-                    style={{
-                        backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                                        linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-                        backgroundSize: '50px 50px'
-                    }}
-                />
             </div>
 
             <div className="container-swiss relative lg:text-left text-center">
@@ -91,16 +77,8 @@ export default function Hero() {
                         Inspektim të plotë, garanci dhe transport të sigurt.
                     </motion.p>
 
-                    {/* Search Section */}
-                    <motion.div
-                        variants={fadeInUp}
-                        className="mb-12 md:mb-16"
-                    >
-                        <div className="lg:hidden mb-4">
-                            <p className="text-white/70 text-sm text-center mb-3">
-                                Filtro makinat sipas preferencave
-                            </p>
-                        </div>
+                    {/* Compact Search - Will show both desktop and mobile versions */}
+                    <motion.div variants={fadeInUp} className="mb-12 md:mb-16">
                         <CompactSearch variant="hero" />
                     </motion.div>
 
@@ -112,7 +90,7 @@ export default function Hero() {
                         {[
                             { icon: Truck, value: '500+', label: 'Makina në stok' },
                             { icon: Shield, value: '98%', label: 'Klientë të kënaqur' },
-                            { icon: Clock, value: '15 ditë', label: 'Transporti' },
+                            { icon: Clock, value: '30 ditë', label: 'Transporti' },
                             { icon: Sparkles, value: '100%', label: 'Të inspektuara' }
                         ].map((stat, index) => (
                             <motion.div

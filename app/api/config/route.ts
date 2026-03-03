@@ -6,8 +6,8 @@ const defaultConfig = {
     shippingCost: 3500,
     markupPercentage: 15,
     minimumMarkup: 1000,
-    contactEmail: 'info@vetura-nga-korea.com',
-    contactPhone: '+383 44 123 456',
+    contactEmail: 'blerart@outlook.com',
+    contactPhone: '+383 49 195 414',
     siteName: 'Vetura Nga Korea',
     currency: 'EUR'
 };

@@ -169,8 +169,8 @@ export default function AdminPage() {
                 shippingCost: 3500,
                 markupPercentage: 15,
                 minimumMarkup: 1000,
-                contactEmail: 'info@vetura-nga-korea.com',
-                contactPhone: '+383 44 123 456',
+                contactEmail: 'blerart@outlook.com',
+                contactPhone: '+383 49 195 414',
                 siteName: 'Vetura Nga Korea',
                 currency: 'EUR' as const,
                 vehicleTypes: {
@@ -601,7 +601,7 @@ export default function AdminPage() {
                                 value={localConfig.contactEmail}
                                 onChange={(e) => updateField('contactEmail', e.target.value)}
                                 className="input text-sm sm:text-base"
-                                placeholder="info@vetura-nga-korea.com"
+                                placeholder="blerart@outlook.com"
                             />
                         </div>
 
@@ -615,7 +615,7 @@ export default function AdminPage() {
                                 value={localConfig.contactPhone}
                                 onChange={(e) => updateField('contactPhone', e.target.value)}
                                 className="input text-sm sm:text-base"
-                                placeholder="+383 44 123 456"
+                                placeholder="+383 49 195 414"
                             />
                         </div>
 

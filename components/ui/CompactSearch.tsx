@@ -429,7 +429,7 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
 export default function CompactSearch(props: CompactSearchProps) {
     return (
         <SearchParamsWrapper fallback={
-            <div className="h-11 bg-surface-2 rounded-xl animate-pulse w-full" />
+            <div className="h-11 bg-surface-2 rounded-xl animate-pulse w-full md:order-2 order-1" />
         }>
             {(searchParams) => <CompactSearchContent searchParams={searchParams} {...props} />}
         </SearchParamsWrapper>

@@ -1,6 +1,7 @@
 // app/cars/page.tsx
 import { Suspense } from 'react';
 import CarsContentWrapper from './CarsContentWrapper';
+import CompactSearch from '@/components/ui/CompactSearch';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -18,9 +19,9 @@ function CarsLoadingSkeleton() {
                 <div className="h-4 bg-surface-2 rounded w-96 animate-pulse"></div>
             </div>
 
-            {/* Filter Bar Skeleton */}
-            <div className="bg-surface-2 border border-light/20 rounded-xl p-3 md:p-4 mb-6">
-                <div className="h-10 bg-surface-2 rounded-lg w-40 animate-pulse"></div>
+            {/* Search Bar Skeleton */}
+            <div className="mb-8">
+                <div className="h-14 bg-surface-2 rounded-xl w-full animate-pulse"></div>
             </div>
 
             {/* Cars Grid Skeleton */}
@@ -49,9 +50,13 @@ function CarsLoadingSkeleton() {
 export default function CarsPage() {
     return (
         <div className="min-h-screen bg-primary">
-            <Suspense fallback={<CarsLoadingSkeleton />}>
-                <CarsContentWrapper />
-            </Suspense>
+            <div className="container-swiss py-6 md:py-8">
+                <CompactSearch variant="header" />
+                {/* Results */}
+                <Suspense fallback={<CarsLoadingSkeleton />}>
+                    <CarsContentWrapper />
+                </Suspense>
+            </div>
         </div>
     );
 }

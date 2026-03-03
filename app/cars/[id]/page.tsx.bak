@@ -267,17 +267,17 @@ export default async function CarDetailPage({ params }: PageProps) {
                                                 </p>
                                                 <p className="flex items-center gap-2 text-secondary">
                                                     <Phone size={14} className="text-orange-primary" />
-                                                    +383 44 123 456
+                                                    +383 49 195 414
                                                 </p>
                                                 <p className="flex items-center gap-2 text-secondary">
                                                     <Mail size={14} className="text-orange-primary" />
-                                                    info@vetura-nga-korea.com
+                                                    blerart@outlook.com
                                                 </p>
                                             </div>
                                         </div>
 
                                         <a
-                                            href="mailto:info@vetura-nga-korea.com"
+                                            href="mailto:blerart@outlook.com"
                                             className="btn-primary w-full"
                                         >
                                             Kontakto shitësin
