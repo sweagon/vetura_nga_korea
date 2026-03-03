@@ -386,8 +386,8 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                         <a
                                             href={`https://wa.me/${config.contactPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
                                                 `Përshëndetje, jam i interesuar për makinën:\n\n` +
-                                                `${carTitle}\n` +
-                                                `VIN: ${car.vin}\n}`
+                                                `*${carTitle}*\n` +
+                                                `🔗 Linku: ${typeof window !== 'undefined' ? window.location.href : ''}`
                                             )}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
