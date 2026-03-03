@@ -383,12 +383,23 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                                 </p>
                                             </div>
                                         </div>
-
+                                        <a
+                                            href={`https://wa.me/${config.contactPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                                                `Përshëndetje, jam i interesuar për makinën:\n\n` +
+                                                `${carTitle}\n` +
+                                                `VIN: ${car.vin}\n}`
+                                            )}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="btn-primary bg-green-500 hover:bg-green-600 w-full flex items-center justify-center gap-2"
+                                        >
+                                            WhatsApp
+                                        </a>
                                         <a
                                             href={`mailto:${config.contactEmail}?subject=Interest in ${car.vin} - ${carTitle}`}
                                             className="btn-primary w-full"
                                         >
-                                            Kontakto shitësin
+                                            Email
                                         </a>
                                     </div>
                                 </div>
@@ -454,7 +465,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                         </Link>
                     </div>
                 </div>
-            </main>
+            </main >
         </>
     );
 }

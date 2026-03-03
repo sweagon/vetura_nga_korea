@@ -122,7 +122,7 @@ export default function Footer() {
                             <li className="flex items-start gap-3">
                                 <MapPin size={16} className="text-muted mt-0.5" />
                                 <span className="text-secondary text-sm">
-                                    Prishtinë, Kosovë
+                                    Skenderaj, Kosovë
                                 </span>
                             </li>
                         </ul>
