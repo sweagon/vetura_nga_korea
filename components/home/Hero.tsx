@@ -61,7 +61,7 @@ export default function Hero() {
                     >
                         Makina cilësore{' '}
                         <span className="text-orange-primary relative">
-                            nga Korea
+                            nga Korea{' '}
                             <span className="absolute -bottom-2 left-0 right-0 h-1 bg-orange-primary/30 rounded-full hidden md:block" />
                         </span>
                         <br className="hidden md:block" />

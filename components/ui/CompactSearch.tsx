@@ -14,6 +14,7 @@ import {
 import { fetchFilterData, fetchModels } from '@/lib/api';
 import { getTranslatedManufacturers } from '@/lib/translations';
 import CustomSelect from './CustomSelect';
+import { filterManufacturers } from '@/lib/staticManufacturers';
 
 interface CompactSearchProps {
     variant?: 'header' | 'hero';
@@ -55,8 +56,9 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
             try {
                 setLoading(prev => ({ ...prev, manufacturers: true }));
                 const data = await fetchFilterData();
+                const filteredManufacturers = filterManufacturers(data.manufacturers); // Filter here
                 setFilterData({
-                    manufacturers: getTranslatedManufacturers(data.manufacturers),
+                    manufacturers: getTranslatedManufacturers(filteredManufacturers), // Use filtered list
                     models: [],
                     years: data.years
                 });

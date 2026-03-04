@@ -49,7 +49,7 @@ export default function Header() {
                         className="flex items-center space-x-3 group shrink-0"
                     >
                         <div className="relative">
-                            <img src="/logo.webp" className="w-12 h-12" alt="Vetura Nga Korea Logo" />
+                            <img src="/logo.webp" className="md:w-12 md:h-12 w-10 h-10" alt="Vetura Nga Korea Logo" />
                         </div>
                         <span
                             className={`text-base md:text-lg font-semibold tracking-tight hidden sm:block ${scrolled ? 'text-primary' : 'text-white'
