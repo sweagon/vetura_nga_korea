@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useConfig } from '@/lib/ConfigContext';
 import { type Car, formatMileage } from '@/lib/api';
 import { translateFuel, translateTransmission, translateColor } from '@/lib/translations';
-import CarSpecs from '@/components/cars/CarSpecs';
+// import CarSpecs from '@/components/cars/CarSpecs';
 import {
     Calendar,
     Gauge,
@@ -25,6 +25,8 @@ import {
 import Link from 'next/link';
 import RecentlyViewedTracker from '@/components/cars/RecentlyViewedTracker';
 import ImageGallery from './ImageGallery';
+import CarDetailTabs from './CarDetailTabs';
+
 
 interface CarDetailClientProps {
     car: Car;
@@ -329,9 +331,12 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                     )}
                                 </div>
                             </div>
+                            <div className="mt-8">
+                                <CarDetailTabs car={car} />
+                            </div>
 
                             {/* Full Specifications */}
-                            <CarSpecs car={car} />
+                            {/* <CarSpecs car={car} /> */}
                         </div>
 
                         {/* Right Column - Contact */}

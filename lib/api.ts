@@ -87,6 +87,31 @@ export interface Lot {
       name: string;
     };
   };
+  details?: {
+    engine_volume?: number;
+    badge?: string;
+    description_ko?: string;
+    description_en?: string;
+    insurance_v2?: {
+      accidentCnt: number;
+      accidents: Array<{
+        date: string;
+        insuranceBenefit: number;
+        laborCost: number;
+        paintingCost: number;
+        partCost: number;
+        type: string;
+      }>;
+      myAccidentCnt: number;
+      myAccidentCost: number;
+      otherAccidentCnt: number;
+      otherAccidentCost: number;
+      totalLossCnt: number;
+      floodTotalLossCnt: number;
+      robberCnt: number;
+      ownerChangeCnt: number;
+    };
+  }
 }
 
 export interface FetchCarsResponse {

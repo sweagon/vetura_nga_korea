@@ -30,6 +30,7 @@ export const manufacturerTranslations: Record<string, string> = {
     'Rolls-Royce': 'Rolls-Royce',
     'Aston Martin': 'Aston Martin',
     'McLaren': 'McLaren',
+    'Fiat': 'Fiat',
 };
 
 export const fuelTranslations: Record<string, string> = {
@@ -74,6 +75,7 @@ export const bodyTypeTranslations: Record<string, string> = {
     'convertible': 'Kabriolet',
     'van': 'Furgon',
     'pickup': 'Pickup',
+    'sport_car': 'Makinë Sportive',
 };
 
 // Helper function to translate manufacturer names
