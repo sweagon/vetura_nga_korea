@@ -1,4 +1,6 @@
 // lib/api.ts
+import { STATIC_MANUFACTURERS } from './staticManufacturers';
+
 export interface Car {
   id: number;
   year: number;
@@ -493,110 +495,58 @@ export async function fetchGenerations(modelId: number, type: string = 'cars'): 
 }
 
 export async function fetchFilterData(): Promise<FilterData> {
-  const defaultManufacturers: Manufacturer[] = [
-    { id: 16, name: 'BMW', cars_qty: 12375 },
-    { id: 147, name: 'Volkswagen', cars_qty: 1951 },
-    { id: 58, name: 'Hyundai', cars_qty: 45514 },
-    { id: 70, name: 'Kia', cars_qty: 41009 },
-    { id: 232, name: 'Genesis', cars_qty: 9310 },
-    { id: 26, name: 'Chevrolet', cars_qty: 7168 },
-    { id: 123, name: 'Renault Samsung', cars_qty: 5514 },
-    { id: 131, name: 'SsangYong', cars_qty: 6995 },
-    { id: 9, name: 'Audi', cars_qty: 0 },
-    { id: 3, name: 'Mercedes-Benz', cars_qty: 0 },
-    { id: 5, name: 'Toyota', cars_qty: 584 },
-    { id: 56, name: 'Honda', cars_qty: 437 },
-    { id: 48, name: 'Ford', cars_qty: 1203 },
-  ];
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - 1989 }, (_, i) => currentYear - i);
 
-  try {
-    const manufacturers = await fetchManufacturers('cars');
-    const currentYear = new Date().getFullYear();
-    const years = Array.from({ length: currentYear - 1989 }, (_, i) => currentYear - i);
+  // Convert static manufacturers to the expected Manufacturer format
+  const manufacturers: Manufacturer[] = STATIC_MANUFACTURERS.map(m => ({
+    id: m.id,
+    name: m.name,
+    // Optional: You could add cars_qty if you have that data
+    cars_qty: undefined,
+    image: undefined,
+    models_qty: undefined
+  }));
 
-    return {
-      manufacturers: manufacturers.length > 0 ? manufacturers : defaultManufacturers,
-      models: [],
-      generations: [],
-      fuelTypes: [
-        { id: 1, name: 'diesel' },
-        { id: 2, name: 'electric' },
-        { id: 3, name: 'hybrid' },
-        { id: 4, name: 'gasoline' }
-      ],
-      transmissions: [
-        { id: 1, name: 'automatic' },
-        { id: 2, name: 'manual' }
-      ],
-      years,
-      bodyTypes: [
-        { id: 1, name: 'sedan' },
-        { id: 2, name: 'wagon' },
-        { id: 3, name: 'coupe' },
-        { id: 5, name: 'suv' },
-        { id: 7, name: 'van' },
-        { id: 11, name: 'hatchback' }
-      ],
-      colors: [
-        { id: 1, name: 'silver' },
-        { id: 2, name: 'purple' },
-        { id: 3, name: 'orange' },
-        { id: 4, name: 'green' },
-        { id: 5, name: 'red' },
-        { id: 6, name: 'gold' },
-        { id: 8, name: 'brown' },
-        { id: 9, name: 'grey' },
-        { id: 11, name: 'blue' },
-        { id: 13, name: 'white' },
-        { id: 15, name: 'black' },
-        { id: 16, name: 'yellow' }
-      ]
-    };
-  } catch (error) {
-    console.error('Error in fetchFilterData:', error);
-
-    const currentYear = new Date().getFullYear();
-    const years = Array.from({ length: currentYear - 1989 }, (_, i) => currentYear - i);
-
-    return {
-      manufacturers: defaultManufacturers,
-      models: [],
-      generations: [],
-      fuelTypes: [
-        { id: 1, name: 'diesel' },
-        { id: 2, name: 'electric' },
-        { id: 3, name: 'hybrid' },
-        { id: 4, name: 'gasoline' }
-      ],
-      transmissions: [
-        { id: 1, name: 'automatic' },
-        { id: 2, name: 'manual' }
-      ],
-      years,
-      bodyTypes: [
-        { id: 1, name: 'sedan' },
-        { id: 2, name: 'wagon' },
-        { id: 3, name: 'coupe' },
-        { id: 5, name: 'suv' },
-        { id: 7, name: 'van' },
-        { id: 11, name: 'hatchback' }
-      ],
-      colors: [
-        { id: 1, name: 'silver' },
-        { id: 2, name: 'purple' },
-        { id: 3, name: 'orange' },
-        { id: 4, name: 'green' },
-        { id: 5, name: 'red' },
-        { id: 6, name: 'gold' },
-        { id: 8, name: 'brown' },
-        { id: 9, name: 'grey' },
-        { id: 11, name: 'blue' },
-        { id: 13, name: 'white' },
-        { id: 15, name: 'black' },
-        { id: 16, name: 'yellow' }
-      ]
-    };
-  }
+  // Return filter data with static manufacturers
+  return {
+    manufacturers, // Using static data instead of API call
+    models: [], // Will be fetched when manufacturer is selected
+    generations: [],
+    fuelTypes: [
+      { id: 1, name: 'diesel' },
+      { id: 2, name: 'electric' },
+      { id: 3, name: 'hybrid' },
+      { id: 4, name: 'gasoline' }
+    ],
+    transmissions: [
+      { id: 1, name: 'automatic' },
+      { id: 2, name: 'manual' }
+    ],
+    years,
+    bodyTypes: [
+      { id: 1, name: 'sedan' },
+      { id: 2, name: 'wagon' },
+      { id: 3, name: 'coupe' },
+      { id: 5, name: 'suv' },
+      { id: 7, name: 'van' },
+      { id: 11, name: 'hatchback' }
+    ],
+    colors: [
+      { id: 1, name: 'silver' },
+      { id: 2, name: 'purple' },
+      { id: 3, name: 'orange' },
+      { id: 4, name: 'green' },
+      { id: 5, name: 'red' },
+      { id: 6, name: 'gold' },
+      { id: 8, name: 'brown' },
+      { id: 9, name: 'grey' },
+      { id: 11, name: 'blue' },
+      { id: 13, name: 'white' },
+      { id: 15, name: 'black' },
+      { id: 16, name: 'yellow' }
+    ]
+  };
 }
 
 // Helper function to format mileage

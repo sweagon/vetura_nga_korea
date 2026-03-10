@@ -12,9 +12,9 @@ import {
     X
 } from 'lucide-react';
 import { fetchFilterData, fetchModels } from '@/lib/api';
-import { getTranslatedManufacturers } from '@/lib/translations';
+import { getStaticManufacturers } from '@/lib/translations'; // Changed import
 import CustomSelect from './CustomSelect';
-import { filterManufacturers } from '@/lib/staticManufacturers';
+import type { Option } from './CustomSelect'; // Import Option type
 
 interface CompactSearchProps {
     variant?: 'header' | 'hero';
@@ -37,7 +37,7 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
         models: false
     });
     const [filterData, setFilterData] = useState({
-        manufacturers: [] as Array<{ id: number; original: string; translated: string }>,
+        manufacturers: [] as Option[], // Use Option type from CustomSelect
         models: [] as Array<{ id: number; name: string; manufacturer_id: number }>,
         years: [] as number[]
     });
@@ -55,12 +55,12 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
         const loadInitialData = async () => {
             try {
                 setLoading(prev => ({ ...prev, manufacturers: true }));
-                const data = await fetchFilterData();  // <-- Fetches manufacturers here
-                setFilterData({
-                    manufacturers: getTranslatedManufacturers(data.manufacturers),  // <-- Stores them
-                    models: [],
-                    years: data.years
-                });
+                // Use static manufacturers directly - no API call needed!
+                setFilterData(prev => ({
+                    ...prev,
+                    manufacturers: getStaticManufacturers(), // Now returns Option[] directly
+                    years: Array.from({ length: 30 }, (_, i) => new Date().getFullYear() - i) // Generate years directly
+                }));
             } catch (error) {
                 console.error('Error loading filters:', error);
             } finally {
@@ -101,7 +101,6 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
     const handleSearch = () => {
         const params = new URLSearchParams();
 
-        // Add all filters
         if (filters.manufacturerId) params.set('manufacturer_id', filters.manufacturerId);
         if (filters.modelId) params.set('model_id', filters.modelId);
         if (filters.fromYear) params.set('from_year', filters.fromYear);
@@ -130,10 +129,7 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
     const activeFilterCount = Object.values(filters).filter(v => v !== '').length;
 
     // Prepare options
-    const manufacturerOptions = filterData.manufacturers.map(({ id, translated }) => ({
-        value: id.toString(),
-        label: translated  // <-- Shows translated manufacturer names
-    }));
+    const manufacturerOptions = filterData.manufacturers; // Already in Option format
 
     const modelOptions = filterData.models.map(model => ({
         value: model.id.toString(),
@@ -166,7 +162,7 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
 
     return (
         <>
-            {/* Desktop Version - Hidden on mobile */}
+            {/* Desktop Version */}
             <div className="hidden md:block w-full md:w-fit">
                 <div className={`
                     flex items-center gap-2 
@@ -191,7 +187,7 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
                             icon={<Car size={14} />}
                             loading={loading.manufacturers}
                             variant={isHero ? 'hero' : 'default'}
-                            className="w-[130px]"
+                            className="w-32" // Changed from w-[130px]
                         />
 
                         {filters.manufacturerId && (
@@ -203,7 +199,7 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
                                 icon={<Car size={14} />}
                                 loading={loading.models}
                                 variant={isHero ? 'hero' : 'default'}
-                                className="w-[120px]"
+                                className="w-30" // Changed from w-[120px]
                             />
                         )}
 
@@ -214,7 +210,7 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
                             placeholder="Nga"
                             icon={<Calendar size={14} />}
                             variant={isHero ? 'hero' : 'default'}
-                            className="w-[85px]"
+                            className="w-20" // Changed from w-[85px]
                         />
 
                         <CustomSelect
@@ -224,7 +220,7 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
                             placeholder="Deri"
                             icon={<Calendar size={14} />}
                             variant={isHero ? 'hero' : 'default'}
-                            className="w-[85px]"
+                            className="w-20" // Changed from w-[85px]
                         />
 
                         <CustomSelect
@@ -234,7 +230,7 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
                             placeholder="Max"
                             icon={<DollarSign size={14} />}
                             variant={isHero ? 'hero' : 'default'}
-                            className="w-[100px]"
+                            className="w-24" // Changed from w-[100px]
                         />
                     </div>
 
@@ -284,7 +280,7 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
                 </div>
             </div>
 
-            {/* Mobile Version - Visible only on mobile */}
+            {/* Mobile Version */}
             <div className="md:hidden w-full">
                 <div className={`
                     rounded-xl p-3 shadow-lg space-y-3
@@ -343,7 +339,7 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
                         )}
                     </div>
 
-                    {/* Second Row - Only when manufacturer is selected */}
+                    {/* Second Row */}
                     {filters.manufacturerId && (
                         <div className="grid grid-cols-2 gap-2">
                             <CustomSelect
@@ -385,7 +381,7 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
                             onClick={handleSearch}
                             className={`
                                 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
-                                flex items-center justify-center gap-2 min-w-[100px]
+                                flex items-center justify-center gap-2 min-w-24 // Changed from min-w-[100px]
                                 ${isHero
                                     ? 'bg-white text-orange-600 hover:bg-gray-100'
                                     : 'bg-orange-600 text-white hover:bg-orange-700'

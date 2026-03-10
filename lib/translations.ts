@@ -1,6 +1,8 @@
 // lib/translations.ts
 // English to Albanian translations for car-related terms
 
+import { STATIC_MANUFACTURERS } from './staticManufacturers';
+
 export const manufacturerTranslations: Record<string, string> = {
     'Maserati': 'Maserati',
     'BMW': 'BMW',
@@ -31,6 +33,24 @@ export const manufacturerTranslations: Record<string, string> = {
     'Aston Martin': 'Aston Martin',
     'McLaren': 'McLaren',
     'Fiat': 'Fiat',
+    'Opel': 'Opel',
+    'Peugeot': 'Peugeot',
+    'Citroen': 'Citroen',
+    'Dacia': 'Dacia',
+    'Seat': 'Seat',
+    'Skoda': 'Skoda',
+    'SsangYong': 'SsangYong',
+    'Renault Samsung': 'Renault Samsung',
+    'Alfa Romeo': 'Alfa Romeo',
+    'Lotus': 'Lotus',
+    'Smart': 'Smart',
+    'Mini': 'Mini',
+    'Infiniti': 'Infiniti',
+    'Acura': 'Acura',
+    'Cadillac': 'Cadillac',
+    'Lincoln': 'Lincoln',
+    'Suzuki': 'Suzuki',
+    // Removed duplicate SsangYong entry
 };
 
 export const fuelTranslations: Record<string, string> = {
@@ -64,6 +84,7 @@ export const colorTranslations: Record<string, string> = {
     'yellow': 'Verdhë',
     'orange': 'Portokalli',
     'purple': 'Vjollcë',
+    'gold': 'Arë',
 };
 
 export const bodyTypeTranslations: Record<string, string> = {
@@ -76,6 +97,7 @@ export const bodyTypeTranslations: Record<string, string> = {
     'van': 'Furgon',
     'pickup': 'Pickup',
     'sport_car': 'Makinë Sportive',
+    'sport': 'Makinë Sportive',
 };
 
 // Helper function to translate manufacturer names
@@ -83,7 +105,15 @@ export function translateManufacturer(manufacturer: string): string {
     return manufacturerTranslations[manufacturer] || manufacturer;
 }
 
-// Helper to get sorted and translated manufacturers
+// Get static manufacturers with translations (returns format for CustomSelect)
+export function getStaticManufacturers() {
+    return STATIC_MANUFACTURERS.map(m => ({
+        value: m.id.toString(),
+        label: m.translated
+    }));
+}
+
+// Helper to get sorted and translated manufacturers from API data
 export function getTranslatedManufacturers(manufacturers: Array<{ id: number; name: string }>): Array<{ id: number; original: string; translated: string }> {
     return manufacturers
         .map(m => ({
