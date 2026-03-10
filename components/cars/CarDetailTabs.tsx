@@ -1,8 +1,9 @@
 // components/cars/CarDetailTabs.tsx
 'use client';
 
-import { useState } from 'react';
-import type { Car } from '@/lib/api';
+import { useState, useEffect } from 'react';
+import { useConfig } from '@/lib/ConfigContext';
+import type { Car, HistoryItem, HistoryContent } from '@/lib/api'; // Add these imports
 import {
     Fuel,
     Gauge,
@@ -14,16 +15,17 @@ import {
     FileText,
     Cpu,
     Wind,
-    Battery,
-    Thermometer,
     Droplets,
     Zap,
     Cog,
     Layers,
     Users,
-    Luggage,
-    Weight,
-    GaugeCircle
+    GaugeCircle,
+    History,
+    Settings,
+    ClipboardCheck,
+    CheckCircle,
+    XCircle
 } from 'lucide-react';
 import {
     translateFuel,
@@ -31,6 +33,10 @@ import {
     translateColor,
     translateBodyType
 } from '@/lib/translations';
+import RecallAlert from './RecallAlert';
+import InspectionReport from './InspectionReport';
+import OptionList from './OptionList';
+import HistoryTimeline from './HistoryTimeline';
 
 // Define the accident type from the API
 interface Accident {
@@ -64,6 +70,21 @@ interface CarDetails {
     description_en?: string;
     seats_count?: number;
     insurance_v2?: InsuranceV2;
+    history?: HistoryItem[]; // Use imported type
+    inspect_outer?: any[];
+    first_registration?: {
+        year: number;
+        month: number;
+        day: number;
+    };
+    options?: {
+        choice: string[];
+        etc: string[];
+        standard: string[];
+        tuning: string[];
+        type: string;
+    };
+    original_price?: number;
 }
 
 // Extend the Lot type to include details
@@ -75,16 +96,40 @@ interface ExtendedLot {
     };
 }
 
+// Approximate exchange rate: 1 EUR = 1450 KRW (adjust as needed)
+const KRW_TO_EUR = 1450;
+
 interface CarDetailTabsProps {
     car: Car;
 }
 
 export default function CarDetailTabs({ car }: CarDetailTabsProps) {
-    const [activeTab, setActiveTab] = useState<'specs' | 'model' | 'insurance'>('specs');
+    const { formatPrice } = useConfig();
+    const [activeTab, setActiveTab] = useState<'specs' | 'model' | 'insurance' | 'history' | 'inspection' | 'recalls' | 'options'>('specs');
 
     // Cast the lot to our extended type
     const lot = car.lots?.[0] as ExtendedLot | undefined;
     const details = lot?.details;
+
+    // Extract recalls from history - now using imported types
+    const recalls = (details?.history?.filter((item: HistoryItem) =>
+        item.content?.some((content: HistoryContent) =>
+            content.title?.includes('Recall') ||
+            content.flag?.includes('Recall')
+        )
+    ) || []) as HistoryItem[];
+
+    const hasOpenRecalls = recalls.some((recall: HistoryItem) =>
+        recall.content?.some((c: HistoryContent) => c.flag === 'Recall required' || c.title?.includes('Recall required'))
+    );
+
+    const ownerCount = details?.insurance_v2?.ownerChangeCnt || 0;
+
+    // Convert KRW to EUR
+    const convertKRWtoEUR = (krwAmount: number): number => {
+        if (!krwAmount) return 0;
+        return Math.round(krwAmount / KRW_TO_EUR);
+    };
 
     // Get engine details from the car data
     const getEngineDetails = () => {
@@ -115,6 +160,7 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
         const model = car.model?.name;
         const title = car.title;
         const color = car.color?.name;
+        const firstReg = details?.first_registration;
 
         return {
             fullName: title || 'N/A',
@@ -125,11 +171,12 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
             bodyType: bodyType ? translateBodyType(bodyType) : 'N/A',
             year: year || 'N/A',
             color: color ? translateColor(color) : 'N/A',
-            vin: car.vin || 'N/A'
+            vin: car.vin || 'N/A',
+            firstRegDate: firstReg ? `${firstReg.year}-${firstReg.month}-${firstReg.day}` : null
         };
     };
 
-    // Get insurance details
+    // Get insurance details with converted amounts
     const getInsuranceDetails = () => {
         const insurance = details?.insurance_v2;
 
@@ -139,6 +186,8 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
                 accidentCount: 0,
                 myAccidentCount: 0,
                 otherAccidentCount: 0,
+                myAccidentCost: 0,
+                otherAccidentCost: 0,
                 totalLossCount: 0,
                 floodTotalLossCount: 0,
                 robberCount: 0,
@@ -151,14 +200,20 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
             hasData: true,
             accidentCount: insurance.accidentCnt || 0,
             myAccidentCount: insurance.myAccidentCnt || 0,
-            myAccidentCost: insurance.myAccidentCost || 0,
+            myAccidentCost: convertKRWtoEUR(insurance.myAccidentCost || 0),
             otherAccidentCount: insurance.otherAccidentCnt || 0,
-            otherAccidentCost: insurance.otherAccidentCost || 0,
+            otherAccidentCost: convertKRWtoEUR(insurance.otherAccidentCost || 0),
             totalLossCount: insurance.totalLossCnt || 0,
             floodTotalLossCount: insurance.floodTotalLossCnt || 0,
             robberCount: insurance.robberCnt || 0,
             ownerChangeCount: insurance.ownerChangeCnt || 0,
-            accidents: insurance.accidents || []
+            accidents: (insurance.accidents || []).map((acc: Accident) => ({
+                ...acc,
+                insuranceBenefit: convertKRWtoEUR(acc.insuranceBenefit || 0),
+                partCost: convertKRWtoEUR(acc.partCost || 0),
+                laborCost: convertKRWtoEUR(acc.laborCost || 0),
+                paintingCost: convertKRWtoEUR(acc.paintingCost || 0)
+            }))
         };
     };
 
@@ -196,47 +251,38 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
     const insurance = getInsuranceDetails();
     const fullSpecs = getFullSpecs();
 
-    // Format currency
-    const formatCurrency = (amount: number) => {
-        if (!amount) return '0';
-        return new Intl.NumberFormat('sq-AL', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        }).format(amount);
-    };
-
     return (
         <div className="bg-surface-2 rounded-xl border border-light/20 overflow-hidden">
-            {/* Tab Headers - with orange background for active tab */}
-            <div className="flex flex-wrap border-b border-light/20">
+            {/* Recall Alert - Show prominently if there are open recalls */}
+            {hasOpenRecalls && <RecallAlert recalls={recalls} />}
 
+            {/* Tab Headers */}
+            <div className="flex flex-wrap border-b border-light/20">
                 <button
                     onClick={() => setActiveTab('specs')}
                     className={`
-            flex-1 px-4 py-3 text-sm font-medium transition-all duration-200 relative
-            ${activeTab === 'specs'
+                        flex-1 px-4 py-3 text-sm font-medium transition-all duration-200 relative
+                        ${activeTab === 'specs'
                             ? 'bg-orange-500 text-white'
                             : 'text-muted hover:text-primary hover:bg-surface-3/30'
                         }
-          `}
+                    `}
                 >
                     <div className="flex items-center justify-center gap-2">
                         <FileText size={16} />
-                        <span>Specifikime të Plota</span>
+                        <span>Specifikime</span>
                     </div>
                 </button>
 
                 <button
                     onClick={() => setActiveTab('model')}
                     className={`
-            flex-1 px-4 py-3 text-sm font-medium transition-all duration-200 relative
-            ${activeTab === 'model'
+                        flex-1 px-4 py-3 text-sm font-medium transition-all duration-200 relative
+                        ${activeTab === 'model'
                             ? 'bg-orange-500 text-white'
                             : 'text-muted hover:text-primary hover:bg-surface-3/30'
                         }
-          `}
+                    `}
                 >
                     <div className="flex items-center justify-center gap-2">
                         <CarIcon size={16} />
@@ -247,25 +293,88 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
                 <button
                     onClick={() => setActiveTab('insurance')}
                     className={`
-            flex-1 px-4 py-3 text-sm font-medium transition-all duration-200 relative
-            ${activeTab === 'insurance'
+                        flex-1 px-4 py-3 text-sm font-medium transition-all duration-200 relative
+                        ${activeTab === 'insurance'
                             ? 'bg-orange-500 text-white'
                             : 'text-muted hover:text-primary hover:bg-surface-3/30'
                         }
-          `}
+                    `}
                 >
                     <div className="flex items-center justify-center gap-2">
                         <Shield size={16} />
                         <span>Sigurimi</span>
                         {insurance.accidentCount > 0 && (
                             <span className={`
-                ml-1 px-1.5 py-0.5 text-xs rounded-full
-                ${activeTab === 'insurance'
+                                ml-1 px-1.5 py-0.5 text-xs rounded-full
+                                ${activeTab === 'insurance'
                                     ? 'bg-white text-orange-500'
                                     : 'bg-orange-500/20 text-orange-500'
                                 }
-              `}>
+                            `}>
                                 {insurance.accidentCount}
+                            </span>
+                        )}
+                    </div>
+                </button>
+
+                <button
+                    onClick={() => setActiveTab('history')}
+                    className={`
+                        flex-1 px-4 py-3 text-sm font-medium transition-all duration-200 relative
+                        ${activeTab === 'history'
+                            ? 'bg-orange-500 text-white'
+                            : 'text-muted hover:text-primary hover:bg-surface-3/30'
+                        }
+                    `}
+                >
+                    <div className="flex items-center justify-center gap-2">
+                        <History size={16} />
+                        <span>Historiku</span>
+                        {ownerCount > 0 && (
+                            <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-surface-3 text-muted">
+                                {ownerCount}
+                            </span>
+                        )}
+                    </div>
+                </button>
+
+                <button
+                    onClick={() => setActiveTab('inspection')}
+                    className={`
+                        flex-1 px-4 py-3 text-sm font-medium transition-all duration-200 relative
+                        ${activeTab === 'inspection'
+                            ? 'bg-orange-500 text-white'
+                            : 'text-muted hover:text-primary hover:bg-surface-3/30'
+                        }
+                    `}
+                >
+                    <div className="flex items-center justify-center gap-2">
+                        <ClipboardCheck size={16} />
+                        <span>Inspektimi</span>
+                        {details?.inspect_outer && details.inspect_outer.length > 0 && (
+                            <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-orange-500/20 text-orange-500">
+                                {details.inspect_outer.length}
+                            </span>
+                        )}
+                    </div>
+                </button>
+
+                <button
+                    onClick={() => setActiveTab('options')}
+                    className={`
+                        flex-1 px-4 py-3 text-sm font-medium transition-all duration-200 relative
+                        ${activeTab === 'options'
+                            ? 'bg-orange-500 text-white'
+                            : 'text-muted hover:text-primary hover:bg-surface-3/30'
+                        }
+                    `}
+                >
+                    <div className="flex items-center justify-center gap-2">
+                        <Settings size={16} />
+                        <span>Opsionet</span>
+                        {details?.options?.standard && (
+                            <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-surface-3 text-muted">
+                                {details.options.standard.length}
                             </span>
                         )}
                     </div>
@@ -274,7 +383,6 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
 
             {/* Tab Content */}
             <div className="p-5">
-
                 {/* Full Specifications Tab */}
                 {activeTab === 'specs' && (
                     <div className="space-y-4 animate-fadeIn">
@@ -317,63 +425,17 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
                                     <SpecItem icon={<FileText size={14} />} label="VIN" value={fullSpecs.vin} colSpan={2} />
                                 </div>
                             </div>
+
+                            {/* First Registration */}
+                            {modelDetails.firstRegDate && (
+                                <div className="bg-surface-3/30 rounded-lg p-3">
+                                    <span className="text-xs text-muted">Regjistrimi i parë:</span>
+                                    <span className="text-sm font-medium text-primary ml-2">{modelDetails.firstRegDate}</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
-
-                {/* Engine Tab */}
-                {/* {activeTab === 'engine' && (
-                    <div className="space-y-4 animate-fadeIn">
-                        <h3 className="text-lg font-medium text-primary mb-3 flex items-center gap-2">
-                            <Gauge className="text-orange-500" size={20} />
-                            Detajet e Motorit
-                        </h3>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <SpecItem
-                                icon={<Cog size={16} />}
-                                label="Vëllimi"
-                                value={engine.volume}
-                            />
-
-                            <SpecItem
-                                icon={<GaugeCircle size={16} />}
-                                label="Fuqia"
-                                value={engine.hp}
-                            />
-
-                            <SpecItem
-                                icon={<Fuel size={16} />}
-                                label="Karburanti"
-                                value={engine.fuel}
-                            />
-
-                            <SpecItem
-                                icon={<Zap size={16} />}
-                                label="Transmisioni"
-                                value={engine.transmission}
-                            />
-
-                            {engine.engineCode !== 'N/A' && (
-                                <SpecItem
-                                    icon={<Cpu size={16} />}
-                                    label="Kodi i Motorit"
-                                    value={engine.engineCode}
-                                    colSpan={2}
-                                />
-                            )}
-
-                            {engine.cylinders !== 'N/A' && (
-                                <SpecItem
-                                    icon={<Layers size={16} />}
-                                    label="Cilindrat"
-                                    value={engine.cylinders}
-                                    colSpan={2}
-                                />
-                            )}
-                        </div>
-                    </div>
-                )} */}
 
                 {/* Model Tab */}
                 {activeTab === 'model' && (
@@ -492,6 +554,27 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
                                     />
                                 </div>
 
+                                {/* Cost Summary */}
+                                {(insurance.myAccidentCost > 0 || insurance.otherAccidentCost > 0) && (
+                                    <div className="bg-surface-3/30 rounded-lg p-3">
+                                        <h4 className="text-xs font-medium text-primary mb-2">Kostot e Aksidenteve</h4>
+                                        <div className="space-y-1 text-xs">
+                                            {insurance.myAccidentCost > 0 && (
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted">Kosto nga aksidentet e mia:</span>
+                                                    <span className="text-orange-primary font-medium">{formatPrice(insurance.myAccidentCost)}</span>
+                                                </div>
+                                            )}
+                                            {insurance.otherAccidentCost > 0 && (
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted">Kosto nga aksidentet e të tjerëve:</span>
+                                                    <span className="text-orange-primary font-medium">{formatPrice(insurance.otherAccidentCost)}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Warning Indicators */}
                                 {(insurance.totalLossCount > 0 || insurance.floodTotalLossCount > 0 || insurance.robberCount > 0) && (
                                     <div className="bg-error-bg border border-error-border rounded-lg p-3">
@@ -516,11 +599,11 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
                                                     <div className="flex items-center justify-between mb-1">
                                                         <span className="text-muted">Data: {accident.date || 'N/A'}</span>
                                                         <span className={`
-                              px-2 py-0.5 rounded-full text-xs
-                              ${accident.type === '1' ? 'bg-error-bg text-error-text' :
+                                                            px-2 py-0.5 rounded-full text-xs
+                                                            ${accident.type === '1' ? 'bg-error-bg text-error-text' :
                                                                 accident.type === '2' ? 'bg-warning-bg text-warning-text' :
                                                                     'bg-info-bg text-info-text'}
-                            `}>
+                                                        `}>
                                                             {accident.type === '1' ? 'Me fajin tim' :
                                                                 accident.type === '2' ? 'Dëmtim i makinës time' :
                                                                     accident.type === '3' ? 'Shkaktuar nga tjetri' : 'Tjetër'}
@@ -528,14 +611,14 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
                                                     </div>
                                                     {accident.insuranceBenefit > 0 && (
                                                         <div className="text-xs text-muted">
-                                                            Përfitimi: {formatCurrency(accident.insuranceBenefit)}
+                                                            Përfitimi: {formatPrice(accident.insuranceBenefit)}
                                                         </div>
                                                     )}
                                                     {(accident.partCost > 0 || accident.laborCost > 0 || accident.paintingCost > 0) && (
                                                         <div className="mt-1 text-xs text-muted">
-                                                            {accident.partCost > 0 && <span>Pjesë: {formatCurrency(accident.partCost)} </span>}
-                                                            {accident.laborCost > 0 && <span>Punë: {formatCurrency(accident.laborCost)} </span>}
-                                                            {accident.paintingCost > 0 && <span>Lyera: {formatCurrency(accident.paintingCost)}</span>}
+                                                            {accident.partCost > 0 && <span>Pjesë: {formatPrice(accident.partCost)} </span>}
+                                                            {accident.laborCost > 0 && <span>Punë: {formatPrice(accident.laborCost)} </span>}
+                                                            {accident.paintingCost > 0 && <span>Lyera: {formatPrice(accident.paintingCost)}</span>}
                                                         </div>
                                                     )}
                                                 </div>
@@ -545,6 +628,79 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
                                 )}
                             </div>
                         )}
+                    </div>
+                )}
+
+                {/* History Tab */}
+                {activeTab === 'history' && (
+                    <div className="space-y-4 animate-fadeIn">
+                        <h3 className="text-lg font-medium text-primary mb-3 flex items-center gap-2">
+                            <History className="text-orange-500" size={20} />
+                            Historiku i Automjetit
+                        </h3>
+                        <HistoryTimeline history={details?.history} ownerCount={ownerCount} />
+                    </div>
+                )}
+
+                {/* Inspection Tab */}
+                {activeTab === 'inspection' && (
+                    <div className="space-y-4 animate-fadeIn">
+                        <h3 className="text-lg font-medium text-primary mb-3 flex items-center gap-2">
+                            <ClipboardCheck className="text-orange-500" size={20} />
+                            Raporti i Inspektimit
+                        </h3>
+                        <InspectionReport inspections={details?.inspect_outer} />
+                    </div>
+                )}
+
+                {/* Options Tab */}
+                {activeTab === 'options' && (
+                    <div className="space-y-4 animate-fadeIn">
+                        <h3 className="text-lg font-medium text-primary mb-3 flex items-center gap-2">
+                            <Settings className="text-orange-500" size={20} />
+                            Opsionet dhe Pajisjet
+                        </h3>
+
+                        <div className="space-y-3">
+                            {details?.options?.standard && (
+                                <OptionList
+                                    options={details.options.standard}
+                                    title="Pajisjet Standarde"
+                                />
+                            )}
+
+                            {details?.options?.choice && details.options.choice.length > 0 && (
+                                <OptionList
+                                    options={details.options.choice}
+                                    title="Opsionet e Zgjedhura"
+                                />
+                            )}
+
+                            {details?.options?.tuning && details.options.tuning.length > 0 && (
+                                <OptionList
+                                    options={details.options.tuning}
+                                    title="Tuning / Modifikime"
+                                />
+                            )}
+
+                            {details?.options?.etc && details.options.etc.length > 0 && (
+                                <OptionList
+                                    options={details.options.etc}
+                                    title="Të Tjera"
+                                />
+                            )}
+
+                            {(!details?.options ||
+                                (!details.options.standard?.length &&
+                                    !details.options.choice?.length &&
+                                    !details.options.tuning?.length &&
+                                    !details.options.etc?.length)) && (
+                                    <div className="text-center py-6 bg-surface-3/30 rounded-lg">
+                                        <Settings className="w-8 h-8 text-muted mx-auto mb-2" />
+                                        <p className="text-muted text-sm">Nuk ka të dhëna për opsionet</p>
+                                    </div>
+                                )}
+                        </div>
                     </div>
                 )}
             </div>
@@ -568,18 +724,18 @@ function SpecItem({
 }) {
     return (
         <div className={`
-      bg-surface-3/30 rounded-lg p-3
-      ${colSpan === 2 ? 'col-span-2' : ''}
-      ${highlight ? 'border border-orange-primary/30' : ''}
-    `}>
+            bg-surface-3/30 rounded-lg p-3
+            ${colSpan === 2 ? 'col-span-2' : ''}
+            ${highlight ? 'border border-orange-primary/30' : ''}
+        `}>
             <div className="flex items-center gap-2 text-xs text-muted mb-1">
                 <span className="text-orange-500">{icon}</span>
                 <span>{label}</span>
             </div>
             <div className={`
-        text-sm font-medium
-        ${highlight ? 'text-orange-500' : 'text-primary'}
-      `}>
+                text-sm font-medium
+                ${highlight ? 'text-orange-500' : 'text-primary'}
+            `}>
                 {value}
             </div>
         </div>

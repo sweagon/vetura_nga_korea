@@ -1,0 +1,64 @@
+// workers/filterWorker.ts
+interface FilterWorkerMessage {
+    cars: any[];
+    filters: Record<string, string>;
+    itemsPerPage: number;
+    currentPage: number;
+}
+
+self.onmessage = function (e: MessageEvent<FilterWorkerMessage>) {
+    const { cars, filters, itemsPerPage, currentPage } = e.data;
+
+    let filtered = [...cars];
+
+    // Apply all filters
+    if (filters.fuel_id) {
+        filtered = filtered.filter(car => car.fuel?.id.toString() === filters.fuel_id);
+    }
+    if (filters.transmission_id) {
+        filtered = filtered.filter(car => car.transmission?.id.toString() === filters.transmission_id);
+    }
+    if (filters.color_id) {
+        filtered = filtered.filter(car => car.color?.id.toString() === filters.color_id);
+    }
+    if (filters.body_type_id) {
+        filtered = filtered.filter(car => car.body_type?.id.toString() === filters.body_type_id);
+    }
+    if (filters.yearFrom) {
+        filtered = filtered.filter(car => car.year >= parseInt(filters.yearFrom));
+    }
+    if (filters.yearTo) {
+        filtered = filtered.filter(car => car.year <= parseInt(filters.yearTo));
+    }
+    if (filters.priceFrom || filters.priceTo) {
+        filtered = filtered.filter(car => {
+            const price = car.lots?.[0]?.buy_now || 0;
+            if (filters.priceFrom && filters.priceTo) {
+                return price >= parseInt(filters.priceFrom) && price <= parseInt(filters.priceTo);
+            } else if (filters.priceFrom) {
+                return price >= parseInt(filters.priceFrom);
+            } else if (filters.priceTo) {
+                return price <= parseInt(filters.priceTo);
+            }
+            return true;
+        });
+    }
+
+    const totalFiltered = filtered.length;
+
+    // Get current page slice
+    const start = (currentPage - 1) * itemsPerPage;
+    const pageResults = filtered.slice(start, start + itemsPerPage);
+
+    // Send back:
+    // - pageResults: just the current page (12 cars)
+    // - filtered: ALL filtered cars (for future pages)
+    // - totalFiltered: total count
+    self.postMessage({
+        pageResults,        // ← Current page to display
+        filtered,           // ← ALL filtered cars (store in allCars)
+        totalFiltered,
+        currentPage,
+        hasMore: filtered.length > start + itemsPerPage
+    });
+};

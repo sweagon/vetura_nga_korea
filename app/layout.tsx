@@ -39,7 +39,7 @@ export default function RootLayout({
             </PageTransition>
           </main>
           <Footer />
-          <ScrollToTop />
+          {/* <ScrollToTop /> */}
         </ConfigProvider>
       </body>
     </html>

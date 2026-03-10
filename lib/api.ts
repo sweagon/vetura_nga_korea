@@ -50,6 +50,94 @@ export interface Car {
   hp?: number;
 }
 
+export interface Accident {
+  date: string;
+  insuranceBenefit: number;
+  laborCost: number;
+  paintingCost: number;
+  partCost: number;
+  type: string;
+}
+
+export interface InsuranceV2 {
+  accidentCnt: number;
+  accidents: Accident[];
+  myAccidentCnt: number;
+  myAccidentCost: number;
+  otherAccidentCnt: number;
+  otherAccidentCost: number;
+  totalLossCnt: number;
+  floodTotalLossCnt: number;
+  robberCnt: number;
+  ownerChangeCnt: number;
+}
+
+export interface HistoryContent {
+  title: string;
+  sub?: string;
+  flag?: string;
+  Date_of_change?: string;
+  Driving_distance_when_changing?: string;
+  Transaction_type?: string;
+  mileage?: string;
+  maintenance_company?: string;
+  total_repair_cost?: string;
+  Defect_details?: string;
+  Correction_method?: string;
+  Recall_Post_Date?: string;
+  target_device?: string;
+  Correction_period?: string;
+  Contact_us?: string;
+}
+
+export interface HistoryItem {
+  content: HistoryContent[];
+  date: string;
+}
+
+export interface InspectItem {
+  attributes: string[];
+  statusTypes: Array<{
+    code: string;
+    title: string;
+  }>;
+  type: {
+    code: string;
+    title: string;
+  };
+}
+
+export interface FirstRegistration {
+  year: number;
+  month: number;
+  day: number;
+}
+
+export interface Options {
+  choice: string[];
+  etc: string[];
+  standard: string[];
+  tuning: string[];
+  type: string;
+}
+
+export interface CarDetails {
+  engine_volume?: number;
+  badge?: string;
+  description_ko?: string;
+  description_en?: string;
+  seats_count?: number;
+  insurance_v2?: InsuranceV2;
+  history?: HistoryItem[];
+  inspect_outer?: InspectItem[];
+  first_registration?: FirstRegistration;
+  options?: Options;
+  original_price?: number;
+  sell_type?: string;
+  is_leasing?: boolean;
+  month?: number;
+}
+
 export interface Lot {
   id: number;
   lot: string;
@@ -87,31 +175,13 @@ export interface Lot {
       name: string;
     };
   };
-  details?: {
-    engine_volume?: number;
-    badge?: string;
-    description_ko?: string;
-    description_en?: string;
-    insurance_v2?: {
-      accidentCnt: number;
-      accidents: Array<{
-        date: string;
-        insuranceBenefit: number;
-        laborCost: number;
-        paintingCost: number;
-        partCost: number;
-        type: string;
-      }>;
-      myAccidentCnt: number;
-      myAccidentCost: number;
-      otherAccidentCnt: number;
-      otherAccidentCost: number;
-      totalLossCnt: number;
-      floodTotalLossCnt: number;
-      robberCnt: number;
-      ownerChangeCnt: number;
-    };
-  }
+  details?: CarDetails;
+  condition?: {
+    name: string;
+    id: number;
+  };
+  keys_available?: boolean;
+  airbags?: boolean | null;
 }
 
 export interface FetchCarsResponse {
@@ -158,6 +228,7 @@ export interface Generation {
   cars_qty?: number;
 }
 
+// lib/api.ts - Ensure FilterData interface has all needed arrays
 export interface FilterData {
   manufacturers: Manufacturer[];
   models: Model[];
@@ -167,6 +238,9 @@ export interface FilterData {
   years: number[];
   bodyTypes: Array<{ id: number; name: string }>;
   colors: Array<{ id: number; name: string }>;
+  // Add these if they exist in the statistics endpoint
+  fuelStats?: Array<{ id: number; name: string; count: number }>;
+  transmissionStats?: Array<{ id: number; name: string; count: number }>;
 }
 
 // API Base URL - using NEXT_PUBLIC_ for client-side access
@@ -229,22 +303,18 @@ const API_SUPPORTED_FILTERS = [
   'vehicle_type'
 ];
 
-/**
- * Fetch cars list with filters - Only uses API-supported filters
- */
-export async function fetchCars(params: Record<string, any> = {}): Promise<FetchCarsResponse> {
+// In lib/api.ts, update the fetchCars function:
+
+export async function fetchCars(params: Record<string, any> = {}) {
   try {
-    // Build query string with ONLY supported filters
     const queryParams: Record<string, string> = {};
 
-    // Only add supported params that have values
     Object.entries(params).forEach(([key, value]) => {
-      if (value && API_SUPPORTED_FILTERS.includes(key)) {
+      if (value !== undefined && value !== null && value !== '') {
         queryParams[key] = value.toString();
       }
     });
 
-    // Default values
     if (!queryParams.per_page) queryParams.per_page = '12';
     if (!queryParams.vehicle_type) queryParams.vehicle_type = '1';
 
@@ -252,7 +322,7 @@ export async function fetchCars(params: Record<string, any> = {}): Promise<Fetch
     const path = `/api/proxy/cars${queryString ? `?${queryString}` : ''}`;
     const url = getFullUrl(path);
 
-    console.log('📡 Fetching cars from proxy with API params:', queryParams);
+    console.log('📡 Fetching cars with params:', queryParams);
 
     const response = await fetchWithTimeout(url, {
       ...(typeof window !== 'undefined'
@@ -266,40 +336,27 @@ export async function fetchCars(params: Record<string, any> = {}): Promise<Fetch
 
     const data = await response.json();
 
-    // Process pagination data
-    if (data.data && Array.isArray(data.data)) {
-      if (!data.meta) {
-        data.meta = {
-          current_page: Number(params.page) || 1,
-          from: 1,
-          path: '',
-          per_page: Number(params.per_page) || 12,
-          to: data.data.length,
-          total: data.data.length
-        };
-      } else {
-        data.meta.current_page = data.meta.current_page || Number(params.page) || 1;
-        data.meta.per_page = data.meta.per_page || Number(params.per_page) || 12;
-        data.meta.from = data.meta.from || ((data.meta.current_page - 1) * data.meta.per_page + 1);
-        data.meta.to = data.meta.to || Math.min(data.meta.current_page * data.meta.per_page, data.meta.total || data.data.length);
-        data.meta.total = data.meta.total || data.data.length;
-      }
+    // IMPORTANT: Ensure meta.total is preserved
+    if (data.meta && typeof data.meta.total === 'undefined') {
+      console.warn('⚠️ API response missing meta.total');
     }
+
+    console.log('✅ API Response processed:', {
+      dataLength: data.data?.length,
+      total: data.meta?.total,
+      current_page: data.meta?.current_page
+    });
 
     return data;
   } catch (error) {
     console.error('Error fetching cars:', error);
     return {
       data: [],
-      links: { first: '', last: null, prev: null, next: null },
       meta: {
         current_page: Number(params.page) || 1,
-        from: 0,
-        path: '',
         per_page: Number(params.per_page) || 12,
-        to: 0,
         total: 0
-      },
+      }
     };
   }
 }
@@ -602,7 +659,8 @@ export function getBodyTypeAlbanian(bodyType: string): string {
     'wagon': 'Kombi',
     'van': 'Furgon',
     'pickup': 'Pickup',
-    'cabrio': 'Kabriolet'
+    'cabrio': 'Kabriolet',
+    'sport_car': 'Makinë Sportive'
   };
   return bodyMap[bodyType.toLowerCase()] || bodyType;
 }

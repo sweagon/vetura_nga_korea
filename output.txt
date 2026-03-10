@@ -1,0 +1,2826 @@
+=========================================
+FILE: app/cars/CarsContentWrapper.tsx
+=========================================
+'use client';
+
+import { useState, useRef, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
+import CarCard from '@/components/cars/CarCard';
+import { CarCardSkeleton } from '@/components/ui/LoadingSkeleton';
+import { AlertCircle, ArrowUpDown, Loader2, Search } from 'lucide-react';
+import CustomSelect from '@/components/ui/CustomSelect';
+import CompactSearch from '@/components/ui/CompactSearch';
+import AdvancedFilterSidebar from '@/components/filters/AdvancedFilterSidebar';
+import FilterToggle from '@/components/ui/FilterToggle';
+import Pagination from '@/components/ui/Pagination';
+import { useCarFilters } from '@/hooks/useCarFilters';
+import { type Car } from '@/lib/api';
+
+interface SortOption {
+    value: string;
+    label: string;
+    sortFn: (a: Car, b: Car) => number;
+}
+
+export default function CarsContentWrapper() {
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [currentSort, setCurrentSort] = useState('recommended');
+    const contentRef = useRef<HTMLDivElement>(null);
+
+    const searchParams = useSearchParams();
+
+    const serverFilters = useMemo(() => ({
+        manufacturer_id: searchParams.get('manufacturer_id') || undefined,
+        model_id: searchParams.get('model_id') || undefined,
+        from_year: searchParams.get('from_year') || undefined,
+        to_year: searchParams.get('to_year') || undefined,
+        buy_now_price_from: searchParams.get('buy_now_price_from') || undefined,
+        buy_now_price_to: searchParams.get('buy_now_price_to') || undefined,
+        odometer_from_km: searchParams.get('odometer_from_km') || undefined,
+        odometer_to_km: searchParams.get('odometer_to_km') || undefined,
+    }), [searchParams]);
+
+    const clientFilters = useMemo(() => ({
+        fuel_id: searchParams.get('fuel_id') || '',
+        transmission_id: searchParams.get('transmission_id') || '',
+        color_id: searchParams.get('color_id') || '',
+        body_type_id: searchParams.get('body_type_id') || '',
+        yearFrom: searchParams.get('filter_year_from') || '',
+        yearTo: searchParams.get('filter_year_to') || '',
+        priceFrom: searchParams.get('filter_price_from') || '',
+        priceTo: searchParams.get('filter_price_to') || '',
+    }), [searchParams]);
+
+    const {
+        cars,
+        loading,
+        loadingMore,
+        currentPage,
+        totalPages,
+        totalMatches,
+        searchProgress,
+        hasClientFilters,
+        error,
+        goToPage
+    } = useCarFilters(serverFilters, clientFilters);
+
+    const sortOptionsList = useMemo<SortOption[]>(() => [
+        { value: 'recommended', label: 'Më të përshtatshmet', sortFn: () => 0 },
+        { value: 'price_asc', label: 'Çmimi: Nga më i ulëti', sortFn: (a, b) => (a.lots?.[0]?.buy_now || 0) - (b.lots?.[0]?.buy_now || 0) },
+        { value: 'price_desc', label: 'Çmimi: Nga më i larti', sortFn: (a, b) => (b.lots?.[0]?.buy_now || 0) - (a.lots?.[0]?.buy_now || 0) },
+        { value: 'year_desc', label: 'Viti: Më të rijtë', sortFn: (a, b) => b.year - a.year },
+        { value: 'year_asc', label: 'Viti: Më të vjetrit', sortFn: (a, b) => a.year - b.year },
+        { value: 'mileage_asc', label: 'Kilometrazha: Më e ulët', sortFn: (a, b) => (a.lots?.[0]?.odometer?.km || 0) - (b.lots?.[0]?.odometer?.km || 0) },
+        { value: 'mileage_desc', label: 'Kilometrazha: Më e lartë', sortFn: (a, b) => (b.lots?.[0]?.odometer?.km || 0) - (a.lots?.[0]?.odometer?.km || 0) },
+    ], []);
+
+    const sortSelectOptions = useMemo(() =>
+        sortOptionsList.map(opt => ({ value: opt.value, label: opt.label })),
+        [sortOptionsList]
+    );
+
+    const displayedCars = useMemo(() => {
+        if (!cars.length) return cars;
+        const sortOption = sortOptionsList.find(opt => opt.value === currentSort);
+        if (sortOption && currentSort !== 'recommended') {
+            return [...cars].sort(sortOption.sortFn);
+        }
+        return cars;
+    }, [cars, currentSort, sortOptionsList]);
+
+    const handlePageChange = useCallback((page: number) => {
+        goToPage(page);
+        contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, [goToPage]);
+
+    const handleClearFilters = useCallback(() => {
+        const params = new URLSearchParams(searchParams.toString());
+        ['fuel_id', 'transmission_id', 'color_id', 'body_type_id',
+            'filter_year_from', 'filter_year_to', 'filter_price_from', 'filter_price_to']
+            .forEach(key => params.delete(key));
+        window.location.href = `/cars?${params.toString()}`;
+    }, [searchParams]);
+
+    // Loading state
+    if (loading && cars.length === 0) {
+        return (
+            <div className="flex gap-8">
+                <div className="hidden lg:block w-72 shrink-0">
+                    <div className="bg-surface-2 border border-light/20 rounded-xl p-4 space-y-4 sticky top-24">
+                        <div className="h-8 bg-surface-3 rounded w-3/4 animate-pulse" />
+                        <div className="h-32 bg-surface-3 rounded animate-pulse" />
+                        <div className="h-32 bg-surface-3 rounded animate-pulse" />
+                    </div>
+                </div>
+                <div className="flex-1 space-y-8">
+                    <div className="bg-surface-2 border border-light/20 rounded-xl p-4">
+                        <div className="h-10 bg-surface-3 rounded-lg w-40 animate-pulse" />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                        {[...Array(12)].map((_, i) => (
+                            <CarCardSkeleton key={i} />
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex gap-8">
+                <div className="hidden lg:block w-72 shrink-0">
+                    <AdvancedFilterSidebar
+                        isOpen={isFilterOpen}
+                        onClose={() => setIsFilterOpen(false)}
+                    />
+                </div>
+                <div className="flex-1 text-center py-16 bg-surface-2/30 rounded-2xl border border-light/20">
+                    <AlertCircle className="w-12 h-12 text-orange-primary mx-auto mb-4" />
+                    <p className="text-secondary mb-2">{error}</p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
+                    >
+                        Provo përsëri
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex gap-8 relative">
+            <AdvancedFilterSidebar isOpen={isFilterOpen} onClose={() => setIsFilterOpen(false)} />
+
+            <div className="flex-1 min-w-0 space-y-8" ref={contentRef}>
+                {/* Sort Bar */}
+                <div className="bg-surface-2 border border-light/20 rounded-xl p-4 flex flex-col lg:flex-row gap-4 justify-between items-center">
+                    <div className="w-full lg:w-auto">
+                        <CompactSearch variant="header" />
+                    </div>
+                    <div className="flex items-center gap-3 w-full lg:w-auto">
+                        <span className="text-sm text-muted whitespace-nowrap">
+                            <ArrowUpDown size={14} className="inline mr-1" />
+                            Rendit:
+                        </span>
+                        <div className="w-full lg:w-48">
+                            <CustomSelect
+                                value={currentSort}
+                                onChange={setCurrentSort}
+                                options={sortSelectOptions}
+                                placeholder="Zgjidh renditjen"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Progress Bar */}
+                {hasClientFilters && loading && searchProgress > 0 && searchProgress < 100 && (
+                    <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                            <span className="text-muted">Duke kërkuar...</span>
+                            <span className="text-orange-500">{searchProgress}%</span>
+                        </div>
+                        <div className="w-full bg-gray-100 rounded-full h-1">
+                            <div
+                                className="bg-orange-500 h-1 rounded-full transition-all duration-300"
+                                style={{ width: `${searchProgress}%` }}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* Results count */}
+                {totalMatches > 0 && (
+                    <div className="flex justify-between items-center px-2">
+                        <p className="text-sm text-muted">
+                            Duke shfaqur {displayedCars.length} nga {totalMatches} makina
+                            {hasClientFilters && loading && (
+                                <span className="ml-2 text-xs text-orange-500 animate-pulse">
+                                    (duke kërkuar...)
+                                </span>
+                            )}
+                        </p>
+                        {totalPages > 1 && (
+                            <p className="text-sm text-muted">Faqja {currentPage} nga {totalPages}</p>
+                        )}
+                    </div>
+                )}
+
+                {/* Car grid */}
+                {displayedCars.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                        {displayedCars.map((car: Car) => (
+                            <CarCard key={car.id} car={car} />
+                        ))}
+                    </div>
+                )}
+
+                {/* Loading More */}
+                {loadingMore && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                        {[...Array(6)].map((_, i) => (
+                            <CarCardSkeleton key={i} />
+                        ))}
+                    </div>
+                )}
+
+                {/* Empty State */}
+                {!loading && !loadingMore && displayedCars.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-16 bg-surface-2/30 rounded-2xl border border-light/20">
+                        <Search className="w-12 h-12 text-muted mb-4" />
+                        <p className="text-secondary mb-2">Nuk u gjet asnjë makinë</p>
+                        <p className="text-sm text-muted mb-6 text-center max-w-md">
+                            {hasClientFilters
+                                ? 'Kemi kontrolluar të gjitha faqet por nuk gjetëm makina.'
+                                : 'Provo të ndryshosh kriteret e kërkimit.'}
+                        </p>
+                        {hasClientFilters && (
+                            <button
+                                onClick={handleClearFilters}
+                                className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
+                            >
+                                Pastro filtrat
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                {/* Pagination */}
+                {!loading && totalPages > 1 && (
+                    <Pagination
+                        currentPage={currentPage}
+                        onNext={() => handlePageChange(currentPage + 1)}
+                        onPrev={() => handlePageChange(currentPage - 1)}
+                        hasNext={currentPage < totalPages}
+                        hasPrev={currentPage > 1}
+                        loading={loadingMore}
+                    />
+                )}
+            </div>
+
+            <FilterToggle onClick={() => setIsFilterOpen(true)} />
+        </div>
+    );
+}
+=========================================
+FILE: hooks/useCarFilters.ts
+=========================================
+'use client';
+
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { fetchCars, type Car } from '@/lib/api';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { debounce } from 'lodash';
+
+const PER_PAGE = 12;
+const API_PAGE_SIZE = 50;
+const BATCH_SIZE = 5;
+
+interface CarFiltersState {
+    cars: Car[];
+    loading: boolean;
+    loadingMore: boolean;
+    currentPage: number;
+    totalPages: number;
+    totalMatches: number;
+    searchProgress: number;
+    currentSearchPage: number;
+    totalSearchPages: number;
+    error: string | null;
+}
+
+export function useCarFilters(
+    serverFilters: Record<string, any>,
+    clientFilters: Record<string, string>
+) {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const urlPage = Number(searchParams.get('page')) || 1;
+
+    // Memoize filter values to prevent unnecessary re-renders
+    const serverFiltersStr = useMemo(() => JSON.stringify(serverFilters), [serverFilters]);
+    const clientFiltersStr = useMemo(() => JSON.stringify(clientFilters), [clientFilters]);
+    const hasClientFilters = useMemo(() =>
+        Object.values(clientFilters).some(v => v !== ''),
+        [clientFiltersStr]
+    );
+
+    const [state, setState] = useState<CarFiltersState>({
+        cars: [],
+        loading: true,
+        loadingMore: false,
+        currentPage: hasClientFilters ? 1 : urlPage,
+        totalPages: 0,
+        totalMatches: 0,
+        searchProgress: 0,
+        currentSearchPage: 0,
+        totalSearchPages: 0,
+        error: null
+    });
+
+    const allMatchesRef = useRef<Car[]>([]);
+    const abortControllerRef = useRef<AbortController | null>(null);
+
+    // Server-only pagination
+    const fetchServerPage = useCallback(async (page: number) => {
+        try {
+            const response = await fetchCars({
+                page,
+                per_page: PER_PAGE,
+                vehicle_type: '1',
+                ...JSON.parse(serverFiltersStr)
+            });
+
+            if (abortControllerRef.current?.signal.aborted) return;
+
+            const cars = response.data || [];
+            const hasNextPage = cars.length === PER_PAGE;
+            const totalFromApi = response.meta?.total || 0;
+
+            setState({
+                cars,
+                loading: false,
+                loadingMore: false,
+                currentPage: page,
+                totalPages: Math.ceil(totalFromApi / PER_PAGE) || (hasNextPage ? page + 1 : page),
+                totalMatches: totalFromApi || cars.length,
+                searchProgress: 100,
+                currentSearchPage: 0,
+                totalSearchPages: 0,
+                error: null
+            });
+        } catch (error) {
+            if (error instanceof Error && error.name === 'AbortError') return;
+            console.error('Error fetching server page:', error);
+            setState(prev => ({
+                ...prev,
+                loading: false,
+                error: 'Failed to load cars'
+            }));
+        }
+    }, [serverFiltersStr]);
+
+    // Optimized filter function
+    const matchesFilters = useCallback((car: Car): boolean => {
+        // Quick reject checks first
+        if (clientFilters.fuel_id && car.fuel?.id.toString() !== clientFilters.fuel_id) return false;
+        if (clientFilters.transmission_id && car.transmission?.id.toString() !== clientFilters.transmission_id) return false;
+        if (clientFilters.color_id && car.color?.id.toString() !== clientFilters.color_id) return false;
+        if (clientFilters.body_type_id && car.body_type?.id.toString() !== clientFilters.body_type_id) return false;
+
+        // Numeric filters
+        if (clientFilters.yearFrom) {
+            const yearFrom = parseInt(clientFilters.yearFrom);
+            if (!isNaN(yearFrom) && car.year < yearFrom) return false;
+        }
+        if (clientFilters.yearTo) {
+            const yearTo = parseInt(clientFilters.yearTo);
+            if (!isNaN(yearTo) && car.year > yearTo) return false;
+        }
+
+        const price = car.lots?.[0]?.buy_now || 0;
+        if (clientFilters.priceFrom) {
+            const priceFrom = parseInt(clientFilters.priceFrom);
+            if (!isNaN(priceFrom) && price < priceFrom) return false;
+        }
+        if (clientFilters.priceTo) {
+            const priceTo = parseInt(clientFilters.priceTo);
+            if (!isNaN(priceTo) && price > priceTo) return false;
+        }
+
+        return true;
+    }, [clientFilters]);
+
+    // Client-side filtering with batching
+    const searchWithClientFilters = useCallback(async () => {
+        try {
+            const firstResponse = await fetchCars({
+                page: 1,
+                per_page: API_PAGE_SIZE,
+                vehicle_type: '1',
+                ...JSON.parse(serverFiltersStr)
+            });
+
+            if (abortControllerRef.current?.signal.aborted) return;
+
+            const totalApiPages = firstResponse.meta?.total
+                ? Math.ceil(firstResponse.meta.total / API_PAGE_SIZE)
+                : 100;
+
+            setState(prev => ({
+                ...prev,
+                totalSearchPages: totalApiPages
+            }));
+
+            let allMatches: Car[] = [];
+
+            // Fetch first 5 pages immediately
+            const initialBatch = [];
+            for (let i = 1; i <= 5; i++) {
+                initialBatch.push(fetchCars({
+                    page: i,
+                    per_page: API_PAGE_SIZE,
+                    vehicle_type: '1',
+                    ...JSON.parse(serverFiltersStr)
+                }));
+            }
+
+            const initialResults = await Promise.all(initialBatch);
+
+            if (abortControllerRef.current?.signal.aborted) return;
+
+            initialResults.forEach(response => {
+                const matches = (response.data || []).filter(matchesFilters);
+                if (matches.length > 0) {
+                    allMatches = [...allMatches, ...matches];
+                }
+            });
+
+            allMatchesRef.current = allMatches;
+
+            setState(prev => ({
+                ...prev,
+                cars: allMatches.slice(0, PER_PAGE),
+                totalMatches: allMatches.length,
+                totalPages: Math.ceil(allMatches.length / PER_PAGE),
+                searchProgress: Math.round((5 / totalApiPages) * 100),
+                currentSearchPage: 5,
+                loading: false
+            }));
+
+            // Fetch remaining in background
+            let pagesFetched = 5;
+            for (let page = 6; page <= totalApiPages; page += BATCH_SIZE) {
+                if (abortControllerRef.current?.signal.aborted) break;
+
+                const batch = [];
+                for (let i = 0; i < BATCH_SIZE && page + i <= totalApiPages; i++) {
+                    batch.push(fetchCars({
+                        page: page + i,
+                        per_page: API_PAGE_SIZE,
+                        vehicle_type: '1',
+                        ...JSON.parse(serverFiltersStr)
+                    }));
+                }
+
+                const batchResults = await Promise.all(batch);
+
+                if (abortControllerRef.current?.signal.aborted) break;
+
+                batchResults.forEach(response => {
+                    const matches = (response.data || []).filter(matchesFilters);
+                    if (matches.length > 0) {
+                        allMatches = [...allMatches, ...matches];
+                        allMatchesRef.current = allMatches;
+                    }
+                });
+
+                pagesFetched += BATCH_SIZE;
+                const lastPage = Math.min(page + BATCH_SIZE - 1, totalApiPages);
+
+                setState(prev => ({
+                    ...prev,
+                    totalMatches: allMatches.length,
+                    totalPages: Math.ceil(allMatches.length / PER_PAGE),
+                    searchProgress: Math.min(100, Math.round((pagesFetched / totalApiPages) * 100)),
+                    currentSearchPage: lastPage
+                }));
+            }
+        } catch (error) {
+            if (error instanceof Error && error.name === 'AbortError') return;
+            console.error('Error in client search:', error);
+            setState(prev => ({
+                ...prev,
+                loading: false,
+                error: 'Search failed'
+            }));
+        }
+    }, [serverFiltersStr, matchesFilters]);
+
+    // Debounced filter change handler
+    const debouncedFilterChange = useCallback(
+        debounce(() => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+            abortControllerRef.current = new AbortController();
+            allMatchesRef.current = [];
+
+            setState(prev => ({
+                ...prev,
+                loading: true,
+                currentPage: hasClientFilters ? 1 : urlPage,
+                searchProgress: 0,
+                error: null
+            }));
+
+            if (!hasClientFilters) {
+                fetchServerPage(urlPage);
+            } else {
+                searchWithClientFilters();
+            }
+        }, 300),
+        [hasClientFilters, urlPage, fetchServerPage, searchWithClientFilters]
+    );
+
+    // Trigger search when filters change
+    useEffect(() => {
+        debouncedFilterChange();
+
+        return () => {
+            debouncedFilterChange.cancel();
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+        };
+    }, [serverFiltersStr, clientFiltersStr, urlPage, debouncedFilterChange]);
+
+    // Optimized page change
+    const goToPage = useCallback((page: number) => {
+        if (!hasClientFilters) {
+            setState(prev => ({ ...prev, loadingMore: true }));
+            const params = new URLSearchParams(searchParams.toString());
+            params.set('page', page.toString());
+            router.push(`/cars?${params.toString()}`);
+        } else {
+            setState(prev => ({ ...prev, loadingMore: true }));
+
+            // Use requestAnimationFrame for smoother UI
+            requestAnimationFrame(() => {
+                const start = (page - 1) * PER_PAGE;
+                const end = start + PER_PAGE;
+                const displayCars = allMatchesRef.current.slice(start, end);
+
+                setState(prev => ({
+                    ...prev,
+                    cars: displayCars,
+                    currentPage: page,
+                    loadingMore: false
+                }));
+            });
+        }
+
+        // Smooth scroll
+        requestAnimationFrame(() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }, [hasClientFilters, router, searchParams]);
+
+    return {
+        cars: state.cars,
+        loading: state.loading,
+        loadingMore: state.loadingMore,
+        currentPage: state.currentPage,
+        totalPages: state.totalPages,
+        totalMatches: state.totalMatches,
+        searchProgress: state.searchProgress,
+        currentSearchPage: state.currentSearchPage,
+        totalSearchPages: state.totalSearchPages,
+        hasClientFilters,
+        error: state.error,
+        goToPage
+    };
+}
+=========================================
+FILE: components/cars/CarCard.tsx
+=========================================
+// components/cars/CarCard.tsx
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Fuel, Gauge, Calendar, Settings } from 'lucide-react';
+import { type Car, formatMileage, getFuelTypeAlbanian, getTransmissionAlbanian } from '@/lib/api';
+import { addToRecentlyViewed } from '@/lib/recentlyViewed';
+import { useConfig } from '@/lib/ConfigContext';
+
+interface CarCardProps {
+    car: Car;
+    priority?: boolean;
+}
+
+export default function CarCard({ car, priority = false }: CarCardProps) {
+    const { formatPrice } = useConfig();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // Safely access nested properties with optional chaining and fallbacks
+    const lot = car.lots?.[0];
+    const price = lot?.buy_now || 0;
+    const mileage = lot?.odometer?.km || 0;
+    const image = lot?.images?.normal?.[0] || lot?.images?.downloaded?.[0] || '';
+
+    // Safely get manufacturer and model names
+    const manufacturerName = car.manufacturer?.name || 'Unknown';
+    const modelName = car.model?.name || 'Unknown';
+    const fuelName = car.fuel?.name || '';
+    const transmissionName = car.transmission?.name || '';
+
+    const handleClick = () => {
+        addToRecentlyViewed({
+            id: car.vin || car.id.toString(),
+            title: car.title || `${manufacturerName} ${modelName}`,
+            image: image,
+            price: price
+        });
+    };
+
+    const carTitle = car.title || `${manufacturerName} ${modelName}`;
+    const detailUrl = car.vin ? `/cars/${car.vin}` : `/cars/${car.id}`;
+
+    return (
+        <Link
+            href={detailUrl}
+            onClick={handleClick}
+            className="group block h-full focus:outline-none focus:ring-2 focus:ring-orange-primary/40 rounded-2xl"
+            aria-label={`Shiko detajet për ${carTitle}`}
+        >
+            <article className="card h-full flex flex-col">
+                {/* Image Container */}
+                <div className="relative aspect-[4/3] overflow-hidden bg-surface-2">
+                    {image ? (
+                        <img
+                            src={image}
+                            alt={carTitle}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            loading={priority ? 'eager' : 'lazy'}
+                            onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                                const fallback = e.currentTarget.parentElement?.querySelector('.fallback');
+                                if (fallback) {
+                                    (fallback as HTMLElement).style.display = 'flex';
+                                }
+                            }}
+                        />
+                    ) : null}
+
+                    {/* Fallback when no image */}
+                    <div
+                        className="fallback absolute inset-0 flex items-center justify-center text-muted text-sm bg-surface-2"
+                        style={{ display: image ? 'none' : 'flex' }}
+                    >
+                        No image
+                    </div>
+
+                    {/* VIN badge for development */}
+                    {/* {process.env.NODE_ENV === 'development' && car.vin && (
+                        <div className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
+                            VIN: {car.vin.slice(0, 8)}...
+                        </div>
+                    )} */}
+                </div>
+
+                {/* Content */}
+                <div className="p-5 flex-1 flex flex-col">
+                    <h3 className="text-base font-medium text-primary mb-3 line-clamp-1 group-hover:text-orange-primary transition-colors">
+                        {carTitle}
+                    </h3>
+
+                    {/* Specs Grid */}
+                    <div className="grid grid-cols-2 gap-y-2 gap-x-3 mb-4">
+                        <div className="flex items-center gap-2">
+                            <Calendar size={14} className="text-muted shrink-0" />
+                            <span className="text-sm text-secondary truncate">{car.year || 'N/A'}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Gauge size={14} className="text-muted shrink-0" />
+                            <span className="text-sm text-secondary truncate">
+                                {mounted ? formatMileage(mileage) : '...'}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Fuel size={14} className="text-muted shrink-0" />
+                            <span className="text-sm text-secondary truncate">{getFuelTypeAlbanian(fuelName)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Settings size={14} className="text-muted shrink-0" />
+                            <span className="text-sm text-secondary truncate">{getTransmissionAlbanian(transmissionName)}</span>
+                        </div>
+                    </div>
+
+                    {/* Price */}
+                    <div className="mt-auto pt-3 border-t border-light">
+                        <div className="flex items-baseline justify-between">
+                            <span className="text-xl font-semibold text-orange-primary">
+                                {formatPrice(price)}
+                            </span>
+                            {car.engine?.name && (
+                                <span className="text-xs text-muted">
+                                    {car.engine.name}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </Link>
+    );
+}
+=========================================
+FILE: components/ui/LoadingSkeleton.tsx
+=========================================
+// components/ui/LoadingSkeleton.tsx
+'use client';
+
+interface SkeletonProps {
+    className?: string;
+}
+
+export const Skeleton = ({ className = '' }: SkeletonProps) => (
+    <div className={`skeleton ${className}`} />
+);
+
+export const CarCardSkeleton = () => (
+    <div className="card p-0">
+        <Skeleton className="aspect-[4/3] rounded-t-xl" />
+        <div className="p-5 space-y-4">
+            <Skeleton className="h-5 rounded w-3/4" />
+            <div className="grid grid-cols-2 gap-2">
+                <Skeleton className="h-4 rounded w-full" />
+                <Skeleton className="h-4 rounded w-full" />
+                <Skeleton className="h-4 rounded w-full" />
+                <Skeleton className="h-4 rounded w-full" />
+            </div>
+            <div className="pt-3 border-t border-light">
+                <Skeleton className="h-8 rounded w-1/2" />
+            </div>
+        </div>
+    </div>
+);
+
+export const GridSkeleton = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+        {[...Array(8)].map((_, i) => (
+            <CarCardSkeleton key={i} />
+        ))}
+    </div>
+);
+
+export const FilterSkeleton = () => (
+    <div className="bg-surface rounded-xl border border-light p-5 space-y-6">
+        <div className="flex items-center justify-between">
+            <Skeleton className="h-5 rounded w-16" />
+            <Skeleton className="h-4 rounded w-12" />
+        </div>
+        <div className="space-y-4">
+            <Skeleton className="h-10 rounded w-full" />
+            <Skeleton className="h-10 rounded w-full" />
+            <Skeleton className="h-10 rounded w-full" />
+        </div>
+    </div>
+);
+
+export const DetailSkeleton = () => (
+    <div className="container-swiss space-y-6 md:space-y-8">
+        {/* Breadcrumb skeleton */}
+        <div className="h-4 bg-surface-2 rounded w-48 md:w-64"></div>
+
+        {/* Title skeleton */}
+        <div className="space-y-2">
+            <Skeleton className="h-8 md:h-10 rounded w-3/4 md:w-2/3" />
+            <Skeleton className="h-4 rounded w-32 md:w-48" />
+        </div>
+
+        {/* Main Grid skeleton */}
+        <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
+            {/* Left Column */}
+            <div className="lg:col-span-2 space-y-6 md:space-y-8">
+                {/* Gallery skeleton */}
+                <Skeleton className="aspect-[16/9] rounded-xl w-full" />
+
+                {/* Quick Stats skeleton - matches actual grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
+                    {[...Array(4)].map((_, i) => (
+                        <div key={i} className="card p-3 md:p-4 space-y-2">
+                            <Skeleton className="h-6 md:h-8 rounded w-3/4 mx-auto" />
+                            <Skeleton className="h-3 rounded w-1/2 mx-auto" />
+                        </div>
+                    ))}
+                </div>
+
+                {/* Key Features skeleton */}
+                <div className="card p-5 md:p-6 space-y-4">
+                    <Skeleton className="h-5 md:h-6 rounded w-36 md:w-48" />
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                        {[...Array(6)].map((_, i) => (
+                            <div key={i} className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-surface-2 rounded-lg">
+                                <Skeleton className="w-5 h-5 md:w-6 md:h-6 rounded-full" />
+                                <div className="space-y-1 flex-1">
+                                    <Skeleton className="h-3 rounded w-12 md:w-16" />
+                                    <Skeleton className="h-4 rounded w-16 md:w-20" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Full Specifications skeleton */}
+                <div className="card p-5 md:p-6 space-y-4">
+                    <Skeleton className="h-5 md:h-6 rounded w-40 md:w-56" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                        {[...Array(8)].map((_, i) => (
+                            <div key={i} className="flex justify-between p-2 md:p-3 bg-surface-2 rounded-lg">
+                                <Skeleton className="h-4 rounded w-16 md:w-20" />
+                                <Skeleton className="h-4 rounded w-12 md:w-16" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Right Column - Contact skeleton */}
+            <div className="lg:col-span-1 space-y-4">
+                {/* Price Card skeleton */}
+                <div className="card p-5 md:p-6 space-y-4">
+                    <Skeleton className="h-8 md:h-10 rounded w-32 md:w-40 mx-auto" />
+                    <Skeleton className="h-3 rounded w-24 md:w-32 mx-auto" />
+                    <div className="space-y-3 pt-2">
+                        <div className="p-3 md:p-4 bg-surface-2 rounded-lg space-y-2">
+                            <Skeleton className="h-4 rounded w-24 md:w-32" />
+                            <Skeleton className="h-4 rounded w-32 md:w-40" />
+                            <Skeleton className="h-4 rounded w-28 md:w-36" />
+                        </div>
+                        <Skeleton className="h-10 md:h-12 rounded w-full" />
+                    </div>
+                </div>
+
+                {/* Cost Estimate skeleton */}
+                <div className="card p-5 md:p-6 space-y-3">
+                    <Skeleton className="h-5 rounded w-32 md:w-40" />
+                    <div className="space-y-2">
+                        {[...Array(3)].map((_, i) => (
+                            <div key={i} className="flex justify-between">
+                                <Skeleton className="h-4 rounded w-16 md:w-20" />
+                                <Skeleton className="h-4 rounded w-12 md:w-16" />
+                            </div>
+                        ))}
+                        <div className="border-t border-light my-2 pt-2">
+                            <div className="flex justify-between">
+                                <Skeleton className="h-5 rounded w-12 md:w-16" />
+                                <Skeleton className="h-5 rounded w-16 md:w-20" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* VIN skeleton */}
+                <Skeleton className="h-12 rounded-lg" />
+            </div>
+        </div>
+
+        {/* Back Link skeleton */}
+        <div className="mt-8 md:mt-12 text-center">
+            <Skeleton className="h-8 md:h-10 w-32 md:w-40 rounded-lg mx-auto" />
+        </div>
+    </div>
+);
+
+export default Skeleton;
+=========================================
+FILE: components/filters/AdvancedFilterSidebar.tsx
+=========================================
+// components/filters/AdvancedFilterSidebar.tsx
+'use client';
+
+import { useState, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import {
+    Fuel,
+    Settings,
+    X,
+    ChevronDown,
+    ChevronUp,
+    Palette,
+    Car as CarIcon,
+    Calendar,
+    DollarSign,
+    Info,
+    Filter
+} from 'lucide-react';
+
+interface AdvancedFilterSidebarProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilterSidebarProps) {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const [expandedSections, setExpandedSections] = useState({
+        fuel: true,
+        transmission: true,
+        color: false,
+        bodyType: false,
+        year: false,
+        price: false
+    });
+
+    // Get current filter values from URL
+    const selectedFilters = useMemo(() => ({
+        fuel: searchParams.get('fuel_id') || '',
+        transmission: searchParams.get('transmission_id') || '',
+        color: searchParams.get('color_id') || '',
+        bodyType: searchParams.get('body_type_id') || '',
+        yearFrom: searchParams.get('filter_year_from') || '',
+        yearTo: searchParams.get('filter_year_to') || '',
+        priceFrom: searchParams.get('filter_price_from') || '',
+        priceTo: searchParams.get('filter_price_to') || '',
+    }), [searchParams]);
+
+    const activeFilterCount = Object.values(selectedFilters).filter(Boolean).length;
+
+    // Check if basic filters are selected (API-supported filters)
+    const hasBasicFilters = !!(
+        searchParams.get('manufacturer_id') ||
+        searchParams.get('model_id') ||
+        searchParams.get('from_year') ||
+        searchParams.get('to_year') ||
+        searchParams.get('buy_now_price_from') ||
+        searchParams.get('buy_now_price_to')
+    );
+
+    // Pre-defined options
+    const fuelOptions = [
+        { id: '1', name: 'diesel', label: 'Naftë' },
+        { id: '2', name: 'electric', label: 'Elektrik' },
+        { id: '3', name: 'hybrid', label: 'Hibrid' },
+        { id: '4', name: 'gasoline', label: 'Benzinë' },
+    ];
+
+    const transmissionOptions = [
+        { id: '1', name: 'automatic', label: 'Automatik' },
+        { id: '2', name: 'manual', label: 'Manuel' },
+    ];
+
+    const colorOptions = [
+        { id: '1', name: 'silver', label: 'Argjend' },
+        { id: '2', name: 'purple', label: 'Vjollcë' },
+        { id: '3', name: 'orange', label: 'Portokalli' },
+        { id: '4', name: 'green', label: 'Gjelbër' },
+        { id: '5', name: 'red', label: 'Kuq' },
+        { id: '6', name: 'gold', label: 'Arë' },
+        { id: '8', name: 'brown', label: 'Kafe' },
+        { id: '9', name: 'grey', label: 'Gri' },
+        { id: '11', name: 'blue', label: 'Kaltër' },
+        { id: '13', name: 'white', label: 'Bardhë' },
+        { id: '15', name: 'black', label: 'Zi' },
+        { id: '16', name: 'yellow', label: 'Verdhë' },
+    ];
+
+    const bodyTypeOptions = [
+        { id: '1', name: 'sedan', label: 'Sedan' },
+        { id: '2', name: 'wagon', label: 'Kombi' },
+        { id: '3', name: 'coupe', label: 'Kupe' },
+        { id: '5', name: 'suv', label: 'SUV' },
+        { id: '7', name: 'van', label: 'Furgon' },
+        { id: '11', name: 'hatchback', label: 'Hatchback' },
+        { id: '27', name: 'sport_car', label: 'Makinë Sportive' },
+    ];
+
+    // Generate year options (last 30 years)
+    const currentYear = new Date().getFullYear();
+    const yearOptions = Array.from({ length: 30 }, (_, i) => currentYear - i);
+
+    const updateFilter = (key: string, value: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+
+        if (value) {
+            params.set(key, value);
+        } else {
+            params.delete(key);
+        }
+
+        // Reset to page 1 when filters change
+        params.set('page', '1');
+
+        router.push(`/cars?${params.toString()}`);
+        onClose();
+    };
+
+    const clearFilters = () => {
+        const params = new URLSearchParams(searchParams.toString());
+        ['fuel_id', 'transmission_id', 'color_id', 'body_type_id', 'filter_year_from', 'filter_year_to', 'filter_price_from', 'filter_price_to'].forEach(key => {
+            params.delete(key);
+        });
+        params.set('page', '1');
+        router.push(`/cars?${params.toString()}`);
+        onClose();
+    };
+
+    const toggleSection = (section: keyof typeof expandedSections) => {
+        setExpandedSections(prev => ({
+            ...prev,
+            [section]: !prev[section]
+        }));
+    };
+
+    // For desktop, always show the sidebar content
+    // For mobile, only show when isOpen is true
+    const showSidebar = typeof window !== 'undefined' && window.innerWidth >= 1024 ? true : isOpen;
+
+    if (!showSidebar) return null;
+
+    return (
+        <>
+            {/* Mobile Overlay - only show on mobile when open */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 lg:hidden"
+                    onClick={onClose}
+                />
+            )}
+
+            {/* Sidebar */}
+            <div className={`
+                fixed top-0 bottom-0 left-0 w-full sm:w-80 bg-surface border-r border-light/20 
+                overflow-y-auto z-50 transition-transform duration-300 shadow-2xl
+                lg:translate-x-0 lg:sticky lg:top-24 lg:h-[calc(100vh-96px)] lg:z-10
+                ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+            `}>
+                {/* Header */}
+                <div className="sticky top-0 bg-surface border-b border-light/20 p-4 flex items-center justify-between z-10">
+                    <div className="flex items-center gap-2">
+                        <Filter size={18} className="text-orange-primary" />
+                        <h2 className="font-semibold text-primary">Filtro</h2>
+                        {activeFilterCount > 0 && (
+                            <span className="ml-2 px-2 py-0.5 text-xs bg-orange-500 text-white rounded-full">
+                                {activeFilterCount}
+                            </span>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {activeFilterCount > 0 && (
+                            <button
+                                onClick={clearFilters}
+                                className="text-xs text-orange-primary hover:text-orange-600 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-surface-2"
+                            >
+                                <X size={14} />
+                                <span>Pastro</span>
+                            </button>
+                        )}
+                        <button
+                            onClick={onClose}
+                            className="lg:hidden p-2 hover:bg-surface-2 rounded-lg"
+                        >
+                            <X size={18} />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-4 space-y-3">
+                    {/* Basic Filters Notice */}
+                    {!hasBasicFilters && (
+                        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-2">
+                            <div className="flex items-start gap-2">
+                                <Info size={16} className="text-orange-500 shrink-0 mt-0.5" />
+                                <p className="text-xs text-orange-700">
+                                    Zgjidh fillimisht prodhuesin, modelin ose vitin për të aktivizuar filtrat e tjerë.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Fuel Type */}
+                    <div className="border border-light/20 rounded-lg overflow-hidden">
+                        <button
+                            onClick={() => toggleSection('fuel')}
+                            className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
+                        >
+                            <div className="flex items-center gap-2">
+                                <Fuel size={16} className="text-orange-primary" />
+                                <span className="font-medium text-sm text-primary">Karburanti</span>
+                            </div>
+                            {expandedSections.fuel ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </button>
+
+                        {expandedSections.fuel && (
+                            <div className="p-3 space-y-1 bg-surface">
+                                <button
+                                    onClick={() => updateFilter('fuel_id', '')}
+                                    disabled={!hasBasicFilters}
+                                    className={`
+                                        w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
+                                        ${!selectedFilters.fuel ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
+                                        ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                                    `}
+                                >
+                                    <span className={!selectedFilters.fuel ? 'font-medium' : ''}>Të gjitha</span>
+                                    {!selectedFilters.fuel && (
+                                        <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
+                                    )}
+                                </button>
+                                {fuelOptions.map(fuel => (
+                                    <button
+                                        key={fuel.id}
+                                        onClick={() => updateFilter('fuel_id', fuel.id)}
+                                        disabled={!hasBasicFilters}
+                                        className={`
+                                            w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
+                                            ${selectedFilters.fuel === fuel.id ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
+                                            ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                                        `}
+                                    >
+                                        <span className={selectedFilters.fuel === fuel.id ? 'font-medium' : ''}>{fuel.label}</span>
+                                        {selectedFilters.fuel === fuel.id && (
+                                            <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Transmission */}
+                    <div className="border border-light/20 rounded-lg overflow-hidden">
+                        <button
+                            onClick={() => toggleSection('transmission')}
+                            className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
+                        >
+                            <div className="flex items-center gap-2">
+                                <Settings size={16} className="text-orange-primary" />
+                                <span className="font-medium text-sm text-primary">Transmisioni</span>
+                            </div>
+                            {expandedSections.transmission ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </button>
+
+                        {expandedSections.transmission && (
+                            <div className="p-3 space-y-1 bg-surface">
+                                <button
+                                    onClick={() => updateFilter('transmission_id', '')}
+                                    disabled={!hasBasicFilters}
+                                    className={`
+                                        w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
+                                        ${!selectedFilters.transmission ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
+                                        ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                                    `}
+                                >
+                                    <span className={!selectedFilters.transmission ? 'font-medium' : ''}>Të gjitha</span>
+                                    {!selectedFilters.transmission && (
+                                        <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
+                                    )}
+                                </button>
+                                {transmissionOptions.map(trans => (
+                                    <button
+                                        key={trans.id}
+                                        onClick={() => updateFilter('transmission_id', trans.id)}
+                                        disabled={!hasBasicFilters}
+                                        className={`
+                                            w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
+                                            ${selectedFilters.transmission === trans.id ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
+                                            ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                                        `}
+                                    >
+                                        <span className={selectedFilters.transmission === trans.id ? 'font-medium' : ''}>{trans.label}</span>
+                                        {selectedFilters.transmission === trans.id && (
+                                            <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Color */}
+                    <div className="border border-light/20 rounded-lg overflow-hidden">
+                        <button
+                            onClick={() => toggleSection('color')}
+                            className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
+                        >
+                            <div className="flex items-center gap-2">
+                                <Palette size={16} className="text-orange-primary" />
+                                <span className="font-medium text-sm text-primary">Ngjyra</span>
+                            </div>
+                            {expandedSections.color ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </button>
+
+                        {expandedSections.color && (
+                            <div className="p-3 space-y-1 max-h-48 overflow-y-auto bg-surface">
+                                <button
+                                    onClick={() => updateFilter('color_id', '')}
+                                    disabled={!hasBasicFilters}
+                                    className={`
+                                        w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
+                                        ${!selectedFilters.color ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
+                                        ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                                    `}
+                                >
+                                    <span className={!selectedFilters.color ? 'font-medium' : ''}>Të gjitha</span>
+                                    {!selectedFilters.color && (
+                                        <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
+                                    )}
+                                </button>
+                                {colorOptions.map(color => (
+                                    <button
+                                        key={color.id}
+                                        onClick={() => updateFilter('color_id', color.id)}
+                                        disabled={!hasBasicFilters}
+                                        className={`
+                                            w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
+                                            ${selectedFilters.color === color.id ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
+                                            ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                                        `}
+                                    >
+                                        <span className={selectedFilters.color === color.id ? 'font-medium' : ''}>{color.label}</span>
+                                        {selectedFilters.color === color.id && (
+                                            <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Body Type */}
+                    <div className="border border-light/20 rounded-lg overflow-hidden">
+                        <button
+                            onClick={() => toggleSection('bodyType')}
+                            className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
+                        >
+                            <div className="flex items-center gap-2">
+                                <CarIcon size={16} className="text-orange-primary" />
+                                <span className="font-medium text-sm text-primary">Tipi</span>
+                            </div>
+                            {expandedSections.bodyType ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </button>
+
+                        {expandedSections.bodyType && (
+                            <div className="p-3 space-y-1 bg-surface">
+                                <button
+                                    onClick={() => updateFilter('body_type_id', '')}
+                                    disabled={!hasBasicFilters}
+                                    className={`
+                                        w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
+                                        ${!selectedFilters.bodyType ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
+                                        ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                                    `}
+                                >
+                                    <span className={!selectedFilters.bodyType ? 'font-medium' : ''}>Të gjitha</span>
+                                    {!selectedFilters.bodyType && (
+                                        <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
+                                    )}
+                                </button>
+                                {bodyTypeOptions.map(body => (
+                                    <button
+                                        key={body.id}
+                                        onClick={() => updateFilter('body_type_id', body.id)}
+                                        disabled={!hasBasicFilters}
+                                        className={`
+                                            w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
+                                            ${selectedFilters.bodyType === body.id ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
+                                            ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                                        `}
+                                    >
+                                        <span className={selectedFilters.bodyType === body.id ? 'font-medium' : ''}>{body.label}</span>
+                                        {selectedFilters.bodyType === body.id && (
+                                            <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Year Range */}
+                    <div className="border border-light/20 rounded-lg overflow-hidden">
+                        <button
+                            onClick={() => toggleSection('year')}
+                            className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
+                        >
+                            <div className="flex items-center gap-2">
+                                <Calendar size={16} className="text-orange-primary" />
+                                <span className="font-medium text-sm text-primary">Viti</span>
+                            </div>
+                            {expandedSections.year ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </button>
+
+                        {expandedSections.year && (
+                            <div className="p-3 space-y-3 bg-surface">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <select
+                                        value={selectedFilters.yearFrom}
+                                        onChange={(e) => updateFilter('filter_year_from', e.target.value)}
+                                        className="select text-sm w-full"
+                                    >
+                                        <option value="">Nga viti</option>
+                                        {yearOptions.map(year => (
+                                            <option key={year} value={year}>
+                                                {year}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <select
+                                        value={selectedFilters.yearTo}
+                                        onChange={(e) => updateFilter('filter_year_to', e.target.value)}
+                                        className="select text-sm w-full"
+                                    >
+                                        <option value="">Deri viti</option>
+                                        {yearOptions.map(year => (
+                                            <option key={year} value={year}>
+                                                {year}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Price Range */}
+                    <div className="border border-light/20 rounded-lg overflow-hidden">
+                        <button
+                            onClick={() => toggleSection('price')}
+                            className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
+                        >
+                            <div className="flex items-center gap-2">
+                                <DollarSign size={16} className="text-orange-primary" />
+                                <span className="font-medium text-sm text-primary">Çmimi</span>
+                            </div>
+                            {expandedSections.price ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </button>
+
+                        {expandedSections.price && (
+                            <div className="p-3 space-y-3 bg-surface">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <input
+                                        type="number"
+                                        placeholder="Min €"
+                                        value={selectedFilters.priceFrom}
+                                        onChange={(e) => updateFilter('filter_price_from', e.target.value)}
+                                        className="input text-sm w-full"
+                                        min="0"
+                                        step="1000"
+                                    />
+                                    <input
+                                        type="number"
+                                        placeholder="Max €"
+                                        value={selectedFilters.priceTo}
+                                        onChange={(e) => updateFilter('filter_price_to', e.target.value)}
+                                        className="input text-sm w-full"
+                                        min="0"
+                                        step="1000"
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Active Filters Summary */}
+                    {activeFilterCount > 0 && (
+                        <div className="bg-orange-5 border border-orange-20 rounded-lg p-3 mt-4">
+                            <p className="text-xs text-orange-primary font-medium mb-2">
+                                Filtrat aktivë:
+                            </p>
+                            <div className="flex flex-wrap gap-1">
+                                {selectedFilters.fuel && (
+                                    <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
+                                        Karburanti: {fuelOptions.find(f => f.id === selectedFilters.fuel)?.label}
+                                    </span>
+                                )}
+                                {selectedFilters.transmission && (
+                                    <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
+                                        Transmisioni: {transmissionOptions.find(t => t.id === selectedFilters.transmission)?.label}
+                                    </span>
+                                )}
+                                {selectedFilters.color && (
+                                    <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
+                                        Ngjyra: {colorOptions.find(c => c.id === selectedFilters.color)?.label}
+                                    </span>
+                                )}
+                                {selectedFilters.bodyType && (
+                                    <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
+                                        Tipi: {bodyTypeOptions.find(b => b.id === selectedFilters.bodyType)?.label}
+                                    </span>
+                                )}
+                                {selectedFilters.yearFrom && (
+                                    <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
+                                        Nga viti: {selectedFilters.yearFrom}
+                                    </span>
+                                )}
+                                {selectedFilters.yearTo && (
+                                    <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
+                                        Deri viti: {selectedFilters.yearTo}
+                                    </span>
+                                )}
+                                {selectedFilters.priceFrom && (
+                                    <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
+                                        Min: €{parseInt(selectedFilters.priceFrom).toLocaleString()}
+                                    </span>
+                                )}
+                                {selectedFilters.priceTo && (
+                                    <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
+                                        Max: €{parseInt(selectedFilters.priceTo).toLocaleString()}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </>
+    );
+}
+=========================================
+FILE: lib/api.ts
+=========================================
+// lib/api.ts
+export interface Car {
+  id: number;
+  year: number;
+  title: string;
+  vin: string;
+  manufacturer: {
+    id: number;
+    name: string;
+  };
+  model: {
+    id: number;
+    name: string;
+    manufacturer_id: number;
+  };
+  generation?: {
+    id: number;
+    name: string;
+  };
+  body_type?: {
+    name: string;
+    id: number;
+  };
+  color: {
+    name: string;
+    id: number;
+  };
+  engine?: {
+    id: number;
+    name: string;
+  };
+  transmission: {
+    name: string;
+    id: number;
+  };
+  drive_wheel?: {
+    name: string;
+    id: number;
+  };
+  vehicle_type: {
+    name: string;
+    id: number;
+  };
+  fuel: {
+    name: string;
+    id: number;
+  };
+  cylinders: number | null;
+  lots: Lot[];
+  hp?: number;
+}
+
+export interface Accident {
+  date: string;
+  insuranceBenefit: number;
+  laborCost: number;
+  paintingCost: number;
+  partCost: number;
+  type: string;
+}
+
+export interface InsuranceV2 {
+  accidentCnt: number;
+  accidents: Accident[];
+  myAccidentCnt: number;
+  myAccidentCost: number;
+  otherAccidentCnt: number;
+  otherAccidentCost: number;
+  totalLossCnt: number;
+  floodTotalLossCnt: number;
+  robberCnt: number;
+  ownerChangeCnt: number;
+}
+
+export interface HistoryContent {
+  title: string;
+  sub?: string;
+  flag?: string;
+  Date_of_change?: string;
+  Driving_distance_when_changing?: string;
+  Transaction_type?: string;
+  mileage?: string;
+  maintenance_company?: string;
+  total_repair_cost?: string;
+  Defect_details?: string;
+  Correction_method?: string;
+  Recall_Post_Date?: string;
+  target_device?: string;
+  Correction_period?: string;
+  Contact_us?: string;
+}
+
+export interface HistoryItem {
+  content: HistoryContent[];
+  date: string;
+}
+
+export interface InspectItem {
+  attributes: string[];
+  statusTypes: Array<{
+    code: string;
+    title: string;
+  }>;
+  type: {
+    code: string;
+    title: string;
+  };
+}
+
+export interface FirstRegistration {
+  year: number;
+  month: number;
+  day: number;
+}
+
+export interface Options {
+  choice: string[];
+  etc: string[];
+  standard: string[];
+  tuning: string[];
+  type: string;
+}
+
+export interface CarDetails {
+  engine_volume?: number;
+  badge?: string;
+  description_ko?: string;
+  description_en?: string;
+  seats_count?: number;
+  insurance_v2?: InsuranceV2;
+  history?: HistoryItem[];
+  inspect_outer?: InspectItem[];
+  first_registration?: FirstRegistration;
+  options?: Options;
+  original_price?: number;
+  sell_type?: string;
+  is_leasing?: boolean;
+  month?: number;
+}
+
+export interface Lot {
+  id: number;
+  lot: string;
+  domain: {
+    name: string;
+    id: number;
+  };
+  odometer: {
+    km: number;
+    mi: number;
+    status: {
+      name: string;
+      id: number;
+    };
+  };
+  buy_now: number | null;
+  bid: number | null;
+  status: {
+    name: string;
+    id: number;
+  };
+  images: {
+    id: number;
+    normal: string[];
+    big: string[];
+    downloaded?: string[];
+  };
+  location: {
+    country: {
+      iso: string;
+      name: string;
+    };
+    city?: {
+      id: number;
+      name: string;
+    };
+  };
+  details?: CarDetails;
+  condition?: {
+    name: string;
+    id: number;
+  };
+  keys_available?: boolean;
+  airbags?: boolean | null;
+}
+
+export interface FetchCarsResponse {
+  data: Car[];
+  links: {
+    first: string;
+    last: string | null;
+    prev: string | null;
+    next: string | null;
+  };
+  meta: {
+    current_page: number;
+    from: number;
+    path: string;
+    per_page: number;
+    to: number;
+    total: number;
+  };
+}
+
+export interface Manufacturer {
+  id: number;
+  name: string;
+  cars_qty?: number;
+  image?: string;
+  models_qty?: number;
+  cars?: boolean;
+  motorcycles?: boolean;
+}
+
+export interface Model {
+  id: number;
+  name: string;
+  manufacturer_id: number;
+  cars_qty?: number;
+  generations_qty?: number;
+}
+
+export interface Generation {
+  id: number;
+  name: string;
+  model_id: number;
+  manufacturer_id: number;
+  cars_qty?: number;
+}
+
+// lib/api.ts - Ensure FilterData interface has all needed arrays
+export interface FilterData {
+  manufacturers: Manufacturer[];
+  models: Model[];
+  generations: Generation[];
+  fuelTypes: Array<{ id: number; name: string }>;
+  transmissions: Array<{ id: number; name: string }>;
+  years: number[];
+  bodyTypes: Array<{ id: number; name: string }>;
+  colors: Array<{ id: number; name: string }>;
+  // Add these if they exist in the statistics endpoint
+  fuelStats?: Array<{ id: number; name: string; count: number }>;
+  transmissionStats?: Array<{ id: number; name: string; count: number }>;
+}
+
+// API Base URL - using NEXT_PUBLIC_ for client-side access
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+// Helper to construct full URLs for server-side requests
+const getFullUrl = (path: string): string => {
+  if (typeof window !== 'undefined') {
+    return path;
+  }
+
+  if (process.env.NODE_ENV === 'development') {
+    return `http://localhost:3000${path}`;
+  }
+
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : process.env.NEXTAUTH_URL || 'https://vetura-nga-korea.vercel.app';
+
+  return `${baseUrl}${path}`;
+};
+
+// Fetch with timeout - increased to 30 seconds for slow API
+const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout = 30000) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        throw new Error(`Kërkesa zgjati shumë (${timeout / 1000} sekonda). Provo përsëri.`);
+      }
+    }
+
+    throw error;
+  }
+};
+
+// List of filters that the API actually supports
+const API_SUPPORTED_FILTERS = [
+  'manufacturer_id',
+  'model_id',
+  'from_year',
+  'to_year',
+  'buy_now_price_from',
+  'buy_now_price_to',
+  'odometer_from_km',
+  'odometer_to_km',
+  'page',
+  'per_page',
+  'vehicle_type'
+];
+
+// In lib/api.ts, update the fetchCars function:
+
+export async function fetchCars(params: Record<string, any> = {}) {
+  try {
+    const queryParams: Record<string, string> = {};
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams[key] = value.toString();
+      }
+    });
+
+    if (!queryParams.per_page) queryParams.per_page = '12';
+    if (!queryParams.vehicle_type) queryParams.vehicle_type = '1';
+
+    const queryString = new URLSearchParams(queryParams).toString();
+    const path = `/api/proxy/cars${queryString ? `?${queryString}` : ''}`;
+    const url = getFullUrl(path);
+
+    console.log('📡 Fetching cars with params:', queryParams);
+
+    const response = await fetchWithTimeout(url, {
+      ...(typeof window !== 'undefined'
+        ? { next: { revalidate: 60 } }
+        : { cache: 'no-store' })
+    }, 30000);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // IMPORTANT: Ensure meta.total is preserved
+    if (data.meta && typeof data.meta.total === 'undefined') {
+      console.warn('⚠️ API response missing meta.total');
+    }
+
+    console.log('✅ API Response processed:', {
+      dataLength: data.data?.length,
+      total: data.meta?.total,
+      current_page: data.meta?.current_page
+    });
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching cars:', error);
+    return {
+      data: [],
+      meta: {
+        current_page: Number(params.page) || 1,
+        per_page: Number(params.per_page) || 12,
+        total: 0
+      }
+    };
+  }
+}
+
+/**
+ * Fetch car by VIN - Uses dedicated endpoint
+ */
+export async function fetchCarByVin(vin: string): Promise<Car | null> {
+  try {
+    if (!vin || vin.length < 10) {
+      console.error('Invalid VIN provided:', vin);
+      return null;
+    }
+
+    const path = `/api/proxy/vin/${encodeURIComponent(vin)}`;
+    const url = getFullUrl(path);
+
+    console.log('📡 Fetching car by VIN from proxy:', url);
+
+    const response = await fetchWithTimeout(url, {
+      ...(typeof window !== 'undefined'
+        ? { next: { revalidate: 3600 } } // Cache for 1 hour
+        : { cache: 'no-store' })
+    }, 10000);
+
+    if (response.status === 200) {
+      const data = await response.json();
+      return data;
+    }
+
+    if (response.status === 404) {
+      console.log('❌ Car not found for VIN:', vin);
+      return null;
+    }
+
+    throw new Error(`HTTP error! status: ${response.status}`);
+  } catch (error) {
+    console.error('Error fetching car by VIN:', error);
+    return null;
+  }
+}
+
+/**
+ * Helper to extract VIN from URL parameter
+ */
+export function extractVinFromParam(param: string): string {
+  // VINs are 17 characters, alphanumeric (excluding I, O, Q)
+  const vinRegex = /^[A-HJ-NPR-Z0-9]{17}$/i;
+
+  if (vinRegex.test(param)) {
+    return param;
+  }
+
+  if (/^\d+$/.test(param)) {
+    console.warn('⚠️ Using numeric ID - this will not work. VIN required.');
+  }
+
+  return param;
+}
+
+export async function fetchManufacturers(type: string = 'cars'): Promise<Manufacturer[]> {
+  try {
+    const path = `/api/proxy/manufacturers/${type}`;
+    const url = getFullUrl(path);
+
+    console.log('📡 Fetching manufacturers from proxy:', url);
+
+    const response = await fetchWithTimeout(url, {
+      ...(typeof window !== 'undefined'
+        ? { next: { revalidate: 3600 } }
+        : { cache: 'no-store' })
+    }, 10000);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.data || data || [];
+  } catch (error) {
+    console.error('Error fetching manufacturers:', error);
+    return [];
+  }
+}
+
+export async function fetchModels(manufacturerId: number, type: string = 'cars'): Promise<Model[]> {
+  try {
+    const path = `/api/proxy/models/${manufacturerId}/${type}`;
+    const url = getFullUrl(path);
+
+    console.log('📡 Fetching models from proxy:', url);
+
+    const response = await fetchWithTimeout(url, {
+      ...(typeof window !== 'undefined'
+        ? { next: { revalidate: 3600 } }
+        : { cache: 'no-store' })
+    }, 10000);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.data || data || [];
+  } catch (error) {
+    console.error('Error fetching models:', error);
+    return [];
+  }
+}
+
+export async function fetchGenerations(modelId: number, type: string = 'cars'): Promise<Generation[]> {
+  try {
+    const path = `/api/proxy/generations/${modelId}/${type}`;
+    const url = getFullUrl(path);
+
+    console.log('📡 Fetching generations from proxy:', url);
+
+    const response = await fetchWithTimeout(url, {
+      ...(typeof window !== 'undefined'
+        ? { next: { revalidate: 3600 } }
+        : { cache: 'no-store' })
+    }, 10000);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.data || data || [];
+  } catch (error) {
+    console.error('Error fetching generations:', error);
+    return [];
+  }
+}
+
+export async function fetchFilterData(): Promise<FilterData> {
+  const defaultManufacturers: Manufacturer[] = [
+    { id: 16, name: 'BMW', cars_qty: 12375 },
+    { id: 147, name: 'Volkswagen', cars_qty: 1951 },
+    { id: 58, name: 'Hyundai', cars_qty: 45514 },
+    { id: 70, name: 'Kia', cars_qty: 41009 },
+    { id: 232, name: 'Genesis', cars_qty: 9310 },
+    { id: 26, name: 'Chevrolet', cars_qty: 7168 },
+    { id: 123, name: 'Renault Samsung', cars_qty: 5514 },
+    { id: 131, name: 'SsangYong', cars_qty: 6995 },
+    { id: 9, name: 'Audi', cars_qty: 0 },
+    { id: 3, name: 'Mercedes-Benz', cars_qty: 0 },
+    { id: 5, name: 'Toyota', cars_qty: 584 },
+    { id: 56, name: 'Honda', cars_qty: 437 },
+    { id: 48, name: 'Ford', cars_qty: 1203 },
+  ];
+
+  try {
+    const manufacturers = await fetchManufacturers('cars');
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: currentYear - 1989 }, (_, i) => currentYear - i);
+
+    return {
+      manufacturers: manufacturers.length > 0 ? manufacturers : defaultManufacturers,
+      models: [],
+      generations: [],
+      fuelTypes: [
+        { id: 1, name: 'diesel' },
+        { id: 2, name: 'electric' },
+        { id: 3, name: 'hybrid' },
+        { id: 4, name: 'gasoline' }
+      ],
+      transmissions: [
+        { id: 1, name: 'automatic' },
+        { id: 2, name: 'manual' }
+      ],
+      years,
+      bodyTypes: [
+        { id: 1, name: 'sedan' },
+        { id: 2, name: 'wagon' },
+        { id: 3, name: 'coupe' },
+        { id: 5, name: 'suv' },
+        { id: 7, name: 'van' },
+        { id: 11, name: 'hatchback' }
+      ],
+      colors: [
+        { id: 1, name: 'silver' },
+        { id: 2, name: 'purple' },
+        { id: 3, name: 'orange' },
+        { id: 4, name: 'green' },
+        { id: 5, name: 'red' },
+        { id: 6, name: 'gold' },
+        { id: 8, name: 'brown' },
+        { id: 9, name: 'grey' },
+        { id: 11, name: 'blue' },
+        { id: 13, name: 'white' },
+        { id: 15, name: 'black' },
+        { id: 16, name: 'yellow' }
+      ]
+    };
+  } catch (error) {
+    console.error('Error in fetchFilterData:', error);
+
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: currentYear - 1989 }, (_, i) => currentYear - i);
+
+    return {
+      manufacturers: defaultManufacturers,
+      models: [],
+      generations: [],
+      fuelTypes: [
+        { id: 1, name: 'diesel' },
+        { id: 2, name: 'electric' },
+        { id: 3, name: 'hybrid' },
+        { id: 4, name: 'gasoline' }
+      ],
+      transmissions: [
+        { id: 1, name: 'automatic' },
+        { id: 2, name: 'manual' }
+      ],
+      years,
+      bodyTypes: [
+        { id: 1, name: 'sedan' },
+        { id: 2, name: 'wagon' },
+        { id: 3, name: 'coupe' },
+        { id: 5, name: 'suv' },
+        { id: 7, name: 'van' },
+        { id: 11, name: 'hatchback' }
+      ],
+      colors: [
+        { id: 1, name: 'silver' },
+        { id: 2, name: 'purple' },
+        { id: 3, name: 'orange' },
+        { id: 4, name: 'green' },
+        { id: 5, name: 'red' },
+        { id: 6, name: 'gold' },
+        { id: 8, name: 'brown' },
+        { id: 9, name: 'grey' },
+        { id: 11, name: 'blue' },
+        { id: 13, name: 'white' },
+        { id: 15, name: 'black' },
+        { id: 16, name: 'yellow' }
+      ]
+    };
+  }
+}
+
+// Helper function to format mileage
+export function formatMileage(mileage: number): string {
+  if (!mileage && mileage !== 0) return 'N/A';
+  const formatted = mileage.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  return `${formatted} km`;
+}
+
+// Helper function to get fuel type in Albanian
+export function getFuelTypeAlbanian(fuelType: string): string {
+  const fuelMap: Record<string, string> = {
+    'diesel': 'Naftë',
+    'gasoline': 'Benzinë',
+    'petrol': 'Benzinë',
+    'electric': 'Elektrik',
+    'hybrid': 'Hibrid',
+    'gas': 'LPG'
+  };
+  return fuelMap[fuelType.toLowerCase()] || fuelType;
+}
+
+// Helper function to get transmission in Albanian
+export function getTransmissionAlbanian(transmission: string): string {
+  const transMap: Record<string, string> = {
+    'automatic': 'Automatik',
+    'manual': 'Manuel'
+  };
+  return transMap[transmission.toLowerCase()] || transmission;
+}
+
+// Helper function to get color in Albanian
+export function getColorAlbanian(color: string): string {
+  const colorMap: Record<string, string> = {
+    'black': 'Zi',
+    'white': 'Bardhë',
+    'silver': 'Argjend',
+    'grey': 'Gri',
+    'gray': 'Gri',
+    'blue': 'Kaltër',
+    'red': 'Kuq',
+    'green': 'Gjelbër',
+    'brown': 'Kafe',
+    'beige': 'Bezhë',
+    'yellow': 'Verdhë',
+    'orange': 'Portokalli',
+    'purple': 'Vjollcë',
+    'gold': 'Arë'
+  };
+  return colorMap[color.toLowerCase()] || color;
+}
+
+// Helper function to get body type in Albanian
+export function getBodyTypeAlbanian(bodyType: string): string {
+  const bodyMap: Record<string, string> = {
+    'sedan': 'Sedan',
+    'suv': 'SUV',
+    'coupe': 'Kupe',
+    'hatchback': 'Hatchback',
+    'wagon': 'Kombi',
+    'van': 'Furgon',
+    'pickup': 'Pickup',
+    'cabrio': 'Kabriolet',
+    'sport_car': 'Makinë Sportive'
+  };
+  return bodyMap[bodyType.toLowerCase()] || bodyType;
+}
+=========================================
+FILE: hooks/useDebounce.ts
+=========================================
+// hooks/useDebounce.ts
+import { useState, useEffect } from 'react';
+
+export function useDebounce<T>(value: T, delay: number): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [value, delay]);
+
+    return debouncedValue;
+}
+=========================================
+FILE: components/ui/CompactSearch.tsx
+=========================================
+// components/ui/CompactSearch.tsx
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import SearchParamsWrapper from '@/components/SearchParamsWrapper';
+import {
+    Search,
+    Car,
+    Calendar,
+    DollarSign,
+    X
+} from 'lucide-react';
+import { fetchFilterData, fetchModels } from '@/lib/api';
+import { getTranslatedManufacturers } from '@/lib/translations';
+import CustomSelect from './CustomSelect';
+import { filterManufacturers } from '@/lib/staticManufacturers';
+
+interface CompactSearchProps {
+    variant?: 'header' | 'hero';
+    onSearch?: () => void;
+}
+
+interface SearchFilters {
+    manufacturerId: string;
+    modelId: string;
+    fromYear: string;
+    toYear: string;
+    priceTo: string;
+}
+
+// Inner component that uses searchParams
+function CompactSearchContent({ searchParams, variant, onSearch }: any) {
+    const router = useRouter();
+    const [loading, setLoading] = useState({
+        manufacturers: false,
+        models: false
+    });
+    const [filterData, setFilterData] = useState({
+        manufacturers: [] as Array<{ id: number; original: string; translated: string }>,
+        models: [] as Array<{ id: number; name: string; manufacturer_id: number }>,
+        years: [] as number[]
+    });
+
+    const [filters, setFilters] = useState<SearchFilters>({
+        manufacturerId: searchParams.get('manufacturer_id') || '',
+        modelId: searchParams.get('model_id') || '',
+        fromYear: searchParams.get('from_year') || '',
+        toYear: searchParams.get('to_year') || '',
+        priceTo: searchParams.get('buy_now_price_to') || '',
+    });
+
+    // Load manufacturers and years
+    useEffect(() => {
+        const loadInitialData = async () => {
+            try {
+                setLoading(prev => ({ ...prev, manufacturers: true }));
+                const data = await fetchFilterData();  // <-- Fetches manufacturers here
+                setFilterData({
+                    manufacturers: getTranslatedManufacturers(data.manufacturers),  // <-- Stores them
+                    models: [],
+                    years: data.years
+                });
+            } catch (error) {
+                console.error('Error loading filters:', error);
+            } finally {
+                setLoading(prev => ({ ...prev, manufacturers: false }));
+            }
+        };
+        loadInitialData();
+    }, []);
+
+    // Load models when manufacturer changes
+    useEffect(() => {
+        const loadModels = async () => {
+            if (!filters.manufacturerId) {
+                setFilterData(prev => ({ ...prev, models: [] }));
+                return;
+            }
+
+            try {
+                setLoading(prev => ({ ...prev, models: true }));
+                const models = await fetchModels(parseInt(filters.manufacturerId), 'cars');
+                setFilterData(prev => ({ ...prev, models }));
+            } catch (error) {
+                console.error('Error loading models:', error);
+            } finally {
+                setLoading(prev => ({ ...prev, models: false }));
+            }
+        };
+        loadModels();
+    }, [filters.manufacturerId]);
+
+    const updateFilter = (key: keyof SearchFilters, value: string) => {
+        setFilters(prev => ({ ...prev, [key]: value }));
+        if (key === 'manufacturerId') {
+            setFilters(prev => ({ ...prev, modelId: '' }));
+        }
+    };
+
+    const handleSearch = () => {
+        const params = new URLSearchParams();
+
+        // Add all filters
+        if (filters.manufacturerId) params.set('manufacturer_id', filters.manufacturerId);
+        if (filters.modelId) params.set('model_id', filters.modelId);
+        if (filters.fromYear) params.set('from_year', filters.fromYear);
+        if (filters.toYear) params.set('to_year', filters.toYear);
+        if (filters.priceTo) params.set('buy_now_price_to', filters.priceTo);
+
+        params.set('page', '1');
+        params.set('per_page', '12');
+        params.set('vehicle_type', '1');
+
+        router.push(`/cars?${params.toString()}`);
+        onSearch?.();
+    };
+
+    const clearFilters = () => {
+        setFilters({
+            manufacturerId: '',
+            modelId: '',
+            fromYear: '',
+            toYear: '',
+            priceTo: ''
+        });
+        router.push('/cars');
+    };
+
+    const activeFilterCount = Object.values(filters).filter(v => v !== '').length;
+
+    // Prepare options
+    const manufacturerOptions = filterData.manufacturers.map(({ id, translated }) => ({
+        value: id.toString(),
+        label: translated  // <-- Shows translated manufacturer names
+    }));
+
+    const modelOptions = filterData.models.map(model => ({
+        value: model.id.toString(),
+        label: model.name
+    }));
+
+    const yearOptions = [
+        { value: '', label: 'Viti' },
+        ...filterData.years.map(year => ({
+            value: year.toString(),
+            label: year.toString()
+        }))
+    ];
+
+    const priceOptions = [
+        { value: '', label: 'Çmimi max' },
+        { value: '5000', label: '€5,000' },
+        { value: '10000', label: '€10,000' },
+        { value: '15000', label: '€15,000' },
+        { value: '20000', label: '€20,000' },
+        { value: '25000', label: '€25,000' },
+        { value: '30000', label: '€30,000' },
+        { value: '40000', label: '€40,000' },
+        { value: '50000', label: '€50,000' },
+        { value: '75000', label: '€75,000' },
+        { value: '100000', label: '€100,000' },
+    ];
+
+    const isHero = variant === 'hero';
+
+    return (
+        <>
+            {/* Desktop Version - Hidden on mobile */}
+            <div className="hidden md:block w-full md:w-fit">
+                <div className={`
+                    flex items-center gap-2 
+                    ${isHero
+                        ? 'bg-orange-500 backdrop-blur-md border border-white/20'
+                        : 'bg-orange-500 border border-light/20'
+                    } 
+                    rounded-xl p-1.5 shadow-lg
+                `}>
+                    {/* Search Icon */}
+                    <div className="flex items-center justify-center w-9 h-9 shrink-0">
+                        <Search size={16} className={isHero ? 'text-white/70' : 'text-muted'} />
+                    </div>
+
+                    {/* Filters */}
+                    <div className="flex-1 flex flex-wrap items-center gap-1.5 min-w-0">
+                        <CustomSelect
+                            value={filters.manufacturerId}
+                            onChange={(value) => updateFilter('manufacturerId', value)}
+                            options={manufacturerOptions}
+                            placeholder="Prodhuesi"
+                            icon={<Car size={14} />}
+                            loading={loading.manufacturers}
+                            variant={isHero ? 'hero' : 'default'}
+                            className="w-[130px]"
+                        />
+
+                        {filters.manufacturerId && (
+                            <CustomSelect
+                                value={filters.modelId}
+                                onChange={(value) => updateFilter('modelId', value)}
+                                options={modelOptions}
+                                placeholder="Modeli"
+                                icon={<Car size={14} />}
+                                loading={loading.models}
+                                variant={isHero ? 'hero' : 'default'}
+                                className="w-[120px]"
+                            />
+                        )}
+
+                        <CustomSelect
+                            value={filters.fromYear}
+                            onChange={(value) => updateFilter('fromYear', value)}
+                            options={yearOptions}
+                            placeholder="Nga"
+                            icon={<Calendar size={14} />}
+                            variant={isHero ? 'hero' : 'default'}
+                            className="w-[85px]"
+                        />
+
+                        <CustomSelect
+                            value={filters.toYear}
+                            onChange={(value) => updateFilter('toYear', value)}
+                            options={yearOptions}
+                            placeholder="Deri"
+                            icon={<Calendar size={14} />}
+                            variant={isHero ? 'hero' : 'default'}
+                            className="w-[85px]"
+                        />
+
+                        <CustomSelect
+                            value={filters.priceTo}
+                            onChange={(value) => updateFilter('priceTo', value)}
+                            options={priceOptions}
+                            placeholder="Max"
+                            icon={<DollarSign size={14} />}
+                            variant={isHero ? 'hero' : 'default'}
+                            className="w-[100px]"
+                        />
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-1 shrink-0">
+                        {activeFilterCount > 0 && (
+                            <button
+                                onClick={clearFilters}
+                                className={`
+                                    w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-200
+                                    ${isHero
+                                        ? 'text-white/70 hover:text-white hover:bg-white/10'
+                                        : 'text-muted hover:text-orange-primary hover:bg-surface-2'
+                                    }
+                                `}
+                                title="Pastro filtrat"
+                                aria-label="Pastro filtrat"
+                            >
+                                <X size={16} />
+                            </button>
+                        )}
+
+                        <button
+                            onClick={handleSearch}
+                            className={`
+                                h-9 px-4 rounded-lg text-sm font-medium transition-all duration-200 
+                                flex items-center gap-1.5 whitespace-nowrap
+                                ${isHero
+                                    ? 'bg-white text-orange-600 hover:bg-gray-100'
+                                    : 'bg-orange-600 text-white hover:bg-orange-700'
+                                }
+                            `}
+                            aria-label="Kërko"
+                        >
+                            <Search size={14} />
+                            <span className="hidden sm:inline">Kërko</span>
+                            {activeFilterCount > 0 && (
+                                <span className={`
+                                    ml-0.5 px-1.5 py-0.5 text-xs rounded-full font-medium
+                                    ${isHero ? 'bg-orange-100 text-orange-600' : 'bg-white/20 text-white'}
+                                `}>
+                                    {activeFilterCount}
+                                </span>
+                            )}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Mobile Version - Visible only on mobile */}
+            <div className="md:hidden w-full">
+                <div className={`
+                    rounded-xl p-3 shadow-lg space-y-3
+                    ${isHero
+                        ? 'bg-orange-500/95 backdrop-blur-md border border-white/20'
+                        : 'bg-surface border border-light/20'
+                    }
+                `}>
+                    {/* Filter Row */}
+                    <div className="grid grid-cols-2 gap-2">
+                        <CustomSelect
+                            value={filters.manufacturerId}
+                            onChange={(value) => updateFilter('manufacturerId', value)}
+                            options={manufacturerOptions}
+                            placeholder="Prodhuesi"
+                            icon={<Car size={16} />}
+                            loading={loading.manufacturers}
+                            variant={isHero ? 'hero' : 'default'}
+                            fullWidth
+                        />
+
+                        {filters.manufacturerId && (
+                            <CustomSelect
+                                value={filters.modelId}
+                                onChange={(value) => updateFilter('modelId', value)}
+                                options={modelOptions}
+                                placeholder="Modeli"
+                                icon={<Car size={16} />}
+                                loading={loading.models}
+                                variant={isHero ? 'hero' : 'default'}
+                                fullWidth
+                            />
+                        )}
+
+                        {!filters.manufacturerId && (
+                            <>
+                                <CustomSelect
+                                    value={filters.fromYear}
+                                    onChange={(value) => updateFilter('fromYear', value)}
+                                    options={yearOptions}
+                                    placeholder="Nga viti"
+                                    icon={<Calendar size={16} />}
+                                    variant={isHero ? 'hero' : 'default'}
+                                    fullWidth
+                                />
+                                <CustomSelect
+                                    value={filters.toYear}
+                                    onChange={(value) => updateFilter('toYear', value)}
+                                    options={yearOptions}
+                                    placeholder="Deri viti"
+                                    icon={<Calendar size={16} />}
+                                    variant={isHero ? 'hero' : 'default'}
+                                    fullWidth
+                                />
+                            </>
+                        )}
+                    </div>
+
+                    {/* Second Row - Only when manufacturer is selected */}
+                    {filters.manufacturerId && (
+                        <div className="grid grid-cols-2 gap-2">
+                            <CustomSelect
+                                value={filters.fromYear}
+                                onChange={(value) => updateFilter('fromYear', value)}
+                                options={yearOptions}
+                                placeholder="Nga viti"
+                                icon={<Calendar size={16} />}
+                                variant={isHero ? 'hero' : 'default'}
+                                fullWidth
+                            />
+                            <CustomSelect
+                                value={filters.toYear}
+                                onChange={(value) => updateFilter('toYear', value)}
+                                options={yearOptions}
+                                placeholder="Deri viti"
+                                icon={<Calendar size={16} />}
+                                variant={isHero ? 'hero' : 'default'}
+                                fullWidth
+                            />
+                        </div>
+                    )}
+
+                    {/* Price and Search Row */}
+                    <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                            <CustomSelect
+                                value={filters.priceTo}
+                                onChange={(value) => updateFilter('priceTo', value)}
+                                options={priceOptions}
+                                placeholder="Çmimi max"
+                                icon={<DollarSign size={16} />}
+                                variant={isHero ? 'hero' : 'default'}
+                                fullWidth
+                            />
+                        </div>
+
+                        <button
+                            onClick={handleSearch}
+                            className={`
+                                px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                                flex items-center justify-center gap-2 min-w-[100px]
+                                ${isHero
+                                    ? 'bg-white text-orange-600 hover:bg-gray-100'
+                                    : 'bg-orange-600 text-white hover:bg-orange-700'
+                                }
+                            `}
+                        >
+                            <Search size={16} />
+                            <span>Kërko</span>
+                            {activeFilterCount > 0 && (
+                                <span className={`
+                                    px-1.5 py-0.5 text-xs rounded-full
+                                    ${isHero ? 'bg-orange-100 text-orange-600' : 'bg-white/20 text-white'}
+                                `}>
+                                    {activeFilterCount}
+                                </span>
+                            )}
+                        </button>
+
+                        {activeFilterCount > 0 && (
+                            <button
+                                onClick={clearFilters}
+                                className={`
+                                    p-2.5 rounded-lg transition-all duration-200
+                                    ${isHero
+                                        ? 'text-white/70 hover:text-white hover:bg-white/10'
+                                        : 'text-muted hover:text-orange-primary hover:bg-surface-2'
+                                    }
+                                `}
+                                aria-label="Pastro filtrat"
+                            >
+                                <X size={18} />
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </>
+    );
+}
+
+// Main export with Suspense wrapper
+export default function CompactSearch(props: CompactSearchProps) {
+    return (
+        <SearchParamsWrapper fallback={
+            <div className="h-11 bg-surface-2 rounded-xl animate-pulse w-full md:order-2 order-1" />
+        }>
+            {(searchParams) => <CompactSearchContent searchParams={searchParams} {...props} />}
+        </SearchParamsWrapper>
+    );
+}
+=========================================
+FILE: components/ui/CustomSelect.tsx
+=========================================
+// components/ui/CustomSelect.tsx
+'use client';
+
+import { useState, useRef, useEffect } from 'react';
+import { ChevronDown, Check } from 'lucide-react';
+import { createPortal } from 'react-dom';
+
+export interface Option {
+    value: string;
+    label: string;
+}
+
+interface CustomSelectProps {
+    value: string;
+    onChange: (value: string) => void;
+    options: Option[];
+    placeholder?: string;
+    icon?: React.ReactNode;
+    loading?: boolean;
+    disabled?: boolean;
+    className?: string;
+    variant?: 'default' | 'hero';
+    fullWidth?: boolean; // Add this prop
+}
+
+export default function CustomSelect({
+    value,
+    onChange,
+    options,
+    placeholder = 'Zgjidh',
+    icon,
+    loading = false,
+    disabled = false,
+    className = '',
+    variant = 'default',
+    fullWidth = false // Add this with default false
+}: CustomSelectProps) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+    const buttonRef = useRef<HTMLButtonElement>(null);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const [mounted, setMounted] = useState(false);
+
+    const selectedOption = options.find(opt => opt.value === value);
+
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+
+    // Update position when opening
+    const openDropdown = () => {
+        if (disabled || loading) return;
+
+        if (buttonRef.current) {
+            const rect = buttonRef.current.getBoundingClientRect();
+            setDropdownPosition({
+                top: rect.bottom + window.scrollY,
+                left: rect.left + window.scrollX,
+                width: rect.width
+            });
+        }
+        setIsOpen(true);
+    };
+
+    // Close on click outside
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (!isOpen) return;
+
+            const target = e.target as Node;
+            const isButton = buttonRef.current?.contains(target);
+            const isDropdown = dropdownRef.current?.contains(target);
+
+            if (!isButton && !isDropdown) {
+                setIsOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen]);
+
+    // Close on scroll
+    useEffect(() => {
+        const handleScroll = () => {
+            if (isOpen) setIsOpen(false);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [isOpen]);
+
+    const baseButtonClasses = variant === 'hero'
+        ? 'bg-white/10 border border-white/20 text-white hover:bg-white/20'
+        : 'bg-surface-2 border border-light/20 text-secondary hover:border-orange-primary/40 hover:text-primary';
+
+    return (
+        <div className={`relative ${fullWidth ? 'w-full' : ''} ${className}`}>
+            <button
+                ref={buttonRef}
+                type="button"
+                onClick={openDropdown}
+                className={`
+                    flex items-center gap-2 px-3 py-2.5
+                    ${baseButtonClasses}
+                    rounded-lg text-sm
+                    transition-all duration-200
+                    ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                    w-full
+                `}
+                disabled={disabled || loading}
+            >
+                {icon && <span className="shrink-0 text-muted">{icon}</span>}
+                <span className={`flex-1 text-left truncate ${selectedOption ? 'text-primary' : 'text-muted'}`}>
+                    {selectedOption ? selectedOption.label : placeholder}
+                </span>
+                <ChevronDown size={16} className={`shrink-0 text-muted transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isOpen && mounted && createPortal(
+                <div
+                    ref={dropdownRef}
+                    style={{
+                        position: 'absolute',
+                        top: dropdownPosition.top,
+                        left: dropdownPosition.left,
+                        width: dropdownPosition.width,
+                        zIndex: 999999,
+                        pointerEvents: 'auto'
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div className="bg-primary border border-light/20 rounded-lg shadow-xl overflow-hidden">
+                        <div className="overflow-y-auto max-h-[300px]">
+                            {options.length > 0 ? (
+                                options.map((option, idx) => (
+                                    <button
+                                        key={option.value}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            onChange(option.value);
+                                            setIsOpen(false);
+                                        }}
+                                        className={`
+                                            bg-blue-950
+                                            w-full px-4 py-3 text-left text-sm
+                                            hover:bg-surface-2 transition-colors
+                                            cursor-pointer
+                                            ${idx !== options.length - 1 ? 'border-b border-light/10' : ''}
+                                            ${value === option.value
+                                                ? 'bg-orange-5 text-orange-primary font-medium'
+                                                : 'text-secondary hover:text-primary'
+                                            }
+                                        `}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <span>{option.label}</span>
+                                            {value === option.value && (
+                                                <Check size={14} className="text-orange-primary" />
+                                            )}
+                                        </div>
+                                    </button>
+                                ))
+                            ) : (
+                                <div className="px-4 py-6 text-sm text-muted text-center">
+                                    Nuk ka opsione
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+        </div>
+    );
+}
+=========================================
+FILE: app/cars/page.tsx
+=========================================
+// app/cars/page.tsx
+import { Suspense } from 'react';
+import CarsContentWrapper from './CarsContentWrapper';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Makina për Shitje | Vetura Nga Korea',
+    description: 'Shfleto makinat më të mira nga Korea.',
+};
+
+// Loading skeleton for cars page
+function CarsLoadingSkeleton() {
+    return (
+        <div className="container-swiss py-6 md:py-8">
+            {/* Header Skeleton */}
+            <div className="mb-8">
+                <div className="h-8 bg-surface-2 rounded w-64 mb-2 animate-pulse"></div>
+                <div className="h-4 bg-surface-2 rounded w-96 animate-pulse"></div>
+            </div>
+
+            <div className="flex gap-8">
+                {/* Sidebar Skeleton - hidden on mobile */}
+                <div className="hidden lg:block w-[300px] shrink-0">
+                    <div className="bg-surface-2 border border-light/20 rounded-xl p-4 space-y-4 sticky top-24">
+                        <div className="h-8 bg-surface-3 rounded w-3/4 animate-pulse"></div>
+                        <div className="h-32 bg-surface-3 rounded animate-pulse"></div>
+                        <div className="h-32 bg-surface-3 rounded animate-pulse"></div>
+                        <div className="h-32 bg-surface-3 rounded animate-pulse"></div>
+                    </div>
+                </div>
+
+                {/* Main Content Skeleton */}
+                <div className="flex-1 space-y-8">
+                    {/* Sort Bar Skeleton */}
+                    <div className="bg-surface-2 border border-light/20 rounded-xl p-3 md:p-4">
+                        <div className="h-10 bg-surface-3 rounded-lg w-40 animate-pulse"></div>
+                    </div>
+
+                    {/* Cars Grid Skeleton */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                        {[...Array(12)].map((_, i) => (
+                            <div key={i} className="bg-surface rounded-xl border border-medium overflow-hidden">
+                                <div className="h-48 bg-surface-2 animate-pulse"></div>
+                                <div className="p-4 space-y-3">
+                                    <div className="h-5 bg-surface-2 rounded w-3/4 animate-pulse"></div>
+                                    <div className="flex justify-between">
+                                        <div className="h-6 bg-surface-2 rounded w-24 animate-pulse"></div>
+                                        <div className="h-5 bg-surface-2 rounded w-12 animate-pulse"></div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="h-4 bg-surface-2 rounded animate-pulse"></div>
+                                        <div className="h-4 bg-surface-2 rounded animate-pulse"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export default function CarsPage() {
+    return (
+        <div className="min-h-screen bg-primary">
+            <div className="container-swiss py-6 md:py-8">
+                {/* Page Header */}
+                <div className="mb-6">
+                    <h1 className="text-2xl md:text-3xl font-bold text-primary mb-2">
+                        Makina për Shitje
+                    </h1>
+                    <p className="text-secondary">
+                        Shfleto makinat më të mira nga Korea
+                    </p>
+                </div>
+
+                {/* Results with Suspense */}
+                <Suspense fallback={<CarsLoadingSkeleton />}>
+                    <CarsContentWrapper />
+                </Suspense>
+            </div>
+        </div>
+    );
+}

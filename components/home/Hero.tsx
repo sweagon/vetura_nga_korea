@@ -90,7 +90,7 @@ export default function Hero() {
                         {[
                             { icon: Truck, value: '500+', label: 'Makina në stok' },
                             { icon: Shield, value: '98%', label: 'Klientë të kënaqur' },
-                            { icon: Clock, value: '30 ditë', label: 'Transporti' },
+                            { icon: Clock, value: '20 ditë', label: 'Transporti' },
                             { icon: Sparkles, value: '100%', label: 'Të inspektuara' }
                         ].map((stat, index) => (
                             <motion.div

@@ -1779,7 +1779,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import { X } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useCarFilters } from '@/hooks/useCarFilters';
-import FilterSection from '@/components/filters/FilterSection';
+import FilterSection from '@/components/ui/FilterSection';
 import MobileSelect from '@/components/ui/MobileSelect';
 import { fetchModels } from '@/lib/api';
 import {

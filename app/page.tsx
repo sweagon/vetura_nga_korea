@@ -1,6 +1,10 @@
 // app/page.tsx
 import { Suspense } from 'react';
 import Hero from '@/components/home/Hero';
+import AboutSection from '@/components/home/AboutSection';
+import HowItWorks from '@/components/home/HowItWorks';
+import WhyChooseUs from '@/components/home/WhyChooseUs';
+import LocationMap from '@/components/home/LocationMap';
 import FeaturedCars from '@/components/home/FeaturedCars';
 import RecentlyViewed from '@/components/cars/RecentlyViewed';
 
@@ -9,7 +13,16 @@ export default function HomePage() {
     <div className="min-h-screen">
       <Hero />
 
-      {/* Featured Cars Section - Wrap in Suspense if it uses search params */}
+      {/* About Section */}
+      <AboutSection />
+
+      {/* How It Works */}
+      <HowItWorks />
+
+      {/* Why Choose Us with Testimonials */}
+      <WhyChooseUs />
+
+      {/* Featured Cars Section */}
       <Suspense fallback={
         <div className="container-swiss py-20">
           <div className="h-8 bg-surface-2 rounded w-48 mb-12 animate-pulse" />
@@ -31,6 +44,9 @@ export default function HomePage() {
       }>
         <FeaturedCars />
       </Suspense>
+
+      {/* Location Map */}
+      <LocationMap />
 
       {/* Recently Viewed Section */}
       <Suspense fallback={null}>

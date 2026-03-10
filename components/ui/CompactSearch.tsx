@@ -55,10 +55,9 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
         const loadInitialData = async () => {
             try {
                 setLoading(prev => ({ ...prev, manufacturers: true }));
-                const data = await fetchFilterData();
-                const filteredManufacturers = filterManufacturers(data.manufacturers); // Filter here
+                const data = await fetchFilterData();  // <-- Fetches manufacturers here
                 setFilterData({
-                    manufacturers: getTranslatedManufacturers(filteredManufacturers), // Use filtered list
+                    manufacturers: getTranslatedManufacturers(data.manufacturers),  // <-- Stores them
                     models: [],
                     years: data.years
                 });
@@ -133,7 +132,7 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
     // Prepare options
     const manufacturerOptions = filterData.manufacturers.map(({ id, translated }) => ({
         value: id.toString(),
-        label: translated
+        label: translated  // <-- Shows translated manufacturer names
     }));
 
     const modelOptions = filterData.models.map(model => ({

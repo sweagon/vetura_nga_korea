@@ -417,9 +417,12 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                             <span className="text-muted">Makina:</span>
                                             <span className="font-medium text-primary">{formatPrice(priceDetails.basePrice)}</span>
                                         </div>
-                                        <div className="flex justify-between">
+                                        <div className="flex justify-between items-center">
                                             <span className="text-muted">Transporti:</span>
-                                            <span className="font-medium text-primary">{formatPrice(priceDetails.shippingCost)}</span>
+                                            <div className="text-right">
+                                                <span className="font-medium text-primary block">{formatPrice(priceDetails.shippingCost)}</span>
+                                                <span className="text-xs text-orange-primary">+350 € deri në Prishtinë</span>
+                                            </div>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-muted flex items-center gap-1">
