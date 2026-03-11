@@ -9,7 +9,7 @@ export default function LocationMap() {
         {
             icon: Building2,
             label: 'Adresa',
-            value: 'Rr. Fehmi Agani, Prishtinë 10000, Kosovë',
+            value: 'Rr. Fehmi Agani, Skenderaj 10000, Kosovë',
         },
         {
             icon: Phone,
@@ -47,15 +47,15 @@ export default function LocationMap() {
                     className="text-center mb-12"
                 >
                     <div className="inline-flex items-center gap-2 bg-orange-10 backdrop-blur-sm px-4 py-2 rounded-full border border-orange-20 mb-6">
-                        <Sparkles size={16} className="text-orange-primary" />
-                        <span className="text-orange-primary text-sm font-medium tracking-wide">
+                        <Sparkles size={16} className="text-orange-500" />
+                        <span className="text-orange-500 text-sm font-medium tracking-wide">
                             VENDNDODHJA JONË
                         </span>
                     </div>
 
                     <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
                         Na vizitoni në{' '}
-                        <span className="text-orange-primary">Prishtinë</span>
+                        <span className="text-orange-500">Prishtinë</span>
                     </h2>
                     <p className="text-white/60 max-w-2xl mx-auto">
                         Jemi të vendosur në qendër të Prishtinës, ku mund të vini dhe të shihni makinat personalisht.
@@ -73,7 +73,7 @@ export default function LocationMap() {
                     >
                         <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
                             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                                <MapPin className="text-orange-primary" size={20} />
+                                <MapPin className="text-orange-500" size={20} />
                                 Informacionet e kontaktit
                             </h3>
 
@@ -81,14 +81,14 @@ export default function LocationMap() {
                                 {contactInfo.map((item, index) => (
                                     <div key={index} className="flex items-start gap-3">
                                         <div className="w-8 h-8 bg-orange-10 rounded-lg flex items-center justify-center shrink-0">
-                                            <item.icon size={16} className="text-orange-primary" />
+                                            <item.icon size={16} className="text-orange-500" />
                                         </div>
                                         <div>
                                             <p className="text-xs text-white/60">{item.label}</p>
                                             {item.href ? (
                                                 <a
                                                     href={item.href}
-                                                    className="text-sm text-white hover:text-orange-primary transition-colors"
+                                                    className="text-sm text-white hover:text-orange-500 transition-colors"
                                                 >
                                                     {item.value}
                                                 </a>
@@ -115,24 +115,24 @@ export default function LocationMap() {
 
                         {/* Quick Stats */}
                         {/* <div className="bg-orange-10 backdrop-blur-sm border border-orange-20 rounded-xl p-6">
-                            <h4 className="text-sm font-medium text-orange-primary mb-3">
+                            <h4 className="text-sm font-medium text-orange-500 mb-3">
                                 Pse të na vizitoni?
                             </h4>
                             <ul className="space-y-2 text-sm text-white/80">
                                 <li className="flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-orange-primary"></div>
+                                    <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
                                     <span>Shikoni makinat personalisht</span>
                                 </li>
                                 <li className="flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-orange-primary"></div>
+                                    <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
                                     <span>Bisedoni me ekspertët tanë</span>
                                 </li>
                                 <li className="flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-orange-primary"></div>
+                                    <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
                                     <span>Testoni makinat para blerjes</span>
                                 </li>
                                 <li className="flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-orange-primary"></div>
+                                    <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
                                     <span>Përfundoni dokumentacionin menjëherë</span>
                                 </li>
                             </ul>
@@ -156,7 +156,7 @@ export default function LocationMap() {
                                 allowFullScreen
                                 loading="lazy"
                                 referrerPolicy="no-referrer-when-downgrade"
-                                title="Vetura Nga Korea Location"
+                                title="Vetura Korea Kosova Location"
                                 className="w-full h-full"
                             />
                         </div>

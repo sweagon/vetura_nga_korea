@@ -38,7 +38,7 @@ const defaultConfig: SiteConfig = {
     minimumMarkup: 1000,
     contactEmail: 'blerart@outlook.com',
     contactPhone: '+383 49 195 414',
-    siteName: 'Vetura Nga Korea',
+    siteName: 'Vetura Korea Kosova',
     currency: 'EUR',
     vehicleTypes: {
         suv: { shippingCost: 4500, markupPercentage: 18, minimumMarkup: 1500, enabled: false },

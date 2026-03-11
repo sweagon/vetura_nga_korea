@@ -73,15 +73,15 @@ export default function WhyChooseUs() {
                         transition={{ duration: 0.5 }}
                     >
                         <div className="inline-flex items-center gap-2 bg-orange-10 backdrop-blur-sm px-4 py-2 rounded-full border border-orange-20 mb-6">
-                            <Sparkles size={16} className="text-orange-primary" />
-                            <span className="text-orange-primary text-sm font-medium tracking-wide">
+                            <Sparkles size={16} className="text-orange-500" />
+                            <span className="text-orange-500 text-sm font-medium tracking-wide">
                                 PËRFITIMET
                             </span>
                         </div>
 
                         <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                            Pse të zgjidhni{' '}
-                            <span className="text-orange-primary">nes?</span>
+                            Pse të na zgjidhni{' '}
+                            <span className="text-orange-500">ne?</span>
                         </h2>
                         <p className="text-white/60 mb-8">
                             Ne ofrojmë një shërbim të plotë dhe transparent për importimin e makinave nga Korea.
@@ -98,7 +98,7 @@ export default function WhyChooseUs() {
                                     className="flex items-start gap-4 p-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl hover:bg-white/10 transition-all"
                                 >
                                     <div className="w-10 h-10 bg-orange-10 rounded-lg flex items-center justify-center shrink-0">
-                                        <benefit.icon size={20} className="text-orange-primary" />
+                                        <benefit.icon size={20} className="text-orange-500" />
                                     </div>
                                     <div>
                                         <h3 className="font-medium text-white mb-1">{benefit.title}</h3>

@@ -260,7 +260,7 @@ const getFullUrl = (path: string): string => {
 
   const baseUrl = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
-    : process.env.NEXTAUTH_URL || 'https://vetura-nga-korea.vercel.app';
+    : process.env.NEXTAUTH_URL || 'https://vetura-korea-kosova.vercel.app';
 
   return `${baseUrl}${path}`;
 };

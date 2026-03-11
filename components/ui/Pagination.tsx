@@ -47,7 +47,7 @@ export default function Pagination({
                     Faqja {currentPage}
                 </span>
                 {isPrefetching && (
-                    <Loader2 size={14} className="animate-spin text-orange-primary" />
+                    <Loader2 size={14} className="animate-spin text-orange-500" />
                 )}
             </div>
 

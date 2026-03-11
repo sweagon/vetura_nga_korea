@@ -61,15 +61,15 @@ export default function AboutSection() {
                     className="text-center mb-12"
                 >
                     <div className="inline-flex items-center gap-2 bg-orange-10 backdrop-blur-sm px-4 py-2 rounded-full border border-orange-20 mb-6">
-                        <Sparkles size={16} className="text-orange-primary" />
-                        <span className="text-orange-primary text-sm font-medium tracking-wide">
+                        <Sparkles size={16} className="text-orange-500" />
+                        <span className="text-orange-500 text-sm font-medium tracking-wide">
                             PSE TË ZGJIDHNI NE?
                         </span>
                     </div>
 
                     <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
                         Pse të zgjidhni{' '}
-                        <span className="text-orange-primary">Vetura Nga Korea</span>
+                        <span className="text-orange-500">Vetura Korea Kosova</span>
                     </h2>
                     <p className="text-white/60 max-w-2xl mx-auto">
                         Ne sjellim makinat më të mira nga Korea me standarde të larta cilësie dhe transparencë të plotë.
@@ -88,7 +88,7 @@ export default function AboutSection() {
                             className="text-center"
                         >
                             <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-10 rounded-full mb-4">
-                                <stat.icon className="w-8 h-8 text-orange-primary" />
+                                <stat.icon className="w-8 h-8 text-orange-500" />
                             </div>
                             <div className="text-2xl md:text-3xl font-bold text-white mb-1">
                                 {stat.value}
@@ -110,7 +110,7 @@ export default function AboutSection() {
                             className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-300"
                         >
                             <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-10 rounded-lg mb-4">
-                                <feature.icon className="w-6 h-6 text-orange-primary" />
+                                <feature.icon className="w-6 h-6 text-orange-500" />
                             </div>
                             <h3 className="text-lg font-semibold text-white mb-2">
                                 {feature.title}

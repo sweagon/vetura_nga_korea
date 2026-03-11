@@ -1,5 +1,5 @@
 // public/sw.js
-const CACHE_NAME = 'vetura-nga-korea-v2'; // Increment version to force update
+const CACHE_NAME = 'vetura-korea-kosova-v2'; // Increment version to force update
 const urlsToCache = [
     '/',
     '/cars',

@@ -149,7 +149,7 @@ export default function CustomSelect({
                                             cursor-pointer
                                             ${idx !== options.length - 1 ? 'border-b border-light/10' : ''}
                                             ${value === option.value
-                                                ? 'bg-orange-5 text-orange-primary font-medium'
+                                                ? 'bg-orange-5 text-orange-500 font-medium'
                                                 : 'text-secondary hover:text-primary'
                                             }
                                         `}
@@ -157,7 +157,7 @@ export default function CustomSelect({
                                         <div className="flex items-center justify-between">
                                             <span>{option.label}</span>
                                             {value === option.value && (
-                                                <Check size={14} className="text-orange-primary" />
+                                                <Check size={14} className="text-orange-500" />
                                             )}
                                         </div>
                                     </button>

@@ -33,7 +33,7 @@ export default function RecentlyViewedContent() {
                         </Link>
                         <div>
                             <h1 className="text-3xl font-bold text-primary flex items-center gap-3">
-                                <Clock className="w-8 h-8 text-orange-primary" />
+                                <Clock className="w-8 h-8 text-orange-500" />
                                 Shikuar së fundmi
                             </h1>
                             <p className="text-secondary mt-1">
@@ -92,11 +92,11 @@ export default function RecentlyViewedContent() {
                                         )}
                                     </div>
                                     <div className="p-5">
-                                        <h3 className="text-lg font-semibold text-primary mb-2 line-clamp-1 group-hover:text-orange-primary transition-colors">
+                                        <h3 className="text-lg font-semibold text-primary mb-2 line-clamp-1 group-hover:text-orange-500 transition-colors">
                                             {car.title}
                                         </h3>
                                         {car.price && (
-                                            <p className="text-xl font-bold text-orange-primary mb-2">
+                                            <p className="text-xl font-bold text-orange-500 mb-2">
                                                 {new Intl.NumberFormat('sq-AL', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(car.price)}
                                             </p>
                                         )}

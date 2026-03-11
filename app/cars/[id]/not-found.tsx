@@ -11,10 +11,10 @@ export default function CarNotFound() {
                 <div className="bg-surface rounded-2xl p-8 md:p-12 shadow-xl border border-medium">
                     {/* Icon */}
                     <div className="relative mb-8">
-                        <div className="w-28 h-28 bg-orange-primary/10 rounded-2xl flex items-center justify-center mx-auto rotate-3">
-                            <Car size={56} className="text-orange-primary" />
+                        <div className="w-28 h-28 bg-orange-500/10 rounded-2xl flex items-center justify-center mx-auto rotate-3">
+                            <Car size={56} className="text-orange-500" />
                         </div>
-                        <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-orange-primary rounded-full flex items-center justify-center text-white font-bold text-xl animate-pulse">
+                        <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-xl animate-pulse">
                             ?
                         </div>
                     </div>
@@ -35,7 +35,7 @@ export default function CarNotFound() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto">
                         <Link
                             href="/cars"
-                            className="group flex items-center justify-center gap-3 p-4 bg-orange-primary text-white rounded-xl hover:bg-orange-dark transition-all hover:scale-105"
+                            className="group flex items-center justify-center gap-3 p-4 bg-orange-500 text-white rounded-xl hover:bg-orange-dark transition-all hover:scale-105"
                         >
                             <Search size={20} />
                             <span className="font-medium">Shfleto makina</span>
@@ -54,7 +54,7 @@ export default function CarNotFound() {
                     <div className="mt-8 text-center">
                         <Link
                             href="/cars"
-                            className="inline-flex items-center gap-2 text-sm text-muted hover:text-orange-primary transition-colors"
+                            className="inline-flex items-center gap-2 text-sm text-muted hover:text-orange-500 transition-colors"
                         >
                             <ArrowLeft size={16} />
                             <span>Kthehu te lista e makinave</span>
@@ -67,7 +67,7 @@ export default function CarNotFound() {
                             Mendon se ky është një gabim?{' '}
                             <Link
                                 href="/contact"
-                                className="text-orange-primary hover:underline font-medium"
+                                className="text-orange-500 hover:underline font-medium"
                             >
                                 Na kontakto
                             </Link>

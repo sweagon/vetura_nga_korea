@@ -25,7 +25,7 @@ export default function HowItWorks() {
         {
             icon: Key,
             title: '4. Marrja e makinës',
-            description: 'Pasi makina mbërrin, vij dhe e merr në adresën tonë.',
+            description: 'Makina vjen dhe dorëzohet në doganë, dhe ju mund ta merrni direkt aty.',
         },
     ];
 
@@ -46,8 +46,8 @@ export default function HowItWorks() {
                     className="text-center mb-12"
                 >
                     <div className="inline-flex items-center gap-2 bg-orange-10 backdrop-blur-sm px-4 py-2 rounded-full border border-orange-20 mb-6">
-                        <Sparkles size={16} className="text-orange-primary" />
-                        <span className="text-orange-primary text-sm font-medium tracking-wide">
+                        <Sparkles size={16} className="text-orange-500" />
+                        <span className="text-orange-500 text-sm font-medium tracking-wide">
                             PROCESI I BLERJES
                         </span>
                     </div>
@@ -77,7 +77,7 @@ export default function HowItWorks() {
                                 <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 text-center hover:bg-white/10 transition-all duration-300 group">
                                     <div className="relative mb-6 inline-flex">
                                         <div className="w-20 h-20 rounded-full bg-orange-10 flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                            <step.icon className="w-8 h-8 text-orange-primary" />
+                                            <step.icon className="w-8 h-8 text-orange-500" />
                                         </div>
                                         {/* Step number badge */}
                                         <div className="absolute -top-2 -right-2 w-8 h-8 bg-orange-500 rounded-full border-2 border-white/20 flex items-center justify-center text-white font-bold">
@@ -96,7 +96,7 @@ export default function HowItWorks() {
                                 {/* Arrow for desktop (except last) */}
                                 {index < steps.length - 1 && (
                                     <div className="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 z-10">
-                                        <ArrowRight className="w-6 h-6 text-orange-primary" />
+                                        <ArrowRight className="w-6 h-6 text-orange-500" />
                                     </div>
                                 )}
                             </motion.div>

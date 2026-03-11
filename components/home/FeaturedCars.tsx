@@ -90,8 +90,8 @@ export default function FeaturedCars() {
                     className="text-center mb-12"
                 >
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-10 rounded-full mb-4">
-                        <Sparkles size={16} className="text-orange-primary" />
-                        <span className="text-xs font-medium text-orange-primary uppercase tracking-wider">
+                        <Sparkles size={16} className="text-orange-500" />
+                        <span className="text-xs font-medium text-orange-500 uppercase tracking-wider">
                             Featured
                         </span>
                     </div>
@@ -128,7 +128,7 @@ export default function FeaturedCars() {
                 >
                     <Link
                         href="/cars"
-                        className="group inline-flex items-center gap-2 px-6 py-3 bg-orange-primary text-white rounded-xl hover:bg-orange-dark transition-all hover:scale-105 shadow-lg focus:outline-none focus:ring-2 focus:ring-orange-primary/50"
+                        className="group inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-dark transition-all hover:scale-105 shadow-lg focus:outline-none focus:ring-2 focus:ring-orange-primary/50"
                     >
                         <span>Shfleto të gjitha makinat</span>
                         <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />

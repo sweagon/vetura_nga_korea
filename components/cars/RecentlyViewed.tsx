@@ -18,8 +18,8 @@ export default function RecentlyViewed() {
     return (
         <div className="w-full max-w-7xl mx-auto px-4 py-12">
             <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-orange-primary/10 rounded-lg">
-                    <Clock className="w-5 h-5 text-orange-primary" />
+                <div className="p-2 bg-orange-500/10 rounded-lg">
+                    <Clock className="w-5 h-5 text-orange-500" />
                 </div>
                 <h2 className="text-2xl font-semibold text-primary">Shikuar së fundmi</h2>
             </div>
@@ -45,11 +45,11 @@ export default function RecentlyViewed() {
                                 )}
                             </div>
                             <div className="p-3">
-                                <h3 className="text-sm font-medium text-primary line-clamp-1 group-hover:text-orange-primary transition-colors">
+                                <h3 className="text-sm font-medium text-primary line-clamp-1 group-hover:text-orange-500 transition-colors">
                                     {car.title}
                                 </h3>
                                 {car.price && (
-                                    <p className="text-sm font-semibold text-orange-primary mt-1">
+                                    <p className="text-sm font-semibold text-orange-500 mt-1">
                                         {new Intl.NumberFormat('sq-AL', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(car.price)}
                                     </p>
                                 )}

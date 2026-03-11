@@ -159,7 +159,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                 {/* Header */}
                 <div className="bg-[#0A1929]/10 bg-clip-padding backdrop-filter backdrop-blur-sm rounded sticky top-0 bg-surface border-b border-light/20 p-4 flex items-center justify-between z-10">
                     <div className="flex items-center gap-2">
-                        <Filter size={18} className="text-orange-primary" />
+                        <Filter size={18} className="text-orange-500" />
                         <h2 className="font-semibold text-primary">Filtro</h2>
                         {activeFilterCount > 0 && (
                             <span className="ml-2 px-2 py-0.5 text-xs bg-orange-500 text-white rounded-full">
@@ -171,7 +171,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                         {activeFilterCount > 0 && (
                             <button
                                 onClick={clearFilters}
-                                className="text-xs text-orange-primary hover:text-orange-600 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-surface-2"
+                                className="text-xs text-orange-500 hover:text-orange-600 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-surface-2"
                             >
                                 <X size={14} />
                                 <span>Pastro</span>
@@ -207,7 +207,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                             className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
                         >
                             <div className="flex items-center gap-2">
-                                <Fuel size={16} className="text-orange-primary" />
+                                <Fuel size={16} className="text-orange-500" />
                                 <span className="font-medium text-sm text-primary">Karburanti</span>
                             </div>
                             {expandedSections.fuel ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -257,7 +257,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                             className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
                         >
                             <div className="flex items-center gap-2">
-                                <Settings size={16} className="text-orange-primary" />
+                                <Settings size={16} className="text-orange-500" />
                                 <span className="font-medium text-sm text-primary">Transmisioni</span>
                             </div>
                             {expandedSections.transmission ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -307,7 +307,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                             className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
                         >
                             <div className="flex items-center gap-2">
-                                <Palette size={16} className="text-orange-primary" />
+                                <Palette size={16} className="text-orange-500" />
                                 <span className="font-medium text-sm text-primary">Ngjyra</span>
                             </div>
                             {expandedSections.color ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -357,7 +357,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                             className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
                         >
                             <div className="flex items-center gap-2">
-                                <CarIcon size={16} className="text-orange-primary" />
+                                <CarIcon size={16} className="text-orange-500" />
                                 <span className="font-medium text-sm text-primary">Tipi</span>
                             </div>
                             {expandedSections.bodyType ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -407,7 +407,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                             className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
                         >
                             <div className="flex items-center gap-2">
-                                <Calendar size={16} className="text-orange-primary" />
+                                <Calendar size={16} className="text-orange-500" />
                                 <span className="font-medium text-sm text-primary">Viti</span>
                             </div>
                             {expandedSections.year ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -452,7 +452,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                             className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
                         >
                             <div className="flex items-center gap-2">
-                                <DollarSign size={16} className="text-orange-primary" />
+                                <DollarSign size={16} className="text-orange-500" />
                                 <span className="font-medium text-sm text-primary">Çmimi</span>
                             </div>
                             {expandedSections.price ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -487,7 +487,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                     {/* Active Filters Summary */}
                     {activeFilterCount > 0 && (
                         <div className="bg-orange-5 border border-orange-20 rounded-lg p-3 mt-4">
-                            <p className="text-xs text-orange-primary font-medium mb-2">
+                            <p className="text-xs text-orange-500 font-medium mb-2">
                                 Filtrat aktivë:
                             </p>
                             <div className="flex flex-wrap gap-1">

@@ -20,6 +20,7 @@ interface CarFiltersState {
     currentSearchPage: number;
     totalSearchPages: number;
     error: string | null;
+    isSearching: boolean;
 }
 
 export function useCarFilters(
@@ -30,7 +31,6 @@ export function useCarFilters(
     const searchParams = useSearchParams();
     const urlPage = Number(searchParams.get('page')) || 1;
 
-    // Check if ANY client-side filters are active
     const hasClientFilters = useMemo(() =>
         Object.values(clientFilters).some(v => v !== ''),
         [clientFilters]
@@ -46,7 +46,8 @@ export function useCarFilters(
         searchProgress: 0,
         currentSearchPage: 0,
         totalSearchPages: 0,
-        error: null
+        error: null,
+        isSearching: true
     });
 
     const allMatchesRef = useRef<Car[]>([]);
@@ -54,7 +55,7 @@ export function useCarFilters(
     const hasMorePagesRef = useRef<boolean>(true);
     const currentApiPageRef = useRef<number>(1);
 
-    // Server-only pagination - ONLY used when NO client filters
+    // Server-only pagination
     const fetchServerPage = useCallback(async (page: number) => {
         try {
             const response = await fetchCars({
@@ -68,8 +69,6 @@ export function useCarFilters(
 
             const cars = response.data || [];
             const totalFromApi = response.meta?.total;
-
-            // If we received fewer cars than requested, this is the last page
             const isLastPage = cars.length < PER_PAGE;
 
             setState({
@@ -77,7 +76,6 @@ export function useCarFilters(
                 loading: false,
                 loadingMore: false,
                 currentPage: page,
-                // If total is known from API, use it; otherwise, use isLastPage to determine if there's a next page
                 totalPages: totalFromApi
                     ? Math.ceil(totalFromApi / PER_PAGE)
                     : isLastPage ? page : page + 1,
@@ -85,25 +83,26 @@ export function useCarFilters(
                 searchProgress: 100,
                 currentSearchPage: 0,
                 totalSearchPages: 0,
-                error: null
+                error: null,
+                isSearching: false
             });
         } catch (error) {
             if (error instanceof Error && error.name === 'AbortError') return;
             setState(prev => ({
                 ...prev,
                 loading: false,
+                isSearching: false,
                 error: 'Failed to load cars'
             }));
         }
     }, [serverFilters]);
 
-    // Filter function for client-side filtering
+    // Filter function
     const matchesFilters = useCallback((car: Car): boolean => {
         if (clientFilters.fuel_id && car.fuel?.id.toString() !== clientFilters.fuel_id) return false;
         if (clientFilters.transmission_id && car.transmission?.id.toString() !== clientFilters.transmission_id) return false;
         if (clientFilters.color_id && car.color?.id.toString() !== clientFilters.color_id) return false;
         if (clientFilters.body_type_id && car.body_type?.id.toString() !== clientFilters.body_type_id) return false;
-
         if (clientFilters.yearFrom) {
             const yearFrom = parseInt(clientFilters.yearFrom);
             if (!isNaN(yearFrom) && car.year < yearFrom) return false;
@@ -112,7 +111,6 @@ export function useCarFilters(
             const yearTo = parseInt(clientFilters.yearTo);
             if (!isNaN(yearTo) && car.year > yearTo) return false;
         }
-
         const price = car.lots?.[0]?.buy_now || 0;
         if (clientFilters.priceFrom) {
             const priceFrom = parseInt(clientFilters.priceFrom);
@@ -122,35 +120,76 @@ export function useCarFilters(
             const priceTo = parseInt(clientFilters.priceTo);
             if (!isNaN(priceTo) && price > priceTo) return false;
         }
-
         return true;
     }, [clientFilters]);
 
-    // Client-side filtering - ALWAYS used when ANY client filter is active
+    // Client-side filtering
     const searchWithClientFilters = useCallback(async () => {
         try {
-            // Reset pagination tracking
+            // Reset
             hasMorePagesRef.current = true;
             currentApiPageRef.current = 1;
 
             let allMatches: Car[] = [];
             let pagesFetched = 0;
-            let totalApiPages = 100; // Start with assumption of 100 pages
-            let reachedEnd = false;
+            let totalApiPages = 100;
 
-            // Fetch pages in batches until we either:
-            // 1. Find at least 12 matches (to show first page)
-            // 2. Or reach the end of available pages
-            while (!reachedEnd && allMatches.length < PER_PAGE && hasMorePagesRef.current) {
-                if (abortControllerRef.current?.signal.aborted) return;
+            // First, get total pages from first response
+            const firstResponse = await fetchCars({
+                page: 1,
+                per_page: API_PAGE_SIZE,
+                vehicle_type: '1',
+                ...serverFilters
+            });
+
+            if (abortControllerRef.current?.signal.aborted) return;
+
+            if (firstResponse.meta?.total) {
+                totalApiPages = Math.ceil(firstResponse.meta.total / API_PAGE_SIZE);
+            }
+
+            // Update state - show skeletons while searching
+            setState(prev => ({
+                ...prev,
+                isSearching: true,
+                loading: false,
+                searchProgress: 0,
+                currentSearchPage: 0,
+                totalSearchPages: totalApiPages,
+                cars: [], // Clear cars to show skeletons
+                totalMatches: 0,
+                totalPages: 0
+            }));
+
+            // Process first page immediately
+            const firstPageMatches = (firstResponse.data || []).filter(matchesFilters);
+            if (firstPageMatches.length > 0) {
+                allMatches = firstPageMatches;
+                allMatchesRef.current = allMatches;
+
+                // Show first results immediately
+                setState(prev => ({
+                    ...prev,
+                    cars: allMatches.slice(0, PER_PAGE),
+                    totalMatches: allMatches.length,
+                    totalPages: Math.ceil(allMatches.length / PER_PAGE),
+                    searchProgress: Math.round((1 / totalApiPages) * 100),
+                    currentSearchPage: 1,
+                }));
+            }
+
+            pagesFetched = 1;
+
+            // Continue fetching remaining pages in batches
+            for (let page = 2; page <= totalApiPages && hasMorePagesRef.current; page += BATCH_SIZE) {
+                if (abortControllerRef.current?.signal.aborted) break;
 
                 const batch = [];
-                const startPage = currentApiPageRef.current;
+                const batchEnd = Math.min(page + BATCH_SIZE - 1, totalApiPages);
 
-                for (let i = 0; i < BATCH_SIZE; i++) {
-                    const page = startPage + i;
+                for (let i = page; i <= batchEnd; i++) {
                     batch.push(fetchCars({
-                        page,
+                        page: i,
                         per_page: API_PAGE_SIZE,
                         vehicle_type: '1',
                         ...serverFilters
@@ -159,144 +198,66 @@ export function useCarFilters(
 
                 const batchResults = await Promise.all(batch);
 
-                if (abortControllerRef.current?.signal.aborted) return;
+                if (abortControllerRef.current?.signal.aborted) break;
 
-                // Process each page in the batch
+                // Process each page in batch
                 for (let i = 0; i < batchResults.length; i++) {
                     const response = batchResults[i];
+                    const currentPageNum = page + i;
                     const cars = response.data || [];
 
-                    // If we got fewer cars than requested, this is the last page
                     if (cars.length < API_PAGE_SIZE) {
                         hasMorePagesRef.current = false;
-                        reachedEnd = true;
                     }
 
-                    // Update total pages estimate if we got meta.total
-                    if (response.meta?.total) {
-                        totalApiPages = Math.ceil(response.meta.total / API_PAGE_SIZE);
-                    }
-
-                    // Filter and add matches
                     const matches = cars.filter(matchesFilters);
                     if (matches.length > 0) {
                         allMatches = [...allMatches, ...matches];
                         allMatchesRef.current = allMatches;
-                    }
 
-                    pagesFetched++;
-                    currentApiPageRef.current = startPage + i + 1;
-
-                    // Update progress after each page
-                    const progress = totalApiPages > 0
-                        ? Math.min(100, Math.round((pagesFetched / totalApiPages) * 100))
-                        : Math.min(100, Math.round((pagesFetched / 50) * 100)); // Estimate if total unknown
-
-                    // Show results as they come in, even if we haven't fetched all pages yet
-                    if (allMatches.length > 0) {
-                        setState(prev => ({
-                            ...prev,
-                            cars: allMatches.slice(0, PER_PAGE),
-                            totalMatches: allMatches.length,
-                            totalPages: Math.ceil(allMatches.length / PER_PAGE),
-                            searchProgress: progress,
-                            currentSearchPage: startPage + i,
-                            totalSearchPages: totalApiPages,
-                            loading: false
-                        }));
-                    }
-
-                    // If we found enough matches for first page, we can stop searching
-                    if (allMatches.length >= PER_PAGE) {
-                        break;
-                    }
-                }
-
-                // If we've fetched all available pages, stop
-                if (!hasMorePagesRef.current) {
-                    break;
-                }
-            }
-
-            // If no matches found at all, show empty state
-            if (allMatches.length === 0) {
-                setState(prev => ({
-                    ...prev,
-                    cars: [],
-                    totalMatches: 0,
-                    totalPages: 0,
-                    searchProgress: 100,
-                    currentSearchPage: currentApiPageRef.current - 1,
-                    totalSearchPages: totalApiPages,
-                    loading: false
-                }));
-                return;
-            }
-
-            // Continue fetching remaining pages in background (for total count accuracy)
-            if (hasMorePagesRef.current) {
-                // Fetch remaining pages in background
-                while (hasMorePagesRef.current) {
-                    if (abortControllerRef.current?.signal.aborted) break;
-
-                    const batch = [];
-                    const startPage = currentApiPageRef.current;
-
-                    for (let i = 0; i < BATCH_SIZE; i++) {
-                        const page = startPage + i;
-                        batch.push(fetchCars({
-                            page,
-                            per_page: API_PAGE_SIZE,
-                            vehicle_type: '1',
-                            ...serverFilters
-                        }));
-                    }
-
-                    const batchResults = await Promise.all(batch);
-
-                    if (abortControllerRef.current?.signal.aborted) break;
-
-                    for (let i = 0; i < batchResults.length; i++) {
-                        const response = batchResults[i];
-                        const cars = response.data || [];
-
-                        if (cars.length < API_PAGE_SIZE) {
-                            hasMorePagesRef.current = false;
-                        }
-
-                        const matches = cars.filter(matchesFilters);
-                        if (matches.length > 0) {
-                            allMatches = [...allMatches, ...matches];
-                            allMatchesRef.current = allMatches;
-                        }
-
-                        pagesFetched++;
-                        currentApiPageRef.current = startPage + i + 1;
-
-                        const progress = totalApiPages > 0
-                            ? Math.min(100, Math.round((pagesFetched / totalApiPages) * 100))
-                            : Math.min(100, Math.round((pagesFetched / 50) * 100));
-
+                        // IMPORTANT FIX: Always update the displayed cars for page 1
+                        // This ensures that as we find more matches, page 1 gets updated
                         setState(prev => ({
                             ...prev,
                             totalMatches: allMatches.length,
                             totalPages: Math.ceil(allMatches.length / PER_PAGE),
-                            searchProgress: progress,
-                            currentSearchPage: startPage + i,
-                            // Don't update cars unless we're on page 1
+                            // Only update cars if we're on page 1
                             cars: prev.currentPage === 1
                                 ? allMatches.slice(0, PER_PAGE)
                                 : prev.cars
                         }));
                     }
+
+                    pagesFetched++;
+
+                    const progress = Math.min(100, Math.round((pagesFetched / totalApiPages) * 100));
+
+                    setState(prev => ({
+                        ...prev,
+                        searchProgress: progress,
+                        currentSearchPage: currentPageNum
+                    }));
                 }
             }
+
+            // Search complete
+            setState(prev => ({
+                ...prev,
+                isSearching: false,
+                searchProgress: 100,
+                // Final update to ensure page 1 has all available cars
+                cars: prev.currentPage === 1
+                    ? allMatchesRef.current.slice(0, PER_PAGE)
+                    : prev.cars
+            }));
+
         } catch (error) {
             if (error instanceof Error && error.name === 'AbortError') return;
             console.error('Error in client search:', error);
             setState(prev => ({
                 ...prev,
                 loading: false,
+                isSearching: false,
                 error: 'Search failed'
             }));
         }
@@ -314,12 +275,13 @@ export function useCarFilters(
             setState(prev => ({
                 ...prev,
                 loading: true,
+                isSearching: true,
                 currentPage: hasClientFilters ? 1 : urlPage,
                 searchProgress: 0,
+                cars: [],
                 error: null
             }));
 
-            // ALWAYS use client filtering mode if ANY client filter is active
             if (hasClientFilters) {
                 searchWithClientFilters();
             } else {
@@ -386,6 +348,7 @@ export function useCarFilters(
         totalSearchPages: state.totalSearchPages,
         hasClientFilters,
         error: state.error,
+        isSearching: state.isSearching,
         goToPage
     };
 }

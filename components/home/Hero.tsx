@@ -48,8 +48,8 @@ export default function Hero() {
                         variants={fadeInUp}
                         className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 mb-6 md:mb-8"
                     >
-                        <Sparkles size={16} className="text-orange-primary" />
-                        <span className="text-orange-primary text-sm font-medium tracking-wide">
+                        <Sparkles size={16} className="text-orange-500" />
+                        <span className="text-orange-500 text-sm font-medium tracking-wide">
                             IMPORT DIREKT NGA KOREA
                         </span>
                     </motion.div>
@@ -60,9 +60,9 @@ export default function Hero() {
                         className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 tracking-tight text-center lg:text-left text-white"
                     >
                         Makina cilësore{' '}
-                        <span className="text-orange-primary relative">
+                        <span className="text-orange-500 relative">
                             nga Korea{' '}
-                            <span className="absolute -bottom-2 left-0 right-0 h-1 bg-orange-primary/30 rounded-full hidden md:block" />
+                            <span className="absolute -bottom-2 left-0 right-0 h-1 bg-orange-500/30 rounded-full hidden md:block" />
                         </span>
                         <br className="hidden md:block" />
                         në Kosovë
@@ -73,7 +73,7 @@ export default function Hero() {
                         variants={fadeInUp}
                         className="text-base md:text-xl text-white/80 mb-8 md:mb-10 max-w-2xl mx-auto lg:mx-0 text-center lg:text-left leading-relaxed"
                     >
-                        Vetura Nga Korea ju sjell makinat më të mira nga Korea me çmime konkurruese.
+                        Vetura Korea Kosova ju sjell makinat më të mira nga Korea me çmime konkurruese.
                         Inspektim të plotë, garanci dhe transport të sigurt.
                     </motion.p>
 
@@ -100,7 +100,7 @@ export default function Hero() {
                             >
                                 <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
                                     <div className="p-1.5 md:p-2 bg-white/10 backdrop-blur-sm rounded-lg border border-white/10">
-                                        <stat.icon size={16} className="md:w-5 md:h-5 text-orange-primary" />
+                                        <stat.icon size={16} className="md:w-5 md:h-5 text-orange-500" />
                                     </div>
                                     <span className="text-lg md:text-2xl font-bold text-white">
                                         {stat.value}

@@ -11,7 +11,7 @@ export default function CostCalculator({ carPrice = 0 }: CostCalculatorProps) {
     const [shippingCost] = useState(1200); // Average shipping cost Korea → Durrës
     const [customsRate] = useState(0.10); // 10% customs duty
     const [vatRate] = useState(0.18); // 18% VAT in Kosovo
-    const [serviceFee] = useState(500); // Vetura Nga Korea service fee
+    const [serviceFee] = useState(500); // Vetura Korea Kosova service fee
     const [showDetails, setShowDetails] = useState(false);
 
     // Ensure carPrice is a number
@@ -86,7 +86,7 @@ export default function CostCalculator({ carPrice = 0 }: CostCalculatorProps) {
                     <div className="flex justify-between py-2 border-b border-dashed">
                         <span className="flex items-center text-secondary">
                             <Calculator size={16} className="mr-2" />
-                            Shërbimi Vetura Nga Korea
+                            Shërbimi Vetura Korea Kosova
                         </span>
                         <span className="font-medium">€{serviceFee}</span>
                     </div>

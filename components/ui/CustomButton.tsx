@@ -27,7 +27,7 @@ const CustomButton = forwardRef<HTMLButtonElement, CustomButtonProps>(
         const baseClasses = 'relative inline-flex items-center justify-center gap-2 font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-primary/20 overflow-hidden';
 
         const variantClasses = {
-            primary: 'bg-orange-primary text-white hover:bg-orange-dark active:scale-[0.98] disabled:hover:bg-orange-primary',
+            primary: 'bg-orange-500 text-white hover:bg-orange-dark active:scale-[0.98] disabled:hover:bg-orange-500',
             secondary: 'bg-surface-2/80 text-secondary border border-light/10 hover:border-orange-primary/30 hover:text-primary hover:bg-surface-2',
             outline: 'bg-transparent border border-light/20 text-secondary hover:border-orange-primary/30 hover:text-primary hover:bg-surface-2/50',
             ghost: 'bg-transparent text-secondary hover:text-primary hover:bg-surface-2/50'

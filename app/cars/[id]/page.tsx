@@ -18,12 +18,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         // For metadata, we still need to fetch on server
         // You can keep this or simplify
         return {
-            title: `Makina me VIN ${vin} | Vetura Nga Korea`,
+            title: `Makina me VIN ${vin} | Vetura Korea Kosova`,
             description: `Detajet e makinës me VIN ${vin}`,
         };
     } catch (error) {
         return {
-            title: 'Makina nuk u gjet | Vetura Nga Korea',
+            title: 'Makina nuk u gjet | Vetura Korea Kosova',
         };
     }
 }

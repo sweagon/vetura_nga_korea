@@ -232,7 +232,7 @@ export default function CarsFilter() {
                 {activeFilterCount > 0 && (
                     <button
                         onClick={clearFilters}
-                        className="h-10 px-4 text-muted hover:text-orange-primary transition-colors flex items-center gap-1"
+                        className="h-10 px-4 text-muted hover:text-orange-500 transition-colors flex items-center gap-1"
                     >
                         <X size={16} />
                         <span className="text-sm">Pastro</span>

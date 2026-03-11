@@ -24,7 +24,7 @@ export default function CarDetailError({
                         <div className="w-24 h-24 bg-error-bg rounded-full flex items-center justify-center mx-auto">
                             <AlertTriangle size={48} className="text-error-text" />
                         </div>
-                        <div className="absolute -top-2 -right-2 w-10 h-10 bg-orange-primary rounded-full flex items-center justify-center text-white font-bold text-sm animate-pulse">
+                        <div className="absolute -top-2 -right-2 w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-sm animate-pulse">
                             !
                         </div>
                     </div>
@@ -40,15 +40,15 @@ export default function CarDetailError({
                         </p>
                         <ul className="text-left space-y-2 mb-4">
                             <li className="flex items-start text-secondary">
-                                <span className="w-1.5 h-1.5 bg-orange-primary rounded-full mt-2 mr-3"></span>
+                                <span className="w-1.5 h-1.5 bg-orange-500 rounded-full mt-2 mr-3"></span>
                                 <span>Makina mund të jetë shitur ose hequr nga lista</span>
                             </li>
                             <li className="flex items-start text-secondary">
-                                <span className="w-1.5 h-1.5 bg-orange-primary rounded-full mt-2 mr-3"></span>
+                                <span className="w-1.5 h-1.5 bg-orange-500 rounded-full mt-2 mr-3"></span>
                                 <span>Probleme teknike me lidhjen me serverin</span>
                             </li>
                             <li className="flex items-start text-secondary">
-                                <span className="w-1.5 h-1.5 bg-orange-primary rounded-full mt-2 mr-3"></span>
+                                <span className="w-1.5 h-1.5 bg-orange-500 rounded-full mt-2 mr-3"></span>
                                 <span>ID e makinës mund të jetë e pasaktë</span>
                             </li>
                         </ul>
@@ -94,7 +94,7 @@ export default function CarDetailError({
                     <div className="mt-8 pt-8 border-t border-light">
                         <p className="text-sm text-secondary">
                             Nëse problemi vazhdon, ju lutemi{' '}
-                            <Link href="/contact" className="text-orange-primary hover:underline">
+                            <Link href="/contact" className="text-orange-500 hover:underline">
                                 na kontaktoni
                             </Link>{' '}
                             për ndihmë.

@@ -1,16 +1,16 @@
 'use client';
 
-import { useState, useRef, useMemo, useCallback } from 'react';
+import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import CarCard from '@/components/cars/CarCard';
 import { CarCardSkeleton } from '@/components/ui/LoadingSkeleton';
-import { AlertCircle, ArrowUpDown, Loader2, Search } from 'lucide-react';
+import { AlertCircle, ArrowUpDown, Loader2, Search, Filter, X } from 'lucide-react';
 import CustomSelect from '@/components/ui/CustomSelect';
 import CompactSearch from '@/components/ui/CompactSearch';
 import AdvancedFilterSidebar from '@/components/filters/AdvancedFilterSidebar';
-import FilterToggle from '@/components/ui/FilterToggle';
 import Pagination from '@/components/ui/Pagination';
 import { useCarFilters } from '@/hooks/useCarFilters';
+import { useFilter } from '@/contexts/FilterContext';
 import { type Car } from '@/lib/api';
 
 interface SortOption {
@@ -20,11 +20,39 @@ interface SortOption {
 }
 
 export default function CarsContentWrapper() {
-    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const { isFilterOpen, setIsFilterOpen } = useFilter();
     const [currentSort, setCurrentSort] = useState('recommended');
     const contentRef = useRef<HTMLDivElement>(null);
 
     const searchParams = useSearchParams();
+
+    // Lock body scroll when filter is open on mobile
+    useEffect(() => {
+        if (isFilterOpen) {
+            const scrollY = window.scrollY;
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${scrollY}px`;
+            document.body.style.width = '100%';
+            document.body.style.overflow = 'hidden';
+        } else {
+            const scrollY = document.body.style.top;
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+            document.body.style.overflow = '';
+
+            if (scrollY) {
+                window.scrollTo(0, parseInt(scrollY || '0') * -1);
+            }
+        }
+
+        return () => {
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+            document.body.style.overflow = '';
+        };
+    }, [isFilterOpen]);
 
     const serverFilters = useMemo(() => ({
         manufacturer_id: searchParams.get('manufacturer_id') || undefined,
@@ -56,8 +84,11 @@ export default function CarsContentWrapper() {
         totalPages,
         totalMatches,
         searchProgress,
+        currentSearchPage,
+        totalSearchPages,
         hasClientFilters,
         error,
+        isSearching,
         goToPage
     } = useCarFilters(serverFilters, clientFilters);
 
@@ -74,6 +105,11 @@ export default function CarsContentWrapper() {
     const sortSelectOptions = useMemo(() =>
         sortOptionsList.map(opt => ({ value: opt.value, label: opt.label })),
         [sortOptionsList]
+    );
+
+    const activeFilterCount = useMemo(() =>
+        Object.values(clientFilters).filter(Boolean).length,
+        [clientFilters]
     );
 
     const displayedCars = useMemo(() => {
@@ -98,42 +134,20 @@ export default function CarsContentWrapper() {
         window.location.href = `/cars?${params.toString()}`;
     }, [searchParams]);
 
-    // Loading state
-    if (loading && cars.length === 0) {
-        return (
-            <div className="flex gap-8">
-                <div className="hidden lg:block w-72 shrink-0">
-                    <div className="bg-surface-2 border border-light/20 rounded-xl p-4 space-y-4 sticky top-24">
-                        <div className="h-8 bg-surface-3 rounded w-3/4 animate-pulse" />
-                        <div className="h-32 bg-surface-3 rounded animate-pulse" />
-                        <div className="h-32 bg-surface-3 rounded animate-pulse" />
-                    </div>
-                </div>
-                <div className="flex-1 space-y-8">
-                    <div className="bg-surface-2 border border-light/20 rounded-xl p-4">
-                        <div className="h-10 bg-surface-3 rounded-lg w-40 animate-pulse" />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                        {[...Array(12)].map((_, i) => (
-                            <CarCardSkeleton key={i} />
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    // Determine UI states
+    const isInitialLoad = loading && cars.length === 0;
+    const isSearchingWithNoResults = isSearching && cars.length === 0;
+    const hasResults = cars.length > 0;
+    const isDoneSearching = !isSearching && !loading;
 
     if (error) {
         return (
-            <div className="flex gap-8">
-                <div className="hidden lg:block w-72 shrink-0">
-                    <AdvancedFilterSidebar
-                        isOpen={isFilterOpen}
-                        onClose={() => setIsFilterOpen(false)}
-                    />
+            <div className="flex flex-col lg:flex-row gap-8">
+                <div className="hidden lg:block lg:w-72 lg:shrink-0">
+                    <AdvancedFilterSidebar isOpen={false} onClose={() => { }} />
                 </div>
                 <div className="flex-1 text-center py-16 bg-surface-2/30 rounded-2xl border border-light/20">
-                    <AlertCircle className="w-12 h-12 text-orange-primary mx-auto mb-4" />
+                    <AlertCircle className="w-12 h-12 text-orange-500 mx-auto mb-4" />
                     <p className="text-secondary mb-2">{error}</p>
                     <button
                         onClick={() => window.location.reload()}
@@ -147,117 +161,186 @@ export default function CarsContentWrapper() {
     }
 
     return (
-        <div className="flex gap-8 relative">
-            <AdvancedFilterSidebar isOpen={isFilterOpen} onClose={() => setIsFilterOpen(false)} />
+        <>
+            {/* Mobile Filter Overlay - Dark background */}
+            {isFilterOpen && (
+                <div
+                    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
+                    onClick={() => setIsFilterOpen(false)}
+                    aria-hidden="true"
+                />
+            )}
 
-            <div className="flex-1 min-w-0 space-y-8" ref={contentRef}>
-                {/* Sort Bar */}
-                <div className="bg-surface-2 border border-light/20 rounded-xl p-4 flex flex-col lg:flex-row gap-4 justify-between items-center">
-                    <div className="w-full lg:w-auto">
-                        <CompactSearch variant="header" />
-                    </div>
-                    <div className="flex items-center gap-3 w-full lg:w-auto">
-                        <span className="text-sm text-muted whitespace-nowrap">
-                            <ArrowUpDown size={14} className="inline mr-1" />
-                            Rendit:
-                        </span>
-                        <div className="w-full lg:w-48">
-                            <CustomSelect
-                                value={currentSort}
-                                onChange={setCurrentSort}
-                                options={sortSelectOptions}
-                                placeholder="Zgjidh renditjen"
-                            />
-                        </div>
-                    </div>
+            <div className="flex flex-col lg:flex-row gap-8 relative">
+                {/* Sidebar - Desktop */}
+                <div className="hidden lg:block lg:w-72 lg:shrink-0 md:mr-8">
+                    <AdvancedFilterSidebar isOpen={false} onClose={() => { }} />
                 </div>
 
-                {/* Progress Bar */}
-                {hasClientFilters && loading && searchProgress > 0 && searchProgress < 100 && (
-                    <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                            <span className="text-muted">Duke kërkuar...</span>
-                            <span className="text-orange-500">{searchProgress}%</span>
-                        </div>
-                        <div className="w-full bg-gray-100 rounded-full h-1">
-                            <div
-                                className="bg-orange-500 h-1 rounded-full transition-all duration-300"
-                                style={{ width: `${searchProgress}%` }}
-                            />
-                        </div>
+                {/* Sidebar - Mobile (slide-out with dark background) */}
+                <div className={`
+                    fixed top-0 left-0 h-full w-[85%] max-w-80 bg-surface z-50 
+                    transform transition-transform duration-300 ease-in-out lg:hidden
+                    shadow-2xl overflow-y-auto
+                    ${isFilterOpen ? 'translate-x-0' : '-translate-x-full'}
+                `}>
+                    {/* Mobile header with close button */}
+                    <div className="sticky top-0 bg-surface border-b border-light/20 p-4 flex items-center justify-between z-10">
+                        <h2 className="font-semibold text-primary">Filtrat</h2>
+                        <button
+                            onClick={() => setIsFilterOpen(false)}
+                            className="p-2 hover:bg-surface-2 rounded-lg transition-colors"
+                            aria-label="Mbyll filtrat"
+                        >
+                            <X size={20} />
+                        </button>
                     </div>
-                )}
 
-                {/* Results count */}
-                {totalMatches > 0 && (
-                    <div className="flex justify-between items-center px-2">
-                        <p className="text-sm text-muted">
-                            Duke shfaqur {displayedCars.length} nga {totalMatches} makina
-                            {hasClientFilters && loading && (
-                                <span className="ml-2 text-xs text-orange-500 animate-pulse">
-                                    (duke kërkuar...)
-                                </span>
-                            )}
-                        </p>
-                        {totalPages > 1 && (
-                            <p className="text-sm text-muted">Faqja {currentPage} nga {totalPages}</p>
-                        )}
-                    </div>
-                )}
-
-                {/* Car grid */}
-                {displayedCars.length > 0 && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                        {displayedCars.map((car: Car) => (
-                            <CarCard key={car.id} car={car} />
-                        ))}
-                    </div>
-                )}
-
-                {/* Loading More */}
-                {loadingMore && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                        {[...Array(6)].map((_, i) => (
-                            <CarCardSkeleton key={i} />
-                        ))}
-                    </div>
-                )}
-
-                {/* Empty State */}
-                {!loading && !loadingMore && displayedCars.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-16 bg-surface-2/30 rounded-2xl border border-light/20">
-                        <Search className="w-12 h-12 text-muted mb-4" />
-                        <p className="text-secondary mb-2">Nuk u gjet asnjë makinë</p>
-                        <p className="text-sm text-muted mb-6 text-center max-w-md">
-                            {hasClientFilters
-                                ? 'Kemi kontrolluar të gjitha faqet por nuk gjetëm makina.'
-                                : 'Provo të ndryshosh kriteret e kërkimit.'}
-                        </p>
-                        {hasClientFilters && (
-                            <button
-                                onClick={handleClearFilters}
-                                className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
-                            >
-                                Pastro filtrat
-                            </button>
-                        )}
-                    </div>
-                )}
-
-                {/* Pagination */}
-                {!loading && totalPages > 1 && (
-                    <Pagination
-                        currentPage={currentPage}
-                        onNext={() => handlePageChange(currentPage + 1)}
-                        onPrev={() => handlePageChange(currentPage - 1)}
-                        hasNext={currentPage < totalPages}
-                        hasPrev={currentPage > 1}
-                        loading={loadingMore}
+                    <AdvancedFilterSidebar
+                        isOpen={isFilterOpen}
+                        onClose={() => setIsFilterOpen(false)}
                     />
-                )}
-            </div>
+                </div>
 
-            <FilterToggle onClick={() => setIsFilterOpen(true)} />
-        </div>
+                {/* Main Content */}
+                <div className="flex-1 min-w-0 space-y-8" ref={contentRef}>
+                    {/* Sort Bar */}
+                    <div className="bg-surface-2 border border-light/20 rounded-xl p-4 flex flex-col lg:flex-row gap-4 justify-between items-center">
+                        <div className="w-full lg:w-auto">
+                            <CompactSearch variant="header" />
+                        </div>
+                        <div className="flex items-center gap-3 w-full lg:w-auto">
+                            {/* Mobile Filter Button */}
+                            <button
+                                onClick={() => setIsFilterOpen(true)}
+                                className="lg:hidden flex items-center gap-2 px-4 py-2.5 bg-surface-3 border border-light/20 rounded-lg text-sm text-primary hover:border-orange-500/40 hover:text-orange-500 transition-all duration-200"
+                                aria-label="Hap filtrat"
+                            >
+                                <Filter size={18} />
+                                <span>Filtrat</span>
+                                {activeFilterCount > 0 && (
+                                    <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500 text-white rounded-full">
+                                        {activeFilterCount}
+                                    </span>
+                                )}
+                            </button>
+
+                            <span className="text-sm text-muted whitespace-nowrap">
+                                <ArrowUpDown size={14} className="inline mr-1" />
+                                Rendit:
+                            </span>
+                            <div className="w-full lg:w-48">
+                                <CustomSelect
+                                    value={currentSort}
+                                    onChange={setCurrentSort}
+                                    options={sortSelectOptions}
+                                    placeholder="Zgjidh renditjen"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Progress Bar */}
+                    {isSearching && searchProgress > 0 && searchProgress < 100 && (
+                        <div className="space-y-2 bg-surface-2/50 backdrop-blur-sm rounded-xl p-4 border border-light/20">
+                            <div className="flex justify-between items-center">
+                                <div className="flex items-center gap-2">
+                                    <Loader2 size={16} className="text-orange-500 animate-spin" />
+                                    <span className="text-sm text-primary">Duke kërkuar...</span>
+                                </div>
+                                <span className="text-sm font-medium text-orange-500">{searchProgress}%</span>
+                            </div>
+                            <div className="h-2 bg-surface-3 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full transition-all duration-300"
+                                    style={{ width: `${searchProgress}%` }}
+                                />
+                            </div>
+                            <div className="flex justify-between items-center text-xs">
+                                <span className="text-muted">
+                                    Faqja {currentSearchPage} nga {totalSearchPages || '?'}
+                                </span>
+                                {totalMatches > 0 && (
+                                    <span className="text-orange-500">
+                                        {totalMatches} makina
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Results count */}
+                    {hasResults && (
+                        <div className="flex justify-between items-center px-2">
+                            <p className="text-sm text-muted">
+                                Duke shfaqur {displayedCars.length} nga {totalMatches} makina
+                                {isSearching && (
+                                    <span className="ml-2 text-xs text-orange-500 animate-pulse">
+                                        (duke përditësuar...)
+                                    </span>
+                                )}
+                            </p>
+                            {!isSearching && totalPages > 1 && (
+                                <p className="text-sm text-muted">Faqja {currentPage} nga {totalPages}</p>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Content Grid */}
+                    {isInitialLoad || isSearchingWithNoResults ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                            {[...Array(12)].map((_, i) => (
+                                <CarCardSkeleton key={i} />
+                            ))}
+                        </div>
+                    ) : hasResults ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                            {displayedCars.map((car: Car) => (
+                                <CarCard key={car.id} car={car} />
+                            ))}
+                        </div>
+                    ) : isDoneSearching && !hasResults ? (
+                        <div className="flex flex-col items-center justify-center py-16 px-4 bg-gradient-to-b from-surface-2/30 to-surface-2/20 rounded-2xl border border-light/20">
+                            <Search className="w-16 h-16 text-muted/30 mb-4" strokeWidth={1} />
+                            <h3 className="text-xl font-semibold text-primary mb-2">Nuk u gjet asnjë makinë</h3>
+                            <p className="text-secondary mb-6 text-center max-w-md">
+                                {hasClientFilters
+                                    ? 'Nuk kemi makina që përputhen me kriteret e tua.'
+                                    : 'Provo të ndryshosh kriteret e kërkimit.'}
+                            </p>
+                            {hasClientFilters && (
+                                <button
+                                    onClick={handleClearFilters}
+                                    className="bg-orange-500 text-white px-6 py-2.5 rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
+                                >
+                                    Pastro filtrat
+                                </button>
+                            )}
+                        </div>
+                    ) : null}
+
+                    {/* Loading More Skeletons */}
+                    {loadingMore && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mt-4">
+                            {[...Array(6)].map((_, i) => (
+                                <CarCardSkeleton key={i} />
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Pagination */}
+                    {!isSearching && !loading && totalPages > 1 && (
+                        <Pagination
+                            currentPage={currentPage}
+                            onNext={() => handlePageChange(currentPage + 1)}
+                            onPrev={() => handlePageChange(currentPage - 1)}
+                            hasNext={currentPage < totalPages}
+                            hasPrev={currentPage > 1}
+                            loading={loadingMore}
+                        />
+                    )}
+                </div>
+            </div>
+        </>
     );
 }

@@ -34,7 +34,7 @@ export default function CustomRadio({
                 <div className={`
           ${type === 'radio' ? 'w-5 h-5 rounded-full' : 'w-5 h-5 rounded'}
           border border-light 
-          peer-checked:border-orange-primary peer-checked:bg-orange-primary 
+          peer-checked:border-orange-primary peer-checked:bg-orange-500 
           transition-all duration-200
           group-hover:border-orange-primary/50
         `} />

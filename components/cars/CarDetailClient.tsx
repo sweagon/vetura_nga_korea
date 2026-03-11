@@ -124,7 +124,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
         return (
             <div className="min-h-screen bg-primary flex items-center justify-center">
                 <div className="text-center">
-                    <CarIcon className="w-16 h-16 text-orange-primary mx-auto mb-4" />
+                    <CarIcon className="w-16 h-16 text-orange-500 mx-auto mb-4" />
                     <h2 className="text-2xl font-bold text-primary mb-2">Makina nuk u gjet</h2>
                     <p className="text-secondary mb-6">Nuk mund të ngarkohen detajet e makinës.</p>
                     <Link href="/cars" className="btn-primary">
@@ -143,11 +143,11 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                 <div className="border-b border-light bg-surface/80 sticky top-4 z-sticky backdrop-blur-sm z-10">
                     <div className="container-swiss py-3">
                         <nav className="flex items-center gap-2 text-sm flex-wrap" aria-label="Breadcrumb">
-                            <Link href="/" className="text-muted hover:text-orange-primary transition focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
+                            <Link href="/" className="text-muted hover:text-orange-500 transition focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
                                 {config.siteName}
                             </Link>
                             <span className="text-muted" aria-hidden="true">/</span>
-                            <Link href="/cars" className="text-muted hover:text-orange-primary transition focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
+                            <Link href="/cars" className="text-muted hover:text-orange-500 transition focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
                                 Makina
                             </Link>
                             {car.manufacturer?.id && (
@@ -155,7 +155,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                     <span className="text-muted" aria-hidden="true">/</span>
                                     <Link
                                         href={`/cars?manufacturer_id=${car.manufacturer.id}`}
-                                        className="text-muted hover:text-orange-primary transition focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded"
+                                        className="text-muted hover:text-orange-500 transition focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded"
                                     >
                                         {car.manufacturer.name}
                                     </Link>
@@ -164,7 +164,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                             {car.model?.name && (
                                 <>
                                     <span className="text-muted" aria-hidden="true">/</span>
-                                    <span className="text-orange-primary" aria-current="page">
+                                    <span className="text-orange-500" aria-current="page">
                                         {car.model.name}
                                     </span>
                                 </>
@@ -193,7 +193,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                         <CarIcon size={14} className="shrink-0" />
                                         {displayBodyType}
                                         {hasTypeConfig && (
-                                            <span className="text-xs bg-orange-100 text-orange-primary px-1.5 py-0.5 rounded-full ml-1">
+                                            <span className="text-xs bg-orange-100 text-orange-500 px-1.5 py-0.5 rounded-full ml-1">
                                                 Aktive
                                             </span>
                                         )}
@@ -248,7 +248,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                             {/* Quick Stats */}
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                 <div className="card p-4 text-center">
-                                    <div className="text-2xl font-semibold text-orange-primary mb-1">
+                                    <div className="text-2xl font-semibold text-orange-500 mb-1">
                                         {formatPrice(priceDetails.basePrice)}
                                     </div>
                                     <div className="text-xs text-muted">Çmimi bazë</div>
@@ -279,7 +279,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                     {car.year && (
                                         <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
-                                            <Calendar size={20} className="text-orange-primary shrink-0" />
+                                            <Calendar size={20} className="text-orange-500 shrink-0" />
                                             <div className="min-w-0">
                                                 <p className="text-xs text-muted">Viti</p>
                                                 <p className="font-medium text-primary truncate">{car.year}</p>
@@ -287,7 +287,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                         </div>
                                     )}
                                     <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
-                                        <Gauge size={20} className="text-orange-primary shrink-0" />
+                                        <Gauge size={20} className="text-orange-500 shrink-0" />
                                         <div className="min-w-0">
                                             <p className="text-xs text-muted">Kilometrazha</p>
                                             <p className="font-medium text-primary truncate">{formatMileage(mileage)}</p>
@@ -295,7 +295,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                     </div>
                                     {car.fuel?.name && (
                                         <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
-                                            <Fuel size={20} className="text-orange-primary shrink-0" />
+                                            <Fuel size={20} className="text-orange-500 shrink-0" />
                                             <div className="min-w-0">
                                                 <p className="text-xs text-muted">Karburanti</p>
                                                 <p className="font-medium text-primary truncate">{translateFuel(car.fuel.name)}</p>
@@ -304,7 +304,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                     )}
                                     {car.transmission?.name && (
                                         <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
-                                            <Settings size={20} className="text-orange-primary shrink-0" />
+                                            <Settings size={20} className="text-orange-500 shrink-0" />
                                             <div className="min-w-0">
                                                 <p className="text-xs text-muted">Transmisioni</p>
                                                 <p className="font-medium text-primary truncate">{translateTransmission(car.transmission.name)}</p>
@@ -313,7 +313,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                     )}
                                     {car.engine?.name && (
                                         <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
-                                            <Database size={20} className="text-orange-primary shrink-0" />
+                                            <Database size={20} className="text-orange-500 shrink-0" />
                                             <div className="min-w-0">
                                                 <p className="text-xs text-muted">Motori</p>
                                                 <p className="font-medium text-primary truncate">{car.engine.name}</p>
@@ -322,7 +322,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                     )}
                                     {car.color?.name && (
                                         <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
-                                            <Tag size={20} className="text-orange-primary shrink-0" />
+                                            <Tag size={20} className="text-orange-500 shrink-0" />
                                             <div className="min-w-0">
                                                 <p className="text-xs text-muted">Ngjyra</p>
                                                 <p className="font-medium text-primary truncate">{translateColor(car.color.name)}</p>
@@ -344,13 +344,13 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                             <div className="sticky top-24 space-y-4">
                                 {/* Price Card */}
                                 <div className="card p-6">
-                                    <div className="text-3xl font-bold text-orange-primary mb-2">
+                                    <div className="text-3xl font-bold text-orange-500 mb-2">
                                         {formatPrice(priceDetails.finalPrice)}
                                     </div>
 
                                     {/* Vehicle Type Pricing Badge */}
                                     {displayBodyType && (
-                                        <div className="mb-3 inline-flex items-center gap-1 px-2 py-1 bg-orange-5 text-orange-primary rounded-lg text-xs">
+                                        <div className="mb-3 inline-flex items-center gap-1 px-2 py-1 bg-orange-5 text-orange-500 rounded-lg text-xs">
                                             <CarIcon size={12} />
                                             <span>
                                                 {hasTypeConfig
@@ -367,21 +367,21 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                     <div className="space-y-3">
                                         <div className="p-4 bg-surface-2 rounded-lg">
                                             <h3 className="font-semibold mb-3 flex items-center gap-2">
-                                                <Building2 size={18} className="text-orange-primary shrink-0" />
+                                                <Building2 size={18} className="text-orange-500 shrink-0" />
                                                 Shitësi
                                             </h3>
                                             <div className="space-y-2 text-sm">
                                                 <p className="text-secondary">
                                                     {config.siteName}
                                                 </p>
-                                                <p className="flex items-center gap-2 text-secondary hover:text-orange-primary transition-colors">
-                                                    <Phone size={14} className="text-orange-primary shrink-0" />
+                                                <p className="flex items-center gap-2 text-secondary hover:text-orange-500 transition-colors">
+                                                    <Phone size={14} className="text-orange-500 shrink-0" />
                                                     <a href={`tel:${config.contactPhone}`} className="hover:underline focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
                                                         {config.contactPhone}
                                                     </a>
                                                 </p>
-                                                <p className="flex items-center gap-2 text-secondary hover:text-orange-primary transition-colors">
-                                                    <Mail size={14} className="text-orange-primary shrink-0" />
+                                                <p className="flex items-center gap-2 text-secondary hover:text-orange-500 transition-colors">
+                                                    <Mail size={14} className="text-orange-500 shrink-0" />
                                                     <a href={`mailto:${config.contactEmail}`} className="hover:underline focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
                                                         {config.contactEmail}
                                                     </a>
@@ -421,14 +421,14 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                             <span className="text-muted">Transporti:</span>
                                             <div className="text-right">
                                                 <span className="font-medium text-primary block">{formatPrice(priceDetails.shippingCost)}</span>
-                                                <span className="text-xs text-orange-primary">+350 € deri në Prishtinë</span>
+                                                <span className="text-xs text-orange-500">+350 € deri në Prishtinë</span>
                                             </div>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-muted flex items-center gap-1">
                                                 Marzha:
                                                 {priceDetails.appliedMarkup === 'minimum' && (
-                                                    <span className="text-xs bg-orange-100 text-orange-primary px-2 py-0.5 rounded-full">
+                                                    <span className="text-xs bg-orange-100 text-orange-500 px-2 py-0.5 rounded-full">
                                                         Minimale
                                                     </span>
                                                 )}
@@ -443,7 +443,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                         <div className="border-t border-light my-2 pt-2">
                                             <div className="flex justify-between font-semibold">
                                                 <span>Totali:</span>
-                                                <span className="text-orange-primary">
+                                                <span className="text-orange-500">
                                                     {formatPrice(priceDetails.finalPrice)}
                                                 </span>
                                             </div>
@@ -466,7 +466,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                     <div className="mt-12 text-center">
                         <Link
                             href="/cars"
-                            className="inline-flex items-center gap-2 text-muted hover:text-orange-primary transition-colors focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded-lg px-4 py-2"
+                            className="inline-flex items-center gap-2 text-muted hover:text-orange-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded-lg px-4 py-2"
                         >
                             <ArrowLeft size={16} />
                             Kthehu te të gjitha makinat

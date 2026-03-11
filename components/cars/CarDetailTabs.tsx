@@ -562,13 +562,13 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
                                             {insurance.myAccidentCost > 0 && (
                                                 <div className="flex justify-between">
                                                     <span className="text-muted">Kosto nga aksidentet e mia:</span>
-                                                    <span className="text-orange-primary font-medium">{formatPrice(insurance.myAccidentCost)}</span>
+                                                    <span className="text-orange-500 font-medium">{formatPrice(insurance.myAccidentCost)}</span>
                                                 </div>
                                             )}
                                             {insurance.otherAccidentCost > 0 && (
                                                 <div className="flex justify-between">
                                                     <span className="text-muted">Kosto nga aksidentet e të tjerëve:</span>
-                                                    <span className="text-orange-primary font-medium">{formatPrice(insurance.otherAccidentCost)}</span>
+                                                    <span className="text-orange-500 font-medium">{formatPrice(insurance.otherAccidentCost)}</span>
                                                 </div>
                                             )}
                                         </div>

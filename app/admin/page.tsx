@@ -171,7 +171,7 @@ export default function AdminPage() {
                 minimumMarkup: 1000,
                 contactEmail: 'blerart@outlook.com',
                 contactPhone: '+383 49 195 414',
-                siteName: 'Vetura Nga Korea',
+                siteName: 'Vetura Korea Kosova',
                 currency: 'EUR' as const,
                 vehicleTypes: {
                     suv: { shippingCost: 4500, markupPercentage: 18, minimumMarkup: 1500, enabled: false },
@@ -241,14 +241,14 @@ export default function AdminPage() {
             <div className="min-h-screen bg-linear-to-br from-dark-blue via-dark-blue to-navy flex items-center justify-center p-4">
                 <div className="bg-surface/50 backdrop-blur-xl border border-light/20 rounded-2xl p-8 w-full max-w-md relative">
                     {/* Security Badge */}
-                    <div className="absolute -top-3 -right-3 bg-orange-primary text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                    <div className="absolute -top-3 -right-3 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
                         <Shield size={12} />
                         E Sigurt
                     </div>
 
                     <div className="text-center mb-8">
-                        <div className="w-20 h-20 bg-orange-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 relative">
-                            <Lock className="w-10 h-10 text-orange-primary" />
+                        <div className="w-20 h-20 bg-orange-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 relative">
+                            <Lock className="w-10 h-10 text-orange-500" />
                             {loginAttempts > 0 && (
                                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-error-text rounded-full flex items-center justify-center text-white text-xs">
                                     {loginAttempts}
@@ -322,8 +322,8 @@ export default function AdminPage() {
                 {/* Header with Logout */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
                     <div className="flex items-center gap-3 w-full sm:w-auto">
-                        <div className="p-3 bg-orange-primary/10 rounded-xl shrink-0">
-                            <Settings className="w-6 h-6 sm:w-8 sm:h-8 text-orange-primary" />
+                        <div className="p-3 bg-orange-500/10 rounded-xl shrink-0">
+                            <Settings className="w-6 h-6 sm:w-8 sm:h-8 text-orange-500" />
                         </div>
                         <div className="min-w-0 flex-1">
                             <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-primary truncate">
@@ -375,15 +375,15 @@ export default function AdminPage() {
                 {/* Default Pricing Cards */}
                 <div className="mb-8">
                     <h2 className="text-xl font-semibold text-primary mb-4 flex items-center gap-2">
-                        <DollarSign className="text-orange-primary" size={24} />
+                        <DollarSign className="text-orange-500" size={24} />
                         <span>Cilësimet Bazë të Çmimeve</span>
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                         {/* Transporti Card */}
                         <div className="bg-surface/30 backdrop-blur-sm border border-light/20 rounded-xl p-4 sm:p-5 md:p-6">
                             <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                                <div className="p-1.5 sm:p-2 bg-orange-primary/10 rounded-lg">
-                                    <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-orange-primary" />
+                                <div className="p-1.5 sm:p-2 bg-orange-500/10 rounded-lg">
+                                    <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
                                 </div>
                                 <h3 className="text-sm sm:text-base font-medium text-primary">Transporti Bazë</h3>
                             </div>
@@ -404,8 +404,8 @@ export default function AdminPage() {
                         {/* Marzha % Card */}
                         <div className="bg-surface/30 backdrop-blur-sm border border-light/20 rounded-xl p-4 sm:p-5 md:p-6">
                             <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                                <div className="p-1.5 sm:p-2 bg-orange-primary/10 rounded-lg">
-                                    <Percent className="w-4 h-4 sm:w-5 sm:h-5 text-orange-primary" />
+                                <div className="p-1.5 sm:p-2 bg-orange-500/10 rounded-lg">
+                                    <Percent className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
                                 </div>
                                 <h3 className="text-sm sm:text-base font-medium text-primary">Marzha Bazë %</h3>
                             </div>
@@ -427,8 +427,8 @@ export default function AdminPage() {
                         {/* Marzha Minimale Card */}
                         <div className="bg-surface/30 backdrop-blur-sm border border-light/20 rounded-xl p-4 sm:p-5 md:p-6">
                             <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                                <div className="p-1.5 sm:p-2 bg-orange-primary/10 rounded-lg">
-                                    <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-orange-primary" />
+                                <div className="p-1.5 sm:p-2 bg-orange-500/10 rounded-lg">
+                                    <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
                                 </div>
                                 <h3 className="text-sm sm:text-base font-medium text-primary">Marzha Minimale Bazë</h3>
                             </div>
@@ -451,7 +451,7 @@ export default function AdminPage() {
                 {/* Vehicle Type Pricing - Simplified */}
                 <div className="mb-8">
                     <h2 className="text-xl font-semibold text-primary mb-4 flex items-center gap-2">
-                        <Car className="text-orange-primary" size={24} />
+                        <Car className="text-orange-500" size={24} />
                         <span>Çmime për SUV</span>
                     </h2>
                     <p className="text-sm text-secondary mb-4">
@@ -482,7 +482,7 @@ export default function AdminPage() {
                                                 className="focus:outline-none"
                                             >
                                                 {typeConfig?.enabled ? (
-                                                    <ToggleRight className="w-6 h-6 text-orange-primary" />
+                                                    <ToggleRight className="w-6 h-6 text-orange-500" />
                                                 ) : (
                                                     <ToggleLeft className="w-6 h-6 text-muted" />
                                                 )}
@@ -492,7 +492,7 @@ export default function AdminPage() {
                                                 <p className="text-xs text-muted mt-0.5">{type.description}</p>
                                             </div>
                                             {typeConfig?.enabled && (
-                                                <span className="text-xs bg-orange-primary/10 text-orange-primary px-2 py-0.5 rounded-full">
+                                                <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-0.5 rounded-full">
                                                     Aktiv
                                                 </span>
                                             )}
@@ -575,7 +575,7 @@ export default function AdminPage() {
                 {/* Contact Information */}
                 <div className="bg-surface/30 backdrop-blur-sm border border-light/20 rounded-xl p-4 sm:p-5 md:p-6 mb-8">
                     <h2 className="text-lg sm:text-xl font-semibold text-primary mb-4 sm:mb-6 flex items-center gap-2">
-                        <Building2 className="text-orange-primary w-5 h-5 sm:w-6 sm:h-6" size={20} />
+                        <Building2 className="text-orange-500 w-5 h-5 sm:w-6 sm:h-6" size={20} />
                         <span>Informacionet e Kontaktit</span>
                     </h2>
 
@@ -587,7 +587,7 @@ export default function AdminPage() {
                                 value={localConfig.siteName}
                                 onChange={(e) => updateField('siteName', e.target.value)}
                                 className="input text-sm sm:text-base"
-                                placeholder="Vetura Nga Korea"
+                                placeholder="Vetura Korea Kosova"
                             />
                         </div>
 
@@ -658,7 +658,7 @@ export default function AdminPage() {
                                     </div>
                                     <div className="flex justify-between font-bold pt-2 border-t border-light/20">
                                         <span>Totali:</span>
-                                        <span className="text-orange-primary">
+                                        <span className="text-orange-500">
                                             €{(15000 + (localConfig.vehicleTypes.default?.shippingCost || localConfig.shippingCost) +
                                                 Math.max(
                                                     (15000 + (localConfig.vehicleTypes.default?.shippingCost || localConfig.shippingCost)) * (localConfig.vehicleTypes.default?.markupPercentage || localConfig.markupPercentage) / 100,
@@ -693,7 +693,7 @@ export default function AdminPage() {
                                     </div>
                                     <div className="flex justify-between font-bold pt-2 border-t border-light/20">
                                         <span>Totali:</span>
-                                        <span className="text-orange-primary">
+                                        <span className="text-orange-500">
                                             €{(
                                                 15000 +
                                                 (localConfig.vehicleTypes.suv?.enabled ? localConfig.vehicleTypes.suv.shippingCost : localConfig.shippingCost) +
@@ -717,10 +717,10 @@ export default function AdminPage() {
                 {/* Security Notice */}
                 <div className="mt-8 p-4 bg-surface-2/30 rounded-lg border border-light/20">
                     <div className="flex items-start gap-3">
-                        <Shield className="w-5 h-5 text-orange-primary shrink-0 mt-0.5" />
+                        <Shield className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
                         <div>
                             <p className="text-sm text-secondary">
-                                <span className="font-medium text-orange-primary">Sesion i Sigurt:</span> Do të dilni automatikisht pas 2 orësh pa aktivitet.
+                                <span className="font-medium text-orange-500">Sesion i Sigurt:</span> Do të dilni automatikisht pas 2 orësh pa aktivitet.
                             </p>
                             <p className="text-xs text-muted mt-1 flex flex-wrap gap-2">
                                 <span>IP: Mbrojtur</span>

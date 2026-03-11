@@ -9,7 +9,7 @@ FILE: package.json
 DESCRIPTION: Project dependencies and scripts
 ========================================
 {
-  "name": "vetura-nga-korea",
+  "name": "vetura-korea-kosova",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -184,10 +184,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://vetura-nga-korea.vercel.app'),
+  metadataBase: new URL('https://vetura-korea-kosova.vercel.app'),
   title: {
-    default: 'Vetura Nga Korea - Makina nga Korea në Kosovë',
-    template: '%s | Vetura Nga Korea'
+    default: 'Vetura Korea Kosova - Makina nga Korea në Kosovë',
+    template: '%s | Vetura Korea Kosova'
   },
   description: 'Importoni makina cilësore nga Korea me çmime konkurruese.',
 };
@@ -1037,7 +1037,7 @@ import CarsContentWrapper from './CarsContentWrapper';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Makina për Shitje | Vetura Nga Korea',
+    title: 'Makina për Shitje | Vetura Korea Kosova',
     description: 'Shfleto makinat më të mira nga Korea.',
 };
 
@@ -1277,14 +1277,14 @@ export default function CarsContent({ searchParams }: CarsContentProps) {
                     className="bg-surface-2 border border-light/20 rounded-xl p-4 mb-6 flex items-center justify-between"
                 >
                     <div className="flex items-center gap-2 min-w-0">
-                        <Search size={18} className="text-orange-primary shrink-0" />
+                        <Search size={18} className="text-orange-500 shrink-0" />
                         <span className="text-sm text-secondary truncate">
                             Duke kërkuar: <span className="font-medium text-primary">"{searchQuery}"</span>
                         </span>
                     </div>
                     <button
                         onClick={handleClearSearch}
-                        className="text-sm text-orange-primary hover:text-orange-dark transition-colors flex items-center gap-1 shrink-0 ml-2"
+                        className="text-sm text-orange-500 hover:text-orange-dark transition-colors flex items-center gap-1 shrink-0 ml-2"
                         aria-label="Pastro kërkimin"
                     >
                         <X size={14} />
@@ -1304,12 +1304,12 @@ export default function CarsContent({ searchParams }: CarsContentProps) {
                         ${activeFilterCount > 0 ? 'border-orange-primary/30 bg-orange-5' : ''}
                     `}
                 >
-                    <Filter size={18} className={activeFilterCount > 0 ? 'text-orange-primary' : ''} />
-                    <span className={activeFilterCount > 0 ? 'text-orange-primary font-medium' : ''}>
+                    <Filter size={18} className={activeFilterCount > 0 ? 'text-orange-500' : ''} />
+                    <span className={activeFilterCount > 0 ? 'text-orange-500 font-medium' : ''}>
                         Filtro makina
                     </span>
                     {activeFilterCount > 0 && (
-                        <span className="ml-1 px-2 py-0.5 bg-orange-primary text-white text-xs rounded-full">
+                        <span className="ml-1 px-2 py-0.5 bg-orange-500 text-white text-xs rounded-full">
                             {activeFilterCount}
                         </span>
                     )}
@@ -1365,13 +1365,13 @@ export default function CarsContent({ searchParams }: CarsContentProps) {
                                         className="ml-1 p-0.5 hover:bg-surface-3 rounded-full transition-colors"
                                         aria-label={`Hiq filtrin ${filterLabels[key]}`}
                                     >
-                                        <X size={10} className="text-muted hover:text-orange-primary" />
+                                        <X size={10} className="text-muted hover:text-orange-500" />
                                     </button>
                                 </span>
                             ))}
                             <button
                                 onClick={handleClearAllFilters}
-                                className="text-xs text-orange-primary hover:text-orange-dark transition-colors flex items-center gap-1 rounded px-2 py-1"
+                                className="text-xs text-orange-500 hover:text-orange-dark transition-colors flex items-center gap-1 rounded px-2 py-1"
                                 aria-label="Pastro të gjithë filtrat"
                             >
                                 <X size={12} />
@@ -1681,7 +1681,7 @@ export default function CarGrid({ sortBy = 'recommended', sortOptions = [] }: Ca
     if (error) {
         return (
             <div className="text-center py-16 bg-surface-2/30 rounded-2xl border border-light/20">
-                <AlertCircle className="w-12 h-12 text-orange-primary mx-auto mb-4" />
+                <AlertCircle className="w-12 h-12 text-orange-500 mx-auto mb-4" />
                 <p className="text-secondary mb-2">{error}</p>
                 <button
                     onClick={() => window.location.reload()}
@@ -1774,12 +1774,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         // For metadata, we still need to fetch on server
         // You can keep this or simplify
         return {
-            title: `Makina me VIN ${vin} | Vetura Nga Korea`,
+            title: `Makina me VIN ${vin} | Vetura Korea Kosova`,
             description: `Detajet e makinës me VIN ${vin}`,
         };
     } catch (error) {
         return {
-            title: 'Makina nuk u gjet | Vetura Nga Korea',
+            title: 'Makina nuk u gjet | Vetura Korea Kosova',
         };
     }
 }
@@ -1987,7 +1987,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
         return (
             <div className="min-h-screen bg-primary flex items-center justify-center">
                 <div className="text-center">
-                    <CarIcon className="w-16 h-16 text-orange-primary mx-auto mb-4" />
+                    <CarIcon className="w-16 h-16 text-orange-500 mx-auto mb-4" />
                     <h2 className="text-2xl font-bold text-primary mb-2">Makina nuk u gjet</h2>
                     <p className="text-secondary mb-6">Nuk mund të ngarkohen detajet e makinës.</p>
                     <Link href="/cars" className="btn-primary">
@@ -2006,11 +2006,11 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                 <div className="border-b border-light bg-surface/80 sticky top-4 z-sticky backdrop-blur-sm z-10">
                     <div className="container-swiss py-3">
                         <nav className="flex items-center gap-2 text-sm flex-wrap" aria-label="Breadcrumb">
-                            <Link href="/" className="text-muted hover:text-orange-primary transition focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
+                            <Link href="/" className="text-muted hover:text-orange-500 transition focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
                                 {config.siteName}
                             </Link>
                             <span className="text-muted" aria-hidden="true">/</span>
-                            <Link href="/cars" className="text-muted hover:text-orange-primary transition focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
+                            <Link href="/cars" className="text-muted hover:text-orange-500 transition focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
                                 Makina
                             </Link>
                             {car.manufacturer?.id && (
@@ -2018,7 +2018,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                     <span className="text-muted" aria-hidden="true">/</span>
                                     <Link
                                         href={`/cars?manufacturer_id=${car.manufacturer.id}`}
-                                        className="text-muted hover:text-orange-primary transition focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded"
+                                        className="text-muted hover:text-orange-500 transition focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded"
                                     >
                                         {car.manufacturer.name}
                                     </Link>
@@ -2027,7 +2027,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                             {car.model?.name && (
                                 <>
                                     <span className="text-muted" aria-hidden="true">/</span>
-                                    <span className="text-orange-primary" aria-current="page">
+                                    <span className="text-orange-500" aria-current="page">
                                         {car.model.name}
                                     </span>
                                 </>
@@ -2056,7 +2056,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                         <CarIcon size={14} className="shrink-0" />
                                         {displayBodyType}
                                         {hasTypeConfig && (
-                                            <span className="text-xs bg-orange-100 text-orange-primary px-1.5 py-0.5 rounded-full ml-1">
+                                            <span className="text-xs bg-orange-100 text-orange-500 px-1.5 py-0.5 rounded-full ml-1">
                                                 Aktive
                                             </span>
                                         )}
@@ -2111,7 +2111,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                             {/* Quick Stats */}
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                 <div className="card p-4 text-center">
-                                    <div className="text-2xl font-semibold text-orange-primary mb-1">
+                                    <div className="text-2xl font-semibold text-orange-500 mb-1">
                                         {formatPrice(priceDetails.basePrice)}
                                     </div>
                                     <div className="text-xs text-muted">Çmimi bazë</div>
@@ -2142,7 +2142,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                     {car.year && (
                                         <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
-                                            <Calendar size={20} className="text-orange-primary shrink-0" />
+                                            <Calendar size={20} className="text-orange-500 shrink-0" />
                                             <div className="min-w-0">
                                                 <p className="text-xs text-muted">Viti</p>
                                                 <p className="font-medium text-primary truncate">{car.year}</p>
@@ -2150,7 +2150,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                         </div>
                                     )}
                                     <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
-                                        <Gauge size={20} className="text-orange-primary shrink-0" />
+                                        <Gauge size={20} className="text-orange-500 shrink-0" />
                                         <div className="min-w-0">
                                             <p className="text-xs text-muted">Kilometrazha</p>
                                             <p className="font-medium text-primary truncate">{formatMileage(mileage)}</p>
@@ -2158,7 +2158,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                     </div>
                                     {car.fuel?.name && (
                                         <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
-                                            <Fuel size={20} className="text-orange-primary shrink-0" />
+                                            <Fuel size={20} className="text-orange-500 shrink-0" />
                                             <div className="min-w-0">
                                                 <p className="text-xs text-muted">Karburanti</p>
                                                 <p className="font-medium text-primary truncate">{translateFuel(car.fuel.name)}</p>
@@ -2167,7 +2167,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                     )}
                                     {car.transmission?.name && (
                                         <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
-                                            <Settings size={20} className="text-orange-primary shrink-0" />
+                                            <Settings size={20} className="text-orange-500 shrink-0" />
                                             <div className="min-w-0">
                                                 <p className="text-xs text-muted">Transmisioni</p>
                                                 <p className="font-medium text-primary truncate">{translateTransmission(car.transmission.name)}</p>
@@ -2176,7 +2176,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                     )}
                                     {car.engine?.name && (
                                         <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
-                                            <Database size={20} className="text-orange-primary shrink-0" />
+                                            <Database size={20} className="text-orange-500 shrink-0" />
                                             <div className="min-w-0">
                                                 <p className="text-xs text-muted">Motori</p>
                                                 <p className="font-medium text-primary truncate">{car.engine.name}</p>
@@ -2185,7 +2185,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                     )}
                                     {car.color?.name && (
                                         <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
-                                            <Tag size={20} className="text-orange-primary shrink-0" />
+                                            <Tag size={20} className="text-orange-500 shrink-0" />
                                             <div className="min-w-0">
                                                 <p className="text-xs text-muted">Ngjyra</p>
                                                 <p className="font-medium text-primary truncate">{translateColor(car.color.name)}</p>
@@ -2204,13 +2204,13 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                             <div className="sticky top-24 space-y-4">
                                 {/* Price Card */}
                                 <div className="card p-6">
-                                    <div className="text-3xl font-bold text-orange-primary mb-2">
+                                    <div className="text-3xl font-bold text-orange-500 mb-2">
                                         {formatPrice(priceDetails.finalPrice)}
                                     </div>
 
                                     {/* Vehicle Type Pricing Badge */}
                                     {displayBodyType && (
-                                        <div className="mb-3 inline-flex items-center gap-1 px-2 py-1 bg-orange-5 text-orange-primary rounded-lg text-xs">
+                                        <div className="mb-3 inline-flex items-center gap-1 px-2 py-1 bg-orange-5 text-orange-500 rounded-lg text-xs">
                                             <CarIcon size={12} />
                                             <span>
                                                 {hasTypeConfig
@@ -2227,21 +2227,21 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                     <div className="space-y-3">
                                         <div className="p-4 bg-surface-2 rounded-lg">
                                             <h3 className="font-semibold mb-3 flex items-center gap-2">
-                                                <Building2 size={18} className="text-orange-primary shrink-0" />
+                                                <Building2 size={18} className="text-orange-500 shrink-0" />
                                                 Shitësi
                                             </h3>
                                             <div className="space-y-2 text-sm">
                                                 <p className="text-secondary">
                                                     {config.siteName}
                                                 </p>
-                                                <p className="flex items-center gap-2 text-secondary hover:text-orange-primary transition-colors">
-                                                    <Phone size={14} className="text-orange-primary shrink-0" />
+                                                <p className="flex items-center gap-2 text-secondary hover:text-orange-500 transition-colors">
+                                                    <Phone size={14} className="text-orange-500 shrink-0" />
                                                     <a href={`tel:${config.contactPhone}`} className="hover:underline focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
                                                         {config.contactPhone}
                                                     </a>
                                                 </p>
-                                                <p className="flex items-center gap-2 text-secondary hover:text-orange-primary transition-colors">
-                                                    <Mail size={14} className="text-orange-primary shrink-0" />
+                                                <p className="flex items-center gap-2 text-secondary hover:text-orange-500 transition-colors">
+                                                    <Mail size={14} className="text-orange-500 shrink-0" />
                                                     <a href={`mailto:${config.contactEmail}`} className="hover:underline focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
                                                         {config.contactEmail}
                                                     </a>
@@ -2274,7 +2274,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                             <span className="text-muted flex items-center gap-1">
                                                 Marzha:
                                                 {priceDetails.appliedMarkup === 'minimum' && (
-                                                    <span className="text-xs bg-orange-100 text-orange-primary px-2 py-0.5 rounded-full">
+                                                    <span className="text-xs bg-orange-100 text-orange-500 px-2 py-0.5 rounded-full">
                                                         Minimale
                                                     </span>
                                                 )}
@@ -2289,7 +2289,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                         <div className="border-t border-light my-2 pt-2">
                                             <div className="flex justify-between font-semibold">
                                                 <span>Totali:</span>
-                                                <span className="text-orange-primary">
+                                                <span className="text-orange-500">
                                                     {formatPrice(priceDetails.finalPrice)}
                                                 </span>
                                             </div>
@@ -2312,7 +2312,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                     <div className="mt-12 text-center">
                         <Link
                             href="/cars"
-                            className="inline-flex items-center gap-2 text-muted hover:text-orange-primary transition-colors focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded-lg px-4 py-2"
+                            className="inline-flex items-center gap-2 text-muted hover:text-orange-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded-lg px-4 py-2"
                         >
                             <ArrowLeft size={16} />
                             Kthehu te të gjitha makinat
@@ -2659,7 +2659,7 @@ const getFullUrl = (path: string): string => {
 
   const baseUrl = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
-    : process.env.NEXTAUTH_URL || 'https://vetura-nga-korea.vercel.app';
+    : process.env.NEXTAUTH_URL || 'https://vetura-korea-kosova.vercel.app';
 
   return `${baseUrl}${path}`;
 };
@@ -3733,10 +3733,10 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
             {/* Header */}
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-light/20">
                 <h2 className="text-lg font-semibold text-primary flex items-center gap-2">
-                    <Filter size={18} className="text-orange-primary" />
+                    <Filter size={18} className="text-orange-500" />
                     Filtrat
                     {activeFilterCount > 0 && (
-                        <span className="px-2 py-0.5 text-xs bg-orange-primary text-white rounded-full">
+                        <span className="px-2 py-0.5 text-xs bg-orange-500 text-white rounded-full">
                             {activeFilterCount}
                         </span>
                     )}
@@ -3744,7 +3744,7 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
                 {activeFilterCount > 0 && (
                     <button
                         onClick={clearFilters}
-                        className="text-sm text-muted hover:text-orange-primary transition-colors"
+                        className="text-sm text-muted hover:text-orange-500 transition-colors"
                     >
                         Pastro të gjitha
                     </button>
@@ -3754,7 +3754,7 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
             {/* Info message about client-side filters */}
             <div className="mb-4 p-3 bg-orange-5 border border-orange-primary/20 rounded-lg">
                 <p className="text-xs text-muted">
-                    <span className="font-medium text-orange-primary">Informacion:</span> Disa filtra (transmisioni, karburanti, ngjyra) aplikohen pas ngarkimit të rezultateve.
+                    <span className="font-medium text-orange-500">Informacion:</span> Disa filtra (transmisioni, karburanti, ngjyra) aplikohen pas ngarkimit të rezultateve.
                 </p>
             </div>
 
@@ -3886,7 +3886,7 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
                                 <div className={`
                                     w-4 h-4 rounded-full border-2 transition-colors
                                     ${localFilters.transmissionId === option.value
-                                        ? 'border-orange-primary bg-orange-primary'
+                                        ? 'border-orange-primary bg-orange-500'
                                         : 'border-light group-hover:border-orange-primary/50'
                                     }
                                 `}>
@@ -3901,7 +3901,7 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
                         ))}
                         <button
                             onClick={() => updateFilter('transmissionId', '')}
-                            className="text-xs text-muted hover:text-orange-primary mt-2"
+                            className="text-xs text-muted hover:text-orange-500 mt-2"
                         >
                             Pastro
                         </button>
@@ -3929,7 +3929,7 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
                                 <div className={`
                                     w-4 h-4 rounded-full border-2 transition-colors
                                     ${localFilters.fuelId === option.value
-                                        ? 'border-orange-primary bg-orange-primary'
+                                        ? 'border-orange-primary bg-orange-500'
                                         : 'border-light group-hover:border-orange-primary/50'
                                     }
                                 `}>
@@ -3944,7 +3944,7 @@ export default function FilterSidebar({ onApply }: FilterSidebarProps) {
                         ))}
                         <button
                             onClick={() => updateFilter('fuelId', '')}
-                            className="text-xs text-muted hover:text-orange-primary mt-2"
+                            className="text-xs text-muted hover:text-orange-500 mt-2"
                         >
                             Pastro
                         </button>
@@ -4431,7 +4431,7 @@ export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
                                                 <Dialog.Title className="text-lg font-semibold text-primary flex items-center gap-2">
                                                     Filtrat
                                                     {activeFilterCount > 0 && (
-                                                        <span className="px-2 py-0.5 text-xs bg-orange-primary text-white rounded-full">
+                                                        <span className="px-2 py-0.5 text-xs bg-orange-500 text-white rounded-full">
                                                             {activeFilterCount}
                                                         </span>
                                                     )}
@@ -4440,7 +4440,7 @@ export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
                                                     {activeFilterCount > 0 && (
                                                         <button
                                                             onClick={clearFilters}
-                                                            className="text-sm text-muted hover:text-orange-primary transition-colors"
+                                                            className="text-sm text-muted hover:text-orange-500 transition-colors"
                                                         >
                                                             Pastro
                                                         </button>
@@ -4459,7 +4459,7 @@ export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
                                         {/* Info message about client-side filters */}
                                         <div className="px-6 py-3 bg-orange-5 border-b border-orange-primary/20">
                                             <p className="text-xs text-muted">
-                                                <span className="font-medium text-orange-primary">Informacion:</span> Disa filtra (transmisioni, karburanti, ngjyra) aplikohen pas ngarkimit të rezultateve.
+                                                <span className="font-medium text-orange-500">Informacion:</span> Disa filtra (transmisioni, karburanti, ngjyra) aplikohen pas ngarkimit të rezultateve.
                                             </p>
                                         </div>
 
@@ -4592,7 +4592,7 @@ export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
                                                                 <div className={`
                                                                     w-4 h-4 rounded-full border-2 transition-colors
                                                                     ${localFilters.transmissionId === option.value
-                                                                        ? 'border-orange-primary bg-orange-primary'
+                                                                        ? 'border-orange-primary bg-orange-500'
                                                                         : 'border-light group-hover:border-orange-primary/50'
                                                                     }
                                                                 `}>
@@ -4607,7 +4607,7 @@ export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
                                                         ))}
                                                         <button
                                                             onClick={() => updateFilter('transmissionId', '')}
-                                                            className="text-xs text-muted hover:text-orange-primary mt-2"
+                                                            className="text-xs text-muted hover:text-orange-500 mt-2"
                                                         >
                                                             Pastro
                                                         </button>
@@ -4635,7 +4635,7 @@ export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
                                                                 <div className={`
                                                                     w-4 h-4 rounded-full border-2 transition-colors
                                                                     ${localFilters.fuelId === option.value
-                                                                        ? 'border-orange-primary bg-orange-primary'
+                                                                        ? 'border-orange-primary bg-orange-500'
                                                                         : 'border-light group-hover:border-orange-primary/50'
                                                                     }
                                                                 `}>
@@ -4650,7 +4650,7 @@ export default function MobileFilters({ isOpen, onClose }: MobileFiltersProps) {
                                                         ))}
                                                         <button
                                                             onClick={() => updateFilter('fuelId', '')}
-                                                            className="text-xs text-muted hover:text-orange-primary mt-2"
+                                                            className="text-xs text-muted hover:text-orange-500 mt-2"
                                                         >
                                                             Pastro
                                                         </button>
@@ -4953,7 +4953,7 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
                                 w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-200
                                 ${isHero
                                     ? 'text-gray-600 hover:text-gray-900 hover:bg-white/20'
-                                    : 'text-muted hover:text-orange-primary hover:bg-surface-2'
+                                    : 'text-muted hover:text-orange-500 hover:bg-surface-2'
                                 }
                             `}
                             title="Pastro filtrat"
@@ -5154,7 +5154,7 @@ export default function CustomSelect({
                                             cursor-pointer
                                             ${idx !== options.length - 1 ? 'border-b border-light/10' : ''}
                                             ${value === option.value
-                                                ? 'bg-orange-5 text-orange-primary font-medium'
+                                                ? 'bg-orange-5 text-orange-500 font-medium'
                                                 : 'text-secondary hover:text-primary'
                                             }
                                         `}
@@ -5162,7 +5162,7 @@ export default function CustomSelect({
                                         <div className="flex items-center justify-between">
                                             <span>{option.label}</span>
                                             {value === option.value && (
-                                                <Check size={14} className="text-orange-primary" />
+                                                <Check size={14} className="text-orange-500" />
                                             )}
                                         </div>
                                     </button>
@@ -5214,7 +5214,7 @@ const CustomButton = forwardRef<HTMLButtonElement, CustomButtonProps>(
         const baseClasses = 'relative inline-flex items-center justify-center gap-2 font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-primary/20 overflow-hidden';
 
         const variantClasses = {
-            primary: 'bg-orange-primary text-white hover:bg-orange-dark active:scale-[0.98] disabled:hover:bg-orange-primary',
+            primary: 'bg-orange-500 text-white hover:bg-orange-dark active:scale-[0.98] disabled:hover:bg-orange-500',
             secondary: 'bg-surface-2/80 text-secondary border border-light/10 hover:border-orange-primary/30 hover:text-primary hover:bg-surface-2',
             outline: 'bg-transparent border border-light/20 text-secondary hover:border-orange-primary/30 hover:text-primary hover:bg-surface-2/50',
             ghost: 'bg-transparent text-secondary hover:text-primary hover:bg-surface-2/50'
@@ -5357,7 +5357,7 @@ export default function CustomRadio({
                 <div className={`
           ${type === 'radio' ? 'w-5 h-5 rounded-full' : 'w-5 h-5 rounded'}
           border border-light 
-          peer-checked:border-orange-primary peer-checked:bg-orange-primary 
+          peer-checked:border-orange-primary peer-checked:bg-orange-500 
           transition-all duration-200
           group-hover:border-orange-primary/50
         `} />
@@ -5485,7 +5485,7 @@ export default function CustomRangeSlider({
             <div className="relative pt-4 pb-2" ref={rangeRef}>
                 <div className="h-1 bg-surface-2 rounded-full">
                     <div
-                        className="absolute h-1 bg-orange-primary rounded-full"
+                        className="absolute h-1 bg-orange-500 rounded-full"
                         style={{
                             left: `${getPercentage(from)}%`,
                             right: `${100 - getPercentage(to)}%`
@@ -5501,7 +5501,7 @@ export default function CustomRangeSlider({
                     value={from}
                     onChange={handleFromChange}
                     step={step}
-                    className="absolute top-3 w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-orange-primary [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow-lg"
+                    className="absolute top-3 w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-orange-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow-lg"
                 />
 
                 {/* To thumb */}
@@ -5512,7 +5512,7 @@ export default function CustomRangeSlider({
                     value={to}
                     onChange={handleToChange}
                     step={step}
-                    className="absolute top-3 w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-orange-primary [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow-lg"
+                    className="absolute top-3 w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-orange-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow-lg"
                 />
             </div>
 
@@ -5624,14 +5624,14 @@ export default function MobileSelect({
                                         transition-colors
                                         flex items-center justify-between gap-2
                                         ${value === option.value
-                                            ? 'bg-orange-10 text-orange-primary font-medium'
+                                            ? 'bg-orange-10 text-orange-500 font-medium'
                                             : 'bg-surface-2 text-secondary hover:bg-surface-3 hover:text-primary'
                                         }
                                     `}
                                 >
                                     <span className="truncate">{option.label}</span>
                                     {value === option.value && (
-                                        <Check size={16} className="text-orange-primary shrink-0" />
+                                        <Check size={16} className="text-orange-500 shrink-0" />
                                     )}
                                 </button>
                             ))
@@ -5745,7 +5745,7 @@ export default function Pagination({
                                 min-w-10 h-10 px-3 flex items-center justify-center rounded-lg
                                 text-sm font-medium transition-all duration-200
                                 ${currentPage === page
-                                    ? 'bg-orange-primary text-white shadow-md'
+                                    ? 'bg-orange-500 text-white shadow-md'
                                     : 'bg-surface-2 border border-light/30 text-secondary hover:text-primary hover:border-orange-primary/50'
                                 }
                                 focus:outline-none focus:ring-2 focus:ring-orange-primary/20
@@ -6018,7 +6018,7 @@ export default function ScrollToTop() {
                     className="fixed bottom-6 right-6 z-fixed p-3 bg-surface border border-light rounded-lg shadow-lg hover:border-orange-primary hover:bg-orange-5 transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-orange-primary/50"
                     aria-label="Kthehu në fillim"
                 >
-                    <ArrowUp size={20} className="text-secondary group-hover:text-orange-primary transition-colors" />
+                    <ArrowUp size={20} className="text-secondary group-hover:text-orange-500 transition-colors" />
                 </motion.button>
             )}
         </AnimatePresence>
@@ -6238,7 +6238,7 @@ export default function Header() {
                         className="flex items-center space-x-3 group shrink-0"
                     >
                         <div className="relative">
-                            <img src="/logo.webp" className="w-12 h-12" alt="Vetura Nga Korea Logo" />
+                            <img src="/logo.webp" className="w-12 h-12" alt="Vetura Korea Kosova Logo" />
                         </div>
                         <span className={`text-base md:text-lg font-semibold tracking-tight hidden sm:block ${scrolled ? 'text-primary' : 'text-white'
                             }`}>
@@ -6262,7 +6262,7 @@ export default function Header() {
                                     : 'focus:ring-white/50 focus:ring-offset-orange-500'
                                     } ${isActive(item.href)
                                         ? scrolled
-                                            ? 'text-orange-primary bg-orange-10'
+                                            ? 'text-orange-500 bg-orange-10'
                                             : 'text-white bg-white/20'
                                         : scrolled
                                             ? 'text-secondary hover:text-primary hover:bg-surface-2/50'
@@ -6308,7 +6308,7 @@ export default function Header() {
                                         href={item.href}
                                         className={`block py-3 px-4 rounded-xl text-sm font-medium transition-all ${isActive(item.href)
                                             ? scrolled
-                                                ? 'bg-orange-10 text-orange-primary'
+                                                ? 'bg-orange-10 text-orange-500'
                                                 : 'bg-white/20 text-white'
                                             : scrolled
                                                 ? 'text-secondary hover:text-primary hover:bg-surface-2/50'
@@ -6373,7 +6373,7 @@ export default function Footer() {
                     {/* Brand */}
                     <div className="lg:col-span-1">
                         <div className="flex items-center space-x-2 mb-4">
-                            <Car className="w-8 h-8 text-orange-primary" />
+                            <Car className="w-8 h-8 text-orange-500" />
                             <span className="text-xl font-semibold text-primary">
                                 {config.siteName}
                             </span>
@@ -6384,13 +6384,13 @@ export default function Footer() {
                         </p>
                         <div className="flex space-x-3">
                             <div className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center hover:bg-orange-10 transition-colors cursor-pointer">
-                                <span className="text-xs font-medium text-secondary hover:text-orange-primary">FB</span>
+                                <span className="text-xs font-medium text-secondary hover:text-orange-500">FB</span>
                             </div>
                             <div className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center hover:bg-orange-10 transition-colors cursor-pointer">
-                                <span className="text-xs font-medium text-secondary hover:text-orange-primary">IG</span>
+                                <span className="text-xs font-medium text-secondary hover:text-orange-500">IG</span>
                             </div>
                             <div className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center hover:bg-orange-10 transition-colors cursor-pointer">
-                                <span className="text-xs font-medium text-secondary hover:text-orange-primary">YT</span>
+                                <span className="text-xs font-medium text-secondary hover:text-orange-500">YT</span>
                             </div>
                         </div>
                     </div>
@@ -6405,7 +6405,7 @@ export default function Footer() {
                                 <li key={item.name}>
                                     <Link
                                         href={item.href}
-                                        className="text-secondary hover:text-orange-primary transition-colors text-sm"
+                                        className="text-secondary hover:text-orange-500 transition-colors text-sm"
                                     >
                                         {item.name}
                                     </Link>
@@ -6424,7 +6424,7 @@ export default function Footer() {
                                 <li key={item.name}>
                                     <Link
                                         href={item.href}
-                                        className="text-secondary hover:text-orange-primary transition-colors text-sm"
+                                        className="text-secondary hover:text-orange-500 transition-colors text-sm"
                                     >
                                         {item.name}
                                     </Link>
@@ -6441,20 +6441,20 @@ export default function Footer() {
                         <ul className="space-y-3">
                             {process.env.NODE_ENV === 'development' && (
                                 <li>
-                                    <Link href="/admin" className="text-secondary hover:text-orange-primary transition-colors text-sm">
+                                    <Link href="/admin" className="text-secondary hover:text-orange-500 transition-colors text-sm">
                                         Admin
                                     </Link>
                                 </li>
                             )}
                             <li className="flex items-start gap-3">
                                 <Mail size={16} className="text-muted mt-0.5" />
-                                <a href={`mailto:${config.contactEmail}`} className="text-secondary hover:text-orange-primary transition-colors text-sm">
+                                <a href={`mailto:${config.contactEmail}`} className="text-secondary hover:text-orange-500 transition-colors text-sm">
                                     {config.contactEmail}
                                 </a>
                             </li>
                             <li className="flex items-start gap-3">
                                 <Phone size={16} className="text-muted mt-0.5" />
-                                <a href={`tel:${config.contactPhone}`} className="text-secondary hover:text-orange-primary transition-colors text-sm">
+                                <a href={`tel:${config.contactPhone}`} className="text-secondary hover:text-orange-500 transition-colors text-sm">
                                     {config.contactPhone}
                                 </a>
                             </li>
@@ -6475,7 +6475,7 @@ export default function Footer() {
                     </p>
                     <button
                         onClick={scrollToTop}
-                        className="flex items-center gap-2 text-sm text-secondary hover:text-orange-primary transition-colors group"
+                        className="flex items-center gap-2 text-sm text-secondary hover:text-orange-500 transition-colors group"
                     >
                         <span>Kthehu lart</span>
                         <ArrowUp size={16} className="group-hover:-translate-y-1 transition-transform" />
@@ -6542,8 +6542,8 @@ export default function Hero() {
                         variants={fadeInUp}
                         className="inline-flex items-center gap-2 bg-orange-10 backdrop-blur-sm px-4 py-2 rounded-full border border-orange-20 mb-6 md:mb-8"
                     >
-                        <Sparkles size={16} className="text-orange-primary" />
-                        <span className="text-orange-primary text-sm font-medium tracking-wide">
+                        <Sparkles size={16} className="text-orange-500" />
+                        <span className="text-orange-500 text-sm font-medium tracking-wide">
                             IMPORT DIREKT NGA KOREA
                         </span>
                     </motion.div>
@@ -6554,9 +6554,9 @@ export default function Hero() {
                         className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 tracking-tight"
                     >
                         Makina cilësore{' '}
-                        <span className="text-orange-primary relative">
+                        <span className="text-orange-500 relative">
                             nga Korea
-                            <span className="absolute -bottom-2 left-0 right-0 h-1 bg-orange-primary/30 rounded-full hidden md:block" />
+                            <span className="absolute -bottom-2 left-0 right-0 h-1 bg-orange-500/30 rounded-full hidden md:block" />
                         </span>
                         <br className="hidden md:block" />
                         në Kosovë
@@ -6567,7 +6567,7 @@ export default function Hero() {
                         variants={fadeInUp}
                         className="text-base md:text-xl text-secondary mb-6 md:mb-8 max-w-2xl leading-relaxed"
                     >
-                        Vetura Nga Korea ju sjell makinat më të mira nga Korea me çmime konkurruese.
+                        Vetura Korea Kosova ju sjell makinat më të mira nga Korea me çmime konkurruese.
                         Inspektim të plotë, garanci dhe transport të sigurt.
                     </motion.p>
 
@@ -6617,7 +6617,7 @@ export default function Hero() {
                             >
                                 <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
                                     <div className="p-1.5 md:p-2 bg-orange-10 rounded-lg">
-                                        <stat.icon size={16} className="md:w-5 md:h-5 text-orange-primary" />
+                                        <stat.icon size={16} className="md:w-5 md:h-5 text-orange-500" />
                                     </div>
                                     <span className="text-lg md:text-2xl font-bold text-primary">
                                         {stat.value}
@@ -6731,8 +6731,8 @@ export default function FeaturedCars() {
                     className="text-center mb-12"
                 >
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-10 rounded-full mb-4">
-                        <Sparkles size={16} className="text-orange-primary" />
-                        <span className="text-xs font-medium text-orange-primary uppercase tracking-wider">
+                        <Sparkles size={16} className="text-orange-500" />
+                        <span className="text-xs font-medium text-orange-500 uppercase tracking-wider">
                             Featured
                         </span>
                     </div>
@@ -6769,7 +6769,7 @@ export default function FeaturedCars() {
                 >
                     <Link
                         href="/cars"
-                        className="group inline-flex items-center gap-2 px-6 py-3 bg-orange-primary text-white rounded-xl hover:bg-orange-dark transition-all hover:scale-105 shadow-lg focus:outline-none focus:ring-2 focus:ring-orange-primary/50"
+                        className="group inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-dark transition-all hover:scale-105 shadow-lg focus:outline-none focus:ring-2 focus:ring-orange-primary/50"
                     >
                         <span>Shfleto të gjitha makinat</span>
                         <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -6875,7 +6875,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
 
                 {/* Content */}
                 <div className="p-5 flex-1 flex flex-col">
-                    <h3 className="text-base font-medium text-primary mb-3 line-clamp-1 group-hover:text-orange-primary transition-colors">
+                    <h3 className="text-base font-medium text-primary mb-3 line-clamp-1 group-hover:text-orange-500 transition-colors">
                         {carTitle}
                     </h3>
 
@@ -6904,7 +6904,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
                     {/* Price */}
                     <div className="mt-auto pt-3 border-t border-light">
                         <div className="flex items-baseline justify-between">
-                            <span className="text-xl font-semibold text-orange-primary">
+                            <span className="text-xl font-semibold text-orange-500">
                                 {formatPrice(price)}
                             </span>
                             {car.engine?.name && (
@@ -6944,8 +6944,8 @@ export default function RecentlyViewed() {
     return (
         <div className="w-full max-w-7xl mx-auto px-4 py-12">
             <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-orange-primary/10 rounded-lg">
-                    <Clock className="w-5 h-5 text-orange-primary" />
+                <div className="p-2 bg-orange-500/10 rounded-lg">
+                    <Clock className="w-5 h-5 text-orange-500" />
                 </div>
                 <h2 className="text-2xl font-semibold text-primary">Shikuar së fundmi</h2>
             </div>
@@ -6971,11 +6971,11 @@ export default function RecentlyViewed() {
                                 )}
                             </div>
                             <div className="p-3">
-                                <h3 className="text-sm font-medium text-primary line-clamp-1 group-hover:text-orange-primary transition-colors">
+                                <h3 className="text-sm font-medium text-primary line-clamp-1 group-hover:text-orange-500 transition-colors">
                                     {car.title}
                                 </h3>
                                 {car.price && (
-                                    <p className="text-sm font-semibold text-orange-primary mt-1">
+                                    <p className="text-sm font-semibold text-orange-500 mt-1">
                                         {new Intl.NumberFormat('sq-AL', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(car.price)}
                                     </p>
                                 )}
@@ -7245,7 +7245,7 @@ const defaultConfig: SiteConfig = {
     minimumMarkup: 1000,
     contactEmail: 'blerart@outlook.com',
     contactPhone: '+383 49 195 414',
-    siteName: 'Vetura Nga Korea',
+    siteName: 'Vetura Korea Kosova',
     currency: 'EUR',
     vehicleTypes: {
         suv: { shippingCost: 4500, markupPercentage: 18, minimumMarkup: 1500, enabled: false },
@@ -7484,7 +7484,7 @@ const defaultConfig: SiteConfig = {
     minimumMarkup: 1000,
     contactEmail: 'info@vetura-korea-kosove.com',
     contactPhone: '+383 49 195 414',
-    siteName: 'Vetura Nga Korea',
+    siteName: 'Vetura Korea Kosova',
     currency: 'EUR'
 };
 

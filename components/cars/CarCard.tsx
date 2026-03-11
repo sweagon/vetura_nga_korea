@@ -89,7 +89,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
 
                 {/* Content */}
                 <div className="p-5 flex-1 flex flex-col">
-                    <h3 className="text-base font-medium text-primary mb-3 line-clamp-1 group-hover:text-orange-primary transition-colors">
+                    <h3 className="text-base font-medium text-primary mb-3 line-clamp-1 group-hover:text-orange-500 transition-colors">
                         {carTitle}
                     </h3>
 
@@ -118,7 +118,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
                     {/* Price */}
                     <div className="mt-auto pt-3 border-t border-light">
                         <div className="flex items-baseline justify-between">
-                            <span className="text-xl font-semibold text-orange-primary">
+                            <span className="text-xl font-semibold text-orange-500">
                                 {formatPrice(price)}
                             </span>
                             {car.engine?.name && (

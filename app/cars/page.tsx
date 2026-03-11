@@ -2,9 +2,10 @@
 import { Suspense } from 'react';
 import CarsContentWrapper from './CarsContentWrapper';
 import { Metadata } from 'next';
+import { FilterProvider } from '@/contexts/FilterContext';
 
 export const metadata: Metadata = {
-    title: 'Makina për Shitje | Vetura Nga Korea',
+    title: 'Makina për Shitje | Vetura Korea Kosova',
     description: 'Shfleto makinat më të mira nga Korea.',
 };
 
@@ -75,10 +76,12 @@ export default function CarsPage() {
                     </p>
                 </div>
 
-                {/* Results with Suspense */}
-                <Suspense fallback={<CarsLoadingSkeleton />}>
-                    <CarsContentWrapper />
-                </Suspense>
+                {/* Results with Suspense - Wrapped in FilterProvider */}
+                <FilterProvider>
+                    <Suspense fallback={<CarsLoadingSkeleton />}>
+                        <CarsContentWrapper />
+                    </Suspense>
+                </FilterProvider>
             </div>
         </div>
     );

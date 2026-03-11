@@ -34,7 +34,7 @@ export default function Footer() {
                     {/* Brand */}
                     <div className="lg:col-span-1">
                         <div className="flex items-center space-x-2 mb-4">
-                            <Car className="w-8 h-8 text-orange-primary" />
+                            <Car className="w-8 h-8 text-orange-500" />
                             <span className="text-xl font-semibold text-primary">
                                 {config.siteName}
                             </span>
@@ -45,13 +45,13 @@ export default function Footer() {
                         </p>
                         <div className="flex space-x-3">
                             <div className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center hover:bg-orange-10 transition-colors cursor-pointer">
-                                <span className="text-xs font-medium text-secondary hover:text-orange-primary">FB</span>
+                                <span className="text-xs font-medium text-secondary hover:text-orange-500">FB</span>
                             </div>
                             <div className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center hover:bg-orange-10 transition-colors cursor-pointer">
-                                <span className="text-xs font-medium text-secondary hover:text-orange-primary">IG</span>
+                                <span className="text-xs font-medium text-secondary hover:text-orange-500">IG</span>
                             </div>
                             <div className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center hover:bg-orange-10 transition-colors cursor-pointer">
-                                <span className="text-xs font-medium text-secondary hover:text-orange-primary">YT</span>
+                                <span className="text-xs font-medium text-secondary hover:text-orange-500">YT</span>
                             </div>
                         </div>
                     </div>
@@ -66,26 +66,7 @@ export default function Footer() {
                                 <li key={item.name}>
                                     <Link
                                         href={item.href}
-                                        className="text-secondary hover:text-orange-primary transition-colors text-sm"
-                                    >
-                                        {item.name}
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    {/* Legal */}
-                    <div>
-                        <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-4">
-                            Ligjore
-                        </h3>
-                        <ul className="space-y-3">
-                            {navigation.legal.map((item) => (
-                                <li key={item.name}>
-                                    <Link
-                                        href={item.href}
-                                        className="text-secondary hover:text-orange-primary transition-colors text-sm"
+                                        className="text-secondary hover:text-orange-500 transition-colors text-sm"
                                     >
                                         {item.name}
                                     </Link>
@@ -102,20 +83,20 @@ export default function Footer() {
                         <ul className="space-y-3">
                             {process.env.NODE_ENV === 'development' && (
                                 <li>
-                                    <Link href="/admin" className="text-secondary hover:text-orange-primary transition-colors text-sm">
+                                    <Link href="/admin" className="text-secondary hover:text-orange-500 transition-colors text-sm">
                                         Admin
                                     </Link>
                                 </li>
                             )}
                             <li className="flex items-start gap-3">
                                 <Mail size={16} className="text-muted mt-0.5" />
-                                <a href={`mailto:${config.contactEmail}`} className="text-secondary hover:text-orange-primary transition-colors text-sm">
+                                <a href={`mailto:${config.contactEmail}`} className="text-secondary hover:text-orange-500 transition-colors text-sm">
                                     {config.contactEmail}
                                 </a>
                             </li>
                             <li className="flex items-start gap-3">
                                 <Phone size={16} className="text-muted mt-0.5" />
-                                <a href={`tel:${config.contactPhone}`} className="text-secondary hover:text-orange-primary transition-colors text-sm">
+                                <a href={`tel:${config.contactPhone}`} className="text-secondary hover:text-orange-500 transition-colors text-sm">
                                     {config.contactPhone}
                                 </a>
                             </li>
@@ -136,7 +117,7 @@ export default function Footer() {
                     </p>
                     <button
                         onClick={scrollToTop}
-                        className="flex items-center gap-2 text-sm text-secondary hover:text-orange-primary transition-colors group"
+                        className="flex items-center gap-2 text-sm text-secondary hover:text-orange-500 transition-colors group"
                     >
                         <span>Kthehu lart</span>
                         <ArrowUp size={16} className="group-hover:-translate-y-1 transition-transform" />

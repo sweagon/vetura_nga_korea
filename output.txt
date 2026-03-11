@@ -136,7 +136,7 @@ export default function CarsContentWrapper() {
                     />
                 </div>
                 <div className="flex-1 text-center py-16 bg-surface-2/30 rounded-2xl border border-light/20">
-                    <AlertCircle className="w-12 h-12 text-orange-primary mx-auto mb-4" />
+                    <AlertCircle className="w-12 h-12 text-orange-500 mx-auto mb-4" />
                     <p className="text-secondary mb-2">{error}</p>
                     <button
                         onClick={() => window.location.reload()}
@@ -265,622 +265,47 @@ export default function CarsContentWrapper() {
     );
 }
 =========================================
-FILE: hooks/useCarFilters.ts
+FILE: components/ui/FilterToggle.tsx
 =========================================
+// components/ui/FilterToggle.tsx
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { fetchCars, type Car } from '@/lib/api';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { debounce } from 'lodash';
+import { Filter } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 
-const PER_PAGE = 12;
-const API_PAGE_SIZE = 50;
-const BATCH_SIZE = 5;
-
-interface CarFiltersState {
-    cars: Car[];
-    loading: boolean;
-    loadingMore: boolean;
-    currentPage: number;
-    totalPages: number;
-    totalMatches: number;
-    searchProgress: number;
-    currentSearchPage: number;
-    totalSearchPages: number;
-    error: string | null;
+interface FilterToggleProps {
+    onClick: () => void;
 }
 
-export function useCarFilters(
-    serverFilters: Record<string, any>,
-    clientFilters: Record<string, string>
-) {
-    const router = useRouter();
+export default function FilterToggle({ onClick }: FilterToggleProps) {
     const searchParams = useSearchParams();
-    const urlPage = Number(searchParams.get('page')) || 1;
 
-    // Memoize filter values to prevent unnecessary re-renders
-    const serverFiltersStr = useMemo(() => JSON.stringify(serverFilters), [serverFilters]);
-    const clientFiltersStr = useMemo(() => JSON.stringify(clientFilters), [clientFilters]);
-    const hasClientFilters = useMemo(() =>
-        Object.values(clientFilters).some(v => v !== ''),
-        [clientFiltersStr]
-    );
-
-    const [state, setState] = useState<CarFiltersState>({
-        cars: [],
-        loading: true,
-        loadingMore: false,
-        currentPage: hasClientFilters ? 1 : urlPage,
-        totalPages: 0,
-        totalMatches: 0,
-        searchProgress: 0,
-        currentSearchPage: 0,
-        totalSearchPages: 0,
-        error: null
-    });
-
-    const allMatchesRef = useRef<Car[]>([]);
-    const abortControllerRef = useRef<AbortController | null>(null);
-
-    // Server-only pagination
-    const fetchServerPage = useCallback(async (page: number) => {
-        try {
-            const response = await fetchCars({
-                page,
-                per_page: PER_PAGE,
-                vehicle_type: '1',
-                ...JSON.parse(serverFiltersStr)
-            });
-
-            if (abortControllerRef.current?.signal.aborted) return;
-
-            const cars = response.data || [];
-            const hasNextPage = cars.length === PER_PAGE;
-            const totalFromApi = response.meta?.total || 0;
-
-            setState({
-                cars,
-                loading: false,
-                loadingMore: false,
-                currentPage: page,
-                totalPages: Math.ceil(totalFromApi / PER_PAGE) || (hasNextPage ? page + 1 : page),
-                totalMatches: totalFromApi || cars.length,
-                searchProgress: 100,
-                currentSearchPage: 0,
-                totalSearchPages: 0,
-                error: null
-            });
-        } catch (error) {
-            if (error instanceof Error && error.name === 'AbortError') return;
-            console.error('Error fetching server page:', error);
-            setState(prev => ({
-                ...prev,
-                loading: false,
-                error: 'Failed to load cars'
-            }));
-        }
-    }, [serverFiltersStr]);
-
-    // Optimized filter function
-    const matchesFilters = useCallback((car: Car): boolean => {
-        // Quick reject checks first
-        if (clientFilters.fuel_id && car.fuel?.id.toString() !== clientFilters.fuel_id) return false;
-        if (clientFilters.transmission_id && car.transmission?.id.toString() !== clientFilters.transmission_id) return false;
-        if (clientFilters.color_id && car.color?.id.toString() !== clientFilters.color_id) return false;
-        if (clientFilters.body_type_id && car.body_type?.id.toString() !== clientFilters.body_type_id) return false;
-
-        // Numeric filters
-        if (clientFilters.yearFrom) {
-            const yearFrom = parseInt(clientFilters.yearFrom);
-            if (!isNaN(yearFrom) && car.year < yearFrom) return false;
-        }
-        if (clientFilters.yearTo) {
-            const yearTo = parseInt(clientFilters.yearTo);
-            if (!isNaN(yearTo) && car.year > yearTo) return false;
-        }
-
-        const price = car.lots?.[0]?.buy_now || 0;
-        if (clientFilters.priceFrom) {
-            const priceFrom = parseInt(clientFilters.priceFrom);
-            if (!isNaN(priceFrom) && price < priceFrom) return false;
-        }
-        if (clientFilters.priceTo) {
-            const priceTo = parseInt(clientFilters.priceTo);
-            if (!isNaN(priceTo) && price > priceTo) return false;
-        }
-
-        return true;
-    }, [clientFilters]);
-
-    // Client-side filtering with batching
-    const searchWithClientFilters = useCallback(async () => {
-        try {
-            const firstResponse = await fetchCars({
-                page: 1,
-                per_page: API_PAGE_SIZE,
-                vehicle_type: '1',
-                ...JSON.parse(serverFiltersStr)
-            });
-
-            if (abortControllerRef.current?.signal.aborted) return;
-
-            const totalApiPages = firstResponse.meta?.total
-                ? Math.ceil(firstResponse.meta.total / API_PAGE_SIZE)
-                : 100;
-
-            setState(prev => ({
-                ...prev,
-                totalSearchPages: totalApiPages
-            }));
-
-            let allMatches: Car[] = [];
-
-            // Fetch first 5 pages immediately
-            const initialBatch = [];
-            for (let i = 1; i <= 5; i++) {
-                initialBatch.push(fetchCars({
-                    page: i,
-                    per_page: API_PAGE_SIZE,
-                    vehicle_type: '1',
-                    ...JSON.parse(serverFiltersStr)
-                }));
-            }
-
-            const initialResults = await Promise.all(initialBatch);
-
-            if (abortControllerRef.current?.signal.aborted) return;
-
-            initialResults.forEach(response => {
-                const matches = (response.data || []).filter(matchesFilters);
-                if (matches.length > 0) {
-                    allMatches = [...allMatches, ...matches];
-                }
-            });
-
-            allMatchesRef.current = allMatches;
-
-            setState(prev => ({
-                ...prev,
-                cars: allMatches.slice(0, PER_PAGE),
-                totalMatches: allMatches.length,
-                totalPages: Math.ceil(allMatches.length / PER_PAGE),
-                searchProgress: Math.round((5 / totalApiPages) * 100),
-                currentSearchPage: 5,
-                loading: false
-            }));
-
-            // Fetch remaining in background
-            let pagesFetched = 5;
-            for (let page = 6; page <= totalApiPages; page += BATCH_SIZE) {
-                if (abortControllerRef.current?.signal.aborted) break;
-
-                const batch = [];
-                for (let i = 0; i < BATCH_SIZE && page + i <= totalApiPages; i++) {
-                    batch.push(fetchCars({
-                        page: page + i,
-                        per_page: API_PAGE_SIZE,
-                        vehicle_type: '1',
-                        ...JSON.parse(serverFiltersStr)
-                    }));
-                }
-
-                const batchResults = await Promise.all(batch);
-
-                if (abortControllerRef.current?.signal.aborted) break;
-
-                batchResults.forEach(response => {
-                    const matches = (response.data || []).filter(matchesFilters);
-                    if (matches.length > 0) {
-                        allMatches = [...allMatches, ...matches];
-                        allMatchesRef.current = allMatches;
-                    }
-                });
-
-                pagesFetched += BATCH_SIZE;
-                const lastPage = Math.min(page + BATCH_SIZE - 1, totalApiPages);
-
-                setState(prev => ({
-                    ...prev,
-                    totalMatches: allMatches.length,
-                    totalPages: Math.ceil(allMatches.length / PER_PAGE),
-                    searchProgress: Math.min(100, Math.round((pagesFetched / totalApiPages) * 100)),
-                    currentSearchPage: lastPage
-                }));
-            }
-        } catch (error) {
-            if (error instanceof Error && error.name === 'AbortError') return;
-            console.error('Error in client search:', error);
-            setState(prev => ({
-                ...prev,
-                loading: false,
-                error: 'Search failed'
-            }));
-        }
-    }, [serverFiltersStr, matchesFilters]);
-
-    // Debounced filter change handler
-    const debouncedFilterChange = useCallback(
-        debounce(() => {
-            if (abortControllerRef.current) {
-                abortControllerRef.current.abort();
-            }
-            abortControllerRef.current = new AbortController();
-            allMatchesRef.current = [];
-
-            setState(prev => ({
-                ...prev,
-                loading: true,
-                currentPage: hasClientFilters ? 1 : urlPage,
-                searchProgress: 0,
-                error: null
-            }));
-
-            if (!hasClientFilters) {
-                fetchServerPage(urlPage);
-            } else {
-                searchWithClientFilters();
-            }
-        }, 300),
-        [hasClientFilters, urlPage, fetchServerPage, searchWithClientFilters]
-    );
-
-    // Trigger search when filters change
-    useEffect(() => {
-        debouncedFilterChange();
-
-        return () => {
-            debouncedFilterChange.cancel();
-            if (abortControllerRef.current) {
-                abortControllerRef.current.abort();
-            }
-        };
-    }, [serverFiltersStr, clientFiltersStr, urlPage, debouncedFilterChange]);
-
-    // Optimized page change
-    const goToPage = useCallback((page: number) => {
-        if (!hasClientFilters) {
-            setState(prev => ({ ...prev, loadingMore: true }));
-            const params = new URLSearchParams(searchParams.toString());
-            params.set('page', page.toString());
-            router.push(`/cars?${params.toString()}`);
-        } else {
-            setState(prev => ({ ...prev, loadingMore: true }));
-
-            // Use requestAnimationFrame for smoother UI
-            requestAnimationFrame(() => {
-                const start = (page - 1) * PER_PAGE;
-                const end = start + PER_PAGE;
-                const displayCars = allMatchesRef.current.slice(start, end);
-
-                setState(prev => ({
-                    ...prev,
-                    cars: displayCars,
-                    currentPage: page,
-                    loadingMore: false
-                }));
-            });
-        }
-
-        // Smooth scroll
-        requestAnimationFrame(() => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-    }, [hasClientFilters, router, searchParams]);
-
-    return {
-        cars: state.cars,
-        loading: state.loading,
-        loadingMore: state.loadingMore,
-        currentPage: state.currentPage,
-        totalPages: state.totalPages,
-        totalMatches: state.totalMatches,
-        searchProgress: state.searchProgress,
-        currentSearchPage: state.currentSearchPage,
-        totalSearchPages: state.totalSearchPages,
-        hasClientFilters,
-        error: state.error,
-        goToPage
-    };
-}
-=========================================
-FILE: components/cars/CarCard.tsx
-=========================================
-// components/cars/CarCard.tsx
-'use client';
-
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { Fuel, Gauge, Calendar, Settings } from 'lucide-react';
-import { type Car, formatMileage, getFuelTypeAlbanian, getTransmissionAlbanian } from '@/lib/api';
-import { addToRecentlyViewed } from '@/lib/recentlyViewed';
-import { useConfig } from '@/lib/ConfigContext';
-
-interface CarCardProps {
-    car: Car;
-    priority?: boolean;
-}
-
-export default function CarCard({ car, priority = false }: CarCardProps) {
-    const { formatPrice } = useConfig();
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
-    // Safely access nested properties with optional chaining and fallbacks
-    const lot = car.lots?.[0];
-    const price = lot?.buy_now || 0;
-    const mileage = lot?.odometer?.km || 0;
-    const image = lot?.images?.normal?.[0] || lot?.images?.downloaded?.[0] || '';
-
-    // Safely get manufacturer and model names
-    const manufacturerName = car.manufacturer?.name || 'Unknown';
-    const modelName = car.model?.name || 'Unknown';
-    const fuelName = car.fuel?.name || '';
-    const transmissionName = car.transmission?.name || '';
-
-    const handleClick = () => {
-        addToRecentlyViewed({
-            id: car.vin || car.id.toString(),
-            title: car.title || `${manufacturerName} ${modelName}`,
-            image: image,
-            price: price
-        });
-    };
-
-    const carTitle = car.title || `${manufacturerName} ${modelName}`;
-    const detailUrl = car.vin ? `/cars/${car.vin}` : `/cars/${car.id}`;
+    const activeFilterCount = [
+        searchParams.get('fuel_id'),
+        searchParams.get('transmission_id'),
+        searchParams.get('color_id'),
+        searchParams.get('body_type_id'),
+        searchParams.get('filter_year_from'),
+        searchParams.get('filter_year_to'),
+        searchParams.get('filter_price_from'),
+        searchParams.get('filter_price_to'),
+    ].filter(Boolean).length;
 
     return (
-        <Link
-            href={detailUrl}
-            onClick={handleClick}
-            className="group block h-full focus:outline-none focus:ring-2 focus:ring-orange-primary/40 rounded-2xl"
-            aria-label={`Shiko detajet për ${carTitle}`}
+        <button
+            onClick={onClick}
+            className="lg:hidden fixed bottom-6 right-6 z-40 bg-orange-500 text-white p-4 rounded-full shadow-lg hover:bg-orange-600 transition-colors"
+            aria-label="Filtro makinat"
         >
-            <article className="card h-full flex flex-col">
-                {/* Image Container */}
-                <div className="relative aspect-[4/3] overflow-hidden bg-surface-2">
-                    {image ? (
-                        <img
-                            src={image}
-                            alt={carTitle}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            loading={priority ? 'eager' : 'lazy'}
-                            onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = 'none';
-                                const fallback = e.currentTarget.parentElement?.querySelector('.fallback');
-                                if (fallback) {
-                                    (fallback as HTMLElement).style.display = 'flex';
-                                }
-                            }}
-                        />
-                    ) : null}
-
-                    {/* Fallback when no image */}
-                    <div
-                        className="fallback absolute inset-0 flex items-center justify-center text-muted text-sm bg-surface-2"
-                        style={{ display: image ? 'none' : 'flex' }}
-                    >
-                        No image
-                    </div>
-
-                    {/* VIN badge for development */}
-                    {/* {process.env.NODE_ENV === 'development' && car.vin && (
-                        <div className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
-                            VIN: {car.vin.slice(0, 8)}...
-                        </div>
-                    )} */}
-                </div>
-
-                {/* Content */}
-                <div className="p-5 flex-1 flex flex-col">
-                    <h3 className="text-base font-medium text-primary mb-3 line-clamp-1 group-hover:text-orange-primary transition-colors">
-                        {carTitle}
-                    </h3>
-
-                    {/* Specs Grid */}
-                    <div className="grid grid-cols-2 gap-y-2 gap-x-3 mb-4">
-                        <div className="flex items-center gap-2">
-                            <Calendar size={14} className="text-muted shrink-0" />
-                            <span className="text-sm text-secondary truncate">{car.year || 'N/A'}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Gauge size={14} className="text-muted shrink-0" />
-                            <span className="text-sm text-secondary truncate">
-                                {mounted ? formatMileage(mileage) : '...'}
-                            </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Fuel size={14} className="text-muted shrink-0" />
-                            <span className="text-sm text-secondary truncate">{getFuelTypeAlbanian(fuelName)}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Settings size={14} className="text-muted shrink-0" />
-                            <span className="text-sm text-secondary truncate">{getTransmissionAlbanian(transmissionName)}</span>
-                        </div>
-                    </div>
-
-                    {/* Price */}
-                    <div className="mt-auto pt-3 border-t border-light">
-                        <div className="flex items-baseline justify-between">
-                            <span className="text-xl font-semibold text-orange-primary">
-                                {formatPrice(price)}
-                            </span>
-                            {car.engine?.name && (
-                                <span className="text-xs text-muted">
-                                    {car.engine.name}
-                                </span>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </article>
-        </Link>
+            <Filter size={24} />
+            {activeFilterCount > 0 && (
+                <span className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                    {activeFilterCount}
+                </span>
+            )}
+        </button>
     );
 }
-=========================================
-FILE: components/ui/LoadingSkeleton.tsx
-=========================================
-// components/ui/LoadingSkeleton.tsx
-'use client';
-
-interface SkeletonProps {
-    className?: string;
-}
-
-export const Skeleton = ({ className = '' }: SkeletonProps) => (
-    <div className={`skeleton ${className}`} />
-);
-
-export const CarCardSkeleton = () => (
-    <div className="card p-0">
-        <Skeleton className="aspect-[4/3] rounded-t-xl" />
-        <div className="p-5 space-y-4">
-            <Skeleton className="h-5 rounded w-3/4" />
-            <div className="grid grid-cols-2 gap-2">
-                <Skeleton className="h-4 rounded w-full" />
-                <Skeleton className="h-4 rounded w-full" />
-                <Skeleton className="h-4 rounded w-full" />
-                <Skeleton className="h-4 rounded w-full" />
-            </div>
-            <div className="pt-3 border-t border-light">
-                <Skeleton className="h-8 rounded w-1/2" />
-            </div>
-        </div>
-    </div>
-);
-
-export const GridSkeleton = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-        {[...Array(8)].map((_, i) => (
-            <CarCardSkeleton key={i} />
-        ))}
-    </div>
-);
-
-export const FilterSkeleton = () => (
-    <div className="bg-surface rounded-xl border border-light p-5 space-y-6">
-        <div className="flex items-center justify-between">
-            <Skeleton className="h-5 rounded w-16" />
-            <Skeleton className="h-4 rounded w-12" />
-        </div>
-        <div className="space-y-4">
-            <Skeleton className="h-10 rounded w-full" />
-            <Skeleton className="h-10 rounded w-full" />
-            <Skeleton className="h-10 rounded w-full" />
-        </div>
-    </div>
-);
-
-export const DetailSkeleton = () => (
-    <div className="container-swiss space-y-6 md:space-y-8">
-        {/* Breadcrumb skeleton */}
-        <div className="h-4 bg-surface-2 rounded w-48 md:w-64"></div>
-
-        {/* Title skeleton */}
-        <div className="space-y-2">
-            <Skeleton className="h-8 md:h-10 rounded w-3/4 md:w-2/3" />
-            <Skeleton className="h-4 rounded w-32 md:w-48" />
-        </div>
-
-        {/* Main Grid skeleton */}
-        <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
-            {/* Left Column */}
-            <div className="lg:col-span-2 space-y-6 md:space-y-8">
-                {/* Gallery skeleton */}
-                <Skeleton className="aspect-[16/9] rounded-xl w-full" />
-
-                {/* Quick Stats skeleton - matches actual grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
-                    {[...Array(4)].map((_, i) => (
-                        <div key={i} className="card p-3 md:p-4 space-y-2">
-                            <Skeleton className="h-6 md:h-8 rounded w-3/4 mx-auto" />
-                            <Skeleton className="h-3 rounded w-1/2 mx-auto" />
-                        </div>
-                    ))}
-                </div>
-
-                {/* Key Features skeleton */}
-                <div className="card p-5 md:p-6 space-y-4">
-                    <Skeleton className="h-5 md:h-6 rounded w-36 md:w-48" />
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-                        {[...Array(6)].map((_, i) => (
-                            <div key={i} className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-surface-2 rounded-lg">
-                                <Skeleton className="w-5 h-5 md:w-6 md:h-6 rounded-full" />
-                                <div className="space-y-1 flex-1">
-                                    <Skeleton className="h-3 rounded w-12 md:w-16" />
-                                    <Skeleton className="h-4 rounded w-16 md:w-20" />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Full Specifications skeleton */}
-                <div className="card p-5 md:p-6 space-y-4">
-                    <Skeleton className="h-5 md:h-6 rounded w-40 md:w-56" />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                        {[...Array(8)].map((_, i) => (
-                            <div key={i} className="flex justify-between p-2 md:p-3 bg-surface-2 rounded-lg">
-                                <Skeleton className="h-4 rounded w-16 md:w-20" />
-                                <Skeleton className="h-4 rounded w-12 md:w-16" />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
-            {/* Right Column - Contact skeleton */}
-            <div className="lg:col-span-1 space-y-4">
-                {/* Price Card skeleton */}
-                <div className="card p-5 md:p-6 space-y-4">
-                    <Skeleton className="h-8 md:h-10 rounded w-32 md:w-40 mx-auto" />
-                    <Skeleton className="h-3 rounded w-24 md:w-32 mx-auto" />
-                    <div className="space-y-3 pt-2">
-                        <div className="p-3 md:p-4 bg-surface-2 rounded-lg space-y-2">
-                            <Skeleton className="h-4 rounded w-24 md:w-32" />
-                            <Skeleton className="h-4 rounded w-32 md:w-40" />
-                            <Skeleton className="h-4 rounded w-28 md:w-36" />
-                        </div>
-                        <Skeleton className="h-10 md:h-12 rounded w-full" />
-                    </div>
-                </div>
-
-                {/* Cost Estimate skeleton */}
-                <div className="card p-5 md:p-6 space-y-3">
-                    <Skeleton className="h-5 rounded w-32 md:w-40" />
-                    <div className="space-y-2">
-                        {[...Array(3)].map((_, i) => (
-                            <div key={i} className="flex justify-between">
-                                <Skeleton className="h-4 rounded w-16 md:w-20" />
-                                <Skeleton className="h-4 rounded w-12 md:w-16" />
-                            </div>
-                        ))}
-                        <div className="border-t border-light my-2 pt-2">
-                            <div className="flex justify-between">
-                                <Skeleton className="h-5 rounded w-12 md:w-16" />
-                                <Skeleton className="h-5 rounded w-16 md:w-20" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* VIN skeleton */}
-                <Skeleton className="h-12 rounded-lg" />
-            </div>
-        </div>
-
-        {/* Back Link skeleton */}
-        <div className="mt-8 md:mt-12 text-center">
-            <Skeleton className="h-8 md:h-10 w-32 md:w-40 rounded-lg mx-auto" />
-        </div>
-    </div>
-);
-
-export default Skeleton;
 =========================================
 FILE: components/filters/AdvancedFilterSidebar.tsx
 =========================================
@@ -1043,9 +468,9 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                 ${isOpen ? 'translate-x-0' : '-translate-x-full'}
             `}>
                 {/* Header */}
-                <div className="sticky top-0 bg-surface border-b border-light/20 p-4 flex items-center justify-between z-10">
+                <div className="bg-[#0A1929]/10 bg-clip-padding backdrop-filter backdrop-blur-sm rounded sticky top-0 bg-surface border-b border-light/20 p-4 flex items-center justify-between z-10">
                     <div className="flex items-center gap-2">
-                        <Filter size={18} className="text-orange-primary" />
+                        <Filter size={18} className="text-orange-500" />
                         <h2 className="font-semibold text-primary">Filtro</h2>
                         {activeFilterCount > 0 && (
                             <span className="ml-2 px-2 py-0.5 text-xs bg-orange-500 text-white rounded-full">
@@ -1057,7 +482,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                         {activeFilterCount > 0 && (
                             <button
                                 onClick={clearFilters}
-                                className="text-xs text-orange-primary hover:text-orange-600 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-surface-2"
+                                className="text-xs text-orange-500 hover:text-orange-600 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-surface-2"
                             >
                                 <X size={14} />
                                 <span>Pastro</span>
@@ -1093,7 +518,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                             className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
                         >
                             <div className="flex items-center gap-2">
-                                <Fuel size={16} className="text-orange-primary" />
+                                <Fuel size={16} className="text-orange-500" />
                                 <span className="font-medium text-sm text-primary">Karburanti</span>
                             </div>
                             {expandedSections.fuel ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -1143,7 +568,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                             className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
                         >
                             <div className="flex items-center gap-2">
-                                <Settings size={16} className="text-orange-primary" />
+                                <Settings size={16} className="text-orange-500" />
                                 <span className="font-medium text-sm text-primary">Transmisioni</span>
                             </div>
                             {expandedSections.transmission ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -1193,7 +618,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                             className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
                         >
                             <div className="flex items-center gap-2">
-                                <Palette size={16} className="text-orange-primary" />
+                                <Palette size={16} className="text-orange-500" />
                                 <span className="font-medium text-sm text-primary">Ngjyra</span>
                             </div>
                             {expandedSections.color ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -1243,7 +668,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                             className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
                         >
                             <div className="flex items-center gap-2">
-                                <CarIcon size={16} className="text-orange-primary" />
+                                <CarIcon size={16} className="text-orange-500" />
                                 <span className="font-medium text-sm text-primary">Tipi</span>
                             </div>
                             {expandedSections.bodyType ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -1293,7 +718,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                             className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
                         >
                             <div className="flex items-center gap-2">
-                                <Calendar size={16} className="text-orange-primary" />
+                                <Calendar size={16} className="text-orange-500" />
                                 <span className="font-medium text-sm text-primary">Viti</span>
                             </div>
                             {expandedSections.year ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -1338,7 +763,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                             className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
                         >
                             <div className="flex items-center gap-2">
-                                <DollarSign size={16} className="text-orange-primary" />
+                                <DollarSign size={16} className="text-orange-500" />
                                 <span className="font-medium text-sm text-primary">Çmimi</span>
                             </div>
                             {expandedSections.price ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -1373,7 +798,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                     {/* Active Filters Summary */}
                     {activeFilterCount > 0 && (
                         <div className="bg-orange-5 border border-orange-20 rounded-lg p-3 mt-4">
-                            <p className="text-xs text-orange-primary font-medium mb-2">
+                            <p className="text-xs text-orange-500 font-medium mb-2">
                                 Filtrat aktivë:
                             </p>
                             <div className="flex flex-wrap gap-1">
@@ -1426,1317 +851,6 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
     );
 }
 =========================================
-FILE: lib/api.ts
-=========================================
-// lib/api.ts
-export interface Car {
-  id: number;
-  year: number;
-  title: string;
-  vin: string;
-  manufacturer: {
-    id: number;
-    name: string;
-  };
-  model: {
-    id: number;
-    name: string;
-    manufacturer_id: number;
-  };
-  generation?: {
-    id: number;
-    name: string;
-  };
-  body_type?: {
-    name: string;
-    id: number;
-  };
-  color: {
-    name: string;
-    id: number;
-  };
-  engine?: {
-    id: number;
-    name: string;
-  };
-  transmission: {
-    name: string;
-    id: number;
-  };
-  drive_wheel?: {
-    name: string;
-    id: number;
-  };
-  vehicle_type: {
-    name: string;
-    id: number;
-  };
-  fuel: {
-    name: string;
-    id: number;
-  };
-  cylinders: number | null;
-  lots: Lot[];
-  hp?: number;
-}
-
-export interface Accident {
-  date: string;
-  insuranceBenefit: number;
-  laborCost: number;
-  paintingCost: number;
-  partCost: number;
-  type: string;
-}
-
-export interface InsuranceV2 {
-  accidentCnt: number;
-  accidents: Accident[];
-  myAccidentCnt: number;
-  myAccidentCost: number;
-  otherAccidentCnt: number;
-  otherAccidentCost: number;
-  totalLossCnt: number;
-  floodTotalLossCnt: number;
-  robberCnt: number;
-  ownerChangeCnt: number;
-}
-
-export interface HistoryContent {
-  title: string;
-  sub?: string;
-  flag?: string;
-  Date_of_change?: string;
-  Driving_distance_when_changing?: string;
-  Transaction_type?: string;
-  mileage?: string;
-  maintenance_company?: string;
-  total_repair_cost?: string;
-  Defect_details?: string;
-  Correction_method?: string;
-  Recall_Post_Date?: string;
-  target_device?: string;
-  Correction_period?: string;
-  Contact_us?: string;
-}
-
-export interface HistoryItem {
-  content: HistoryContent[];
-  date: string;
-}
-
-export interface InspectItem {
-  attributes: string[];
-  statusTypes: Array<{
-    code: string;
-    title: string;
-  }>;
-  type: {
-    code: string;
-    title: string;
-  };
-}
-
-export interface FirstRegistration {
-  year: number;
-  month: number;
-  day: number;
-}
-
-export interface Options {
-  choice: string[];
-  etc: string[];
-  standard: string[];
-  tuning: string[];
-  type: string;
-}
-
-export interface CarDetails {
-  engine_volume?: number;
-  badge?: string;
-  description_ko?: string;
-  description_en?: string;
-  seats_count?: number;
-  insurance_v2?: InsuranceV2;
-  history?: HistoryItem[];
-  inspect_outer?: InspectItem[];
-  first_registration?: FirstRegistration;
-  options?: Options;
-  original_price?: number;
-  sell_type?: string;
-  is_leasing?: boolean;
-  month?: number;
-}
-
-export interface Lot {
-  id: number;
-  lot: string;
-  domain: {
-    name: string;
-    id: number;
-  };
-  odometer: {
-    km: number;
-    mi: number;
-    status: {
-      name: string;
-      id: number;
-    };
-  };
-  buy_now: number | null;
-  bid: number | null;
-  status: {
-    name: string;
-    id: number;
-  };
-  images: {
-    id: number;
-    normal: string[];
-    big: string[];
-    downloaded?: string[];
-  };
-  location: {
-    country: {
-      iso: string;
-      name: string;
-    };
-    city?: {
-      id: number;
-      name: string;
-    };
-  };
-  details?: CarDetails;
-  condition?: {
-    name: string;
-    id: number;
-  };
-  keys_available?: boolean;
-  airbags?: boolean | null;
-}
-
-export interface FetchCarsResponse {
-  data: Car[];
-  links: {
-    first: string;
-    last: string | null;
-    prev: string | null;
-    next: string | null;
-  };
-  meta: {
-    current_page: number;
-    from: number;
-    path: string;
-    per_page: number;
-    to: number;
-    total: number;
-  };
-}
-
-export interface Manufacturer {
-  id: number;
-  name: string;
-  cars_qty?: number;
-  image?: string;
-  models_qty?: number;
-  cars?: boolean;
-  motorcycles?: boolean;
-}
-
-export interface Model {
-  id: number;
-  name: string;
-  manufacturer_id: number;
-  cars_qty?: number;
-  generations_qty?: number;
-}
-
-export interface Generation {
-  id: number;
-  name: string;
-  model_id: number;
-  manufacturer_id: number;
-  cars_qty?: number;
-}
-
-// lib/api.ts - Ensure FilterData interface has all needed arrays
-export interface FilterData {
-  manufacturers: Manufacturer[];
-  models: Model[];
-  generations: Generation[];
-  fuelTypes: Array<{ id: number; name: string }>;
-  transmissions: Array<{ id: number; name: string }>;
-  years: number[];
-  bodyTypes: Array<{ id: number; name: string }>;
-  colors: Array<{ id: number; name: string }>;
-  // Add these if they exist in the statistics endpoint
-  fuelStats?: Array<{ id: number; name: string; count: number }>;
-  transmissionStats?: Array<{ id: number; name: string; count: number }>;
-}
-
-// API Base URL - using NEXT_PUBLIC_ for client-side access
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-
-// Helper to construct full URLs for server-side requests
-const getFullUrl = (path: string): string => {
-  if (typeof window !== 'undefined') {
-    return path;
-  }
-
-  if (process.env.NODE_ENV === 'development') {
-    return `http://localhost:3000${path}`;
-  }
-
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : process.env.NEXTAUTH_URL || 'https://vetura-nga-korea.vercel.app';
-
-  return `${baseUrl}${path}`;
-};
-
-// Fetch with timeout - increased to 30 seconds for slow API
-const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout = 30000) => {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-
-  try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal
-    });
-    clearTimeout(id);
-    return response;
-  } catch (error) {
-    clearTimeout(id);
-
-    if (error instanceof Error) {
-      if (error.name === 'AbortError') {
-        throw new Error(`Kërkesa zgjati shumë (${timeout / 1000} sekonda). Provo përsëri.`);
-      }
-    }
-
-    throw error;
-  }
-};
-
-// List of filters that the API actually supports
-const API_SUPPORTED_FILTERS = [
-  'manufacturer_id',
-  'model_id',
-  'from_year',
-  'to_year',
-  'buy_now_price_from',
-  'buy_now_price_to',
-  'odometer_from_km',
-  'odometer_to_km',
-  'page',
-  'per_page',
-  'vehicle_type'
-];
-
-// In lib/api.ts, update the fetchCars function:
-
-export async function fetchCars(params: Record<string, any> = {}) {
-  try {
-    const queryParams: Record<string, string> = {};
-
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        queryParams[key] = value.toString();
-      }
-    });
-
-    if (!queryParams.per_page) queryParams.per_page = '12';
-    if (!queryParams.vehicle_type) queryParams.vehicle_type = '1';
-
-    const queryString = new URLSearchParams(queryParams).toString();
-    const path = `/api/proxy/cars${queryString ? `?${queryString}` : ''}`;
-    const url = getFullUrl(path);
-
-    console.log('📡 Fetching cars with params:', queryParams);
-
-    const response = await fetchWithTimeout(url, {
-      ...(typeof window !== 'undefined'
-        ? { next: { revalidate: 60 } }
-        : { cache: 'no-store' })
-    }, 30000);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    // IMPORTANT: Ensure meta.total is preserved
-    if (data.meta && typeof data.meta.total === 'undefined') {
-      console.warn('⚠️ API response missing meta.total');
-    }
-
-    console.log('✅ API Response processed:', {
-      dataLength: data.data?.length,
-      total: data.meta?.total,
-      current_page: data.meta?.current_page
-    });
-
-    return data;
-  } catch (error) {
-    console.error('Error fetching cars:', error);
-    return {
-      data: [],
-      meta: {
-        current_page: Number(params.page) || 1,
-        per_page: Number(params.per_page) || 12,
-        total: 0
-      }
-    };
-  }
-}
-
-/**
- * Fetch car by VIN - Uses dedicated endpoint
- */
-export async function fetchCarByVin(vin: string): Promise<Car | null> {
-  try {
-    if (!vin || vin.length < 10) {
-      console.error('Invalid VIN provided:', vin);
-      return null;
-    }
-
-    const path = `/api/proxy/vin/${encodeURIComponent(vin)}`;
-    const url = getFullUrl(path);
-
-    console.log('📡 Fetching car by VIN from proxy:', url);
-
-    const response = await fetchWithTimeout(url, {
-      ...(typeof window !== 'undefined'
-        ? { next: { revalidate: 3600 } } // Cache for 1 hour
-        : { cache: 'no-store' })
-    }, 10000);
-
-    if (response.status === 200) {
-      const data = await response.json();
-      return data;
-    }
-
-    if (response.status === 404) {
-      console.log('❌ Car not found for VIN:', vin);
-      return null;
-    }
-
-    throw new Error(`HTTP error! status: ${response.status}`);
-  } catch (error) {
-    console.error('Error fetching car by VIN:', error);
-    return null;
-  }
-}
-
-/**
- * Helper to extract VIN from URL parameter
- */
-export function extractVinFromParam(param: string): string {
-  // VINs are 17 characters, alphanumeric (excluding I, O, Q)
-  const vinRegex = /^[A-HJ-NPR-Z0-9]{17}$/i;
-
-  if (vinRegex.test(param)) {
-    return param;
-  }
-
-  if (/^\d+$/.test(param)) {
-    console.warn('⚠️ Using numeric ID - this will not work. VIN required.');
-  }
-
-  return param;
-}
-
-export async function fetchManufacturers(type: string = 'cars'): Promise<Manufacturer[]> {
-  try {
-    const path = `/api/proxy/manufacturers/${type}`;
-    const url = getFullUrl(path);
-
-    console.log('📡 Fetching manufacturers from proxy:', url);
-
-    const response = await fetchWithTimeout(url, {
-      ...(typeof window !== 'undefined'
-        ? { next: { revalidate: 3600 } }
-        : { cache: 'no-store' })
-    }, 10000);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.data || data || [];
-  } catch (error) {
-    console.error('Error fetching manufacturers:', error);
-    return [];
-  }
-}
-
-export async function fetchModels(manufacturerId: number, type: string = 'cars'): Promise<Model[]> {
-  try {
-    const path = `/api/proxy/models/${manufacturerId}/${type}`;
-    const url = getFullUrl(path);
-
-    console.log('📡 Fetching models from proxy:', url);
-
-    const response = await fetchWithTimeout(url, {
-      ...(typeof window !== 'undefined'
-        ? { next: { revalidate: 3600 } }
-        : { cache: 'no-store' })
-    }, 10000);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.data || data || [];
-  } catch (error) {
-    console.error('Error fetching models:', error);
-    return [];
-  }
-}
-
-export async function fetchGenerations(modelId: number, type: string = 'cars'): Promise<Generation[]> {
-  try {
-    const path = `/api/proxy/generations/${modelId}/${type}`;
-    const url = getFullUrl(path);
-
-    console.log('📡 Fetching generations from proxy:', url);
-
-    const response = await fetchWithTimeout(url, {
-      ...(typeof window !== 'undefined'
-        ? { next: { revalidate: 3600 } }
-        : { cache: 'no-store' })
-    }, 10000);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.data || data || [];
-  } catch (error) {
-    console.error('Error fetching generations:', error);
-    return [];
-  }
-}
-
-export async function fetchFilterData(): Promise<FilterData> {
-  const defaultManufacturers: Manufacturer[] = [
-    { id: 16, name: 'BMW', cars_qty: 12375 },
-    { id: 147, name: 'Volkswagen', cars_qty: 1951 },
-    { id: 58, name: 'Hyundai', cars_qty: 45514 },
-    { id: 70, name: 'Kia', cars_qty: 41009 },
-    { id: 232, name: 'Genesis', cars_qty: 9310 },
-    { id: 26, name: 'Chevrolet', cars_qty: 7168 },
-    { id: 123, name: 'Renault Samsung', cars_qty: 5514 },
-    { id: 131, name: 'SsangYong', cars_qty: 6995 },
-    { id: 9, name: 'Audi', cars_qty: 0 },
-    { id: 3, name: 'Mercedes-Benz', cars_qty: 0 },
-    { id: 5, name: 'Toyota', cars_qty: 584 },
-    { id: 56, name: 'Honda', cars_qty: 437 },
-    { id: 48, name: 'Ford', cars_qty: 1203 },
-  ];
-
-  try {
-    const manufacturers = await fetchManufacturers('cars');
-    const currentYear = new Date().getFullYear();
-    const years = Array.from({ length: currentYear - 1989 }, (_, i) => currentYear - i);
-
-    return {
-      manufacturers: manufacturers.length > 0 ? manufacturers : defaultManufacturers,
-      models: [],
-      generations: [],
-      fuelTypes: [
-        { id: 1, name: 'diesel' },
-        { id: 2, name: 'electric' },
-        { id: 3, name: 'hybrid' },
-        { id: 4, name: 'gasoline' }
-      ],
-      transmissions: [
-        { id: 1, name: 'automatic' },
-        { id: 2, name: 'manual' }
-      ],
-      years,
-      bodyTypes: [
-        { id: 1, name: 'sedan' },
-        { id: 2, name: 'wagon' },
-        { id: 3, name: 'coupe' },
-        { id: 5, name: 'suv' },
-        { id: 7, name: 'van' },
-        { id: 11, name: 'hatchback' }
-      ],
-      colors: [
-        { id: 1, name: 'silver' },
-        { id: 2, name: 'purple' },
-        { id: 3, name: 'orange' },
-        { id: 4, name: 'green' },
-        { id: 5, name: 'red' },
-        { id: 6, name: 'gold' },
-        { id: 8, name: 'brown' },
-        { id: 9, name: 'grey' },
-        { id: 11, name: 'blue' },
-        { id: 13, name: 'white' },
-        { id: 15, name: 'black' },
-        { id: 16, name: 'yellow' }
-      ]
-    };
-  } catch (error) {
-    console.error('Error in fetchFilterData:', error);
-
-    const currentYear = new Date().getFullYear();
-    const years = Array.from({ length: currentYear - 1989 }, (_, i) => currentYear - i);
-
-    return {
-      manufacturers: defaultManufacturers,
-      models: [],
-      generations: [],
-      fuelTypes: [
-        { id: 1, name: 'diesel' },
-        { id: 2, name: 'electric' },
-        { id: 3, name: 'hybrid' },
-        { id: 4, name: 'gasoline' }
-      ],
-      transmissions: [
-        { id: 1, name: 'automatic' },
-        { id: 2, name: 'manual' }
-      ],
-      years,
-      bodyTypes: [
-        { id: 1, name: 'sedan' },
-        { id: 2, name: 'wagon' },
-        { id: 3, name: 'coupe' },
-        { id: 5, name: 'suv' },
-        { id: 7, name: 'van' },
-        { id: 11, name: 'hatchback' }
-      ],
-      colors: [
-        { id: 1, name: 'silver' },
-        { id: 2, name: 'purple' },
-        { id: 3, name: 'orange' },
-        { id: 4, name: 'green' },
-        { id: 5, name: 'red' },
-        { id: 6, name: 'gold' },
-        { id: 8, name: 'brown' },
-        { id: 9, name: 'grey' },
-        { id: 11, name: 'blue' },
-        { id: 13, name: 'white' },
-        { id: 15, name: 'black' },
-        { id: 16, name: 'yellow' }
-      ]
-    };
-  }
-}
-
-// Helper function to format mileage
-export function formatMileage(mileage: number): string {
-  if (!mileage && mileage !== 0) return 'N/A';
-  const formatted = mileage.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-  return `${formatted} km`;
-}
-
-// Helper function to get fuel type in Albanian
-export function getFuelTypeAlbanian(fuelType: string): string {
-  const fuelMap: Record<string, string> = {
-    'diesel': 'Naftë',
-    'gasoline': 'Benzinë',
-    'petrol': 'Benzinë',
-    'electric': 'Elektrik',
-    'hybrid': 'Hibrid',
-    'gas': 'LPG'
-  };
-  return fuelMap[fuelType.toLowerCase()] || fuelType;
-}
-
-// Helper function to get transmission in Albanian
-export function getTransmissionAlbanian(transmission: string): string {
-  const transMap: Record<string, string> = {
-    'automatic': 'Automatik',
-    'manual': 'Manuel'
-  };
-  return transMap[transmission.toLowerCase()] || transmission;
-}
-
-// Helper function to get color in Albanian
-export function getColorAlbanian(color: string): string {
-  const colorMap: Record<string, string> = {
-    'black': 'Zi',
-    'white': 'Bardhë',
-    'silver': 'Argjend',
-    'grey': 'Gri',
-    'gray': 'Gri',
-    'blue': 'Kaltër',
-    'red': 'Kuq',
-    'green': 'Gjelbër',
-    'brown': 'Kafe',
-    'beige': 'Bezhë',
-    'yellow': 'Verdhë',
-    'orange': 'Portokalli',
-    'purple': 'Vjollcë',
-    'gold': 'Arë'
-  };
-  return colorMap[color.toLowerCase()] || color;
-}
-
-// Helper function to get body type in Albanian
-export function getBodyTypeAlbanian(bodyType: string): string {
-  const bodyMap: Record<string, string> = {
-    'sedan': 'Sedan',
-    'suv': 'SUV',
-    'coupe': 'Kupe',
-    'hatchback': 'Hatchback',
-    'wagon': 'Kombi',
-    'van': 'Furgon',
-    'pickup': 'Pickup',
-    'cabrio': 'Kabriolet',
-    'sport_car': 'Makinë Sportive'
-  };
-  return bodyMap[bodyType.toLowerCase()] || bodyType;
-}
-=========================================
-FILE: hooks/useDebounce.ts
-=========================================
-// hooks/useDebounce.ts
-import { useState, useEffect } from 'react';
-
-export function useDebounce<T>(value: T, delay: number): T {
-    const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            setDebouncedValue(value);
-        }, delay);
-
-        return () => {
-            clearTimeout(handler);
-        };
-    }, [value, delay]);
-
-    return debouncedValue;
-}
-=========================================
-FILE: components/ui/CompactSearch.tsx
-=========================================
-// components/ui/CompactSearch.tsx
-'use client';
-
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import SearchParamsWrapper from '@/components/SearchParamsWrapper';
-import {
-    Search,
-    Car,
-    Calendar,
-    DollarSign,
-    X
-} from 'lucide-react';
-import { fetchFilterData, fetchModels } from '@/lib/api';
-import { getTranslatedManufacturers } from '@/lib/translations';
-import CustomSelect from './CustomSelect';
-import { filterManufacturers } from '@/lib/staticManufacturers';
-
-interface CompactSearchProps {
-    variant?: 'header' | 'hero';
-    onSearch?: () => void;
-}
-
-interface SearchFilters {
-    manufacturerId: string;
-    modelId: string;
-    fromYear: string;
-    toYear: string;
-    priceTo: string;
-}
-
-// Inner component that uses searchParams
-function CompactSearchContent({ searchParams, variant, onSearch }: any) {
-    const router = useRouter();
-    const [loading, setLoading] = useState({
-        manufacturers: false,
-        models: false
-    });
-    const [filterData, setFilterData] = useState({
-        manufacturers: [] as Array<{ id: number; original: string; translated: string }>,
-        models: [] as Array<{ id: number; name: string; manufacturer_id: number }>,
-        years: [] as number[]
-    });
-
-    const [filters, setFilters] = useState<SearchFilters>({
-        manufacturerId: searchParams.get('manufacturer_id') || '',
-        modelId: searchParams.get('model_id') || '',
-        fromYear: searchParams.get('from_year') || '',
-        toYear: searchParams.get('to_year') || '',
-        priceTo: searchParams.get('buy_now_price_to') || '',
-    });
-
-    // Load manufacturers and years
-    useEffect(() => {
-        const loadInitialData = async () => {
-            try {
-                setLoading(prev => ({ ...prev, manufacturers: true }));
-                const data = await fetchFilterData();  // <-- Fetches manufacturers here
-                setFilterData({
-                    manufacturers: getTranslatedManufacturers(data.manufacturers),  // <-- Stores them
-                    models: [],
-                    years: data.years
-                });
-            } catch (error) {
-                console.error('Error loading filters:', error);
-            } finally {
-                setLoading(prev => ({ ...prev, manufacturers: false }));
-            }
-        };
-        loadInitialData();
-    }, []);
-
-    // Load models when manufacturer changes
-    useEffect(() => {
-        const loadModels = async () => {
-            if (!filters.manufacturerId) {
-                setFilterData(prev => ({ ...prev, models: [] }));
-                return;
-            }
-
-            try {
-                setLoading(prev => ({ ...prev, models: true }));
-                const models = await fetchModels(parseInt(filters.manufacturerId), 'cars');
-                setFilterData(prev => ({ ...prev, models }));
-            } catch (error) {
-                console.error('Error loading models:', error);
-            } finally {
-                setLoading(prev => ({ ...prev, models: false }));
-            }
-        };
-        loadModels();
-    }, [filters.manufacturerId]);
-
-    const updateFilter = (key: keyof SearchFilters, value: string) => {
-        setFilters(prev => ({ ...prev, [key]: value }));
-        if (key === 'manufacturerId') {
-            setFilters(prev => ({ ...prev, modelId: '' }));
-        }
-    };
-
-    const handleSearch = () => {
-        const params = new URLSearchParams();
-
-        // Add all filters
-        if (filters.manufacturerId) params.set('manufacturer_id', filters.manufacturerId);
-        if (filters.modelId) params.set('model_id', filters.modelId);
-        if (filters.fromYear) params.set('from_year', filters.fromYear);
-        if (filters.toYear) params.set('to_year', filters.toYear);
-        if (filters.priceTo) params.set('buy_now_price_to', filters.priceTo);
-
-        params.set('page', '1');
-        params.set('per_page', '12');
-        params.set('vehicle_type', '1');
-
-        router.push(`/cars?${params.toString()}`);
-        onSearch?.();
-    };
-
-    const clearFilters = () => {
-        setFilters({
-            manufacturerId: '',
-            modelId: '',
-            fromYear: '',
-            toYear: '',
-            priceTo: ''
-        });
-        router.push('/cars');
-    };
-
-    const activeFilterCount = Object.values(filters).filter(v => v !== '').length;
-
-    // Prepare options
-    const manufacturerOptions = filterData.manufacturers.map(({ id, translated }) => ({
-        value: id.toString(),
-        label: translated  // <-- Shows translated manufacturer names
-    }));
-
-    const modelOptions = filterData.models.map(model => ({
-        value: model.id.toString(),
-        label: model.name
-    }));
-
-    const yearOptions = [
-        { value: '', label: 'Viti' },
-        ...filterData.years.map(year => ({
-            value: year.toString(),
-            label: year.toString()
-        }))
-    ];
-
-    const priceOptions = [
-        { value: '', label: 'Çmimi max' },
-        { value: '5000', label: '€5,000' },
-        { value: '10000', label: '€10,000' },
-        { value: '15000', label: '€15,000' },
-        { value: '20000', label: '€20,000' },
-        { value: '25000', label: '€25,000' },
-        { value: '30000', label: '€30,000' },
-        { value: '40000', label: '€40,000' },
-        { value: '50000', label: '€50,000' },
-        { value: '75000', label: '€75,000' },
-        { value: '100000', label: '€100,000' },
-    ];
-
-    const isHero = variant === 'hero';
-
-    return (
-        <>
-            {/* Desktop Version - Hidden on mobile */}
-            <div className="hidden md:block w-full md:w-fit">
-                <div className={`
-                    flex items-center gap-2 
-                    ${isHero
-                        ? 'bg-orange-500 backdrop-blur-md border border-white/20'
-                        : 'bg-orange-500 border border-light/20'
-                    } 
-                    rounded-xl p-1.5 shadow-lg
-                `}>
-                    {/* Search Icon */}
-                    <div className="flex items-center justify-center w-9 h-9 shrink-0">
-                        <Search size={16} className={isHero ? 'text-white/70' : 'text-muted'} />
-                    </div>
-
-                    {/* Filters */}
-                    <div className="flex-1 flex flex-wrap items-center gap-1.5 min-w-0">
-                        <CustomSelect
-                            value={filters.manufacturerId}
-                            onChange={(value) => updateFilter('manufacturerId', value)}
-                            options={manufacturerOptions}
-                            placeholder="Prodhuesi"
-                            icon={<Car size={14} />}
-                            loading={loading.manufacturers}
-                            variant={isHero ? 'hero' : 'default'}
-                            className="w-[130px]"
-                        />
-
-                        {filters.manufacturerId && (
-                            <CustomSelect
-                                value={filters.modelId}
-                                onChange={(value) => updateFilter('modelId', value)}
-                                options={modelOptions}
-                                placeholder="Modeli"
-                                icon={<Car size={14} />}
-                                loading={loading.models}
-                                variant={isHero ? 'hero' : 'default'}
-                                className="w-[120px]"
-                            />
-                        )}
-
-                        <CustomSelect
-                            value={filters.fromYear}
-                            onChange={(value) => updateFilter('fromYear', value)}
-                            options={yearOptions}
-                            placeholder="Nga"
-                            icon={<Calendar size={14} />}
-                            variant={isHero ? 'hero' : 'default'}
-                            className="w-[85px]"
-                        />
-
-                        <CustomSelect
-                            value={filters.toYear}
-                            onChange={(value) => updateFilter('toYear', value)}
-                            options={yearOptions}
-                            placeholder="Deri"
-                            icon={<Calendar size={14} />}
-                            variant={isHero ? 'hero' : 'default'}
-                            className="w-[85px]"
-                        />
-
-                        <CustomSelect
-                            value={filters.priceTo}
-                            onChange={(value) => updateFilter('priceTo', value)}
-                            options={priceOptions}
-                            placeholder="Max"
-                            icon={<DollarSign size={14} />}
-                            variant={isHero ? 'hero' : 'default'}
-                            className="w-[100px]"
-                        />
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-1 shrink-0">
-                        {activeFilterCount > 0 && (
-                            <button
-                                onClick={clearFilters}
-                                className={`
-                                    w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-200
-                                    ${isHero
-                                        ? 'text-white/70 hover:text-white hover:bg-white/10'
-                                        : 'text-muted hover:text-orange-primary hover:bg-surface-2'
-                                    }
-                                `}
-                                title="Pastro filtrat"
-                                aria-label="Pastro filtrat"
-                            >
-                                <X size={16} />
-                            </button>
-                        )}
-
-                        <button
-                            onClick={handleSearch}
-                            className={`
-                                h-9 px-4 rounded-lg text-sm font-medium transition-all duration-200 
-                                flex items-center gap-1.5 whitespace-nowrap
-                                ${isHero
-                                    ? 'bg-white text-orange-600 hover:bg-gray-100'
-                                    : 'bg-orange-600 text-white hover:bg-orange-700'
-                                }
-                            `}
-                            aria-label="Kërko"
-                        >
-                            <Search size={14} />
-                            <span className="hidden sm:inline">Kërko</span>
-                            {activeFilterCount > 0 && (
-                                <span className={`
-                                    ml-0.5 px-1.5 py-0.5 text-xs rounded-full font-medium
-                                    ${isHero ? 'bg-orange-100 text-orange-600' : 'bg-white/20 text-white'}
-                                `}>
-                                    {activeFilterCount}
-                                </span>
-                            )}
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Mobile Version - Visible only on mobile */}
-            <div className="md:hidden w-full">
-                <div className={`
-                    rounded-xl p-3 shadow-lg space-y-3
-                    ${isHero
-                        ? 'bg-orange-500/95 backdrop-blur-md border border-white/20'
-                        : 'bg-surface border border-light/20'
-                    }
-                `}>
-                    {/* Filter Row */}
-                    <div className="grid grid-cols-2 gap-2">
-                        <CustomSelect
-                            value={filters.manufacturerId}
-                            onChange={(value) => updateFilter('manufacturerId', value)}
-                            options={manufacturerOptions}
-                            placeholder="Prodhuesi"
-                            icon={<Car size={16} />}
-                            loading={loading.manufacturers}
-                            variant={isHero ? 'hero' : 'default'}
-                            fullWidth
-                        />
-
-                        {filters.manufacturerId && (
-                            <CustomSelect
-                                value={filters.modelId}
-                                onChange={(value) => updateFilter('modelId', value)}
-                                options={modelOptions}
-                                placeholder="Modeli"
-                                icon={<Car size={16} />}
-                                loading={loading.models}
-                                variant={isHero ? 'hero' : 'default'}
-                                fullWidth
-                            />
-                        )}
-
-                        {!filters.manufacturerId && (
-                            <>
-                                <CustomSelect
-                                    value={filters.fromYear}
-                                    onChange={(value) => updateFilter('fromYear', value)}
-                                    options={yearOptions}
-                                    placeholder="Nga viti"
-                                    icon={<Calendar size={16} />}
-                                    variant={isHero ? 'hero' : 'default'}
-                                    fullWidth
-                                />
-                                <CustomSelect
-                                    value={filters.toYear}
-                                    onChange={(value) => updateFilter('toYear', value)}
-                                    options={yearOptions}
-                                    placeholder="Deri viti"
-                                    icon={<Calendar size={16} />}
-                                    variant={isHero ? 'hero' : 'default'}
-                                    fullWidth
-                                />
-                            </>
-                        )}
-                    </div>
-
-                    {/* Second Row - Only when manufacturer is selected */}
-                    {filters.manufacturerId && (
-                        <div className="grid grid-cols-2 gap-2">
-                            <CustomSelect
-                                value={filters.fromYear}
-                                onChange={(value) => updateFilter('fromYear', value)}
-                                options={yearOptions}
-                                placeholder="Nga viti"
-                                icon={<Calendar size={16} />}
-                                variant={isHero ? 'hero' : 'default'}
-                                fullWidth
-                            />
-                            <CustomSelect
-                                value={filters.toYear}
-                                onChange={(value) => updateFilter('toYear', value)}
-                                options={yearOptions}
-                                placeholder="Deri viti"
-                                icon={<Calendar size={16} />}
-                                variant={isHero ? 'hero' : 'default'}
-                                fullWidth
-                            />
-                        </div>
-                    )}
-
-                    {/* Price and Search Row */}
-                    <div className="flex items-center gap-2">
-                        <div className="flex-1">
-                            <CustomSelect
-                                value={filters.priceTo}
-                                onChange={(value) => updateFilter('priceTo', value)}
-                                options={priceOptions}
-                                placeholder="Çmimi max"
-                                icon={<DollarSign size={16} />}
-                                variant={isHero ? 'hero' : 'default'}
-                                fullWidth
-                            />
-                        </div>
-
-                        <button
-                            onClick={handleSearch}
-                            className={`
-                                px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
-                                flex items-center justify-center gap-2 min-w-[100px]
-                                ${isHero
-                                    ? 'bg-white text-orange-600 hover:bg-gray-100'
-                                    : 'bg-orange-600 text-white hover:bg-orange-700'
-                                }
-                            `}
-                        >
-                            <Search size={16} />
-                            <span>Kërko</span>
-                            {activeFilterCount > 0 && (
-                                <span className={`
-                                    px-1.5 py-0.5 text-xs rounded-full
-                                    ${isHero ? 'bg-orange-100 text-orange-600' : 'bg-white/20 text-white'}
-                                `}>
-                                    {activeFilterCount}
-                                </span>
-                            )}
-                        </button>
-
-                        {activeFilterCount > 0 && (
-                            <button
-                                onClick={clearFilters}
-                                className={`
-                                    p-2.5 rounded-lg transition-all duration-200
-                                    ${isHero
-                                        ? 'text-white/70 hover:text-white hover:bg-white/10'
-                                        : 'text-muted hover:text-orange-primary hover:bg-surface-2'
-                                    }
-                                `}
-                                aria-label="Pastro filtrat"
-                            >
-                                <X size={18} />
-                            </button>
-                        )}
-                    </div>
-                </div>
-            </div>
-        </>
-    );
-}
-
-// Main export with Suspense wrapper
-export default function CompactSearch(props: CompactSearchProps) {
-    return (
-        <SearchParamsWrapper fallback={
-            <div className="h-11 bg-surface-2 rounded-xl animate-pulse w-full md:order-2 order-1" />
-        }>
-            {(searchParams) => <CompactSearchContent searchParams={searchParams} {...props} />}
-        </SearchParamsWrapper>
-    );
-}
-=========================================
-FILE: components/ui/CustomSelect.tsx
-=========================================
-// components/ui/CustomSelect.tsx
-'use client';
-
-import { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Check } from 'lucide-react';
-import { createPortal } from 'react-dom';
-
-export interface Option {
-    value: string;
-    label: string;
-}
-
-interface CustomSelectProps {
-    value: string;
-    onChange: (value: string) => void;
-    options: Option[];
-    placeholder?: string;
-    icon?: React.ReactNode;
-    loading?: boolean;
-    disabled?: boolean;
-    className?: string;
-    variant?: 'default' | 'hero';
-    fullWidth?: boolean; // Add this prop
-}
-
-export default function CustomSelect({
-    value,
-    onChange,
-    options,
-    placeholder = 'Zgjidh',
-    icon,
-    loading = false,
-    disabled = false,
-    className = '',
-    variant = 'default',
-    fullWidth = false // Add this with default false
-}: CustomSelectProps) {
-    const [isOpen, setIsOpen] = useState(false);
-    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
-    const buttonRef = useRef<HTMLButtonElement>(null);
-    const dropdownRef = useRef<HTMLDivElement>(null);
-    const [mounted, setMounted] = useState(false);
-
-    const selectedOption = options.find(opt => opt.value === value);
-
-    useEffect(() => {
-        setMounted(true);
-        return () => setMounted(false);
-    }, []);
-
-    // Update position when opening
-    const openDropdown = () => {
-        if (disabled || loading) return;
-
-        if (buttonRef.current) {
-            const rect = buttonRef.current.getBoundingClientRect();
-            setDropdownPosition({
-                top: rect.bottom + window.scrollY,
-                left: rect.left + window.scrollX,
-                width: rect.width
-            });
-        }
-        setIsOpen(true);
-    };
-
-    // Close on click outside
-    useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            if (!isOpen) return;
-
-            const target = e.target as Node;
-            const isButton = buttonRef.current?.contains(target);
-            const isDropdown = dropdownRef.current?.contains(target);
-
-            if (!isButton && !isDropdown) {
-                setIsOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [isOpen]);
-
-    // Close on scroll
-    useEffect(() => {
-        const handleScroll = () => {
-            if (isOpen) setIsOpen(false);
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, [isOpen]);
-
-    const baseButtonClasses = variant === 'hero'
-        ? 'bg-white/10 border border-white/20 text-white hover:bg-white/20'
-        : 'bg-surface-2 border border-light/20 text-secondary hover:border-orange-primary/40 hover:text-primary';
-
-    return (
-        <div className={`relative ${fullWidth ? 'w-full' : ''} ${className}`}>
-            <button
-                ref={buttonRef}
-                type="button"
-                onClick={openDropdown}
-                className={`
-                    flex items-center gap-2 px-3 py-2.5
-                    ${baseButtonClasses}
-                    rounded-lg text-sm
-                    transition-all duration-200
-                    ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                    w-full
-                `}
-                disabled={disabled || loading}
-            >
-                {icon && <span className="shrink-0 text-muted">{icon}</span>}
-                <span className={`flex-1 text-left truncate ${selectedOption ? 'text-primary' : 'text-muted'}`}>
-                    {selectedOption ? selectedOption.label : placeholder}
-                </span>
-                <ChevronDown size={16} className={`shrink-0 text-muted transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            {isOpen && mounted && createPortal(
-                <div
-                    ref={dropdownRef}
-                    style={{
-                        position: 'absolute',
-                        top: dropdownPosition.top,
-                        left: dropdownPosition.left,
-                        width: dropdownPosition.width,
-                        zIndex: 999999,
-                        pointerEvents: 'auto'
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <div className="bg-primary border border-light/20 rounded-lg shadow-xl overflow-hidden">
-                        <div className="overflow-y-auto max-h-[300px]">
-                            {options.length > 0 ? (
-                                options.map((option, idx) => (
-                                    <button
-                                        key={option.value}
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            onChange(option.value);
-                                            setIsOpen(false);
-                                        }}
-                                        className={`
-                                            bg-blue-950
-                                            w-full px-4 py-3 text-left text-sm
-                                            hover:bg-surface-2 transition-colors
-                                            cursor-pointer
-                                            ${idx !== options.length - 1 ? 'border-b border-light/10' : ''}
-                                            ${value === option.value
-                                                ? 'bg-orange-5 text-orange-primary font-medium'
-                                                : 'text-secondary hover:text-primary'
-                                            }
-                                        `}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <span>{option.label}</span>
-                                            {value === option.value && (
-                                                <Check size={14} className="text-orange-primary" />
-                                            )}
-                                        </div>
-                                    </button>
-                                ))
-                            ) : (
-                                <div className="px-4 py-6 text-sm text-muted text-center">
-                                    Nuk ka opsione
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>,
-                document.body
-            )}
-        </div>
-    );
-}
-=========================================
 FILE: app/cars/page.tsx
 =========================================
 // app/cars/page.tsx
@@ -2745,7 +859,7 @@ import CarsContentWrapper from './CarsContentWrapper';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Makina për Shitje | Vetura Nga Korea',
+    title: 'Makina për Shitje | Vetura Korea Kosova',
     description: 'Shfleto makinat më të mira nga Korea.',
 };
 
@@ -2823,4 +937,1205 @@ export default function CarsPage() {
             </div>
         </div>
     );
+}
+=========================================
+FILE: components/ui/CompactSearch.tsx
+=========================================
+// components/ui/CompactSearch.tsx
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import SearchParamsWrapper from '@/components/SearchParamsWrapper';
+import {
+    Search,
+    Car,
+    Calendar,
+    DollarSign,
+    X
+} from 'lucide-react';
+import { fetchFilterData, fetchModels } from '@/lib/api';
+import { getStaticManufacturers } from '@/lib/translations'; // Changed import
+import CustomSelect from './CustomSelect';
+import type { Option } from './CustomSelect'; // Import Option type
+
+interface CompactSearchProps {
+    variant?: 'header' | 'hero';
+    onSearch?: () => void;
+}
+
+interface SearchFilters {
+    manufacturerId: string;
+    modelId: string;
+    fromYear: string;
+    toYear: string;
+    priceTo: string;
+}
+
+// Inner component that uses searchParams
+function CompactSearchContent({ searchParams, variant, onSearch }: any) {
+    const router = useRouter();
+    const [loading, setLoading] = useState({
+        manufacturers: false,
+        models: false
+    });
+    const [filterData, setFilterData] = useState({
+        manufacturers: [] as Option[], // Use Option type from CustomSelect
+        models: [] as Array<{ id: number; name: string; manufacturer_id: number }>,
+        years: [] as number[]
+    });
+
+    const [filters, setFilters] = useState<SearchFilters>({
+        manufacturerId: searchParams.get('manufacturer_id') || '',
+        modelId: searchParams.get('model_id') || '',
+        fromYear: searchParams.get('from_year') || '',
+        toYear: searchParams.get('to_year') || '',
+        priceTo: searchParams.get('buy_now_price_to') || '',
+    });
+
+    // Load manufacturers and years
+    useEffect(() => {
+        const loadInitialData = async () => {
+            try {
+                setLoading(prev => ({ ...prev, manufacturers: true }));
+                // Use static manufacturers directly - no API call needed!
+                setFilterData(prev => ({
+                    ...prev,
+                    manufacturers: getStaticManufacturers(), // Now returns Option[] directly
+                    years: Array.from({ length: 30 }, (_, i) => new Date().getFullYear() - i) // Generate years directly
+                }));
+            } catch (error) {
+                console.error('Error loading filters:', error);
+            } finally {
+                setLoading(prev => ({ ...prev, manufacturers: false }));
+            }
+        };
+        loadInitialData();
+    }, []);
+
+    // Load models when manufacturer changes
+    useEffect(() => {
+        const loadModels = async () => {
+            if (!filters.manufacturerId) {
+                setFilterData(prev => ({ ...prev, models: [] }));
+                return;
+            }
+
+            try {
+                setLoading(prev => ({ ...prev, models: true }));
+                const models = await fetchModels(parseInt(filters.manufacturerId), 'cars');
+                setFilterData(prev => ({ ...prev, models }));
+            } catch (error) {
+                console.error('Error loading models:', error);
+            } finally {
+                setLoading(prev => ({ ...prev, models: false }));
+            }
+        };
+        loadModels();
+    }, [filters.manufacturerId]);
+
+    const updateFilter = (key: keyof SearchFilters, value: string) => {
+        setFilters(prev => ({ ...prev, [key]: value }));
+        if (key === 'manufacturerId') {
+            setFilters(prev => ({ ...prev, modelId: '' }));
+        }
+    };
+
+    const handleSearch = () => {
+        const params = new URLSearchParams();
+
+        if (filters.manufacturerId) params.set('manufacturer_id', filters.manufacturerId);
+        if (filters.modelId) params.set('model_id', filters.modelId);
+        if (filters.fromYear) params.set('from_year', filters.fromYear);
+        if (filters.toYear) params.set('to_year', filters.toYear);
+        if (filters.priceTo) params.set('buy_now_price_to', filters.priceTo);
+
+        params.set('page', '1');
+        params.set('per_page', '12');
+        params.set('vehicle_type', '1');
+
+        router.push(`/cars?${params.toString()}`);
+        onSearch?.();
+    };
+
+    const clearFilters = () => {
+        setFilters({
+            manufacturerId: '',
+            modelId: '',
+            fromYear: '',
+            toYear: '',
+            priceTo: ''
+        });
+        router.push('/cars');
+    };
+
+    const activeFilterCount = Object.values(filters).filter(v => v !== '').length;
+
+    // Prepare options
+    const manufacturerOptions = filterData.manufacturers; // Already in Option format
+
+    const modelOptions = filterData.models.map(model => ({
+        value: model.id.toString(),
+        label: model.name
+    }));
+
+    const yearOptions = [
+        { value: '', label: 'Viti' },
+        ...filterData.years.map(year => ({
+            value: year.toString(),
+            label: year.toString()
+        }))
+    ];
+
+    const priceOptions = [
+        { value: '', label: 'Çmimi max' },
+        { value: '5000', label: '€5,000' },
+        { value: '10000', label: '€10,000' },
+        { value: '15000', label: '€15,000' },
+        { value: '20000', label: '€20,000' },
+        { value: '25000', label: '€25,000' },
+        { value: '30000', label: '€30,000' },
+        { value: '40000', label: '€40,000' },
+        { value: '50000', label: '€50,000' },
+        { value: '75000', label: '€75,000' },
+        { value: '100000', label: '€100,000' },
+    ];
+
+    const isHero = variant === 'hero';
+
+    return (
+        <>
+            {/* Desktop Version */}
+            <div className="hidden md:block w-full md:w-fit">
+                <div className={`
+                    flex items-center gap-2 
+                    ${isHero
+                        ? 'bg-orange-500 backdrop-blur-md border border-white/20'
+                        : 'bg-orange-500 border border-light/20'
+                    } 
+                    rounded-xl p-1.5 shadow-lg
+                `}>
+                    {/* Search Icon */}
+                    <div className="flex items-center justify-center w-9 h-9 shrink-0">
+                        <Search size={16} className={isHero ? 'text-white/70' : 'text-muted'} />
+                    </div>
+
+                    {/* Filters */}
+                    <div className="flex-1 flex flex-wrap items-center gap-1.5 min-w-0">
+                        <CustomSelect
+                            value={filters.manufacturerId}
+                            onChange={(value) => updateFilter('manufacturerId', value)}
+                            options={manufacturerOptions}
+                            placeholder="Prodhuesi"
+                            icon={<Car size={14} />}
+                            loading={loading.manufacturers}
+                            variant={isHero ? 'hero' : 'default'}
+                            className="w-32" // Changed from w-[130px]
+                        />
+
+                        {filters.manufacturerId && (
+                            <CustomSelect
+                                value={filters.modelId}
+                                onChange={(value) => updateFilter('modelId', value)}
+                                options={modelOptions}
+                                placeholder="Modeli"
+                                icon={<Car size={14} />}
+                                loading={loading.models}
+                                variant={isHero ? 'hero' : 'default'}
+                                className="w-30" // Changed from w-[120px]
+                            />
+                        )}
+
+                        <CustomSelect
+                            value={filters.fromYear}
+                            onChange={(value) => updateFilter('fromYear', value)}
+                            options={yearOptions}
+                            placeholder="Nga"
+                            icon={<Calendar size={14} />}
+                            variant={isHero ? 'hero' : 'default'}
+                            className="w-20" // Changed from w-[85px]
+                        />
+
+                        <CustomSelect
+                            value={filters.toYear}
+                            onChange={(value) => updateFilter('toYear', value)}
+                            options={yearOptions}
+                            placeholder="Deri"
+                            icon={<Calendar size={14} />}
+                            variant={isHero ? 'hero' : 'default'}
+                            className="w-20" // Changed from w-[85px]
+                        />
+
+                        <CustomSelect
+                            value={filters.priceTo}
+                            onChange={(value) => updateFilter('priceTo', value)}
+                            options={priceOptions}
+                            placeholder="Max"
+                            icon={<DollarSign size={14} />}
+                            variant={isHero ? 'hero' : 'default'}
+                            className="w-24" // Changed from w-[100px]
+                        />
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-1 shrink-0">
+                        {activeFilterCount > 0 && (
+                            <button
+                                onClick={clearFilters}
+                                className={`
+                                    w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-200
+                                    ${isHero
+                                        ? 'text-white/70 hover:text-white hover:bg-white/10'
+                                        : 'text-muted hover:text-orange-primary hover:bg-surface-2'
+                                    }
+                                `}
+                                title="Pastro filtrat"
+                                aria-label="Pastro filtrat"
+                            >
+                                <X size={16} />
+                            </button>
+                        )}
+
+                        <button
+                            onClick={handleSearch}
+                            className={`
+                                h-9 px-4 rounded-lg text-sm font-medium transition-all duration-200 
+                                flex items-center gap-1.5 whitespace-nowrap
+                                ${isHero
+                                    ? 'bg-white text-orange-600 hover:bg-gray-100'
+                                    : 'bg-orange-600 text-white hover:bg-orange-700'
+                                }
+                            `}
+                            aria-label="Kërko"
+                        >
+                            <Search size={14} />
+                            <span className="hidden sm:inline">Kërko</span>
+                            {activeFilterCount > 0 && (
+                                <span className={`
+                                    ml-0.5 px-1.5 py-0.5 text-xs rounded-full font-medium
+                                    ${isHero ? 'bg-orange-100 text-orange-600' : 'bg-white/20 text-white'}
+                                `}>
+                                    {activeFilterCount}
+                                </span>
+                            )}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Mobile Version */}
+            <div className="md:hidden w-full">
+                <div className={`
+                    rounded-xl p-3 shadow-lg space-y-3
+                    ${isHero
+                        ? 'bg-orange-500/95 backdrop-blur-md border border-white/20'
+                        : 'bg-surface border border-light/20'
+                    }
+                `}>
+                    {/* Filter Row */}
+                    <div className="grid grid-cols-2 gap-2">
+                        <CustomSelect
+                            value={filters.manufacturerId}
+                            onChange={(value) => updateFilter('manufacturerId', value)}
+                            options={manufacturerOptions}
+                            placeholder="Prodhuesi"
+                            icon={<Car size={16} />}
+                            loading={loading.manufacturers}
+                            variant={isHero ? 'hero' : 'default'}
+                            fullWidth
+                        />
+
+                        {filters.manufacturerId && (
+                            <CustomSelect
+                                value={filters.modelId}
+                                onChange={(value) => updateFilter('modelId', value)}
+                                options={modelOptions}
+                                placeholder="Modeli"
+                                icon={<Car size={16} />}
+                                loading={loading.models}
+                                variant={isHero ? 'hero' : 'default'}
+                                fullWidth
+                            />
+                        )}
+
+                        {!filters.manufacturerId && (
+                            <>
+                                <CustomSelect
+                                    value={filters.fromYear}
+                                    onChange={(value) => updateFilter('fromYear', value)}
+                                    options={yearOptions}
+                                    placeholder="Nga viti"
+                                    icon={<Calendar size={16} />}
+                                    variant={isHero ? 'hero' : 'default'}
+                                    fullWidth
+                                />
+                                <CustomSelect
+                                    value={filters.toYear}
+                                    onChange={(value) => updateFilter('toYear', value)}
+                                    options={yearOptions}
+                                    placeholder="Deri viti"
+                                    icon={<Calendar size={16} />}
+                                    variant={isHero ? 'hero' : 'default'}
+                                    fullWidth
+                                />
+                            </>
+                        )}
+                    </div>
+
+                    {/* Second Row */}
+                    {filters.manufacturerId && (
+                        <div className="grid grid-cols-2 gap-2">
+                            <CustomSelect
+                                value={filters.fromYear}
+                                onChange={(value) => updateFilter('fromYear', value)}
+                                options={yearOptions}
+                                placeholder="Nga viti"
+                                icon={<Calendar size={16} />}
+                                variant={isHero ? 'hero' : 'default'}
+                                fullWidth
+                            />
+                            <CustomSelect
+                                value={filters.toYear}
+                                onChange={(value) => updateFilter('toYear', value)}
+                                options={yearOptions}
+                                placeholder="Deri viti"
+                                icon={<Calendar size={16} />}
+                                variant={isHero ? 'hero' : 'default'}
+                                fullWidth
+                            />
+                        </div>
+                    )}
+
+                    {/* Price and Search Row */}
+                    <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                            <CustomSelect
+                                value={filters.priceTo}
+                                onChange={(value) => updateFilter('priceTo', value)}
+                                options={priceOptions}
+                                placeholder="Çmimi max"
+                                icon={<DollarSign size={16} />}
+                                variant={isHero ? 'hero' : 'default'}
+                                fullWidth
+                            />
+                        </div>
+
+                        <button
+                            onClick={handleSearch}
+                            className={`
+                                px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                                flex items-center justify-center gap-2 min-w-24 // Changed from min-w-[100px]
+                                ${isHero
+                                    ? 'bg-white text-orange-600 hover:bg-gray-100'
+                                    : 'bg-orange-600 text-white hover:bg-orange-700'
+                                }
+                            `}
+                        >
+                            <Search size={16} />
+                            <span>Kërko</span>
+                            {activeFilterCount > 0 && (
+                                <span className={`
+                                    px-1.5 py-0.5 text-xs rounded-full
+                                    ${isHero ? 'bg-orange-100 text-orange-600' : 'bg-white/20 text-white'}
+                                `}>
+                                    {activeFilterCount}
+                                </span>
+                            )}
+                        </button>
+
+                        {activeFilterCount > 0 && (
+                            <button
+                                onClick={clearFilters}
+                                className={`
+                                    p-2.5 rounded-lg transition-all duration-200
+                                    ${isHero
+                                        ? 'text-white/70 hover:text-white hover:bg-white/10'
+                                        : 'text-muted hover:text-orange-primary hover:bg-surface-2'
+                                    }
+                                `}
+                                aria-label="Pastro filtrat"
+                            >
+                                <X size={18} />
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </>
+    );
+}
+
+// Main export with Suspense wrapper
+export default function CompactSearch(props: CompactSearchProps) {
+    return (
+        <SearchParamsWrapper fallback={
+            <div className="h-11 bg-surface-2 rounded-xl animate-pulse w-full md:order-2 order-1" />
+        }>
+            {(searchParams) => <CompactSearchContent searchParams={searchParams} {...props} />}
+        </SearchParamsWrapper>
+    );
+}
+=========================================
+FILE: app/globals.css
+=========================================
+/* app/globals.css */
+@import "tailwindcss";
+
+@theme {
+  /* Refined Swiss Design Colors - Fixed variable naming */
+  --color-orange-500: #FF6B00;
+  --color-orange-600: #CC5500;
+  --color-orange-400: #FF8C42;
+  --color-orange-300: #FFB347;
+
+  /* Dark Blue palette - consistent naming */
+  --color-blue-950: #0A1929;
+  --color-blue-900: #102336;
+  --color-blue-800: #1A2C40;
+  --color-blue-700: #132F4C;
+  --color-blue-600: #1E3A5A;
+  --color-blue-500: #244562;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* Spacing - 8px grid */
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-10: 2.5rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+  --spacing-20: 5rem;
+  --spacing-24: 6rem;
+
+  /* Animation */
+  --duration-fast: 0.2s;
+  --duration-base: 0.3s;
+  --duration-slow: 0.5s;
+  --easing-standard: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  :root {
+    /* Dark theme backgrounds - fixed variable names */
+    --bg-primary: #0A1929;
+    --bg-secondary: #102336;
+    --bg-tertiary: #1A2C40;
+    --bg-surface: #132F4C;
+    --bg-surface-2: #1E3A5A;
+    --bg-elevated: #244562;
+
+    /* Borders - consistent opacity */
+    --border-light: rgba(255, 255, 255, 0.08);
+    --border-medium: rgba(255, 255, 255, 0.12);
+    --border-strong: rgba(255, 255, 255, 0.2);
+
+    /* Text - WCAG contrast compliant */
+    --text-primary: #FFFFFF;
+    --text-secondary: rgba(255, 255, 255, 0.85);
+    --text-tertiary: rgba(255, 255, 255, 0.65);
+    --text-muted: rgba(255, 255, 255, 0.45);
+    --text-disabled: rgba(255, 255, 255, 0.25);
+
+    /* Link colors - subtle */
+    --link-default: rgba(255, 255, 255, 0.85);
+    --link-hover: #FF6B00;
+    --link-active: #FF6B00;
+    --link-visited: rgba(255, 255, 255, 0.6);
+
+    /* Icon colors - harmonious */
+    --icon-default: rgba(255, 255, 255, 0.7);
+    --icon-hover: #FF6B00;
+    --icon-muted: rgba(255, 255, 255, 0.4);
+
+    /* Status colors */
+    --success-bg: rgba(74, 222, 128, 0.1);
+    --success-text: #4ADE80;
+    --success-border: rgba(74, 222, 128, 0.2);
+
+    --warning-bg: rgba(251, 191, 36, 0.1);
+    --warning-text: #FBBF24;
+    --warning-border: rgba(251, 191, 36, 0.2);
+
+    --error-bg: rgba(248, 113, 113, 0.1);
+    --error-text: #F87171;
+    --error-border: rgba(248, 113, 113, 0.2);
+
+    --info-bg: rgba(96, 165, 250, 0.1);
+    --info-text: #60A5FA;
+    --info-border: rgba(96, 165, 250, 0.2);
+
+    /* Orange opacities - fixed */
+    --orange-50: rgba(255, 107, 0, 0.05);
+    --orange-100: rgba(255, 107, 0, 0.1);
+    --orange-150: rgba(255, 107, 0, 0.15);
+    --orange-200: rgba(255, 107, 0, 0.2);
+    --orange-250: rgba(255, 107, 0, 0.25);
+    --orange-300: rgba(255, 107, 0, 0.3);
+
+    /* Shadows - fixed layering */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.25);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.35);
+
+    /* Focus rings */
+    --ring-offset: 2px;
+    --ring-color: rgba(255, 107, 0, 0.5);
+
+    /* Z-index layers - fixed */
+    --z-dropdown: 100;
+    --z-sticky: 200;
+    --z-fixed: 300;
+    --z-modal: 400;
+    --z-popover: 500;
+    --z-tooltip: 600;
+    --z-toast: 700;
+  }
+
+  /* Base styles - FIXED */
+  * {
+    border-color: var(--border-light);
+    box-sizing: border-box;
+  }
+
+  /* Only constrain these specific elements */
+  html,
+  body,
+  #__next,
+  main,
+  .container-swiss,
+  .container-custom,
+  .w-full {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Typography - fixed responsive sizes */
+  h1 {
+    font-size: clamp(2rem, 5vw, 2.5rem);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+  }
+
+  h2 {
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.875rem;
+  }
+
+  h3 {
+    font-size: clamp(1.25rem, 3vw, 1.5rem);
+    font-weight: 500;
+    line-height: 1.4;
+    margin-bottom: 0.75rem;
+  }
+
+  h4 {
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    font-weight: 500;
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+  }
+
+  small {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--text-tertiary);
+  }
+
+  /* Selection */
+  ::selection {
+    background: var(--orange-200);
+    color: var(--text-primary);
+  }
+}
+
+/* Animations - fixed with will-change */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.98);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Animation classes */
+.animate-fadeIn {
+  animation: fadeIn var(--duration-base) var(--easing-standard);
+  will-change: transform, opacity;
+}
+
+.animate-slideIn {
+  animation: slideIn var(--duration-fast) var(--easing-standard);
+  will-change: transform, opacity;
+}
+
+.animate-slideUp {
+  animation: slideUp var(--duration-base) var(--easing-standard);
+  will-change: transform, opacity;
+}
+
+.animate-scaleIn {
+  animation: scaleIn var(--duration-fast) var(--easing-standard);
+  will-change: transform, opacity;
+}
+
+.animate-pulse-slow {
+  animation: pulse 2s var(--easing-standard) infinite;
+}
+
+@layer components {
+
+  /* Container - fixed responsive */
+  .container-swiss {
+    width: 100%;
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: clamp(1rem, 5vw, 2rem);
+    padding-right: clamp(1rem, 5vw, 2rem);
+  }
+
+  @media (min-width: 1440px) {
+    .container-swiss {
+      max-width: 1440px;
+    }
+  }
+
+  /* Buttons */
+  .btn-primary {
+    background-color: var(--color-orange-500);
+    color: white;
+    padding: 0.75rem 1.75rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    letter-spacing: 0.01em;
+    transition: all var(--duration-fast) var(--easing-standard);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid transparent;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background-color: var(--color-orange-600);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .btn-primary:focus-visible {
+    outline: 2px solid var(--color-orange-500);
+    outline-offset: 2px;
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background-color: transparent;
+    border: 1px solid var(--border-medium);
+    color: var(--text-primary);
+    padding: 0.75rem 1.75rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    letter-spacing: 0.01em;
+    transition: all var(--duration-fast) var(--easing-standard);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background-color: rgba(255, 255, 255, 0.02);
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    border-color: var(--color-orange-500);
+    color: var(--color-orange-500);
+    background-color: var(--orange-50);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .btn-secondary:focus-visible {
+    outline: 2px solid var(--color-orange-500);
+    outline-offset: 2px;
+  }
+
+  .btn-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Cards */
+  .card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: 1rem;
+    transition: all var(--duration-base) var(--easing-standard);
+    overflow: hidden;
+    box-shadow: var(--shadow-xs);
+    position: relative;
+    isolation: isolate;
+  }
+
+  .card:hover {
+    border-color: var(--border-medium);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .card-elevated {
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-medium);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Inputs */
+  .input {
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-light);
+    color: var(--text-primary);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    transition: all var(--duration-fast) ease;
+    width: 100%;
+    backdrop-filter: blur(4px);
+  }
+
+  .input:hover:not(:disabled) {
+    border-color: var(--border-medium);
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .input:focus {
+    outline: none;
+    border-color: var(--color-orange-500);
+    background-color: rgba(255, 107, 0, 0.05);
+    box-shadow: 0 0 0 3px var(--orange-100);
+  }
+
+  .input::placeholder {
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+
+  .input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: rgba(255, 255, 255, 0.02);
+  }
+
+  /* Select inputs */
+  .select {
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-light);
+    color: var(--text-primary);
+    border-radius: 0.5rem;
+    padding: 0.75rem 2rem 0.75rem 1rem;
+    font-size: 0.875rem;
+    transition: all var(--duration-fast) ease;
+    width: 100%;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+  }
+
+  .select:hover:not(:disabled) {
+    border-color: var(--border-medium);
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .select:focus {
+    outline: none;
+    border-color: var(--color-orange-500);
+    background-color: rgba(255, 107, 0, 0.05);
+    box-shadow: 0 0 0 3px var(--orange-100);
+  }
+
+  .select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Badges */
+  .badge {
+    padding: 0.25rem 0.875rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    line-height: 1.5;
+    border: 1px solid transparent;
+  }
+
+  .badge-success {
+    background-color: var(--success-bg);
+    color: var(--success-text);
+    border-color: var(--success-border);
+  }
+
+  .badge-warning {
+    background-color: var(--warning-bg);
+    color: var(--warning-text);
+    border-color: var(--warning-border);
+  }
+
+  .badge-error {
+    background-color: var(--error-bg);
+    color: var(--error-text);
+    border-color: var(--error-border);
+  }
+
+  .badge-info {
+    background-color: var(--info-bg);
+    color: var(--info-text);
+    border-color: var(--info-border);
+  }
+
+  /* Dividers */
+  .divider {
+    height: 1px;
+    background: linear-gradient(to right,
+        transparent,
+        var(--border-medium) 20%,
+        var(--border-medium) 80%,
+        transparent);
+    width: 100%;
+    margin: var(--spacing-6) 0;
+  }
+
+  .divider-vertical {
+    width: 1px;
+    background: linear-gradient(to bottom,
+        transparent,
+        var(--border-medium) 20%,
+        var(--border-medium) 80%,
+        transparent);
+    height: 100%;
+  }
+
+  /* Skeleton */
+  .skeleton {
+    background: linear-gradient(90deg,
+        var(--bg-surface-2) 25%,
+        var(--border-light) 37%,
+        var(--bg-surface-2) 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease infinite;
+    border-radius: 0.5rem;
+  }
+
+  /* Glass effect */
+  .glass {
+    background: rgba(19, 47, 76, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-light);
+  }
+
+  .glass-hover:hover {
+    background: rgba(19, 47, 76, 0.7);
+    backdrop-filter: blur(12px);
+    border-color: var(--border-medium);
+  }
+
+  /* Focus ring */
+  .focus-ring {
+    transition: box-shadow var(--duration-fast) ease;
+  }
+
+  .focus-ring:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 var(--ring-offset) var(--bg-primary), 0 0 0 calc(var(--ring-offset) + 2px) var(--ring-color);
+  }
+
+  /* Truncation */
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  /* Background utilities */
+  .bg-surface-3 {
+    background-color: var(--bg-surface-2);
+    filter: brightness(1.2);
+  }
+
+  /* Image Gallery Specific Styles */
+  .thumbnail-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    position: relative;
+    width: 100%;
+  }
+
+  .thumbnail-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .thumbnail-gradient-left {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2rem;
+    background: linear-gradient(to right, var(--bg-primary), transparent);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .thumbnail-gradient-right {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 2rem;
+    background: linear-gradient(to left, var(--bg-primary), transparent);
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-surface-2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 4px;
+  transition: background var(--duration-fast) ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-orange-500);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--bg-primary);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-medium) var(--bg-surface-2);
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: var(--bg-surface-2);
+  border-radius: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 8px;
+  transition: background var(--duration-fast) ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-orange-500);
+}
+
+/* Hide scrollbar */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Number input */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* Select options */
+select option,
+.dropdown-option {
+  background-color: var(--bg-surface-2);
+  color: var(--text-primary);
+}
+
+select option:hover,
+select option:focus,
+select option:checked {
+  background: linear-gradient(0deg, var(--orange-100) 0%, var(--orange-100) 100%);
+  background-color: var(--orange-100) !important;
+  color: var(--color-orange-500);
+}
+
+/* Selection color for inputs */
+input::selection,
+textarea::selection {
+  background: var(--orange-200);
+  color: var(--text-primary);
+}
+
+/* Media queries */
+@media (min-width: 480px) {
+  .xs\:inline {
+    display: inline;
+  }
+}
+
+/* Print styles */
+@media print {
+  body {
+    background-color: white;
+    color: black;
+  }
+
+  .no-print {
+    display: none;
+  }
 }

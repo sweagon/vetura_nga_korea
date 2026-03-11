@@ -94,14 +94,14 @@ export default function MobileSelect({
                                         transition-colors
                                         flex items-center justify-between gap-2
                                         ${value === option.value
-                                            ? 'bg-orange-10 text-orange-primary font-medium'
+                                            ? 'bg-orange-10 text-orange-500 font-medium'
                                             : 'bg-surface-2 text-secondary hover:bg-surface-3 hover:text-primary'
                                         }
                                     `}
                                 >
                                     <span className="truncate">{option.label}</span>
                                     {value === option.value && (
-                                        <Check size={16} className="text-orange-primary shrink-0" />
+                                        <Check size={16} className="text-orange-500 shrink-0" />
                                     )}
                                 </button>
                             ))
