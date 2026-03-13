@@ -8,7 +8,7 @@ const defaultConfig = {
     minimumMarkup: 1000,
     contactEmail: 'blerart@outlook.com',
     contactPhone: '+383 49 195 414',
-    siteName: 'Vetura Korea Kosova',
+    siteName: 'Vetura Korea Kosovë',
     currency: 'EUR'
 };
 

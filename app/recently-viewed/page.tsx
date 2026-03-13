@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 import RecentlyViewedContent from './RecentlyViewedContent';
 
 export const metadata = {
-    title: 'Shikuar së fundmi | Vetura Korea Kosova',
+    title: 'Shikuar së fundmi | Vetura Korea Kosovë',
     description: 'Makinat që keni shikuar së fundmi.',
 };
 

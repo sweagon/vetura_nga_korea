@@ -153,7 +153,7 @@ export default function LocationMap() {
                                 allowFullScreen
                                 loading="lazy"
                                 referrerPolicy="no-referrer-when-downgrade"
-                                title="Vetura Korea Kosova Location"
+                                title="Vetura Korea Kosovë Location"
                                 className="w-full h-full"
                             />
                         </div>

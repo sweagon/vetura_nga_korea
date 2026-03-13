@@ -20,7 +20,7 @@ export default function HowItWorks() {
         {
             icon: Truck,
             title: '3. Transporti',
-            description: 'Ne organizojmë transportin nga Korea në Prishtinës',
+            description: 'Ne organizojmë transportin nga Korea në Prishtinë',
         },
         {
             icon: Key,

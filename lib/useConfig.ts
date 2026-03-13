@@ -19,7 +19,7 @@ const defaultConfig: SiteConfig = {
     minimumMarkup: 1000,
     contactEmail: 'info@vetura-korea-kosove.com',
     contactPhone: '+383 49 195 414',
-    siteName: 'Vetura Korea Kosova',
+    siteName: 'Vetura Korea Kosovë',
     currency: 'EUR'
 };
 

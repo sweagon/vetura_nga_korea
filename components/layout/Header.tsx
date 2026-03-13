@@ -59,8 +59,8 @@ export default function Header() {
     return (
         <header
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled || isMenuOpen
-                    ? 'bg-surface/95 backdrop-blur-xl border-b border-light/10 py-3'
-                    : 'bg-transparent py-4 md:py-5'
+                ? 'bg-surface/95 backdrop-blur-xl border-b border-light/10 py-3'
+                : 'bg-transparent py-4 md:py-5'
                 }`}
         >
             <nav className="container-swiss">
@@ -71,7 +71,7 @@ export default function Header() {
                         className="flex items-center space-x-3 group shrink-0"
                     >
                         <div className="relative">
-                            <img src="/logo.webp" className="md:w-12 md:h-12 w-10 h-10" alt="Vetura Korea Kosova Logo" />
+                            <img src="/logo.webp" className="md:w-12 md:h-12 w-10 h-10" alt="Vetura Korea Kosovë Logo" />
                         </div>
                         <span
                             className={`text-base md:text-lg font-semibold tracking-tight hidden sm:block ${scrolled ? 'text-primary' : 'text-white'
@@ -88,8 +88,8 @@ export default function Header() {
                                 key={item.name}
                                 href={item.href}
                                 className={`relative px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${scrolled
-                                        ? 'focus:ring-orange-primary/50 focus:ring-offset-surface'
-                                        : 'focus:ring-white/50 focus:ring-offset-transparent'
+                                    ? 'focus:ring-orange-primary/50 focus:ring-offset-surface'
+                                    : 'focus:ring-white/50 focus:ring-offset-transparent'
                                     } ${isActive(item.href)
                                         ? scrolled
                                             ? 'text-orange-500 bg-orange-10'
@@ -109,8 +109,8 @@ export default function Header() {
                         <button
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
                             className={`lg:hidden relative w-10 h-10 rounded-xl transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-offset-2 ${scrolled
-                                    ? 'bg-surface-2/50 hover:bg-surface-2 focus:ring-orange-primary/50 focus:ring-offset-surface'
-                                    : 'bg-white/10 hover:bg-white/20 focus:ring-white/50 focus:ring-offset-transparent'
+                                ? 'bg-surface-2/50 hover:bg-surface-2 focus:ring-orange-primary/50 focus:ring-offset-surface'
+                                : 'bg-white/10 hover:bg-white/20 focus:ring-white/50 focus:ring-offset-transparent'
                                 }`}
                             aria-label={isMenuOpen ? "Close menu" : "Open menu"}
                         >
@@ -144,12 +144,12 @@ export default function Header() {
                                         key={item.name}
                                         href={item.href}
                                         className={`block py-3 px-4 rounded-xl text-sm font-medium transition-all ${isActive(item.href)
-                                                ? scrolled
-                                                    ? 'bg-orange-10 text-orange-500'
-                                                    : 'bg-white/20 text-white'
-                                                : scrolled
-                                                    ? 'text-secondary hover:text-primary hover:bg-surface-2/50'
-                                                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                                            ? scrolled
+                                                ? 'bg-orange-10 text-orange-500'
+                                                : 'bg-white/20 text-white'
+                                            : scrolled
+                                                ? 'text-secondary hover:text-primary hover:bg-surface-2/50'
+                                                : 'text-white/80 hover:text-white hover:bg-white/10'
                                             }`}
                                         onClick={() => setIsMenuOpen(false)}
                                     >

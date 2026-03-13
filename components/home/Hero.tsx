@@ -72,7 +72,7 @@ export default function Hero() {
                         variants={fadeInUp}
                         className="text-base md:text-xl text-white/80 mb-8 md:mb-10 max-w-2xl mx-auto lg:mx-0 text-center lg:text-left leading-relaxed"
                     >
-                        Vetura Korea Kosova ju sjell vetura të përzgjedhura nga Korea me standarde të larta cilësie,
+                        Vetura Korea Kosovë ju sjell vetura të përzgjedhura nga Korea me standarde të larta cilësie,
                         histori të verifikuar dhe transparencë të plotë në çdo hap të procesit.
                     </motion.p>
 

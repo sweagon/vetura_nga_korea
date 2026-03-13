@@ -61,10 +61,10 @@ export default function AboutSection() {
 
                     <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
                         Pse të zgjidhni{' '}
-                        <span className="text-orange-500">Vetura Korea Kosova</span>
+                        <span className="text-orange-500">Vetura Korea Kosovë</span>
                     </h2>
                     <p className="text-white/60 max-w-2xl mx-auto">
-                        Në Vetura Korea Kosova sjellim vetura të përzgjedhura nga Korea me standarde të larta cilësie,
+                        Në Vetura Korea Kosovë sjellim vetura të përzgjedhura nga Korea me standarde të larta cilësie,
                         histori të verifikuar dhe transparencë të plotë në çdo hap të procesit.
                     </p>
                 </motion.div>

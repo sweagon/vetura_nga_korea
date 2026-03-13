@@ -17,8 +17,8 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL('https://vetura-korea-kosova.vercel.app'),
   title: {
-    default: 'Vetura Korea Kosova - Makina nga Korea në Kosovë',
-    template: '%s | Vetura Korea Kosova'
+    default: 'Vetura Korea Kosovë - Makina nga Korea në Kosovë',
+    template: '%s | Vetura Korea Kosovë'
   },
   description: 'Importoni makina cilësore nga Korea me çmime konkurruese.',
 };

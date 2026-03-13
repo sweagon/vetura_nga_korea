@@ -1,4 +1,3 @@
-// lib/ConfigContext.tsx
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
@@ -11,7 +10,8 @@ export interface VehicleTypeConfig {
 }
 
 export interface SiteConfig {
-    shippingCost: number;
+    shippingCost: number; // Base shipping to Durres
+    shippingToPristina: number; // Additional shipping from Durres to Pristina
     markupPercentage: number;
     minimumMarkup: number;
     contactEmail: string;
@@ -21,7 +21,6 @@ export interface SiteConfig {
     vehicleTypes: {
         suv?: VehicleTypeConfig;
         default?: VehicleTypeConfig;
-        // Make other types optional
         sedan?: VehicleTypeConfig;
         hatchback?: VehicleTypeConfig;
         wagon?: VehicleTypeConfig;
@@ -32,31 +31,45 @@ export interface SiteConfig {
     };
 }
 
+export interface PriceDetails {
+    basePrice: number;
+    shippingCost: number; // Shipping to Durres
+    shippingToPristina: number; // Additional to Pristina
+    markupAmount: number;
+    finalPrice: number;
+    appliedMarkup: 'percentage' | 'minimum' | 'none';
+    vehicleTypeUsed: string;
+}
+
 const defaultConfig: SiteConfig = {
     shippingCost: 3500,
-    markupPercentage: 15,
+    shippingToPristina: 350,
+    markupPercentage: 15,      // This is the global fallback
     minimumMarkup: 1000,
     contactEmail: 'blerart@outlook.com',
     contactPhone: '+383 49 195 414',
-    siteName: 'Vetura Korea Kosova',
+    siteName: 'Vetura Korea Kosovë',
     currency: 'EUR',
     vehicleTypes: {
-        suv: { shippingCost: 4500, markupPercentage: 18, minimumMarkup: 1500, enabled: false },
-        default: { shippingCost: 3500, markupPercentage: 15, minimumMarkup: 1000, enabled: true }
+        suv: {
+            shippingCost: 4500,
+            markupPercentage: 18,  // Changed from 0 to 18
+            minimumMarkup: 1500,
+            enabled: false
+        },
+        default: {
+            shippingCost: 3500,
+            markupPercentage: 15,   // Changed from 0 to 15
+            minimumMarkup: 1000,
+            enabled: true
+        }
     }
 };
 
 interface ConfigContextType {
     config: SiteConfig;
     updateConfig: (newConfig: SiteConfig) => void;
-    calculateFinalPrice: (basePrice: number, vehicleType?: string) => {
-        basePrice: number;
-        shippingCost: number;
-        markupAmount: number;
-        finalPrice: number;
-        appliedMarkup: 'percentage' | 'minimum';
-        vehicleTypeUsed: string;
-    };
+    calculateFinalPrice: (basePrice: number, vehicleType?: string) => PriceDetails;
     formatPrice: (price: number) => string;
     validateConfig: (config: Partial<SiteConfig>) => { valid: boolean; errors: string[] };
     getVehicleTypeLabel: (type: string) => string;
@@ -71,7 +84,12 @@ const getStorageConfig = (): SiteConfig | null => {
     try {
         const saved = localStorage.getItem('siteConfig');
         if (saved) {
-            return JSON.parse(saved);
+            const parsed = JSON.parse(saved);
+            // Ensure shippingToPristina exists (for backward compatibility)
+            if (parsed.shippingToPristina === undefined) {
+                parsed.shippingToPristina = 350;
+            }
+            return parsed;
         }
     } catch (e) {
         console.error('Failed to load config from localStorage');
@@ -86,6 +104,11 @@ const validateConfigValues = (config: Partial<SiteConfig>): { valid: boolean; er
     if (config.shippingCost !== undefined) {
         if (config.shippingCost < 0) errors.push('Shipping cost cannot be negative');
         if (config.shippingCost > 10000) errors.push('Shipping cost seems too high (max €10,000)');
+    }
+
+    if (config.shippingToPristina !== undefined) {
+        if (config.shippingToPristina < 0) errors.push('Shipping to Pristina cost cannot be negative');
+        if (config.shippingToPristina > 1000) errors.push('Shipping to Pristina seems too high (max €1,000)');
     }
 
     if (config.markupPercentage !== undefined) {
@@ -135,9 +158,12 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
 
         const stored = getStorageConfig();
         if (stored) {
-            // Ensure stored config has vehicleTypes (for backward compatibility)
+            // Ensure stored config has vehicleTypes and shippingToPristina (for backward compatibility)
             if (!stored.vehicleTypes) {
                 stored.vehicleTypes = defaultConfig.vehicleTypes;
+            }
+            if (stored.shippingToPristina === undefined) {
+                stored.shippingToPristina = defaultConfig.shippingToPristina;
             }
             const { valid } = validateConfigValues(stored);
             if (valid) {
@@ -165,11 +191,11 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    const calculateFinalPrice = (basePrice: number, vehicleType?: string) => {
+    const calculateFinalPrice = (basePrice: number, vehicleType?: string): PriceDetails => {
         const validBasePrice = Math.max(0, basePrice || 0);
 
         // Determine which config to use
-        let shipping = config.shippingCost;
+        let shipping = config.shippingCost; // Shipping to Durres
         let markupPercent = config.markupPercentage;
         let minMarkup = config.minimumMarkup;
         let usedType = 'default';
@@ -193,17 +219,27 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
         }
 
         const withShipping = validBasePrice + shipping;
-        const percentageMarkup = withShipping * (markupPercent / 100);
 
-        const useMinimumMarkup = percentageMarkup < minMarkup;
-        const markupAmount = useMinimumMarkup ? minMarkup : percentageMarkup;
-        const appliedMarkup: 'percentage' | 'minimum' = useMinimumMarkup ? 'minimum' : 'percentage';
+        // Calculate markup
+        let markupAmount = 0;
+        let appliedMarkup: 'percentage' | 'minimum' | 'none' = 'none';
+
+        if (markupPercent > 0) {
+            const percentageMarkup = withShipping * (markupPercent / 100);
+            const useMinimumMarkup = percentageMarkup < minMarkup;
+            markupAmount = useMinimumMarkup ? minMarkup : percentageMarkup;
+            appliedMarkup = useMinimumMarkup ? 'minimum' : 'percentage';
+        }
+
+        // Final price includes base + shipping to Durres + shipping to Pristina + markup
+        const finalPrice = validBasePrice + shipping + config.shippingToPristina + markupAmount;
 
         return {
             basePrice: validBasePrice,
             shippingCost: shipping,
+            shippingToPristina: config.shippingToPristina,
             markupAmount: Math.round(markupAmount),
-            finalPrice: Math.round(withShipping + markupAmount),
+            finalPrice: Math.round(finalPrice),
             appliedMarkup,
             vehicleTypeUsed: usedType
         };

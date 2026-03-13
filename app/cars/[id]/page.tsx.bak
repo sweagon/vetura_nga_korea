@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
         if (!car) {
             return {
-                title: 'Makina nuk u gjet | Vetura Korea Kosova',
+                title: 'Makina nuk u gjet | Vetura Korea Kosovë',
             };
         }
 
@@ -41,12 +41,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         const mileage = lot?.odometer?.km || 0;
 
         return {
-            title: `${car.manufacturer?.name || 'Makina'} ${car.model?.name || ''} ${car.year || ''} | Vetura Korea Kosova`,
+            title: `${car.manufacturer?.name || 'Makina'} ${car.model?.name || ''} ${car.year || ''} | Vetura Korea Kosovë`,
             description: `${car.manufacturer?.name || 'Makina'} ${car.model?.name || ''} ${car.year || ''} me ${formatMileage(mileage)}. Çmimi: ${formatPrice(price)}`,
         };
     } catch (error) {
         return {
-            title: 'Makina nuk u gjet | Vetura Korea Kosova',
+            title: 'Makina nuk u gjet | Vetura Korea Kosovë',
         };
     }
 }
@@ -80,7 +80,7 @@ export default async function CarDetailPage({ params }: PageProps) {
                 <div className="border-b border-light bg-surface/80 sticky top-16 z-40 backdrop-blur-sm">
                     <div className="container-swiss py-3">
                         <div className="flex items-center gap-2 text-sm flex-wrap">
-                            <Link href="/" className="text-muted hover:text-orange-500 transition">Vetura Korea Kosova</Link>
+                            <Link href="/" className="text-muted hover:text-orange-500 transition">Vetura Korea Kosovë</Link>
                             <span className="text-muted">/</span>
                             <Link href="/cars" className="text-muted hover:text-orange-500 transition">Makina</Link>
                             {car.manufacturer?.id && (

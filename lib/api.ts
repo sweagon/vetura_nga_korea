@@ -140,6 +140,8 @@ export interface CarDetails {
   month?: number;
 }
 
+// lib/api.ts - Update around line 150-170
+
 export interface Lot {
   id: number;
   lot: string;
@@ -184,6 +186,27 @@ export interface Lot {
   };
   keys_available?: boolean;
   airbags?: boolean | null;
+  // Add these new fields for Euro pricing
+  price_with_margin_and_kosovo?: number;  // Final Euro price with margin
+  price_with_margin_no_discount?: number; // Euro price without discount
+  step5?: number;                          // Alternative Euro price field
+}
+
+// Also add helper function to get the best available price
+export function getBestPrice(lot: Lot | undefined): { price: number; source: string } {
+  if (!lot) return { price: 0, source: 'none' };
+
+  // Priority: 1. API Euro price, 2. step5, 3. buy_now (USD fallback)
+  if (lot.price_with_margin_and_kosovo) {
+    return { price: lot.price_with_margin_and_kosovo, source: 'api_euro' };
+  }
+  if (lot.step5) {
+    return { price: lot.step5, source: 'step5' };
+  }
+  if (lot.buy_now) {
+    return { price: lot.buy_now, source: 'buy_now_usd' };
+  }
+  return { price: 0, source: 'none' };
 }
 
 export interface FetchCarsResponse {
@@ -382,10 +405,17 @@ export async function fetchCarByVin(vin: string): Promise<Car | null> {
       ...(typeof window !== 'undefined'
         ? { next: { revalidate: 3600 } } // Cache for 1 hour
         : { cache: 'no-store' })
-    }, 10000);
+    }, 15000); // Increased timeout to 15 seconds
 
     if (response.status === 200) {
       const data = await response.json();
+
+      // Check if the response has the expected structure
+      if (!data || !data.manufacturer) {
+        console.warn('⚠️ API returned incomplete car data:', data);
+        return null;
+      }
+
       return data;
     }
 
@@ -394,7 +424,12 @@ export async function fetchCarByVin(vin: string): Promise<Car | null> {
       return null;
     }
 
-    throw new Error(`HTTP error! status: ${response.status}`);
+    // Log other error statuses
+    console.error(`❌ API returned status ${response.status} for VIN:`, vin);
+    const errorText = await response.text().catch(() => 'No error details');
+    console.error('Error details:', errorText);
+
+    return null;
   } catch (error) {
     console.error('Error fetching car by VIN:', error);
     return null;

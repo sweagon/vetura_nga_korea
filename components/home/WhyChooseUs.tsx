@@ -102,10 +102,10 @@ export default function WhyChooseUs() {
 
                     <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
                         Pse të zgjidhni{' '}
-                        <span className="text-orange-500">Vetura Korea Kosova</span>
+                        <span className="text-orange-500">Vetura Korea Kosovë</span>
                     </h2>
                     <p className="text-white/60 text-lg">
-                        Në Vetura Korea Kosova sjellim vetura të përzgjedhura nga Korea me standarde të larta cilësie,
+                        Në Vetura Korea Kosovë sjellim vetura të përzgjedhura nga Korea me standarde të larta cilësie,
                         histori të verifikuar dhe transparencë të plotë në çdo hap të procesit. Qëllimi ynë është t'u
                         ofrojmë klientëve vetura të sigurta, të besueshme dhe me çmimin më konkurrues në treg.
                     </p>

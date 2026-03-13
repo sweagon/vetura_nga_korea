@@ -374,7 +374,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                             </h3>
                                             <div className="space-y-2 text-sm">
                                                 <p className="text-secondary">
-                                                    veturakoreakosove
+                                                    {config.siteName}
                                                 </p>
                                                 <p className="flex items-center gap-2 text-secondary hover:text-orange-500 transition-colors">
                                                     <Phone size={14} className="text-orange-500 shrink-0" />

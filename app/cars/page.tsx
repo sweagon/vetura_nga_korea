@@ -5,7 +5,7 @@ import { Metadata } from 'next';
 import { FilterProvider } from '@/contexts/FilterContext';
 
 export const metadata: Metadata = {
-    title: 'Makina për Shitje | Vetura Korea Kosova',
+    title: 'Makina për Shitje | Vetura Korea Kosovë',
     description: 'Shfleto makinat më të mira nga Korea.',
 };
 
