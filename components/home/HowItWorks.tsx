@@ -15,12 +15,12 @@ export default function HowItWorks() {
         {
             icon: FileCheck,
             title: '2. Kontrata dhe pagesa',
-            description: 'Nënshkruaj kontratën dhe bëj pagesën e parapagimit.',
+            description: 'Nënshkruaj kontratën dhe bëj pagesën.',
         },
         {
             icon: Truck,
             title: '3. Transporti',
-            description: 'Ne organizojmë transportin detar nga Korea në Durrës.',
+            description: 'Ne organizojmë transportin nga Korea në Prishtinës',
         },
         {
             icon: Key,
