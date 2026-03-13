@@ -608,7 +608,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                         {tempActiveCount > 0 && (
                             <button
                                 onClick={clearAllAndClose}
-                                className="flex-1 px-4 py-2.5 border border-light/20 text-secondary rounded-lg hover:bg-surface-2 transition-colors text-sm font-medium"
+                                className="bg-black/90 border-orange-500 flex-1 px-4 py-2.5 border border-light/20 text-secondary rounded-lg hover:bg-surface-2 transition-colors text-sm font-medium"
                             >
                                 Anulo
                             </button>
