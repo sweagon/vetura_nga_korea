@@ -6,9 +6,8 @@ import { Shield, Truck, Award, Users, Clock, ThumbsUp, Sparkles } from 'lucide-r
 
 export default function AboutSection() {
     const stats = [
-        { value: '500+', label: 'Makina në stok', icon: Truck },
         { value: '98%', label: 'Klientë të kënaqur', icon: ThumbsUp },
-        { value: '20 ditë', label: 'Transporti', icon: Clock },
+        { value: '20 ditë', label: 'Transporti Mesatar', icon: Clock },
         { value: '100%', label: 'Të inspektuara', icon: Shield },
     ];
 
@@ -63,7 +62,7 @@ export default function AboutSection() {
                     <div className="inline-flex items-center gap-2 bg-orange-10 backdrop-blur-sm px-4 py-2 rounded-full border border-orange-20 mb-6">
                         <Sparkles size={16} className="text-orange-500" />
                         <span className="text-orange-500 text-sm font-medium tracking-wide">
-                            PSE TË ZGJIDHNI NE?
+                            PSE TË NA ZGJIDHNI NE?
                         </span>
                     </div>
 
@@ -77,7 +76,7 @@ export default function AboutSection() {
                 </motion.div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-16">
                     {stats.map((stat, index) => (
                         <motion.div
                             key={index}

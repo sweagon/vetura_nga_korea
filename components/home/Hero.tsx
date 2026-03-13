@@ -85,12 +85,11 @@ export default function Hero() {
                     {/* Stats */}
                     <motion.div
                         variants={fadeInUp}
-                        className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 max-w-3xl mx-auto lg:mx-0"
+                        className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 max-w-3xl mx-auto lg:mx-0"
                     >
                         {[
-                            { icon: Truck, value: '500+', label: 'Makina në stok' },
                             { icon: Shield, value: '98%', label: 'Klientë të kënaqur' },
-                            { icon: Clock, value: '20 ditë', label: 'Transporti' },
+                            { icon: Clock, value: '20 ditë', label: 'Transporti Mesatar' },
                             { icon: Sparkles, value: '100%', label: 'Të inspektuara' }
                         ].map((stat, index) => (
                             <motion.div

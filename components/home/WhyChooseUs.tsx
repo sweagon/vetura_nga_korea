@@ -1,30 +1,51 @@
-// components/home/WhyChooseUs.tsx
 'use client';
 
 import { motion } from 'framer-motion';
-import { CheckCircle, Star, TrendingUp, Heart, Shield, Zap, Sparkles } from 'lucide-react';
+import { CheckCircle, Star, TrendingUp, Shield, Zap, Sparkles, Truck, FileCheck, Clock, Heart, Users, Award } from 'lucide-react';
 
 export default function WhyChooseUs() {
-    const benefits = [
+    const stats = [
         {
-            icon: Star,
-            title: 'Makina cilësore',
-            description: 'Të gjitha makinat vijnë nga Korea me standarde të larta.',
+            icon: Users,
+            value: '98%',
+            label: 'Klientë të kënaqur',
+            description: 'Besimi dhe kënaqësia e klientëve tanë janë prioriteti ynë kryesor'
+        },
+        {
+            icon: Truck,
+            value: '35 ditë',
+            label: 'Transport deri në Prishtinë',
+            description: 'Transport i sigurt dhe i organizuar nga Koreja deri në Prishtinë'
         },
         {
             icon: Shield,
-            title: 'Inspektim i plotë',
-            description: 'Çdo makinë inspektohet nga ekspertët tanë para dërgesës.',
+            value: '100%',
+            label: 'Të inspektuara',
+            description: 'Çdo veturë kalon proces të plotë verifikimi dhe inspektimi'
         },
         {
-            icon: TrendingUp,
-            title: 'Çmime konkurruese',
-            description: 'Ofertat më të mira në treg për makina nga Korea.',
+            icon: FileCheck,
+            value: 'Histori e verifikuar',
+            label: 'Dokumentacion i plotë',
+            description: 'Çdo veturë vjen me histori dhe dokumentacion të plotë'
+        }
+    ];
+
+    const benefits = [
+        {
+            icon: Award,
+            title: 'Çmime konkurruese në treg',
+            description: 'Falë bashkëpunimit direkt me tregun korean, ofrojmë çmime shumë të favorshme.',
         },
         {
             icon: Heart,
-            title: 'Kënaqësia e klientit',
-            description: '98% e klientëve tanë kthehen ose na rekomandojnë.',
+            title: 'Mbështetje gjatë gjithë procesit',
+            description: 'Ju asistojmë nga zgjedhja e veturës deri te dorëzimi final në Kosovë.',
+        },
+        {
+            icon: FileCheck,
+            title: 'Dokumentacion i rregullt për import',
+            description: 'Sigurojmë të gjitha dokumentet e nevojshme për transport dhe procedurat e importit.',
         },
     ];
 
@@ -64,6 +85,53 @@ export default function WhyChooseUs() {
             />
 
             <div className="container-swiss relative">
+                {/* Header Section */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                    className="text-center max-w-3xl mx-auto mb-12"
+                >
+                    <div className="inline-flex items-center gap-2 bg-orange-10 backdrop-blur-sm px-4 py-2 rounded-full border border-orange-20 mb-6">
+                        <Sparkles size={16} className="text-orange-500" />
+                        <span className="text-orange-500 text-sm font-medium tracking-wide">
+                            PSE TË ZGJIDHNI NE
+                        </span>
+                    </div>
+
+                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                        Pse të zgjidhni{' '}
+                        <span className="text-orange-500">Vetura Korea Kosova</span>
+                    </h2>
+                    <p className="text-white/60 text-lg">
+                        Në Vetura Korea Kosova sjellim vetura të përzgjedhura nga Koreja me standarde të larta cilësie,
+                        histori të verifikuar dhe transparencë të plotë në çdo hap të procesit. Qëllimi ynë është t'u
+                        ofrojmë klientëve vetura të sigurta, të besueshme dhe me çmimin më konkurrues në treg.
+                    </p>
+                </motion.div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+                    {stats.map((stat, index) => (
+                        <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: index * 0.1 }}
+                            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 text-center hover:bg-white/10 transition-all group"
+                        >
+                            <div className="w-16 h-16 bg-orange-10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                                <stat.icon size={28} className="text-orange-500" />
+                            </div>
+                            <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
+                            <div className="text-orange-500 font-medium text-sm mb-2">{stat.label}</div>
+                            <p className="text-white/60 text-xs">{stat.description}</p>
+                        </motion.div>
+                    ))}
+                </div>
+
                 <div className="grid lg:grid-cols-2 gap-12">
                     {/* Left side - Benefits */}
                     <motion.div
@@ -72,20 +140,9 @@ export default function WhyChooseUs() {
                         viewport={{ once: true }}
                         transition={{ duration: 0.5 }}
                     >
-                        <div className="inline-flex items-center gap-2 bg-orange-10 backdrop-blur-sm px-4 py-2 rounded-full border border-orange-20 mb-6">
-                            <Sparkles size={16} className="text-orange-500" />
-                            <span className="text-orange-500 text-sm font-medium tracking-wide">
-                                PËRFITIMET
-                            </span>
-                        </div>
-
-                        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                            Pse të na zgjidhni{' '}
-                            <span className="text-orange-500">ne?</span>
-                        </h2>
-                        <p className="text-white/60 mb-8">
-                            Ne ofrojmë një shërbim të plotë dhe transparent për importimin e makinave nga Korea.
-                        </p>
+                        <h3 className="text-2xl font-semibold text-white mb-6">
+                            Përfitimet e bashkëpunimit me ne
+                        </h3>
 
                         <div className="space-y-4">
                             {benefits.map((benefit, index) => (
@@ -101,7 +158,7 @@ export default function WhyChooseUs() {
                                         <benefit.icon size={20} className="text-orange-500" />
                                     </div>
                                     <div>
-                                        <h3 className="font-medium text-white mb-1">{benefit.title}</h3>
+                                        <h4 className="font-medium text-white mb-1">{benefit.title}</h4>
                                         <p className="text-sm text-white/60">{benefit.description}</p>
                                     </div>
                                 </motion.div>

@@ -1,7 +1,6 @@
-// components/filters/AdvancedFilterSidebar.tsx
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
     Fuel,
@@ -14,12 +13,24 @@ import {
     Calendar,
     DollarSign,
     Info,
-    Filter
+    Filter,
+    Search
 } from 'lucide-react';
 
 interface AdvancedFilterSidebarProps {
     isOpen: boolean;
     onClose: () => void;
+}
+
+interface TempFilters {
+    fuel_id: string;
+    transmission_id: string;
+    color_id: string;
+    body_type_id: string;
+    filter_year_from: string;
+    filter_year_to: string;
+    filter_price_from: string;
+    filter_price_to: string;
 }
 
 export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilterSidebarProps) {
@@ -34,7 +45,35 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
         price: false
     });
 
-    // Get current filter values from URL
+    // Temporary filters state
+    const [tempFilters, setTempFilters] = useState<TempFilters>({
+        fuel_id: '',
+        transmission_id: '',
+        color_id: '',
+        body_type_id: '',
+        filter_year_from: '',
+        filter_year_to: '',
+        filter_price_from: '',
+        filter_price_to: ''
+    });
+
+    // Initialize temp filters from URL when sidebar opens
+    useEffect(() => {
+        if (isOpen) {
+            setTempFilters({
+                fuel_id: searchParams.get('fuel_id') || '',
+                transmission_id: searchParams.get('transmission_id') || '',
+                color_id: searchParams.get('color_id') || '',
+                body_type_id: searchParams.get('body_type_id') || '',
+                filter_year_from: searchParams.get('filter_year_from') || '',
+                filter_year_to: searchParams.get('filter_year_to') || '',
+                filter_price_from: searchParams.get('filter_price_from') || '',
+                filter_price_to: searchParams.get('filter_price_to') || ''
+            });
+        }
+    }, [isOpen, searchParams]);
+
+    // Get current filter values from URL for active count
     const selectedFilters = useMemo(() => ({
         fuel: searchParams.get('fuel_id') || '',
         transmission: searchParams.get('transmission_id') || '',
@@ -47,6 +86,9 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
     }), [searchParams]);
 
     const activeFilterCount = Object.values(selectedFilters).filter(Boolean).length;
+
+    // Temporary active count for UI feedback
+    const tempActiveCount = Object.values(tempFilters).filter(Boolean).length;
 
     // Check if basic filters are selected (API-supported filters)
     const hasBasicFilters = !!(
@@ -100,14 +142,21 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
     const currentYear = new Date().getFullYear();
     const yearOptions = Array.from({ length: 30 }, (_, i) => currentYear - i);
 
-    const updateFilter = (key: string, value: string) => {
+    const updateTempFilter = (key: keyof TempFilters, value: string) => {
+        setTempFilters(prev => ({ ...prev, [key]: value }));
+    };
+
+    const applyFilters = () => {
         const params = new URLSearchParams(searchParams.toString());
 
-        if (value) {
-            params.set(key, value);
-        } else {
-            params.delete(key);
-        }
+        // Update all filter parameters from temp state
+        Object.entries(tempFilters).forEach(([key, value]) => {
+            if (value) {
+                params.set(key, value);
+            } else {
+                params.delete(key);
+            }
+        });
 
         // Reset to page 1 when filters change
         params.set('page', '1');
@@ -117,6 +166,19 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
     };
 
     const clearFilters = () => {
+        setTempFilters({
+            fuel_id: '',
+            transmission_id: '',
+            color_id: '',
+            body_type_id: '',
+            filter_year_from: '',
+            filter_year_to: '',
+            filter_price_from: '',
+            filter_price_to: ''
+        });
+    };
+
+    const clearAllAndClose = () => {
         const params = new URLSearchParams(searchParams.toString());
         ['fuel_id', 'transmission_id', 'color_id', 'body_type_id', 'filter_year_from', 'filter_year_to', 'filter_price_from', 'filter_price_to'].forEach(key => {
             params.delete(key);
@@ -138,6 +200,10 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
     const showSidebar = typeof window !== 'undefined' && window.innerWidth >= 1024 ? true : isOpen;
 
     if (!showSidebar) return null;
+
+    const isFilterSelected = (filterType: keyof TempFilters, value: string) => {
+        return tempFilters[filterType] === value;
+    };
 
     return (
         <>
@@ -161,14 +227,14 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                     <div className="flex items-center gap-2">
                         <Filter size={18} className="text-orange-500" />
                         <h2 className="font-semibold text-primary">Filtro</h2>
-                        {activeFilterCount > 0 && (
+                        {tempActiveCount > 0 && (
                             <span className="ml-2 px-2 py-0.5 text-xs bg-orange-500 text-white rounded-full">
-                                {activeFilterCount}
+                                {tempActiveCount}
                             </span>
                         )}
                     </div>
                     <div className="flex items-center gap-2">
-                        {activeFilterCount > 0 && (
+                        {tempActiveCount > 0 && (
                             <button
                                 onClick={clearFilters}
                                 className="text-xs text-orange-500 hover:text-orange-600 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-surface-2"
@@ -216,32 +282,32 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                         {expandedSections.fuel && (
                             <div className="p-3 space-y-1 bg-surface">
                                 <button
-                                    onClick={() => updateFilter('fuel_id', '')}
+                                    onClick={() => updateTempFilter('fuel_id', '')}
                                     disabled={!hasBasicFilters}
                                     className={`
                                         w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
-                                        ${!selectedFilters.fuel ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
+                                        ${!tempFilters.fuel_id ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
                                         ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                                     `}
                                 >
-                                    <span className={!selectedFilters.fuel ? 'font-medium' : ''}>Të gjitha</span>
-                                    {!selectedFilters.fuel && (
+                                    <span className={!tempFilters.fuel_id ? 'font-medium' : ''}>Të gjitha</span>
+                                    {!tempFilters.fuel_id && (
                                         <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
                                     )}
                                 </button>
                                 {fuelOptions.map(fuel => (
                                     <button
                                         key={fuel.id}
-                                        onClick={() => updateFilter('fuel_id', fuel.id)}
+                                        onClick={() => updateTempFilter('fuel_id', fuel.id)}
                                         disabled={!hasBasicFilters}
                                         className={`
                                             w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
-                                            ${selectedFilters.fuel === fuel.id ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
+                                            ${tempFilters.fuel_id === fuel.id ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
                                             ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                                         `}
                                     >
-                                        <span className={selectedFilters.fuel === fuel.id ? 'font-medium' : ''}>{fuel.label}</span>
-                                        {selectedFilters.fuel === fuel.id && (
+                                        <span className={tempFilters.fuel_id === fuel.id ? 'font-medium' : ''}>{fuel.label}</span>
+                                        {tempFilters.fuel_id === fuel.id && (
                                             <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
                                         )}
                                     </button>
@@ -266,32 +332,32 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                         {expandedSections.transmission && (
                             <div className="p-3 space-y-1 bg-surface">
                                 <button
-                                    onClick={() => updateFilter('transmission_id', '')}
+                                    onClick={() => updateTempFilter('transmission_id', '')}
                                     disabled={!hasBasicFilters}
                                     className={`
                                         w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
-                                        ${!selectedFilters.transmission ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
+                                        ${!tempFilters.transmission_id ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
                                         ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                                     `}
                                 >
-                                    <span className={!selectedFilters.transmission ? 'font-medium' : ''}>Të gjitha</span>
-                                    {!selectedFilters.transmission && (
+                                    <span className={!tempFilters.transmission_id ? 'font-medium' : ''}>Të gjitha</span>
+                                    {!tempFilters.transmission_id && (
                                         <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
                                     )}
                                 </button>
                                 {transmissionOptions.map(trans => (
                                     <button
                                         key={trans.id}
-                                        onClick={() => updateFilter('transmission_id', trans.id)}
+                                        onClick={() => updateTempFilter('transmission_id', trans.id)}
                                         disabled={!hasBasicFilters}
                                         className={`
                                             w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
-                                            ${selectedFilters.transmission === trans.id ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
+                                            ${tempFilters.transmission_id === trans.id ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
                                             ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                                         `}
                                     >
-                                        <span className={selectedFilters.transmission === trans.id ? 'font-medium' : ''}>{trans.label}</span>
-                                        {selectedFilters.transmission === trans.id && (
+                                        <span className={tempFilters.transmission_id === trans.id ? 'font-medium' : ''}>{trans.label}</span>
+                                        {tempFilters.transmission_id === trans.id && (
                                             <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
                                         )}
                                     </button>
@@ -316,32 +382,32 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                         {expandedSections.color && (
                             <div className="p-3 space-y-1 max-h-48 overflow-y-auto bg-surface">
                                 <button
-                                    onClick={() => updateFilter('color_id', '')}
+                                    onClick={() => updateTempFilter('color_id', '')}
                                     disabled={!hasBasicFilters}
                                     className={`
                                         w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
-                                        ${!selectedFilters.color ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
+                                        ${!tempFilters.color_id ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
                                         ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                                     `}
                                 >
-                                    <span className={!selectedFilters.color ? 'font-medium' : ''}>Të gjitha</span>
-                                    {!selectedFilters.color && (
+                                    <span className={!tempFilters.color_id ? 'font-medium' : ''}>Të gjitha</span>
+                                    {!tempFilters.color_id && (
                                         <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
                                     )}
                                 </button>
                                 {colorOptions.map(color => (
                                     <button
                                         key={color.id}
-                                        onClick={() => updateFilter('color_id', color.id)}
+                                        onClick={() => updateTempFilter('color_id', color.id)}
                                         disabled={!hasBasicFilters}
                                         className={`
                                             w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
-                                            ${selectedFilters.color === color.id ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
+                                            ${tempFilters.color_id === color.id ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
                                             ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                                         `}
                                     >
-                                        <span className={selectedFilters.color === color.id ? 'font-medium' : ''}>{color.label}</span>
-                                        {selectedFilters.color === color.id && (
+                                        <span className={tempFilters.color_id === color.id ? 'font-medium' : ''}>{color.label}</span>
+                                        {tempFilters.color_id === color.id && (
                                             <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
                                         )}
                                     </button>
@@ -366,32 +432,32 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                         {expandedSections.bodyType && (
                             <div className="p-3 space-y-1 bg-surface">
                                 <button
-                                    onClick={() => updateFilter('body_type_id', '')}
+                                    onClick={() => updateTempFilter('body_type_id', '')}
                                     disabled={!hasBasicFilters}
                                     className={`
                                         w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
-                                        ${!selectedFilters.bodyType ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
+                                        ${!tempFilters.body_type_id ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
                                         ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                                     `}
                                 >
-                                    <span className={!selectedFilters.bodyType ? 'font-medium' : ''}>Të gjitha</span>
-                                    {!selectedFilters.bodyType && (
+                                    <span className={!tempFilters.body_type_id ? 'font-medium' : ''}>Të gjitha</span>
+                                    {!tempFilters.body_type_id && (
                                         <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
                                     )}
                                 </button>
                                 {bodyTypeOptions.map(body => (
                                     <button
                                         key={body.id}
-                                        onClick={() => updateFilter('body_type_id', body.id)}
+                                        onClick={() => updateTempFilter('body_type_id', body.id)}
                                         disabled={!hasBasicFilters}
                                         className={`
                                             w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
-                                            ${selectedFilters.bodyType === body.id ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
+                                            ${tempFilters.body_type_id === body.id ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
                                             ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                                         `}
                                     >
-                                        <span className={selectedFilters.bodyType === body.id ? 'font-medium' : ''}>{body.label}</span>
-                                        {selectedFilters.bodyType === body.id && (
+                                        <span className={tempFilters.body_type_id === body.id ? 'font-medium' : ''}>{body.label}</span>
+                                        {tempFilters.body_type_id === body.id && (
                                             <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
                                         )}
                                     </button>
@@ -417,8 +483,8 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                             <div className="p-3 space-y-3 bg-surface">
                                 <div className="grid grid-cols-2 gap-2">
                                     <select
-                                        value={selectedFilters.yearFrom}
-                                        onChange={(e) => updateFilter('filter_year_from', e.target.value)}
+                                        value={tempFilters.filter_year_from}
+                                        onChange={(e) => updateTempFilter('filter_year_from', e.target.value)}
                                         className="select text-sm w-full"
                                     >
                                         <option value="">Nga viti</option>
@@ -429,8 +495,8 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                                         ))}
                                     </select>
                                     <select
-                                        value={selectedFilters.yearTo}
-                                        onChange={(e) => updateFilter('filter_year_to', e.target.value)}
+                                        value={tempFilters.filter_year_to}
+                                        onChange={(e) => updateTempFilter('filter_year_to', e.target.value)}
                                         className="select text-sm w-full"
                                     >
                                         <option value="">Deri viti</option>
@@ -464,8 +530,8 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                                     <input
                                         type="number"
                                         placeholder="Min €"
-                                        value={selectedFilters.priceFrom}
-                                        onChange={(e) => updateFilter('filter_price_from', e.target.value)}
+                                        value={tempFilters.filter_price_from}
+                                        onChange={(e) => updateTempFilter('filter_price_from', e.target.value)}
                                         className="input text-sm w-full"
                                         min="0"
                                         step="1000"
@@ -473,8 +539,8 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                                     <input
                                         type="number"
                                         placeholder="Max €"
-                                        value={selectedFilters.priceTo}
-                                        onChange={(e) => updateFilter('filter_price_to', e.target.value)}
+                                        value={tempFilters.filter_price_to}
+                                        onChange={(e) => updateTempFilter('filter_price_to', e.target.value)}
                                         className="input text-sm w-full"
                                         min="0"
                                         step="1000"
@@ -485,55 +551,87 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                     </div>
 
                     {/* Active Filters Summary */}
-                    {activeFilterCount > 0 && (
+                    {tempActiveCount > 0 && (
                         <div className="bg-orange-5 border border-orange-20 rounded-lg p-3 mt-4">
                             <p className="text-xs text-orange-500 font-medium mb-2">
-                                Filtrat aktivë:
+                                Filtrat e zgjedhur:
                             </p>
                             <div className="flex flex-wrap gap-1">
-                                {selectedFilters.fuel && (
+                                {tempFilters.fuel_id && (
                                     <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
-                                        Karburanti: {fuelOptions.find(f => f.id === selectedFilters.fuel)?.label}
+                                        Karburanti: {fuelOptions.find(f => f.id === tempFilters.fuel_id)?.label}
                                     </span>
                                 )}
-                                {selectedFilters.transmission && (
+                                {tempFilters.transmission_id && (
                                     <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
-                                        Transmisioni: {transmissionOptions.find(t => t.id === selectedFilters.transmission)?.label}
+                                        Transmisioni: {transmissionOptions.find(t => t.id === tempFilters.transmission_id)?.label}
                                     </span>
                                 )}
-                                {selectedFilters.color && (
+                                {tempFilters.color_id && (
                                     <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
-                                        Ngjyra: {colorOptions.find(c => c.id === selectedFilters.color)?.label}
+                                        Ngjyra: {colorOptions.find(c => c.id === tempFilters.color_id)?.label}
                                     </span>
                                 )}
-                                {selectedFilters.bodyType && (
+                                {tempFilters.body_type_id && (
                                     <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
-                                        Tipi: {bodyTypeOptions.find(b => b.id === selectedFilters.bodyType)?.label}
+                                        Tipi: {bodyTypeOptions.find(b => b.id === tempFilters.body_type_id)?.label}
                                     </span>
                                 )}
-                                {selectedFilters.yearFrom && (
+                                {tempFilters.filter_year_from && (
                                     <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
-                                        Nga viti: {selectedFilters.yearFrom}
+                                        Nga viti: {tempFilters.filter_year_from}
                                     </span>
                                 )}
-                                {selectedFilters.yearTo && (
+                                {tempFilters.filter_year_to && (
                                     <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
-                                        Deri viti: {selectedFilters.yearTo}
+                                        Deri viti: {tempFilters.filter_year_to}
                                     </span>
                                 )}
-                                {selectedFilters.priceFrom && (
+                                {tempFilters.filter_price_from && (
                                     <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
-                                        Min: €{parseInt(selectedFilters.priceFrom).toLocaleString()}
+                                        Min: €{parseInt(tempFilters.filter_price_from).toLocaleString()}
                                     </span>
                                 )}
-                                {selectedFilters.priceTo && (
+                                {tempFilters.filter_price_to && (
                                     <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
-                                        Max: €{parseInt(selectedFilters.priceTo).toLocaleString()}
+                                        Max: €{parseInt(tempFilters.filter_price_to).toLocaleString()}
                                     </span>
                                 )}
                             </div>
                         </div>
                     )}
+                </div>
+
+                {/* Footer with Apply Button */}
+                <div className="sticky bottom-0 bg-surface border-t border-light/20 p-4">
+                    <div className="flex gap-2">
+                        {tempActiveCount > 0 && (
+                            <button
+                                onClick={clearAllAndClose}
+                                className="flex-1 px-4 py-2.5 border border-light/20 text-secondary rounded-lg hover:bg-surface-2 transition-colors text-sm font-medium"
+                            >
+                                Anulo
+                            </button>
+                        )}
+                        <button
+                            onClick={applyFilters}
+                            disabled={!hasBasicFilters && tempActiveCount > 0}
+                            className={`
+                                flex-1 px-4 py-2.5 bg-orange-500 text-white rounded-lg 
+                                hover:bg-orange-600 transition-colors text-sm font-medium
+                                flex items-center justify-center gap-2
+                                ${(!hasBasicFilters && tempActiveCount > 0) ? 'opacity-50 cursor-not-allowed' : ''}
+                            `}
+                        >
+                            <Search size={16} />
+                            <span>Filtro</span>
+                            {tempActiveCount > 0 && (
+                                <span className="bg-white/20 px-1.5 py-0.5 rounded-full text-xs">
+                                    {tempActiveCount}
+                                </span>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </div>
         </>
