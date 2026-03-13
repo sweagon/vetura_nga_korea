@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { CheckCircle, Star, TrendingUp, Shield, Zap, Sparkles, Truck, FileCheck, Clock, Heart, Users, Award } from 'lucide-react';
+import { CheckCircle, Star, TrendingUp, Shield, Zap, Sparkles, Truck, Clock, Heart, Users, Award, FileText, FileCheck } from 'lucide-react';
 
 export default function WhyChooseUs() {
     const stats = [
@@ -15,7 +15,7 @@ export default function WhyChooseUs() {
             icon: Truck,
             value: '35 ditë',
             label: 'Transport deri në Prishtinë',
-            description: 'Transport i sigurt dhe i organizuar nga Koreja deri në Prishtinë'
+            description: 'Transport i sigurt dhe i organizuar nga Korea deri në Prishtinë'
         },
         {
             icon: Shield,
@@ -25,8 +25,8 @@ export default function WhyChooseUs() {
         },
         {
             icon: FileCheck,
-            value: 'Histori e verifikuar',
-            label: 'Dokumentacion i plotë',
+            value: 'Histori e',
+            label: 'verifikuar',
             description: 'Çdo veturë vjen me histori dhe dokumentacion të plotë'
         }
     ];
@@ -43,7 +43,7 @@ export default function WhyChooseUs() {
             description: 'Ju asistojmë nga zgjedhja e veturës deri te dorëzimi final në Kosovë.',
         },
         {
-            icon: FileCheck,
+            icon: FileText,
             title: 'Dokumentacion i rregullt për import',
             description: 'Sigurojmë të gjitha dokumentet e nevojshme për transport dhe procedurat e importit.',
         },
@@ -57,12 +57,12 @@ export default function WhyChooseUs() {
         },
         {
             name: 'Arta Gashi',
-            comment: 'Makina erdhi në gjendje perfekte, siç e kishin përshkruar. Rekomandoj!',
+            comment: 'Vetura erdhi në gjendje perfekte, siç e kishin përshkruar. Rekomandoj!',
             rating: 5,
         },
         {
             name: 'Fatos Berisha',
-            comment: 'Proces i lehtë dhe i shpejtë. Makina mbërriti brenda 20 ditëve.',
+            comment: 'Proces i lehtë dhe i shpejtë. Vetura mbërriti brenda 35 ditëve.',
             rating: 5,
         },
     ];
@@ -96,7 +96,7 @@ export default function WhyChooseUs() {
                     <div className="inline-flex items-center gap-2 bg-orange-10 backdrop-blur-sm px-4 py-2 rounded-full border border-orange-20 mb-6">
                         <Sparkles size={16} className="text-orange-500" />
                         <span className="text-orange-500 text-sm font-medium tracking-wide">
-                            PSE TË ZGJIDHNI NE
+                            PSE TË NA ZGJIDHNI NE
                         </span>
                     </div>
 
@@ -105,7 +105,7 @@ export default function WhyChooseUs() {
                         <span className="text-orange-500">Vetura Korea Kosova</span>
                     </h2>
                     <p className="text-white/60 text-lg">
-                        Në Vetura Korea Kosova sjellim vetura të përzgjedhura nga Koreja me standarde të larta cilësie,
+                        Në Vetura Korea Kosova sjellim vetura të përzgjedhura nga Korea me standarde të larta cilësie,
                         histori të verifikuar dhe transparencë të plotë në çdo hap të procesit. Qëllimi ynë është t'u
                         ofrojmë klientëve vetura të sigurta, të besueshme dhe me çmimin më konkurrues në treg.
                     </p>

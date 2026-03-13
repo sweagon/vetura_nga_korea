@@ -1,7 +1,6 @@
-// components/home/Hero.tsx (simplified)
 'use client';
 
-import { Sparkles, Shield, Truck, Clock } from 'lucide-react';
+import { Sparkles, Shield, Truck, Clock, FileCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 import CompactSearch from '@/components/ui/CompactSearch';
 
@@ -26,7 +25,7 @@ export default function Hero() {
             <div className="absolute inset-0">
                 <img
                     src="https://images.pexels.com/photos/220309/pexels-photo-220309.jpeg"
-                    alt="Luxury cars background"
+                    alt="Vetura luksoze"
                     className="absolute inset-0 w-full h-full object-cover brightness-50"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-dark-blue/70 via-dark-blue/60 to-dark-blue/50" />
@@ -59,7 +58,7 @@ export default function Hero() {
                         variants={fadeInUp}
                         className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 tracking-tight text-center lg:text-left text-white"
                     >
-                        Makina cilësore{' '}
+                        Vetura cilësore{' '}
                         <span className="text-orange-500 relative">
                             nga Korea{' '}
                             <span className="absolute -bottom-2 left-0 right-0 h-1 bg-orange-500/30 rounded-full hidden md:block" />
@@ -73,11 +72,11 @@ export default function Hero() {
                         variants={fadeInUp}
                         className="text-base md:text-xl text-white/80 mb-8 md:mb-10 max-w-2xl mx-auto lg:mx-0 text-center lg:text-left leading-relaxed"
                     >
-                        Vetura Korea Kosova ju sjell makinat më të mira nga Korea me çmime konkurruese.
-                        Inspektim të plotë, garanci dhe transport të sigurt.
+                        Vetura Korea Kosova ju sjell vetura të përzgjedhura nga Korea me standarde të larta cilësie,
+                        histori të verifikuar dhe transparencë të plotë në çdo hap të procesit.
                     </motion.p>
 
-                    {/* Compact Search - Will show both desktop and mobile versions */}
+                    {/* Compact Search */}
                     <motion.div variants={fadeInUp} className="mb-12 md:mb-16">
                         <CompactSearch variant="hero" />
                     </motion.div>
@@ -85,12 +84,13 @@ export default function Hero() {
                     {/* Stats */}
                     <motion.div
                         variants={fadeInUp}
-                        className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 max-w-3xl mx-auto lg:mx-0"
+                        className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-4xl mx-auto lg:mx-0"
                     >
                         {[
                             { icon: Shield, value: '98%', label: 'Klientë të kënaqur' },
-                            { icon: Clock, value: '20 ditë', label: 'Transporti Mesatar' },
-                            { icon: Sparkles, value: '100%', label: 'Të inspektuara' }
+                            { icon: Truck, value: '35 ditë', label: 'Transport deri në Prishtinë' },
+                            { icon: Sparkles, value: '100%', label: 'Të inspektuara' },
+                            { icon: FileCheck, value: 'Histori e', label: 'verifikuar' }
                         ].map((stat, index) => (
                             <motion.div
                                 key={index}

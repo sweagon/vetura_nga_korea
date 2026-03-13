@@ -57,9 +57,6 @@ export default function LocationMap() {
                         Na vizitoni në{' '}
                         <span className="text-orange-500">Prishtinë</span>
                     </h2>
-                    <p className="text-white/60 max-w-2xl mx-auto">
-                        Jemi të vendosur në qendër të Prishtinës, ku mund të vini dhe të shihni makinat personalisht.
-                    </p>
                 </motion.div>
 
                 <div className="grid lg:grid-cols-3 gap-8">

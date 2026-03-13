@@ -1,36 +1,29 @@
-// components/home/AboutSection.tsx
 'use client';
 
 import { motion } from 'framer-motion';
-import { Shield, Truck, Award, Users, Clock, ThumbsUp, Sparkles } from 'lucide-react';
+import { Shield, Truck, Award, Users, Clock, ThumbsUp, Sparkles, FileCheck, Heart, TrendingUp, FileText } from 'lucide-react';
 
 export default function AboutSection() {
-    const stats = [
-        { value: '98%', label: 'Klientë të kënaqur', icon: ThumbsUp },
-        { value: '20 ditë', label: 'Transporti Mesatar', icon: Clock },
-        { value: '100%', label: 'Të inspektuara', icon: Shield },
-    ];
-
     const features = [
         {
-            icon: Award,
-            title: 'Cilësi e garantuar',
-            description: 'Të gjitha makinat inspektohen nga ekspertët tanë para importit.',
+            icon: TrendingUp,
+            title: 'Çmime konkurruese në treg',
+            description: 'Falë bashkëpunimit direkt me tregun korean, ofrojmë çmime shumë të favorshme.',
         },
         {
-            icon: Shield,
-            title: 'Siguri në blerje',
-            description: 'Kontratë zyrtare dhe garanci për çdo automjet.',
+            icon: Heart,
+            title: 'Mbështetje gjatë gjithë procesit',
+            description: 'Ju asistojmë nga zgjedhja e veturës deri te dorëzimi final në Kosovë.',
         },
         {
-            icon: Truck,
-            title: 'Transport i sigurt',
-            description: 'Transport detar me sigurim dhe dokumentacion të plotë.',
+            icon: FileText,
+            title: 'Dokumentacion i rregullt për import',
+            description: 'Sigurojmë të gjitha dokumentet e nevojshme për transport dhe procedurat e importit.',
         },
         {
             icon: Users,
-            title: 'Mbështetje 24/7',
-            description: 'Jemi në dispozicion për çdo pyetje gjatë gjithë kohës.',
+            title: 'Transparencë e plotë',
+            description: 'Histori të verifikuara dhe inspektim të detajuar për çdo automjet.',
         },
     ];
 
@@ -62,7 +55,7 @@ export default function AboutSection() {
                     <div className="inline-flex items-center gap-2 bg-orange-10 backdrop-blur-sm px-4 py-2 rounded-full border border-orange-20 mb-6">
                         <Sparkles size={16} className="text-orange-500" />
                         <span className="text-orange-500 text-sm font-medium tracking-wide">
-                            PSE TË NA ZGJIDHNI NE?
+                            RRETH NESH
                         </span>
                     </div>
 
@@ -71,31 +64,10 @@ export default function AboutSection() {
                         <span className="text-orange-500">Vetura Korea Kosova</span>
                     </h2>
                     <p className="text-white/60 max-w-2xl mx-auto">
-                        Ne sjellim makinat më të mira nga Korea me standarde të larta cilësie dhe transparencë të plotë.
+                        Në Vetura Korea Kosova sjellim vetura të përzgjedhura nga Korea me standarde të larta cilësie,
+                        histori të verifikuar dhe transparencë të plotë në çdo hap të procesit.
                     </p>
                 </motion.div>
-
-                {/* Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-16">
-                    {stats.map((stat, index) => (
-                        <motion.div
-                            key={index}
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: index * 0.1 }}
-                            className="text-center"
-                        >
-                            <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-10 rounded-full mb-4">
-                                <stat.icon className="w-8 h-8 text-orange-500" />
-                            </div>
-                            <div className="text-2xl md:text-3xl font-bold text-white mb-1">
-                                {stat.value}
-                            </div>
-                            <div className="text-sm text-white/60">{stat.label}</div>
-                        </motion.div>
-                    ))}
-                </div>
 
                 {/* Features Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

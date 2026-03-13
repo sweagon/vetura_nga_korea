@@ -92,7 +92,7 @@ export default function FeaturedCars() {
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-10 rounded-full mb-4">
                         <Sparkles size={16} className="text-orange-500" />
                         <span className="text-xs font-medium text-orange-500 uppercase tracking-wider">
-                            Featured
+                            Të Reja
                         </span>
                     </div>
                     <h2 className="text-3xl md:text-4xl font-bold text-primary mb-3">
