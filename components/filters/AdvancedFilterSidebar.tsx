@@ -108,10 +108,10 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
         { id: '4', name: 'gasoline', label: 'Benzinë' },
     ];
 
-    const transmissionOptions = [
-        { id: '1', name: 'automatic', label: 'Automatik' },
-        { id: '2', name: 'manual', label: 'Manuel' },
-    ];
+    // const transmissionOptions = [
+    //     { id: '1', name: 'automatic', label: 'Automatik' },
+    //     { id: '2', name: 'manual', label: 'Manuel' },
+    // ];
 
     const colorOptions = [
         { id: '1', name: 'silver', label: 'Argjend' },
@@ -317,7 +317,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                     </div>
 
                     {/* Transmission */}
-                    <div className="border border-light/20 rounded-lg overflow-hidden">
+                    {/* <div className="border border-light/20 rounded-lg overflow-hidden">
                         <button
                             onClick={() => toggleSection('transmission')}
                             className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
@@ -364,7 +364,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                                 ))}
                             </div>
                         )}
-                    </div>
+                    </div> */}
 
                     {/* Color */}
                     <div className="border border-light/20 rounded-lg overflow-hidden">
@@ -562,11 +562,11 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                                         Karburanti: {fuelOptions.find(f => f.id === tempFilters.fuel_id)?.label}
                                     </span>
                                 )}
-                                {tempFilters.transmission_id && (
+                                {/* {tempFilters.transmission_id && (
                                     <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
                                         Transmisioni: {transmissionOptions.find(t => t.id === tempFilters.transmission_id)?.label}
                                     </span>
-                                )}
+                                )} */}
                                 {tempFilters.color_id && (
                                     <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
                                         Ngjyra: {colorOptions.find(c => c.id === tempFilters.color_id)?.label}
