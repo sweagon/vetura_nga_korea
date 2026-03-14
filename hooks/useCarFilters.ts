@@ -112,14 +112,18 @@ export function useCarFilters(
             const yearTo = parseInt(clientFilters.yearTo);
             if (!isNaN(yearTo) && car.year > yearTo) return false;
         }
-        const price = car.lots?.[0]?.buy_now || 0;
+
+        // Use base price for filtering (without shipping)
+        const lot = car.lots?.[0];
+        const basePrice = lot?.price_with_margin_and_kosovo || lot?.step5 || lot?.buy_now || 0;
+
         if (clientFilters.priceFrom) {
             const priceFrom = parseInt(clientFilters.priceFrom);
-            if (!isNaN(priceFrom) && price < priceFrom) return false;
+            if (!isNaN(priceFrom) && basePrice < priceFrom) return false;
         }
         if (clientFilters.priceTo) {
             const priceTo = parseInt(clientFilters.priceTo);
-            if (!isNaN(priceTo) && price > priceTo) return false;
+            if (!isNaN(priceTo) && basePrice > priceTo) return false;
         }
         return true;
     }, [clientFilters]);

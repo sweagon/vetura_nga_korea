@@ -592,15 +592,13 @@ export default function AdminPage() {
                                 <h3 className="text-sm font-medium text-white mb-3">Shembull: Sedan</h3>
                                 <div className="space-y-2 text-sm">
                                     <div className="flex justify-between text-white/70">
-                                        <span>Çmimi i makinës:</span>
-                                        <span className="text-white">€15,000</span>
+                                        <span>Makina (me transport):</span>
+                                        <span className="text-white">
+                                            €{(15000 + localConfig.shippingCost).toLocaleString()}
+                                        </span>
                                     </div>
                                     <div className="flex justify-between text-white/70">
-                                        <span>Transporti Korea → Durrës:</span>
-                                        <span className="text-white">€{localConfig.shippingCost}</span>
-                                    </div>
-                                    <div className="flex justify-between text-white/70">
-                                        <span>Transporti Durrës → Prishtinë:</span>
+                                        <span>Transporti Prishtinë:</span>
                                         <span className="text-white">€{localConfig.shippingToPristina}</span>
                                     </div>
                                     <div className="flex justify-between font-bold pt-2 border-t border-white/10 text-white">
@@ -617,17 +615,13 @@ export default function AdminPage() {
                                 <h3 className="text-sm font-medium text-white mb-3">Shembull: SUV</h3>
                                 <div className="space-y-2 text-sm">
                                     <div className="flex justify-between text-white/70">
-                                        <span>Çmimi i makinës:</span>
-                                        <span className="text-white">€25,000</span>
-                                    </div>
-                                    <div className="flex justify-between text-white/70">
-                                        <span>Transporti Korea → Durrës:</span>
+                                        <span>Makina (me transport):</span>
                                         <span className="text-white">
-                                            €{localConfig.vehicleTypes.suv?.enabled ? localConfig.vehicleTypes.suv.shippingCost : localConfig.shippingCost}
+                                            €{(25000 + (localConfig.vehicleTypes.suv?.enabled ? localConfig.vehicleTypes.suv.shippingCost : localConfig.shippingCost)).toLocaleString()}
                                         </span>
                                     </div>
                                     <div className="flex justify-between text-white/70">
-                                        <span>Transporti Durrës → Prishtinë:</span>
+                                        <span>Transporti Prishtinë:</span>
                                         <span className="text-white">€{localConfig.shippingToPristina}</span>
                                     </div>
                                     <div className="flex justify-between font-bold pt-2 border-t border-white/10 text-white">

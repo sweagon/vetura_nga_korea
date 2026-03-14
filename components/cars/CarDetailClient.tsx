@@ -248,9 +248,9 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                 <div className="card p-4 text-center">
                                     <div className="text-2xl font-semibold text-orange-500 mb-1">
-                                        {formatPrice(priceDetails.basePrice)}
+                                        {formatPrice(priceDetails.basePrice + priceDetails.shippingCost)}
                                     </div>
-                                    <div className="text-xs text-muted">Çmimi bazë</div>
+                                    <div className="text-xs text-muted">Çmimi me transport</div>
                                 </div>
                                 <div className="card p-4 text-center">
                                     <div className="text-2xl font-semibold text-primary mb-1">
@@ -409,29 +409,27 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                 </div>
 
                                 {/* Cost Estimate */}
-                                {/* Cost Estimate */}
                                 <div className="card p-6">
                                     <h3 className="font-semibold mb-3">Shpenzime të përafërta</h3>
                                     <div className="space-y-2 text-sm">
-                                        {/* Base Price */}
+                                        {/* Base Price (now includes Korea→Durrës shipping) */}
                                         <div className="flex justify-between">
                                             <span className="text-muted">Makina:</span>
-                                            <span className="font-medium text-primary">{formatPrice(priceDetails.basePrice)}</span>
+                                            <span className="font-medium text-primary">
+                                                {formatPrice(priceDetails.basePrice + priceDetails.shippingCost)}
+                                            </span>
                                         </div>
 
-                                        {/* Shipping to Durres */}
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-muted">Transporti deri në Durrës:</span>
-                                            <div className="text-right">
-                                                <span className="font-medium text-primary block">{formatPrice(priceDetails.shippingCost)}</span>
-                                            </div>
-                                        </div>
-
-                                        {/* Shipping to Pristina */}
+                                        {/* Only show Prishtina shipping */}
                                         <div className="flex justify-between items-center">
                                             <span className="text-muted">Transporti deri në Prishtinë:</span>
                                             <div className="text-right">
-                                                <span className="font-medium text-primary block">{formatPrice(priceDetails.shippingToPristina)}</span>
+                                                <span className="font-medium text-primary block">
+                                                    {formatPrice(priceDetails.shippingToPristina)}
+                                                </span>
+                                                <span className="text-xs text-orange-500">
+                                                    Nga Durrësi në Prishtinë
+                                                </span>
                                             </div>
                                         </div>
 

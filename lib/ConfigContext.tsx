@@ -109,22 +109,27 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
     const calculateFinalPrice = useCallback((basePrice: number, vehicleType?: string): PriceDetails => {
         const validBasePrice = Math.max(0, basePrice || 0);
 
-        let shipping = config.shippingCost;
+        // Get vehicle-specific shipping cost (Korea → Durrës)
+        let vehicleShipping = config.shippingCost;
         let usedType = 'default';
 
         if (vehicleType && config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes]) {
             const typeConfig = config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes];
             if (typeConfig?.enabled) {
-                shipping = typeConfig.shippingCost;
+                vehicleShipping = typeConfig.shippingCost;
                 usedType = vehicleType;
             }
         }
 
-        const finalPrice = validBasePrice + shipping + config.shippingToPristina;
+        // Base price now INCLUDES Korea→Durrës shipping
+        const priceWithShipping = validBasePrice + vehicleShipping;
+
+        // Add Prishtina shipping
+        const finalPrice = priceWithShipping + config.shippingToPristina;
 
         return {
             basePrice: validBasePrice,
-            shippingCost: shipping,
+            shippingCost: vehicleShipping,
             shippingToPristina: config.shippingToPristina,
             finalPrice: Math.round(finalPrice),
             vehicleTypeUsed: usedType

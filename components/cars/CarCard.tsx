@@ -14,22 +14,21 @@ interface CarCardProps {
 }
 
 export default function CarCard({ car, priority = false }: CarCardProps) {
-    const { formatPrice } = useConfig();
+    const { config, formatPrice } = useConfig(); // ✅ Get config here
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
-    // Safely access nested properties with optional chaining and fallbacks
+    // Safely access nested properties
     const lot = car.lots?.[0];
     const price = lot?.price_with_margin_and_kosovo || lot?.step5 || lot?.buy_now || 0;
     const mileage = lot?.odometer?.km || 0;
     const image = lot?.images?.normal?.[0] || lot?.images?.downloaded?.[0] || '';
 
-    // Safely get manufacturer and model names
     const manufacturerName = car.manufacturer?.name || 'Unknown';
-    const modelName = car.model?.name || 'Unknown';
+    const modelName = car.model?.name || '';
     const fuelName = car.fuel?.name || '';
     const transmissionName = car.transmission?.name || '';
 
@@ -44,6 +43,9 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
 
     const carTitle = car.title || `${manufacturerName} ${modelName}`;
     const detailUrl = car.vin ? `/cars/${car.vin}` : `/cars/${car.id}`;
+
+    // Calculate final price with Prishtina shipping
+    const finalPrice = price + (config?.shippingToPristina || 350);
 
     return (
         <Link
@@ -78,13 +80,6 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
                     >
                         No image
                     </div>
-
-                    {/* VIN badge for development */}
-                    {/* {process.env.NODE_ENV === 'development' && car.vin && (
-                        <div className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
-                            VIN: {car.vin.slice(0, 8)}...
-                        </div>
-                    )} */}
                 </div>
 
                 {/* Content */}
@@ -118,9 +113,14 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
                     {/* Price */}
                     <div className="mt-auto pt-3 border-t border-light">
                         <div className="flex items-baseline justify-between">
-                            <span className="text-xl font-semibold text-orange-500">
-                                {formatPrice(price)}
-                            </span>
+                            <div>
+                                <span className="text-xl font-semibold text-orange-500">
+                                    {formatPrice(finalPrice)}
+                                </span>
+                                <span className="text-xs text-muted ml-1">
+                                    me transport
+                                </span>
+                            </div>
                             {car.engine?.name && (
                                 <span className="text-xs text-muted">
                                     {car.engine.name}
