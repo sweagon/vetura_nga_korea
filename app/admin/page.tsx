@@ -430,7 +430,6 @@ export default function AdminPage() {
                         </div>
                     </div>
                 </div>
-
                 {/* Vehicle Types */}
                 <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 mb-6">
                     <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
