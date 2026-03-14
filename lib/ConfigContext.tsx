@@ -16,7 +16,6 @@ interface ConfigContextType {
 
 const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
 
-// Vehicle type labels in Albanian
 const vehicleTypeLabels: Record<string, string> = {
     sedan: 'Sedan',
     suv: 'SUV',
@@ -39,7 +38,9 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
         const fetchConfig = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('/api/config');
+                const response = await fetch('/api/config', {
+                    credentials: 'include' // ✅ CRITICAL: Include cookies
+                });
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch configuration');
@@ -69,25 +70,38 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
                 throw new Error(`Invalid config: ${errors.join(', ')}`);
             }
 
+            console.log('📤 Attempting to save config...');
+            console.log('Cookie present:', document.cookie.includes('admin_token')); // Debug log
+
             const response = await fetch('/api/config', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                credentials: 'include', // ← MAKE SURE THIS IS HERE
+                credentials: 'include', // ✅ ABSOLUTELY CRITICAL - MUST BE HERE
                 body: JSON.stringify(newConfig),
             });
 
+            console.log('📥 Response status:', response.status);
+
             if (!response.ok) {
                 const errorData = await response.json();
+                console.error('❌ Save failed:', errorData);
+
+                if (response.status === 401) {
+                    throw new Error('Unauthorized - Please refresh and login again');
+                }
                 throw new Error(errorData.error || 'Failed to save config');
             }
+
+            const result = await response.json();
+            console.log('✅ Config saved successfully:', result);
 
             setConfig(newConfig);
             window.dispatchEvent(new Event('configUpdated'));
 
         } catch (error) {
-            console.error('Error updating config:', error);
+            console.error('❌ Error updating config:', error);
             throw error;
         }
     };
@@ -98,7 +112,6 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
         let shipping = config.shippingCost;
         let usedType = 'default';
 
-        // Check vehicle type config
         if (vehicleType && config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes]) {
             const typeConfig = config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes];
             if (typeConfig?.enabled) {
@@ -107,7 +120,6 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
             }
         }
 
-        // Simple calculation: base price + shipping costs
         const finalPrice = validBasePrice + shipping + config.shippingToPristina;
 
         return {
@@ -128,6 +140,10 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
         }).format(price || 0);
     }, [config.currency]);
 
+    const validateConfigWrapper = (configToValidate: Partial<SiteConfig>) => {
+        return validateConfig(configToValidate);
+    };
+
     const getVehicleTypeLabel = (type: string): string => {
         return vehicleTypeLabels[type] || type;
     };
@@ -146,7 +162,7 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
             updateConfig,
             calculateFinalPrice,
             formatPrice,
-            validateConfig,
+            validateConfig: validateConfigWrapper,
             getVehicleTypeLabel,
             loading,
             error

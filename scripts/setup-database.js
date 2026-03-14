@@ -59,7 +59,7 @@ async function setupDatabase() {
         console.log('✅ Default config inserted');
 
         // Hash and insert admin password
-        const password = '@Blerand_2026';
+        const password = '@Blerart_2026';
         const hash = await bcrypt.hash(password, 10);
 
         await sql`

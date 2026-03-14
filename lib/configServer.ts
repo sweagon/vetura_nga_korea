@@ -1,10 +1,10 @@
-// lib/configServer.ts
+// lib/configServer.ts - This should be fine, but verify:
 import { getConfigFromDb, saveConfigToDb } from './db';
 import { SiteConfig, defaultConfig, validateConfig } from './config';
 
 export async function getConfig(): Promise<SiteConfig> {
     try {
-        return await getConfigFromDb();
+        return await getConfigFromDb(); // ✅ Uses DB
     } catch (error) {
         console.error('Error reading config from DB:', error);
         return defaultConfig;
@@ -17,7 +17,7 @@ export async function saveConfig(config: SiteConfig): Promise<void> {
         if (!valid) {
             throw new Error(`Invalid config: ${errors.join(', ')}`);
         }
-        await saveConfigToDb(config);
+        await saveConfigToDb(config); // ✅ Saves to DB
     } catch (error) {
         console.error('Error saving config:', error);
         throw error;

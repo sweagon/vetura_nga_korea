@@ -65,7 +65,9 @@ export default function AdminPage() {
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                const response = await fetch('/api/admin/check-session');
+                const response = await fetch('/api/admin/check-session', {
+                    credentials: 'include'
+                });
                 const data = await response.json();
                 setIsAuthenticated(data.authenticated);
 
@@ -114,6 +116,7 @@ export default function AdminPage() {
                 setLockoutUntil(null);
                 setIsAuthenticated(true);
                 setSaveMessage({ text: '✅ Hyrja e suksesshme!', type: 'success' });
+                setPassword('');
 
                 // Redirect or update UI
                 setTimeout(() => setSaveMessage({ text: '', type: '' }), 2000);
@@ -144,13 +147,20 @@ export default function AdminPage() {
 
     const handleLogout = async () => {
         try {
-            await fetch('/api/admin/verify', { method: 'DELETE' });
-            document.cookie = 'admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+            const response = await fetch('/api/admin/verify', {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                setIsAuthenticated(false);
+                setPassword('');
+                setSaveMessage({ text: '✅ Jeni shkyçur me sukses', type: 'success' });
+                setTimeout(() => setSaveMessage({ text: '', type: '' }), 2000);
+            }
         } catch (error) {
             console.error('Logout error:', error);
         }
-        setIsAuthenticated(false);
-        setPassword('');
     };
 
     const handleSave = async () => {
@@ -525,6 +535,7 @@ export default function AdminPage() {
                                 value={localConfig.siteName}
                                 onChange={(e) => updateField('siteName', e.target.value)}
                                 className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                placeholder="Vetura Korea Kosovë"
                             />
                         </div>
 
@@ -537,6 +548,7 @@ export default function AdminPage() {
                                 value={localConfig.contactEmail}
                                 onChange={(e) => updateField('contactEmail', e.target.value)}
                                 className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                placeholder="blerart@outlook.com"
                             />
                         </div>
 
@@ -549,6 +561,7 @@ export default function AdminPage() {
                                 value={localConfig.contactPhone}
                                 onChange={(e) => updateField('contactPhone', e.target.value)}
                                 className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                placeholder="+383 49 195 414"
                             />
                         </div>
 

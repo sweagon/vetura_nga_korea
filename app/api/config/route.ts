@@ -7,7 +7,6 @@ import { rateLimit } from '@/lib/rateLimit';
 const publicLimiter = rateLimit({ interval: 60 * 1000, max: 60 });
 const adminLimiter = rateLimit({ interval: 60 * 1000, max: 10 });
 
-// GET /api/config - Public endpoint (no auth needed)
 export async function GET() {
     try {
         const headersList = await headers();
@@ -34,24 +33,28 @@ export async function GET() {
     }
 }
 
-// POST /api/config - Admin only
 export async function POST(request: Request) {
     try {
         const headersList = await headers();
 
-        // Check for admin session cookie
+        // Check for admin token in cookies
         const cookie = headersList.get('cookie') || '';
-        const hasAdminSession = cookie.includes('admin_session=');
+        const hasAdminToken = cookie.includes('admin_token=');
 
-        if (!hasAdminSession) {
-            console.log('❌ Unauthorized: No admin session cookie');
+        console.log('🔑 Session check:', {
+            hasAdminToken,
+            cookiePreview: cookie.substring(0, 50) + '...'
+        });
+
+        if (!hasAdminToken) {
+            console.log('❌ Unauthorized: No admin_token cookie found');
             return NextResponse.json(
-                { error: 'Unauthorized' },
+                { error: 'Unauthorized - Please login again' },
                 { status: 401 }
             );
         }
 
-        // Rate limiting for admin actions
+        // Rate limiting
         const forwardedFor = headersList.get('x-forwarded-for');
         const ip = forwardedFor ? forwardedFor.split(',')[0] : 'unknown';
         const { success } = await adminLimiter.check(ip);
@@ -76,6 +79,8 @@ export async function POST(request: Request) {
 
         // Save to database
         await saveConfig(body);
+
+        console.log('✅ Config saved successfully by authenticated admin');
 
         return NextResponse.json({
             success: true,
