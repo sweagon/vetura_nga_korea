@@ -1,34 +1,81 @@
-// app/api/config/route.ts
 import { NextResponse } from 'next/server';
+import { getConfig, saveConfig } from '@/lib/configServer';
+import { validateConfig } from '@/lib/config'; // Import validateConfig from config, not configServer
+import { headers } from 'next/headers';
+import { rateLimit } from '@/lib/rateLimit';
 
-// Default config (same as in Context)
-const defaultConfig = {
-    shippingCost: 3500,
-    markupPercentage: 15,
-    minimumMarkup: 1000,
-    contactEmail: 'blerart@outlook.com',
-    contactPhone: '+383 49 195 414',
-    siteName: 'Vetura Korea Kosovë',
-    currency: 'EUR'
-};
+const publicLimiter = rateLimit({ interval: 60 * 1000, max: 60 });
+const adminLimiter = rateLimit({ interval: 60 * 1000, max: 10 });
 
 export async function GET() {
-    // In a real app, you might fetch this from a database
-    // For now, return default config
-    return NextResponse.json(defaultConfig);
+    try {
+        const headersList = await headers();
+        const forwardedFor = headersList.get('x-forwarded-for');
+        const ip = forwardedFor ? forwardedFor.split(',')[0] : 'unknown';
+
+        const { success, remaining, resetTime } = await publicLimiter.check(ip);
+
+        if (!success) {
+            return NextResponse.json(
+                { error: 'Too many requests' },
+                { status: 429 }
+            );
+        }
+
+        const config = await getConfig();
+        return NextResponse.json(config);
+    } catch (error) {
+        console.error('Error fetching config:', error);
+        return NextResponse.json(
+            { error: 'Failed to fetch configuration' },
+            { status: 500 }
+        );
+    }
 }
 
 export async function POST(request: Request) {
     try {
+        const headersList = await headers();
+        const forwardedFor = headersList.get('x-forwarded-for');
+        const ip = forwardedFor ? forwardedFor.split(',')[0] : 'unknown';
+
+        const { success } = await adminLimiter.check(ip);
+
+        if (!success) {
+            return NextResponse.json(
+                { error: 'Too many requests' },
+                { status: 429 }
+            );
+        }
+
+        // Check admin session
+        const cookie = headersList.get('cookie') || '';
+        if (!cookie.includes('adminSession')) {
+            return NextResponse.json(
+                { error: 'Unauthorized' },
+                { status: 401 }
+            );
+        }
+
         const body = await request.json();
+        const { valid, errors } = validateConfig(body);
 
-        // Here you would save to a database
-        // For now, just return success
+        if (!valid) {
+            return NextResponse.json(
+                { error: 'Invalid configuration', details: errors },
+                { status: 400 }
+            );
+        }
 
-        return NextResponse.json({ success: true });
+        await saveConfig(body);
+        return NextResponse.json({
+            success: true,
+            message: 'Configuration updated successfully'
+        });
     } catch (error) {
+        console.error('Error saving config:', error);
         return NextResponse.json(
-            { error: 'Failed to save config' },
+            { error: 'Failed to save configuration' },
             { status: 500 }
         );
     }

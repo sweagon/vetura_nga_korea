@@ -25,8 +25,8 @@ export default function WhyChooseUs() {
         },
         {
             icon: FileCheck,
-            value: 'Histori e',
-            label: 'verifikuar',
+            value: 'Historia',
+            label: 'Dokumentacion i plotë',
             description: 'Çdo veturë vjen me histori dhe dokumentacion të plotë'
         }
     ];

@@ -51,4 +51,4 @@ coverage/
 *.log
 *.pid
 *.seed
-*.pid.lock
+*.pid.lockdata/

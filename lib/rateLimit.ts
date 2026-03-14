@@ -1,4 +1,3 @@
-// lib/rateLimit.ts
 interface RateLimitConfig {
     interval: number;
     max: number;

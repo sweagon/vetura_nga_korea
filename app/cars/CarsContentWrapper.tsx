@@ -93,7 +93,7 @@ export default function CarsContentWrapper() {
     } = useCarFilters(serverFilters, clientFilters);
 
     const sortOptionsList = useMemo<SortOption[]>(() => [
-        { value: 'recommended', label: 'Më të përshtatshmet', sortFn: () => 0 },
+        { value: 'recommended', label: 'Përditësimet e fundit', sortFn: () => 0 },
         { value: 'price_asc', label: 'Çmimi: Nga më i ulëti', sortFn: (a, b) => (a.lots?.[0]?.buy_now || 0) - (b.lots?.[0]?.buy_now || 0) },
         { value: 'price_desc', label: 'Çmimi: Nga më i larti', sortFn: (a, b) => (b.lots?.[0]?.buy_now || 0) - (a.lots?.[0]?.buy_now || 0) },
         { value: 'year_desc', label: 'Viti: Më të rijtë', sortFn: (a, b) => b.year - a.year },

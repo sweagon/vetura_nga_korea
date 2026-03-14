@@ -24,12 +24,16 @@ export default function Hero() {
             {/* Background Image with Overlay */}
             <div className="absolute inset-0">
                 <img
-                    src="https://images.pexels.com/photos/220309/pexels-photo-220309.jpeg"
-                    alt="Vetura luksoze"
+                    src="https://satgurucargo.com/wp-content/uploads/2024/11/shutterstock_1228329946-scaled.jpg"
+                    alt="Import direkt nga Korea - transport detar"
                     className="absolute inset-0 w-full h-full object-cover brightness-50"
                 />
+                {/* ADD THIS LINEAR GRADIENT OVERLAY */}
+                <div className="absolute inset-0 bg-gradient-to-t from-blue-900/75 via-dark-blue/70 to-transparent" />
+
+                {/* Keep your existing gradient and effects */}
                 <div className="absolute inset-0 bg-gradient-to-r from-dark-blue/70 via-dark-blue/60 to-dark-blue/50" />
-                <div className="absolute inset-0 opacity-30 mix-blend-overlay">
+                <div className="absolute inset-0 mix-blend-overlay">
                     <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_50%,rgba(255,107,0,0.4)_0%,transparent_50%)]" />
                     <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_80%,rgba(255,107,0,0.4)_0%,transparent_50%)]" />
                 </div>
@@ -72,8 +76,8 @@ export default function Hero() {
                         variants={fadeInUp}
                         className="text-base md:text-xl text-white/80 mb-8 md:mb-10 max-w-2xl mx-auto lg:mx-0 text-center lg:text-left leading-relaxed"
                     >
-                        Vetura Korea Kosovë ju sjell vetura të përzgjedhura nga Korea me standarde të larta cilësie,
-                        histori të verifikuar dhe transparencë të plotë në çdo hap të procesit.
+                        Garanci në motorr, pa kilometra të ndërruara, pa aksidente.
+                        20 ditë ose 1,000 km garanci.
                     </motion.p>
 
                     {/* Compact Search */}
@@ -90,7 +94,7 @@ export default function Hero() {
                             { icon: Shield, value: '98%', label: 'Klientë të kënaqur' },
                             { icon: Truck, value: '35 ditë', label: 'Transport deri në Prishtinë' },
                             { icon: Sparkles, value: '100%', label: 'Të inspektuara' },
-                            { icon: FileCheck, value: 'Histori e', label: 'verifikuar' }
+                            { icon: FileCheck, value: 'Historia', label: 'Dokumentacion i plotë' }
                         ].map((stat, index) => (
                             <motion.div
                                 key={index}

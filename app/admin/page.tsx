@@ -140,27 +140,26 @@ export default function AdminPage() {
         setPassword('');
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         setIsSaving(true);
 
-        // Validate using the context's validation
-        const { valid, errors } = validateConfig(localConfig);
+        try {
+            // This now calls the server API through updateConfig
+            await updateConfig(localConfig);
 
-        if (!valid) {
             setSaveMessage({
-                text: `Gabim: ${errors.join(', ')}`,
+                text: '✅ Cilësimet u ruajtën me sukses për të gjithë përdoruesit!',
+                type: 'success'
+            });
+        } catch (error) {
+            setSaveMessage({
+                text: `Gabim: ${error instanceof Error ? error.message : 'Ruajtja dështoi'}`,
                 type: 'error'
             });
+        } finally {
             setIsSaving(false);
-            return;
+            setTimeout(() => setSaveMessage({ text: '', type: '' }), 3000);
         }
-
-        // Update config in context
-        updateConfig(localConfig);
-
-        setSaveMessage({ text: '✅ Cilësimet u ruajtën me sukses!', type: 'success' });
-        setTimeout(() => setSaveMessage({ text: '', type: '' }), 3000);
-        setIsSaving(false);
     };
 
     const handleReset = () => {

@@ -1,0 +1,24 @@
+{
+  "shippingCost": 3500,
+  "shippingToPristina": 350,
+  "markupPercentage": 15,
+  "minimumMarkup": 1000,
+  "contactEmail": "blerart@outlook.com",
+  "contactPhone": "+383 49 195 414",
+  "siteName": "Vetura Korea Kosova",
+  "currency": "EUR",
+  "vehicleTypes": {
+    "suv": {
+      "shippingCost": 4500,
+      "markupPercentage": 18,
+      "minimumMarkup": 1500,
+      "enabled": false
+    },
+    "default": {
+      "shippingCost": 3500,
+      "markupPercentage": 15,
+      "minimumMarkup": 1000,
+      "enabled": true
+    }
+  }
+}
