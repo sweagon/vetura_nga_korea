@@ -2,6 +2,14 @@ import { NextResponse } from 'next/server';
 import { validateAdmin } from '@/lib/db';
 import { cookies } from 'next/headers';
 
+// ✅ Add this GET handler to check if route is working
+export async function GET() {
+    return NextResponse.json({
+        status: 'ok',
+        message: 'Admin verify API is working'
+    });
+}
+
 export async function POST(request: Request) {
     try {
         const { password } = await request.json();
@@ -10,13 +18,11 @@ export async function POST(request: Request) {
 
         if (isValid) {
             const cookieStore = await cookies();
-
-            // Set cookie with proper settings for production
             cookieStore.set('admin_session', 'authenticated', {
                 httpOnly: true,
-                secure: true, // Always true on Vercel (HTTPS)
-                sameSite: 'lax', // Important for cross-origin
-                maxAge: 2 * 60 * 60, // 2 hours
+                secure: true,
+                sameSite: 'lax',
+                maxAge: 2 * 60 * 60,
                 path: '/',
             });
 
@@ -37,7 +43,6 @@ export async function POST(request: Request) {
     }
 }
 
-// Add logout endpoint
 export async function DELETE() {
     const cookieStore = await cookies();
     cookieStore.delete('admin_session');
