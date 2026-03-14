@@ -1,6 +1,8 @@
+// lib/db.ts
 import { sql } from '@vercel/postgres';
 import { SiteConfig, defaultConfig } from './config';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 // ============ CONFIG FUNCTIONS ============
 
@@ -81,7 +83,7 @@ export async function saveConfigToDb(config: SiteConfig): Promise<void> {
     }
 }
 
-// ============ ADMIN FUNCTIONS ============
+// ============ ADMIN AUTH FUNCTIONS ============
 
 export async function validateAdmin(password: string): Promise<boolean> {
     try {
@@ -104,4 +106,83 @@ export async function updateAdminPassword(newPassword: string): Promise<void> {
         UPDATE admin SET password_hash = ${hash}, updated_at = CURRENT_TIMESTAMP
         WHERE id = 1
     `;
+}
+
+// ============ SESSION FUNCTIONS ============
+
+export interface AdminSession {
+    token: string;
+    user_id: number;
+    expires_at: Date;
+}
+
+// Create session for admin
+export async function createAdminSession(userId: number = 1): Promise<string> {
+    // Generate a random token
+    const token = crypto.randomBytes(32).toString('hex');
+
+    // Set expiration to 2 hours from now
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 2);
+
+    // Store session in database
+    await sql`
+        INSERT INTO admin_sessions (user_id, token, expires_at)
+        VALUES (${userId}, ${token}, ${expiresAt.toISOString()})
+    `;
+
+    console.log(`✅ Session created for user ${userId}, expires at ${expiresAt.toISOString()}`);
+    return token;
+}
+
+// Validate session token
+export async function validateSessionToken(token: string): Promise<boolean> {
+    try {
+        const { rows } = await sql`
+            SELECT id FROM admin_sessions 
+            WHERE token = ${token} 
+            AND expires_at > NOW()
+        `;
+
+        const isValid = rows.length > 0;
+        console.log(`🔑 Session validation: ${isValid ? '✅ valid' : '❌ invalid'}`);
+        return isValid;
+    } catch (error) {
+        console.error('Session validation error:', error);
+        return false;
+    }
+}
+
+// Get all active sessions (for debugging)
+export async function getActiveSessions(): Promise<any[]> {
+    try {
+        const { rows } = await sql`
+            SELECT id, user_id, token, created_at, expires_at 
+            FROM admin_sessions 
+            WHERE expires_at > NOW()
+            ORDER BY created_at DESC
+        `;
+        return rows;
+    } catch (error) {
+        console.error('Error getting active sessions:', error);
+        return [];
+    }
+}
+
+// Delete session (logout)
+export async function deleteSession(token: string): Promise<void> {
+    await sql`DELETE FROM admin_sessions WHERE token = ${token}`;
+    console.log(`✅ Session deleted: ${token.substring(0, 8)}...`);
+}
+
+// Delete all sessions for a user (logout from all devices)
+export async function deleteAllUserSessions(userId: number = 1): Promise<void> {
+    await sql`DELETE FROM admin_sessions WHERE user_id = ${userId}`;
+    console.log(`✅ All sessions deleted for user ${userId}`);
+}
+
+// Clean up expired sessions (call this periodically)
+export async function cleanupExpiredSessions(): Promise<void> {
+    const { rowCount } = await sql`DELETE FROM admin_sessions WHERE expires_at < NOW()`;
+    console.log(`🧹 Cleaned up ${rowCount} expired sessions`);
 }

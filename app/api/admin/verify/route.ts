@@ -1,5 +1,6 @@
+// app/api/admin/verify/route.ts
 import { NextResponse } from 'next/server';
-import { validateAdmin } from '@/lib/db';
+import { validateAdmin, createAdminSession, deleteSession } from '@/lib/db';
 import { cookies } from 'next/headers';
 
 export async function GET() {
@@ -17,41 +18,33 @@ export async function POST(request: Request) {
         console.log('🔐 Login attempt received');
 
         if (!password) {
-            console.log('❌ No password provided');
             return NextResponse.json(
                 { success: false, message: 'Fjalëkalimi kërkohet' },
                 { status: 400 }
             );
         }
 
-        // Test database connection first
-        try {
-            const { sql } = require('@vercel/postgres');
-            await sql`SELECT 1`;
-            console.log('✅ Database connection successful');
-        } catch (dbError) {
-            console.error('❌ Database connection failed:', dbError);
-            return NextResponse.json(
-                { success: false, message: 'Gabim i lidhjes me databazën' },
-                { status: 500 }
-            );
-        }
-
         const isValid = await validateAdmin(password);
-        console.log('🔑 Password validation result:', isValid);
 
         if (isValid) {
+            // Create session in database
+            const token = await createAdminSession(1);
+
+            // Set cookie with the token
             const cookieStore = await cookies();
-            cookieStore.set('admin_session', 'authenticated', {
+            cookieStore.set('admin_token', token, {
                 httpOnly: true,
                 secure: true,
                 sameSite: 'lax',
-                maxAge: 2 * 60 * 60,
+                maxAge: 2 * 60 * 60, // 2 hours
                 path: '/',
             });
 
-            console.log('✅ Login successful, cookie set');
-            return NextResponse.json({ success: true });
+            console.log('✅ Login successful, session created');
+            return NextResponse.json({
+                success: true,
+                message: 'Login successful'
+            });
         }
 
         console.log('❌ Invalid password');
@@ -63,14 +56,26 @@ export async function POST(request: Request) {
     } catch (error) {
         console.error('🔥 Login error:', error);
         return NextResponse.json(
-            { success: false, message: 'Gabim gjatë hyrjes: ' + (error instanceof Error ? error.message : 'unknown') },
+            { success: false, message: 'Gabim gjatë hyrjes' },
             { status: 500 }
         );
     }
 }
 
-export async function DELETE() {
-    const cookieStore = await cookies();
-    cookieStore.delete('admin_session');
-    return NextResponse.json({ success: true });
+export async function DELETE(request: Request) {
+    try {
+        const cookieStore = await cookies();
+        const token = cookieStore.get('admin_token')?.value;
+
+        if (token) {
+            await deleteSession(token);
+            cookieStore.delete('admin_token');
+            console.log('✅ Logout successful');
+        }
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error('Logout error:', error);
+        return NextResponse.json({ success: false }, { status: 500 });
+    }
 }

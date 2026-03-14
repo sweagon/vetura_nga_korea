@@ -63,16 +63,25 @@ export default function AdminPage() {
 
     // Check if already authenticated via session cookie
     useEffect(() => {
-        const checkAuth = () => {
-            // Check for admin_session cookie
-            const cookies = document.cookie.split(';');
-            const hasSession = cookies.some(c => c.trim().startsWith('admin_session='));
+        const checkAuth = async () => {
+            try {
+                const response = await fetch('/api/admin/check-session');
+                const data = await response.json();
+                setIsAuthenticated(data.authenticated);
 
-            if (hasSession) {
-                setIsAuthenticated(true);
+                if (data.authenticated) {
+                    console.log('✅ Valid session found');
+                } else {
+                    console.log('❌ No valid session');
+                }
+            } catch (error) {
+                console.error('Session check error:', error);
+                setIsAuthenticated(false);
+            } finally {
+                setIsLoading(false);
             }
-            setIsLoading(false);
         };
+
         checkAuth();
     }, []);
 
@@ -94,7 +103,7 @@ export default function AdminPage() {
             const response = await fetch('/api/admin/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                credentials: 'include', // ← ADD THIS
+                credentials: 'include',
                 body: JSON.stringify({ password })
             });
 
@@ -104,9 +113,27 @@ export default function AdminPage() {
                 setLoginAttempts(0);
                 setLockoutUntil(null);
                 setIsAuthenticated(true);
-                setSaveMessage({ text: '', type: '' });
+                setSaveMessage({ text: '✅ Hyrja e suksesshme!', type: 'success' });
+
+                // Redirect or update UI
+                setTimeout(() => setSaveMessage({ text: '', type: '' }), 2000);
             } else {
-                // ... rest of your error handling
+                const newAttempts = loginAttempts + 1;
+                setLoginAttempts(newAttempts);
+
+                if (newAttempts >= MAX_ATTEMPTS) {
+                    const lockout = Date.now() + LOCKOUT_TIME;
+                    setLockoutUntil(lockout);
+                    setSaveMessage({
+                        text: `Shumë përpjekje të dështuara. Llogaria është bllokuar për 15 minuta.`,
+                        type: 'error'
+                    });
+                } else {
+                    setSaveMessage({
+                        text: `Fjalëkalimi i gabuar. ${MAX_ATTEMPTS - newAttempts} përpjekje të mbetura.`,
+                        type: 'error'
+                    });
+                }
             }
         } catch (error) {
             setSaveMessage({ text: 'Hyrja dështoi. Provo përsëri.', type: 'error' });
