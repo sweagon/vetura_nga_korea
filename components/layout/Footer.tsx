@@ -113,7 +113,7 @@ export default function Footer() {
                 {/* Bottom Bar */}
                 <div className="mt-16 pt-8 border-t border-light flex flex-col md:flex-row justify-between items-center gap-4">
                     <p className="text-muted text-sm">
-                        © {currentYear} {config.siteName}. Të gjitha të drejtat e rezervuara.
+                        Since 2024. Të gjitha të drejtat e rezervuara.
                     </p>
                     <button
                         onClick={scrollToTop}

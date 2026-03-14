@@ -1,4 +1,3 @@
-// app/cars/page.tsx
 import { Suspense } from 'react';
 import CarsContentWrapper from './CarsContentWrapper';
 import { Metadata } from 'next';
@@ -6,7 +5,7 @@ import { FilterProvider } from '@/contexts/FilterContext';
 
 export const metadata: Metadata = {
     title: 'Makina për Shitje | Vetura Korea Kosovë',
-    description: 'Shfleto makinat më të mira nga Korea.',
+    description: 'Shfleto makinat më të mira nga Korea. Mercedes, BMW, Audi, Volkswagen dhe Toyota të përzgjedhura për tregun kosovar.',
 };
 
 // Loading skeleton for cars page
@@ -72,7 +71,7 @@ export default function CarsPage() {
                         Makina për Shitje
                     </h1>
                     <p className="text-secondary">
-                        Shfleto makinat më të mira nga Korea
+                        Mercedes, BMW, Audi, Volkswagen, Toyota dhe modele të tjera të përzgjedhura për tregun kosovar
                     </p>
                 </div>
 

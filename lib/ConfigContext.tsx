@@ -51,7 +51,6 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
             } catch (err) {
                 console.error('Error loading config:', err);
                 setError('Failed to load configuration');
-                // Keep default config
             } finally {
                 setLoading(false);
             }
@@ -59,25 +58,23 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
 
         fetchConfig();
 
-        // Refresh config every 5 minutes
         const interval = setInterval(fetchConfig, 5 * 60 * 1000);
         return () => clearInterval(interval);
     }, []);
 
     const updateConfig = async (newConfig: SiteConfig) => {
         try {
-            // Validate
             const { valid, errors } = validateConfig(newConfig);
             if (!valid) {
                 throw new Error(`Invalid config: ${errors.join(', ')}`);
             }
 
-            // Send to server
             const response = await fetch('/api/config', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include', // ← ADD THIS ONE LINE
                 body: JSON.stringify(newConfig),
             });
 
@@ -86,10 +83,7 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
                 throw new Error(errorData.error || 'Failed to save config');
             }
 
-            // Update local state
             setConfig(newConfig);
-
-            // Dispatch event for other components
             window.dispatchEvent(new Event('configUpdated'));
 
         } catch (error) {
@@ -102,41 +96,25 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
         const validBasePrice = Math.max(0, basePrice || 0);
 
         let shipping = config.shippingCost;
-        let markupPercent = config.markupPercentage;
-        let minMarkup = config.minimumMarkup;
         let usedType = 'default';
 
+        // Check vehicle type config
         if (vehicleType && config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes]) {
             const typeConfig = config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes];
             if (typeConfig?.enabled) {
                 shipping = typeConfig.shippingCost;
-                markupPercent = typeConfig.markupPercentage;
-                minMarkup = typeConfig.minimumMarkup;
                 usedType = vehicleType;
             }
         }
 
-        const withShipping = validBasePrice + shipping;
-
-        let markupAmount = 0;
-        let appliedMarkup: 'percentage' | 'minimum' | 'none' = 'none';
-
-        if (markupPercent > 0) {
-            const percentageMarkup = withShipping * (markupPercent / 100);
-            const useMinimumMarkup = percentageMarkup < minMarkup;
-            markupAmount = useMinimumMarkup ? minMarkup : percentageMarkup;
-            appliedMarkup = useMinimumMarkup ? 'minimum' : 'percentage';
-        }
-
-        const finalPrice = validBasePrice + shipping + config.shippingToPristina + markupAmount;
+        // Simple calculation: base price + shipping costs
+        const finalPrice = validBasePrice + shipping + config.shippingToPristina;
 
         return {
             basePrice: validBasePrice,
             shippingCost: shipping,
             shippingToPristina: config.shippingToPristina,
-            markupAmount: Math.round(markupAmount),
             finalPrice: Math.round(finalPrice),
-            appliedMarkup,
             vehicleTypeUsed: usedType
         };
     }, [config]);
@@ -149,10 +127,6 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
             maximumFractionDigits: 0
         }).format(price || 0);
     }, [config.currency]);
-
-    const validateConfigWrapper = (configToValidate: Partial<SiteConfig>) => {
-        return validateConfig(configToValidate);
-    };
 
     const getVehicleTypeLabel = (type: string): string => {
         return vehicleTypeLabels[type] || type;
@@ -172,7 +146,7 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
             updateConfig,
             calculateFinalPrice,
             formatPrice,
-            validateConfig: validateConfigWrapper,
+            validateConfig,
             getVehicleTypeLabel,
             loading,
             error

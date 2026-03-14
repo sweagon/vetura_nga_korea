@@ -1,4 +1,3 @@
-// lib/api.ts
 import { STATIC_MANUFACTURERS } from './staticManufacturers';
 
 export interface Car {
@@ -140,8 +139,6 @@ export interface CarDetails {
   month?: number;
 }
 
-// lib/api.ts - Update around line 150-170
-
 export interface Lot {
   id: number;
   lot: string;
@@ -186,17 +183,14 @@ export interface Lot {
   };
   keys_available?: boolean;
   airbags?: boolean | null;
-  // Add these new fields for Euro pricing
-  price_with_margin_and_kosovo?: number;  // Final Euro price with margin
-  price_with_margin_no_discount?: number; // Euro price without discount
-  step5?: number;                          // Alternative Euro price field
+  price_with_margin_and_kosovo?: number;
+  price_with_margin_no_discount?: number;
+  step5?: number;
 }
 
-// Also add helper function to get the best available price
 export function getBestPrice(lot: Lot | undefined): { price: number; source: string } {
   if (!lot) return { price: 0, source: 'none' };
 
-  // Priority: 1. API Euro price, 2. step5, 3. buy_now (USD fallback)
   if (lot.price_with_margin_and_kosovo) {
     return { price: lot.price_with_margin_and_kosovo, source: 'api_euro' };
   }
@@ -253,7 +247,6 @@ export interface Generation {
   cars_qty?: number;
 }
 
-// lib/api.ts - Ensure FilterData interface has all needed arrays
 export interface FilterData {
   manufacturers: Manufacturer[];
   models: Model[];
@@ -263,10 +256,97 @@ export interface FilterData {
   years: number[];
   bodyTypes: Array<{ id: number; name: string }>;
   colors: Array<{ id: number; name: string }>;
-  // Add these if they exist in the statistics endpoint
   fuelStats?: Array<{ id: number; name: string; count: number }>;
   transmissionStats?: Array<{ id: number; name: string; count: number }>;
 }
+
+// Kosovo market priority order for manufacturers (corrected based on actual market)
+const KOSOVO_MANUFACTURER_ORDER = [
+  // 🇩🇪 GERMAN CARS - Most popular in Kosovo
+  'Volkswagen',      // #1 - Golf, Passat, Tiguan are everywhere
+  'Mercedes-Benz',   // #2 - Status symbol, very popular
+  'BMW',             // #3 - Very popular (3 Series, 5 Series, X5)
+  'Audi',            // #4 - Popular (A4, A6, Q5, Q7)
+  'Opel',            // #5 - Very popular affordable German (Astra, Corsa)
+
+  // 🇫🇷 FRENCH CARS - Very common
+  'Peugeot',         // #6 - Very popular (206, 307, Partner)
+  'Citroen',         // #7 - Very popular (C3, C4, Berlingo)
+  'Renault',         // #8 - Very popular (Clio, Megane, Kangoo)
+  'Renault Samsung', // #9 - Korean Renaults (QM6, SM6)
+
+  // 🇷🇴 ROMANIAN - Budget king
+  'Dacia',           // #10 - Extremely popular (Duster, Sandero, Logan)
+
+  // 🇨🇿 CZECH - Popular VW group
+  'Skoda',           // #11 - Very popular (Octavia, Fabia, Superb)
+
+  // 🇪🇸 SPANISH - VW group
+  'SEAT',            // #12 - Popular (Leon, Ibiza)
+
+  // 🇬🇧 BRITISH LUXURY
+  'Land Rover',      // #13 - Popular luxury SUVs (Range Rover)
+  'Jaguar',          // #14 - Luxury
+
+  // 🇮🇹 ITALIAN
+  'Fiat',            // #15 - Popular (Panda, 500, Doblo)
+  'Alfa Romeo',      // #16 - Niche but present
+
+  // 🇯🇵 JAPANESE - Reliable
+  'Toyota',          // #17 - Popular (Corolla, RAV4, Yaris)
+  'Honda',           // #18 - Popular (Civic, CR-V)
+  'Nissan',          // #19 - Popular (Qashqai, Juke, Micra)
+  'Mazda',           // #20 - Popular (3, 6, CX-5)
+  'Mitsubishi',      // #21 - Popular (Pajero, L200)
+  'Suzuki',          // #22 - Popular (Swift, Vitara)
+  'Subaru',          // #23 - Less common
+
+  // 🇰🇷 KOREAN - Growing popularity
+  'Hyundai',         // #24 - Popular (i30, Tucson, Santa Fe)
+  'Kia',             // #25 - Popular (Sportage, Ceed, Picanto)
+  'SsangYong',       // #26 - Popular SUVs (Rexton, Korando)
+
+  // 🇺🇸 AMERICAN
+  'Ford',            // #27 - Popular (Focus, Fiesta, Transit)
+  'Jeep',            // #28 - Popular SUVs (Cherokee, Grand Cherokee)
+  'Chevrolet',       // #29 - Present (Spark, Cruze)
+
+  // 🇸🇪 SWEDISH
+  'Volvo',           // #30 - Popular for safety (XC90, V40)
+
+  // 🇯🇵 JAPANESE LUXURY
+  'Lexus',           // #31 - Luxury
+
+  // 🇩🇪 GERMAN LUXURY
+  'Porsche',         // #32 - Aspirational
+
+  // 🇮🇹 ITALIAN LUXURY
+  'Maserati',        // #33 - Rare
+
+  // 🇬🇧 BRITISH ULTRA LUXURY
+  'Bentley',         // #34 - Very rare
+  'Rolls-Royce',     // #35 - Very rare
+  'Aston Martin',    // #36 - Very rare
+  'Lotus',           // #37 - Very rare
+
+  // 🇮🇹 ITALIAN SUPERCARS
+  'Lamborghini',     // #38 - Very rare
+  'Ferrari',         // #39 - Very rare
+
+  // 🇬🇧 BRITISH SUPERCARS
+  'McLaren',         // #40 - Very rare
+
+  // 🇯🇵/🇺🇸 LUXURY (rare)
+  'Infiniti',        // #41 - Rare
+  'Acura',           // #42 - Very rare
+  'Genesis',         // #43 - Rare
+  'Cadillac',        // #44 - Rare
+  'Lincoln',         // #45 - Rare
+
+  // 🇩🇪 NICHE
+  'Mini',            // #46 - Niche
+  'Smart'            // #47 - Niche
+];
 
 // API Base URL - using NEXT_PUBLIC_ for client-side access
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -328,8 +408,6 @@ const API_SUPPORTED_FILTERS = [
   'vehicle_type'
 ];
 
-// In lib/api.ts, update the fetchCars function:
-
 export async function fetchCars(params: Record<string, any> = {}) {
   try {
     const queryParams: Record<string, string> = {};
@@ -361,7 +439,6 @@ export async function fetchCars(params: Record<string, any> = {}) {
 
     const data = await response.json();
 
-    // IMPORTANT: Ensure meta.total is preserved
     if (data.meta && typeof data.meta.total === 'undefined') {
       console.warn('⚠️ API response missing meta.total');
     }
@@ -386,9 +463,6 @@ export async function fetchCars(params: Record<string, any> = {}) {
   }
 }
 
-/**
- * Fetch car by VIN - Uses dedicated endpoint
- */
 export async function fetchCarByVin(vin: string): Promise<Car | null> {
   try {
     if (!vin || vin.length < 10) {
@@ -403,14 +477,13 @@ export async function fetchCarByVin(vin: string): Promise<Car | null> {
 
     const response = await fetchWithTimeout(url, {
       ...(typeof window !== 'undefined'
-        ? { next: { revalidate: 3600 } } // Cache for 1 hour
+        ? { next: { revalidate: 3600 } }
         : { cache: 'no-store' })
-    }, 15000); // Increased timeout to 15 seconds
+    }, 15000);
 
     if (response.status === 200) {
       const data = await response.json();
 
-      // Check if the response has the expected structure
       if (!data || !data.manufacturer) {
         console.warn('⚠️ API returned incomplete car data:', data);
         return null;
@@ -424,7 +497,6 @@ export async function fetchCarByVin(vin: string): Promise<Car | null> {
       return null;
     }
 
-    // Log other error statuses
     console.error(`❌ API returned status ${response.status} for VIN:`, vin);
     const errorText = await response.text().catch(() => 'No error details');
     console.error('Error details:', errorText);
@@ -436,11 +508,7 @@ export async function fetchCarByVin(vin: string): Promise<Car | null> {
   }
 }
 
-/**
- * Helper to extract VIN from URL parameter
- */
 export function extractVinFromParam(param: string): string {
-  // VINs are 17 characters, alphanumeric (excluding I, O, Q)
   const vinRegex = /^[A-HJ-NPR-Z0-9]{17}$/i;
 
   if (vinRegex.test(param)) {
@@ -472,7 +540,24 @@ export async function fetchManufacturers(type: string = 'cars'): Promise<Manufac
     }
 
     const data = await response.json();
-    return data.data || data || [];
+    const manufacturers = data.data || data || [];
+
+    // Sort manufacturers by Kosovo market priority
+    return manufacturers.sort((a: Manufacturer, b: Manufacturer) => {
+      const indexA = KOSOVO_MANUFACTURER_ORDER.indexOf(a.name);
+      const indexB = KOSOVO_MANUFACTURER_ORDER.indexOf(b.name);
+
+      // If both are in the priority list, sort by priority order
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB;
+      }
+      // If only A is in priority list, A comes first
+      if (indexA !== -1) return -1;
+      // If only B is in priority list, B comes first
+      if (indexB !== -1) return 1;
+      // If neither is in priority list, sort alphabetically
+      return a.name.localeCompare(b.name);
+    });
   } catch (error) {
     console.error('Error fetching manufacturers:', error);
     return [];
@@ -533,20 +618,30 @@ export async function fetchFilterData(): Promise<FilterData> {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 1989 }, (_, i) => currentYear - i);
 
-  // Convert static manufacturers to the expected Manufacturer format
   const manufacturers: Manufacturer[] = STATIC_MANUFACTURERS.map(m => ({
     id: m.id,
     name: m.name,
-    // Optional: You could add cars_qty if you have that data
     cars_qty: undefined,
     image: undefined,
     models_qty: undefined
   }));
 
-  // Return filter data with static manufacturers
+  // Sort static manufacturers by Kosovo priority
+  const sortedManufacturers = [...manufacturers].sort((a, b) => {
+    const indexA = KOSOVO_MANUFACTURER_ORDER.indexOf(a.name);
+    const indexB = KOSOVO_MANUFACTURER_ORDER.indexOf(b.name);
+
+    if (indexA !== -1 && indexB !== -1) {
+      return indexA - indexB;
+    }
+    if (indexA !== -1) return -1;
+    if (indexB !== -1) return 1;
+    return a.name.localeCompare(b.name);
+  });
+
   return {
-    manufacturers, // Using static data instead of API call
-    models: [], // Will be fetched when manufacturer is selected
+    manufacturers: sortedManufacturers,
+    models: [],
     generations: [],
     fuelTypes: [
       { id: 1, name: 'diesel' },
@@ -584,14 +679,12 @@ export async function fetchFilterData(): Promise<FilterData> {
   };
 }
 
-// Helper function to format mileage
 export function formatMileage(mileage: number): string {
   if (!mileage && mileage !== 0) return 'N/A';
   const formatted = mileage.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   return `${formatted} km`;
 }
 
-// Helper function to get fuel type in Albanian
 export function getFuelTypeAlbanian(fuelType: string): string {
   const fuelMap: Record<string, string> = {
     'diesel': 'Naftë',
@@ -604,7 +697,6 @@ export function getFuelTypeAlbanian(fuelType: string): string {
   return fuelMap[fuelType.toLowerCase()] || fuelType;
 }
 
-// Helper function to get transmission in Albanian
 export function getTransmissionAlbanian(transmission: string): string {
   const transMap: Record<string, string> = {
     'automatic': 'Automatik',
@@ -613,7 +705,6 @@ export function getTransmissionAlbanian(transmission: string): string {
   return transMap[transmission.toLowerCase()] || transmission;
 }
 
-// Helper function to get color in Albanian
 export function getColorAlbanian(color: string): string {
   const colorMap: Record<string, string> = {
     'black': 'Zi',
@@ -634,7 +725,6 @@ export function getColorAlbanian(color: string): string {
   return colorMap[color.toLowerCase()] || color;
 }
 
-// Helper function to get body type in Albanian
 export function getBodyTypeAlbanian(bodyType: string): string {
   const bodyMap: Record<string, string> = {
     'sedan': 'Sedan',

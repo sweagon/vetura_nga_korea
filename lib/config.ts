@@ -1,16 +1,12 @@
-// lib/config.ts - Client-safe types and pure functions
+// lib/config.ts - Client-safe types
 export interface VehicleTypeConfig {
     shippingCost: number;
-    markupPercentage: number;
-    minimumMarkup: number;
     enabled: boolean;
 }
 
 export interface SiteConfig {
-    shippingCost: number;
-    shippingToPristina: number;
-    markupPercentage: number;
-    minimumMarkup: number;
+    shippingCost: number; // Base shipping to Durres
+    shippingToPristina: number; // Additional shipping from Durres to Pristina
     contactEmail: string;
     contactPhone: string;
     siteName: string;
@@ -30,11 +26,9 @@ export interface SiteConfig {
 
 export interface PriceDetails {
     basePrice: number;
-    shippingCost: number;
-    shippingToPristina: number;
-    markupAmount: number;
+    shippingCost: number; // Shipping to Durres
+    shippingToPristina: number; // Additional to Pristina
     finalPrice: number;
-    appliedMarkup: 'percentage' | 'minimum' | 'none';
     vehicleTypeUsed: string;
 }
 
@@ -42,19 +36,23 @@ export interface PriceDetails {
 export const defaultConfig: SiteConfig = {
     shippingCost: 3500,
     shippingToPristina: 350,
-    markupPercentage: 15,
-    minimumMarkup: 1000,
     contactEmail: 'blerart@outlook.com',
     contactPhone: '+383 49 195 414',
     siteName: 'Vetura Korea Kosova',
     currency: 'EUR',
     vehicleTypes: {
-        suv: { shippingCost: 4500, markupPercentage: 18, minimumMarkup: 1500, enabled: false },
-        default: { shippingCost: 3500, markupPercentage: 15, minimumMarkup: 1000, enabled: true }
+        suv: { shippingCost: 4500, enabled: false },
+        sedan: { shippingCost: 3500, enabled: true },
+        hatchback: { shippingCost: 3500, enabled: true },
+        wagon: { shippingCost: 3500, enabled: true },
+        coupe: { shippingCost: 3500, enabled: true },
+        van: { shippingCost: 3800, enabled: true },
+        pickup: { shippingCost: 4000, enabled: true },
+        default: { shippingCost: 3500, enabled: true }
     }
 };
 
-// PURE FUNCTION - Safe for client-side
+// Validation function
 export function validateConfig(config: Partial<SiteConfig>): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
@@ -66,16 +64,6 @@ export function validateConfig(config: Partial<SiteConfig>): { valid: boolean; e
     if (config.shippingToPristina !== undefined) {
         if (config.shippingToPristina < 0) errors.push('Shipping to Pristina cannot be negative');
         if (config.shippingToPristina > 1000) errors.push('Shipping to Pristina too high (max €1,000)');
-    }
-
-    if (config.markupPercentage !== undefined) {
-        if (config.markupPercentage < 0) errors.push('Markup percentage cannot be negative');
-        if (config.markupPercentage > 100) errors.push('Markup percentage cannot exceed 100%');
-    }
-
-    if (config.minimumMarkup !== undefined) {
-        if (config.minimumMarkup < 0) errors.push('Minimum markup cannot be negative');
-        if (config.minimumMarkup > 50000) errors.push('Minimum markup too high (max €50,000)');
     }
 
     if (config.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(config.contactEmail)) {

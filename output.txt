@@ -1,2141 +1,2186 @@
-=========================================
-FILE: app/cars/CarsContentWrapper.tsx
-=========================================
-'use client';
+================================================
+Files needed for database integration review
+Generated on: Sat, Mar 14, 2026  9:18:27 PM
+================================================
 
-import { useState, useRef, useMemo, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
-import CarCard from '@/components/cars/CarCard';
-import { CarCardSkeleton } from '@/components/ui/LoadingSkeleton';
-import { AlertCircle, ArrowUpDown, Loader2, Search } from 'lucide-react';
-import CustomSelect from '@/components/ui/CustomSelect';
-import CompactSearch from '@/components/ui/CompactSearch';
-import AdvancedFilterSidebar from '@/components/filters/AdvancedFilterSidebar';
-import FilterToggle from '@/components/ui/FilterToggle';
-import Pagination from '@/components/ui/Pagination';
-import { useCarFilters } from '@/hooks/useCarFilters';
-import { type Car } from '@/lib/api';
 
-interface SortOption {
-    value: string;
-    label: string;
-    sortFn: (a: Car, b: Car) => number;
+================================================
+FILE: lib/config.ts
+================================================
+
+// lib/config.ts - Client-safe types
+export interface VehicleTypeConfig {
+    shippingCost: number;
+    enabled: boolean;
 }
 
-export default function CarsContentWrapper() {
-    const [isFilterOpen, setIsFilterOpen] = useState(false);
-    const [currentSort, setCurrentSort] = useState('recommended');
-    const contentRef = useRef<HTMLDivElement>(null);
+export interface SiteConfig {
+    shippingCost: number; // Base shipping to Durres
+    shippingToPristina: number; // Additional shipping from Durres to Pristina
+    contactEmail: string;
+    contactPhone: string;
+    siteName: string;
+    currency: 'EUR' | 'USD' | 'ALL';
+    vehicleTypes: {
+        suv?: VehicleTypeConfig;
+        default?: VehicleTypeConfig;
+        sedan?: VehicleTypeConfig;
+        hatchback?: VehicleTypeConfig;
+        wagon?: VehicleTypeConfig;
+        coupe?: VehicleTypeConfig;
+        convertible?: VehicleTypeConfig;
+        van?: VehicleTypeConfig;
+        pickup?: VehicleTypeConfig;
+    };
+}
 
-    const searchParams = useSearchParams();
+export interface PriceDetails {
+    basePrice: number;
+    shippingCost: number; // Shipping to Durres
+    shippingToPristina: number; // Additional to Pristina
+    finalPrice: number;
+    vehicleTypeUsed: string;
+}
 
-    const serverFilters = useMemo(() => ({
-        manufacturer_id: searchParams.get('manufacturer_id') || undefined,
-        model_id: searchParams.get('model_id') || undefined,
-        from_year: searchParams.get('from_year') || undefined,
-        to_year: searchParams.get('to_year') || undefined,
-        buy_now_price_from: searchParams.get('buy_now_price_from') || undefined,
-        buy_now_price_to: searchParams.get('buy_now_price_to') || undefined,
-        odometer_from_km: searchParams.get('odometer_from_km') || undefined,
-        odometer_to_km: searchParams.get('odometer_to_km') || undefined,
-    }), [searchParams]);
-
-    const clientFilters = useMemo(() => ({
-        fuel_id: searchParams.get('fuel_id') || '',
-        transmission_id: searchParams.get('transmission_id') || '',
-        color_id: searchParams.get('color_id') || '',
-        body_type_id: searchParams.get('body_type_id') || '',
-        yearFrom: searchParams.get('filter_year_from') || '',
-        yearTo: searchParams.get('filter_year_to') || '',
-        priceFrom: searchParams.get('filter_price_from') || '',
-        priceTo: searchParams.get('filter_price_to') || '',
-    }), [searchParams]);
-
-    const {
-        cars,
-        loading,
-        loadingMore,
-        currentPage,
-        totalPages,
-        totalMatches,
-        searchProgress,
-        hasClientFilters,
-        error,
-        goToPage
-    } = useCarFilters(serverFilters, clientFilters);
-
-    const sortOptionsList = useMemo<SortOption[]>(() => [
-        { value: 'recommended', label: 'Më të përshtatshmet', sortFn: () => 0 },
-        { value: 'price_asc', label: 'Çmimi: Nga më i ulëti', sortFn: (a, b) => (a.lots?.[0]?.buy_now || 0) - (b.lots?.[0]?.buy_now || 0) },
-        { value: 'price_desc', label: 'Çmimi: Nga më i larti', sortFn: (a, b) => (b.lots?.[0]?.buy_now || 0) - (a.lots?.[0]?.buy_now || 0) },
-        { value: 'year_desc', label: 'Viti: Më të rijtë', sortFn: (a, b) => b.year - a.year },
-        { value: 'year_asc', label: 'Viti: Më të vjetrit', sortFn: (a, b) => a.year - b.year },
-        { value: 'mileage_asc', label: 'Kilometrazha: Më e ulët', sortFn: (a, b) => (a.lots?.[0]?.odometer?.km || 0) - (b.lots?.[0]?.odometer?.km || 0) },
-        { value: 'mileage_desc', label: 'Kilometrazha: Më e lartë', sortFn: (a, b) => (b.lots?.[0]?.odometer?.km || 0) - (a.lots?.[0]?.odometer?.km || 0) },
-    ], []);
-
-    const sortSelectOptions = useMemo(() =>
-        sortOptionsList.map(opt => ({ value: opt.value, label: opt.label })),
-        [sortOptionsList]
-    );
-
-    const displayedCars = useMemo(() => {
-        if (!cars.length) return cars;
-        const sortOption = sortOptionsList.find(opt => opt.value === currentSort);
-        if (sortOption && currentSort !== 'recommended') {
-            return [...cars].sort(sortOption.sortFn);
-        }
-        return cars;
-    }, [cars, currentSort, sortOptionsList]);
-
-    const handlePageChange = useCallback((page: number) => {
-        goToPage(page);
-        contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, [goToPage]);
-
-    const handleClearFilters = useCallback(() => {
-        const params = new URLSearchParams(searchParams.toString());
-        ['fuel_id', 'transmission_id', 'color_id', 'body_type_id',
-            'filter_year_from', 'filter_year_to', 'filter_price_from', 'filter_price_to']
-            .forEach(key => params.delete(key));
-        window.location.href = `/cars?${params.toString()}`;
-    }, [searchParams]);
-
-    // Loading state
-    if (loading && cars.length === 0) {
-        return (
-            <div className="flex gap-8">
-                <div className="hidden lg:block w-72 shrink-0">
-                    <div className="bg-surface-2 border border-light/20 rounded-xl p-4 space-y-4 sticky top-24">
-                        <div className="h-8 bg-surface-3 rounded w-3/4 animate-pulse" />
-                        <div className="h-32 bg-surface-3 rounded animate-pulse" />
-                        <div className="h-32 bg-surface-3 rounded animate-pulse" />
-                    </div>
-                </div>
-                <div className="flex-1 space-y-8">
-                    <div className="bg-surface-2 border border-light/20 rounded-xl p-4">
-                        <div className="h-10 bg-surface-3 rounded-lg w-40 animate-pulse" />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                        {[...Array(12)].map((_, i) => (
-                            <CarCardSkeleton key={i} />
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
+// Default configuration (used as fallback)
+export const defaultConfig: SiteConfig = {
+    shippingCost: 3500,
+    shippingToPristina: 350,
+    contactEmail: 'blerart@outlook.com',
+    contactPhone: '+383 49 195 414',
+    siteName: 'Vetura Korea Kosova',
+    currency: 'EUR',
+    vehicleTypes: {
+        suv: { shippingCost: 4500, enabled: false },
+        sedan: { shippingCost: 3500, enabled: true },
+        hatchback: { shippingCost: 3500, enabled: true },
+        wagon: { shippingCost: 3500, enabled: true },
+        coupe: { shippingCost: 3500, enabled: true },
+        van: { shippingCost: 3800, enabled: true },
+        pickup: { shippingCost: 4000, enabled: true },
+        default: { shippingCost: 3500, enabled: true }
     }
-
-    if (error) {
-        return (
-            <div className="flex gap-8">
-                <div className="hidden lg:block w-72 shrink-0">
-                    <AdvancedFilterSidebar
-                        isOpen={isFilterOpen}
-                        onClose={() => setIsFilterOpen(false)}
-                    />
-                </div>
-                <div className="flex-1 text-center py-16 bg-surface-2/30 rounded-2xl border border-light/20">
-                    <AlertCircle className="w-12 h-12 text-orange-500 mx-auto mb-4" />
-                    <p className="text-secondary mb-2">{error}</p>
-                    <button
-                        onClick={() => window.location.reload()}
-                        className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
-                    >
-                        Provo përsëri
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div className="flex gap-8 relative">
-            <AdvancedFilterSidebar isOpen={isFilterOpen} onClose={() => setIsFilterOpen(false)} />
-
-            <div className="flex-1 min-w-0 space-y-8" ref={contentRef}>
-                {/* Sort Bar */}
-                <div className="bg-surface-2 border border-light/20 rounded-xl p-4 flex flex-col lg:flex-row gap-4 justify-between items-center">
-                    <div className="w-full lg:w-auto">
-                        <CompactSearch variant="header" />
-                    </div>
-                    <div className="flex items-center gap-3 w-full lg:w-auto">
-                        <span className="text-sm text-muted whitespace-nowrap">
-                            <ArrowUpDown size={14} className="inline mr-1" />
-                            Rendit:
-                        </span>
-                        <div className="w-full lg:w-48">
-                            <CustomSelect
-                                value={currentSort}
-                                onChange={setCurrentSort}
-                                options={sortSelectOptions}
-                                placeholder="Zgjidh renditjen"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Progress Bar */}
-                {hasClientFilters && loading && searchProgress > 0 && searchProgress < 100 && (
-                    <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                            <span className="text-muted">Duke kërkuar...</span>
-                            <span className="text-orange-500">{searchProgress}%</span>
-                        </div>
-                        <div className="w-full bg-gray-100 rounded-full h-1">
-                            <div
-                                className="bg-orange-500 h-1 rounded-full transition-all duration-300"
-                                style={{ width: `${searchProgress}%` }}
-                            />
-                        </div>
-                    </div>
-                )}
-
-                {/* Results count */}
-                {totalMatches > 0 && (
-                    <div className="flex justify-between items-center px-2">
-                        <p className="text-sm text-muted">
-                            Duke shfaqur {displayedCars.length} nga {totalMatches} makina
-                            {hasClientFilters && loading && (
-                                <span className="ml-2 text-xs text-orange-500 animate-pulse">
-                                    (duke kërkuar...)
-                                </span>
-                            )}
-                        </p>
-                        {totalPages > 1 && (
-                            <p className="text-sm text-muted">Faqja {currentPage} nga {totalPages}</p>
-                        )}
-                    </div>
-                )}
-
-                {/* Car grid */}
-                {displayedCars.length > 0 && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                        {displayedCars.map((car: Car) => (
-                            <CarCard key={car.id} car={car} />
-                        ))}
-                    </div>
-                )}
-
-                {/* Loading More */}
-                {loadingMore && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                        {[...Array(6)].map((_, i) => (
-                            <CarCardSkeleton key={i} />
-                        ))}
-                    </div>
-                )}
-
-                {/* Empty State */}
-                {!loading && !loadingMore && displayedCars.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-16 bg-surface-2/30 rounded-2xl border border-light/20">
-                        <Search className="w-12 h-12 text-muted mb-4" />
-                        <p className="text-secondary mb-2">Nuk u gjet asnjë makinë</p>
-                        <p className="text-sm text-muted mb-6 text-center max-w-md">
-                            {hasClientFilters
-                                ? 'Kemi kontrolluar të gjitha faqet por nuk gjetëm makina.'
-                                : 'Provo të ndryshosh kriteret e kërkimit.'}
-                        </p>
-                        {hasClientFilters && (
-                            <button
-                                onClick={handleClearFilters}
-                                className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
-                            >
-                                Pastro filtrat
-                            </button>
-                        )}
-                    </div>
-                )}
-
-                {/* Pagination */}
-                {!loading && totalPages > 1 && (
-                    <Pagination
-                        currentPage={currentPage}
-                        onNext={() => handlePageChange(currentPage + 1)}
-                        onPrev={() => handlePageChange(currentPage - 1)}
-                        hasNext={currentPage < totalPages}
-                        hasPrev={currentPage > 1}
-                        loading={loadingMore}
-                    />
-                )}
-            </div>
-
-            <FilterToggle onClick={() => setIsFilterOpen(true)} />
-        </div>
-    );
-}
-=========================================
-FILE: components/ui/FilterToggle.tsx
-=========================================
-// components/ui/FilterToggle.tsx
-'use client';
-
-import { Filter } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
-
-interface FilterToggleProps {
-    onClick: () => void;
-}
-
-export default function FilterToggle({ onClick }: FilterToggleProps) {
-    const searchParams = useSearchParams();
-
-    const activeFilterCount = [
-        searchParams.get('fuel_id'),
-        searchParams.get('transmission_id'),
-        searchParams.get('color_id'),
-        searchParams.get('body_type_id'),
-        searchParams.get('filter_year_from'),
-        searchParams.get('filter_year_to'),
-        searchParams.get('filter_price_from'),
-        searchParams.get('filter_price_to'),
-    ].filter(Boolean).length;
-
-    return (
-        <button
-            onClick={onClick}
-            className="lg:hidden fixed bottom-6 right-6 z-40 bg-orange-500 text-white p-4 rounded-full shadow-lg hover:bg-orange-600 transition-colors"
-            aria-label="Filtro makinat"
-        >
-            <Filter size={24} />
-            {activeFilterCount > 0 && (
-                <span className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                    {activeFilterCount}
-                </span>
-            )}
-        </button>
-    );
-}
-=========================================
-FILE: components/filters/AdvancedFilterSidebar.tsx
-=========================================
-// components/filters/AdvancedFilterSidebar.tsx
-'use client';
-
-import { useState, useMemo } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import {
-    Fuel,
-    Settings,
-    X,
-    ChevronDown,
-    ChevronUp,
-    Palette,
-    Car as CarIcon,
-    Calendar,
-    DollarSign,
-    Info,
-    Filter
-} from 'lucide-react';
-
-interface AdvancedFilterSidebarProps {
-    isOpen: boolean;
-    onClose: () => void;
-}
-
-export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilterSidebarProps) {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const [expandedSections, setExpandedSections] = useState({
-        fuel: true,
-        transmission: true,
-        color: false,
-        bodyType: false,
-        year: false,
-        price: false
-    });
-
-    // Get current filter values from URL
-    const selectedFilters = useMemo(() => ({
-        fuel: searchParams.get('fuel_id') || '',
-        transmission: searchParams.get('transmission_id') || '',
-        color: searchParams.get('color_id') || '',
-        bodyType: searchParams.get('body_type_id') || '',
-        yearFrom: searchParams.get('filter_year_from') || '',
-        yearTo: searchParams.get('filter_year_to') || '',
-        priceFrom: searchParams.get('filter_price_from') || '',
-        priceTo: searchParams.get('filter_price_to') || '',
-    }), [searchParams]);
-
-    const activeFilterCount = Object.values(selectedFilters).filter(Boolean).length;
-
-    // Check if basic filters are selected (API-supported filters)
-    const hasBasicFilters = !!(
-        searchParams.get('manufacturer_id') ||
-        searchParams.get('model_id') ||
-        searchParams.get('from_year') ||
-        searchParams.get('to_year') ||
-        searchParams.get('buy_now_price_from') ||
-        searchParams.get('buy_now_price_to')
-    );
-
-    // Pre-defined options
-    const fuelOptions = [
-        { id: '1', name: 'diesel', label: 'Naftë' },
-        { id: '2', name: 'electric', label: 'Elektrik' },
-        { id: '3', name: 'hybrid', label: 'Hibrid' },
-        { id: '4', name: 'gasoline', label: 'Benzinë' },
-    ];
-
-    const transmissionOptions = [
-        { id: '1', name: 'automatic', label: 'Automatik' },
-        { id: '2', name: 'manual', label: 'Manuel' },
-    ];
-
-    const colorOptions = [
-        { id: '1', name: 'silver', label: 'Argjend' },
-        { id: '2', name: 'purple', label: 'Vjollcë' },
-        { id: '3', name: 'orange', label: 'Portokalli' },
-        { id: '4', name: 'green', label: 'Gjelbër' },
-        { id: '5', name: 'red', label: 'Kuq' },
-        { id: '6', name: 'gold', label: 'Arë' },
-        { id: '8', name: 'brown', label: 'Kafe' },
-        { id: '9', name: 'grey', label: 'Gri' },
-        { id: '11', name: 'blue', label: 'Kaltër' },
-        { id: '13', name: 'white', label: 'Bardhë' },
-        { id: '15', name: 'black', label: 'Zi' },
-        { id: '16', name: 'yellow', label: 'Verdhë' },
-    ];
-
-    const bodyTypeOptions = [
-        { id: '1', name: 'sedan', label: 'Sedan' },
-        { id: '2', name: 'wagon', label: 'Kombi' },
-        { id: '3', name: 'coupe', label: 'Kupe' },
-        { id: '5', name: 'suv', label: 'SUV' },
-        { id: '7', name: 'van', label: 'Furgon' },
-        { id: '11', name: 'hatchback', label: 'Hatchback' },
-        { id: '27', name: 'sport_car', label: 'Makinë Sportive' },
-    ];
-
-    // Generate year options (last 30 years)
-    const currentYear = new Date().getFullYear();
-    const yearOptions = Array.from({ length: 30 }, (_, i) => currentYear - i);
-
-    const updateFilter = (key: string, value: string) => {
-        const params = new URLSearchParams(searchParams.toString());
-
-        if (value) {
-            params.set(key, value);
-        } else {
-            params.delete(key);
-        }
-
-        // Reset to page 1 when filters change
-        params.set('page', '1');
-
-        router.push(`/cars?${params.toString()}`);
-        onClose();
-    };
-
-    const clearFilters = () => {
-        const params = new URLSearchParams(searchParams.toString());
-        ['fuel_id', 'transmission_id', 'color_id', 'body_type_id', 'filter_year_from', 'filter_year_to', 'filter_price_from', 'filter_price_to'].forEach(key => {
-            params.delete(key);
-        });
-        params.set('page', '1');
-        router.push(`/cars?${params.toString()}`);
-        onClose();
-    };
-
-    const toggleSection = (section: keyof typeof expandedSections) => {
-        setExpandedSections(prev => ({
-            ...prev,
-            [section]: !prev[section]
-        }));
-    };
-
-    // For desktop, always show the sidebar content
-    // For mobile, only show when isOpen is true
-    const showSidebar = typeof window !== 'undefined' && window.innerWidth >= 1024 ? true : isOpen;
-
-    if (!showSidebar) return null;
-
-    return (
-        <>
-            {/* Mobile Overlay - only show on mobile when open */}
-            {isOpen && (
-                <div
-                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 lg:hidden"
-                    onClick={onClose}
-                />
-            )}
-
-            {/* Sidebar */}
-            <div className={`
-                fixed top-0 bottom-0 left-0 w-full sm:w-80 bg-surface border-r border-light/20 
-                overflow-y-auto z-50 transition-transform duration-300 shadow-2xl
-                lg:translate-x-0 lg:sticky lg:top-24 lg:h-[calc(100vh-96px)] lg:z-10
-                ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-            `}>
-                {/* Header */}
-                <div className="bg-[#0A1929]/10 bg-clip-padding backdrop-filter backdrop-blur-sm rounded sticky top-0 bg-surface border-b border-light/20 p-4 flex items-center justify-between z-10">
-                    <div className="flex items-center gap-2">
-                        <Filter size={18} className="text-orange-500" />
-                        <h2 className="font-semibold text-primary">Filtro</h2>
-                        {activeFilterCount > 0 && (
-                            <span className="ml-2 px-2 py-0.5 text-xs bg-orange-500 text-white rounded-full">
-                                {activeFilterCount}
-                            </span>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {activeFilterCount > 0 && (
-                            <button
-                                onClick={clearFilters}
-                                className="text-xs text-orange-500 hover:text-orange-600 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-surface-2"
-                            >
-                                <X size={14} />
-                                <span>Pastro</span>
-                            </button>
-                        )}
-                        <button
-                            onClick={onClose}
-                            className="lg:hidden p-2 hover:bg-surface-2 rounded-lg"
-                        >
-                            <X size={18} />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-4 space-y-3">
-                    {/* Basic Filters Notice */}
-                    {!hasBasicFilters && (
-                        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-2">
-                            <div className="flex items-start gap-2">
-                                <Info size={16} className="text-orange-500 shrink-0 mt-0.5" />
-                                <p className="text-xs text-orange-700">
-                                    Zgjidh fillimisht prodhuesin, modelin ose vitin për të aktivizuar filtrat e tjerë.
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Fuel Type */}
-                    <div className="border border-light/20 rounded-lg overflow-hidden">
-                        <button
-                            onClick={() => toggleSection('fuel')}
-                            className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
-                        >
-                            <div className="flex items-center gap-2">
-                                <Fuel size={16} className="text-orange-500" />
-                                <span className="font-medium text-sm text-primary">Karburanti</span>
-                            </div>
-                            {expandedSections.fuel ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                        </button>
-
-                        {expandedSections.fuel && (
-                            <div className="p-3 space-y-1 bg-surface">
-                                <button
-                                    onClick={() => updateFilter('fuel_id', '')}
-                                    disabled={!hasBasicFilters}
-                                    className={`
-                                        w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
-                                        ${!selectedFilters.fuel ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
-                                        ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                                    `}
-                                >
-                                    <span className={!selectedFilters.fuel ? 'font-medium' : ''}>Të gjitha</span>
-                                    {!selectedFilters.fuel && (
-                                        <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
-                                    )}
-                                </button>
-                                {fuelOptions.map(fuel => (
-                                    <button
-                                        key={fuel.id}
-                                        onClick={() => updateFilter('fuel_id', fuel.id)}
-                                        disabled={!hasBasicFilters}
-                                        className={`
-                                            w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
-                                            ${selectedFilters.fuel === fuel.id ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
-                                            ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                                        `}
-                                    >
-                                        <span className={selectedFilters.fuel === fuel.id ? 'font-medium' : ''}>{fuel.label}</span>
-                                        {selectedFilters.fuel === fuel.id && (
-                                            <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
-                                        )}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Transmission */}
-                    <div className="border border-light/20 rounded-lg overflow-hidden">
-                        <button
-                            onClick={() => toggleSection('transmission')}
-                            className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
-                        >
-                            <div className="flex items-center gap-2">
-                                <Settings size={16} className="text-orange-500" />
-                                <span className="font-medium text-sm text-primary">Transmisioni</span>
-                            </div>
-                            {expandedSections.transmission ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                        </button>
-
-                        {expandedSections.transmission && (
-                            <div className="p-3 space-y-1 bg-surface">
-                                <button
-                                    onClick={() => updateFilter('transmission_id', '')}
-                                    disabled={!hasBasicFilters}
-                                    className={`
-                                        w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
-                                        ${!selectedFilters.transmission ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
-                                        ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                                    `}
-                                >
-                                    <span className={!selectedFilters.transmission ? 'font-medium' : ''}>Të gjitha</span>
-                                    {!selectedFilters.transmission && (
-                                        <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
-                                    )}
-                                </button>
-                                {transmissionOptions.map(trans => (
-                                    <button
-                                        key={trans.id}
-                                        onClick={() => updateFilter('transmission_id', trans.id)}
-                                        disabled={!hasBasicFilters}
-                                        className={`
-                                            w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
-                                            ${selectedFilters.transmission === trans.id ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
-                                            ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                                        `}
-                                    >
-                                        <span className={selectedFilters.transmission === trans.id ? 'font-medium' : ''}>{trans.label}</span>
-                                        {selectedFilters.transmission === trans.id && (
-                                            <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
-                                        )}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Color */}
-                    <div className="border border-light/20 rounded-lg overflow-hidden">
-                        <button
-                            onClick={() => toggleSection('color')}
-                            className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
-                        >
-                            <div className="flex items-center gap-2">
-                                <Palette size={16} className="text-orange-500" />
-                                <span className="font-medium text-sm text-primary">Ngjyra</span>
-                            </div>
-                            {expandedSections.color ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                        </button>
-
-                        {expandedSections.color && (
-                            <div className="p-3 space-y-1 max-h-48 overflow-y-auto bg-surface">
-                                <button
-                                    onClick={() => updateFilter('color_id', '')}
-                                    disabled={!hasBasicFilters}
-                                    className={`
-                                        w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
-                                        ${!selectedFilters.color ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
-                                        ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                                    `}
-                                >
-                                    <span className={!selectedFilters.color ? 'font-medium' : ''}>Të gjitha</span>
-                                    {!selectedFilters.color && (
-                                        <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
-                                    )}
-                                </button>
-                                {colorOptions.map(color => (
-                                    <button
-                                        key={color.id}
-                                        onClick={() => updateFilter('color_id', color.id)}
-                                        disabled={!hasBasicFilters}
-                                        className={`
-                                            w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
-                                            ${selectedFilters.color === color.id ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
-                                            ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                                        `}
-                                    >
-                                        <span className={selectedFilters.color === color.id ? 'font-medium' : ''}>{color.label}</span>
-                                        {selectedFilters.color === color.id && (
-                                            <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
-                                        )}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Body Type */}
-                    <div className="border border-light/20 rounded-lg overflow-hidden">
-                        <button
-                            onClick={() => toggleSection('bodyType')}
-                            className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
-                        >
-                            <div className="flex items-center gap-2">
-                                <CarIcon size={16} className="text-orange-500" />
-                                <span className="font-medium text-sm text-primary">Tipi</span>
-                            </div>
-                            {expandedSections.bodyType ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                        </button>
-
-                        {expandedSections.bodyType && (
-                            <div className="p-3 space-y-1 bg-surface">
-                                <button
-                                    onClick={() => updateFilter('body_type_id', '')}
-                                    disabled={!hasBasicFilters}
-                                    className={`
-                                        w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
-                                        ${!selectedFilters.bodyType ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
-                                        ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                                    `}
-                                >
-                                    <span className={!selectedFilters.bodyType ? 'font-medium' : ''}>Të gjitha</span>
-                                    {!selectedFilters.bodyType && (
-                                        <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
-                                    )}
-                                </button>
-                                {bodyTypeOptions.map(body => (
-                                    <button
-                                        key={body.id}
-                                        onClick={() => updateFilter('body_type_id', body.id)}
-                                        disabled={!hasBasicFilters}
-                                        className={`
-                                            w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-all
-                                            ${selectedFilters.bodyType === body.id ? 'bg-orange-500 text-white' : 'hover:bg-surface-2 text-secondary'}
-                                            ${!hasBasicFilters ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                                        `}
-                                    >
-                                        <span className={selectedFilters.bodyType === body.id ? 'font-medium' : ''}>{body.label}</span>
-                                        {selectedFilters.bodyType === body.id && (
-                                            <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">Aktiv</span>
-                                        )}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Year Range */}
-                    <div className="border border-light/20 rounded-lg overflow-hidden">
-                        <button
-                            onClick={() => toggleSection('year')}
-                            className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
-                        >
-                            <div className="flex items-center gap-2">
-                                <Calendar size={16} className="text-orange-500" />
-                                <span className="font-medium text-sm text-primary">Viti</span>
-                            </div>
-                            {expandedSections.year ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                        </button>
-
-                        {expandedSections.year && (
-                            <div className="p-3 space-y-3 bg-surface">
-                                <div className="grid grid-cols-2 gap-2">
-                                    <select
-                                        value={selectedFilters.yearFrom}
-                                        onChange={(e) => updateFilter('filter_year_from', e.target.value)}
-                                        className="select text-sm w-full"
-                                    >
-                                        <option value="">Nga viti</option>
-                                        {yearOptions.map(year => (
-                                            <option key={year} value={year}>
-                                                {year}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <select
-                                        value={selectedFilters.yearTo}
-                                        onChange={(e) => updateFilter('filter_year_to', e.target.value)}
-                                        className="select text-sm w-full"
-                                    >
-                                        <option value="">Deri viti</option>
-                                        {yearOptions.map(year => (
-                                            <option key={year} value={year}>
-                                                {year}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Price Range */}
-                    <div className="border border-light/20 rounded-lg overflow-hidden">
-                        <button
-                            onClick={() => toggleSection('price')}
-                            className="w-full flex items-center justify-between p-3 bg-surface-2 hover:bg-surface-3 transition-colors"
-                        >
-                            <div className="flex items-center gap-2">
-                                <DollarSign size={16} className="text-orange-500" />
-                                <span className="font-medium text-sm text-primary">Çmimi</span>
-                            </div>
-                            {expandedSections.price ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                        </button>
-
-                        {expandedSections.price && (
-                            <div className="p-3 space-y-3 bg-surface">
-                                <div className="grid grid-cols-2 gap-2">
-                                    <input
-                                        type="number"
-                                        placeholder="Min €"
-                                        value={selectedFilters.priceFrom}
-                                        onChange={(e) => updateFilter('filter_price_from', e.target.value)}
-                                        className="input text-sm w-full"
-                                        min="0"
-                                        step="1000"
-                                    />
-                                    <input
-                                        type="number"
-                                        placeholder="Max €"
-                                        value={selectedFilters.priceTo}
-                                        onChange={(e) => updateFilter('filter_price_to', e.target.value)}
-                                        className="input text-sm w-full"
-                                        min="0"
-                                        step="1000"
-                                    />
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Active Filters Summary */}
-                    {activeFilterCount > 0 && (
-                        <div className="bg-orange-5 border border-orange-20 rounded-lg p-3 mt-4">
-                            <p className="text-xs text-orange-500 font-medium mb-2">
-                                Filtrat aktivë:
-                            </p>
-                            <div className="flex flex-wrap gap-1">
-                                {selectedFilters.fuel && (
-                                    <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
-                                        Karburanti: {fuelOptions.find(f => f.id === selectedFilters.fuel)?.label}
-                                    </span>
-                                )}
-                                {selectedFilters.transmission && (
-                                    <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
-                                        Transmisioni: {transmissionOptions.find(t => t.id === selectedFilters.transmission)?.label}
-                                    </span>
-                                )}
-                                {selectedFilters.color && (
-                                    <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
-                                        Ngjyra: {colorOptions.find(c => c.id === selectedFilters.color)?.label}
-                                    </span>
-                                )}
-                                {selectedFilters.bodyType && (
-                                    <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
-                                        Tipi: {bodyTypeOptions.find(b => b.id === selectedFilters.bodyType)?.label}
-                                    </span>
-                                )}
-                                {selectedFilters.yearFrom && (
-                                    <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
-                                        Nga viti: {selectedFilters.yearFrom}
-                                    </span>
-                                )}
-                                {selectedFilters.yearTo && (
-                                    <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
-                                        Deri viti: {selectedFilters.yearTo}
-                                    </span>
-                                )}
-                                {selectedFilters.priceFrom && (
-                                    <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
-                                        Min: €{parseInt(selectedFilters.priceFrom).toLocaleString()}
-                                    </span>
-                                )}
-                                {selectedFilters.priceTo && (
-                                    <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded">
-                                        Max: €{parseInt(selectedFilters.priceTo).toLocaleString()}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </>
-    );
-}
-=========================================
-FILE: app/cars/page.tsx
-=========================================
-// app/cars/page.tsx
-import { Suspense } from 'react';
-import CarsContentWrapper from './CarsContentWrapper';
-import { Metadata } from 'next';
-
-export const metadata: Metadata = {
-    title: 'Makina për Shitje | Vetura Korea Kosovë',
-    description: 'Shfleto makinat më të mira nga Korea.',
 };
 
-// Loading skeleton for cars page
-function CarsLoadingSkeleton() {
+// Validation function
+export function validateConfig(config: Partial<SiteConfig>): { valid: boolean; errors: string[] } {
+    const errors: string[] = [];
+
+    if (config.shippingCost !== undefined) {
+        if (config.shippingCost < 0) errors.push('Shipping cost cannot be negative');
+        if (config.shippingCost > 10000) errors.push('Shipping cost seems too high (max €10,000)');
+    }
+
+    if (config.shippingToPristina !== undefined) {
+        if (config.shippingToPristina < 0) errors.push('Shipping to Pristina cannot be negative');
+        if (config.shippingToPristina > 1000) errors.push('Shipping to Pristina too high (max €1,000)');
+    }
+
+    if (config.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(config.contactEmail)) {
+        errors.push('Invalid email format');
+    }
+
+    if (config.contactPhone && !/^[\+\d\s\-\(\)]{8,20}$/.test(config.contactPhone.replace(/\s/g, ''))) {
+        errors.push('Invalid phone format');
+    }
+
+    return { valid: errors.length === 0, errors };
+}
+
+================================================
+FILE: lib/ConfigContext.tsx
+================================================
+
+'use client';
+
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { SiteConfig, defaultConfig, PriceDetails, validateConfig } from './config';
+
+interface ConfigContextType {
+    config: SiteConfig;
+    updateConfig: (newConfig: SiteConfig) => Promise<void>;
+    calculateFinalPrice: (basePrice: number, vehicleType?: string) => PriceDetails;
+    formatPrice: (price: number) => string;
+    validateConfig: (config: Partial<SiteConfig>) => { valid: boolean; errors: string[] };
+    getVehicleTypeLabel: (type: string) => string;
+    loading: boolean;
+    error: string | null;
+}
+
+const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
+
+// Vehicle type labels in Albanian
+const vehicleTypeLabels: Record<string, string> = {
+    sedan: 'Sedan',
+    suv: 'SUV',
+    hatchback: 'Hatchback',
+    wagon: 'Kombi',
+    coupe: 'Kupe',
+    convertible: 'Kabriolet',
+    van: 'Furgon',
+    pickup: 'Pickup',
+    default: 'Tjetër'
+};
+
+export function ConfigProvider({ children }: { children: React.ReactNode }) {
+    const [config, setConfig] = useState<SiteConfig>(defaultConfig);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    // Load config from server on mount
+    useEffect(() => {
+        const fetchConfig = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch('/api/config');
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch configuration');
+                }
+
+                const data = await response.json();
+                setConfig(data);
+                setError(null);
+            } catch (err) {
+                console.error('Error loading config:', err);
+                setError('Failed to load configuration');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchConfig();
+
+        const interval = setInterval(fetchConfig, 5 * 60 * 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const updateConfig = async (newConfig: SiteConfig) => {
+        try {
+            const { valid, errors } = validateConfig(newConfig);
+            if (!valid) {
+                throw new Error(`Invalid config: ${errors.join(', ')}`);
+            }
+
+            const response = await fetch('/api/config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(newConfig),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to save config');
+            }
+
+            setConfig(newConfig);
+            window.dispatchEvent(new Event('configUpdated'));
+
+        } catch (error) {
+            console.error('Error updating config:', error);
+            throw error;
+        }
+    };
+
+    const calculateFinalPrice = useCallback((basePrice: number, vehicleType?: string): PriceDetails => {
+        const validBasePrice = Math.max(0, basePrice || 0);
+
+        let shipping = config.shippingCost;
+        let usedType = 'default';
+
+        // Check vehicle type config
+        if (vehicleType && config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes]) {
+            const typeConfig = config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes];
+            if (typeConfig?.enabled) {
+                shipping = typeConfig.shippingCost;
+                usedType = vehicleType;
+            }
+        }
+
+        // Simple calculation: base price + shipping costs
+        const finalPrice = validBasePrice + shipping + config.shippingToPristina;
+
+        return {
+            basePrice: validBasePrice,
+            shippingCost: shipping,
+            shippingToPristina: config.shippingToPristina,
+            finalPrice: Math.round(finalPrice),
+            vehicleTypeUsed: usedType
+        };
+    }, [config]);
+
+    const formatPrice = useCallback((price: number): string => {
+        return new Intl.NumberFormat('sq-AL', {
+            style: 'currency',
+            currency: config.currency,
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(price || 0);
+    }, [config.currency]);
+
+    const getVehicleTypeLabel = (type: string): string => {
+        return vehicleTypeLabels[type] || type;
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"></div>
+            </div>
+        );
+    }
+
     return (
-        <div className="container-swiss py-6 md:py-8">
-            {/* Header Skeleton */}
-            <div className="mb-8">
-                <div className="h-8 bg-surface-2 rounded w-64 mb-2 animate-pulse"></div>
-                <div className="h-4 bg-surface-2 rounded w-96 animate-pulse"></div>
-            </div>
-
-            <div className="flex gap-8">
-                {/* Sidebar Skeleton - hidden on mobile */}
-                <div className="hidden lg:block w-[300px] shrink-0">
-                    <div className="bg-surface-2 border border-light/20 rounded-xl p-4 space-y-4 sticky top-24">
-                        <div className="h-8 bg-surface-3 rounded w-3/4 animate-pulse"></div>
-                        <div className="h-32 bg-surface-3 rounded animate-pulse"></div>
-                        <div className="h-32 bg-surface-3 rounded animate-pulse"></div>
-                        <div className="h-32 bg-surface-3 rounded animate-pulse"></div>
-                    </div>
-                </div>
-
-                {/* Main Content Skeleton */}
-                <div className="flex-1 space-y-8">
-                    {/* Sort Bar Skeleton */}
-                    <div className="bg-surface-2 border border-light/20 rounded-xl p-3 md:p-4">
-                        <div className="h-10 bg-surface-3 rounded-lg w-40 animate-pulse"></div>
-                    </div>
-
-                    {/* Cars Grid Skeleton */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                        {[...Array(12)].map((_, i) => (
-                            <div key={i} className="bg-surface rounded-xl border border-medium overflow-hidden">
-                                <div className="h-48 bg-surface-2 animate-pulse"></div>
-                                <div className="p-4 space-y-3">
-                                    <div className="h-5 bg-surface-2 rounded w-3/4 animate-pulse"></div>
-                                    <div className="flex justify-between">
-                                        <div className="h-6 bg-surface-2 rounded w-24 animate-pulse"></div>
-                                        <div className="h-5 bg-surface-2 rounded w-12 animate-pulse"></div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div className="h-4 bg-surface-2 rounded animate-pulse"></div>
-                                        <div className="h-4 bg-surface-2 rounded animate-pulse"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        </div>
+        <ConfigContext.Provider value={{
+            config,
+            updateConfig,
+            calculateFinalPrice,
+            formatPrice,
+            validateConfig,
+            getVehicleTypeLabel,
+            loading,
+            error
+        }}>
+            {children}
+        </ConfigContext.Provider>
     );
 }
 
-export default function CarsPage() {
-    return (
-        <div className="min-h-screen bg-primary">
-            <div className="container-swiss py-6 md:py-8">
-                {/* Page Header */}
-                <div className="mb-6">
-                    <h1 className="text-2xl md:text-3xl font-bold text-primary mb-2">
-                        Makina për Shitje
-                    </h1>
-                    <p className="text-secondary">
-                        Shfleto makinat më të mira nga Korea
-                    </p>
-                </div>
-
-                {/* Results with Suspense */}
-                <Suspense fallback={<CarsLoadingSkeleton />}>
-                    <CarsContentWrapper />
-                </Suspense>
-            </div>
-        </div>
-    );
+export function useConfig() {
+    const context = useContext(ConfigContext);
+    if (context === undefined) {
+        throw new Error('useConfig must be used within a ConfigProvider');
+    }
+    return context;
 }
-=========================================
-FILE: components/ui/CompactSearch.tsx
-=========================================
-// components/ui/CompactSearch.tsx
+
+================================================
+FILE: lib/configServer.ts
+================================================
+
+// lib/configServer.ts
+import { getConfigFromDb, saveConfigToDb } from './db';
+import { SiteConfig, defaultConfig, validateConfig } from './config';
+
+export async function getConfig(): Promise<SiteConfig> {
+    try {
+        return await getConfigFromDb();
+    } catch (error) {
+        console.error('Error reading config from DB:', error);
+        return defaultConfig;
+    }
+}
+
+export async function saveConfig(config: SiteConfig): Promise<void> {
+    try {
+        const { valid, errors } = validateConfig(config);
+        if (!valid) {
+            throw new Error(`Invalid config: ${errors.join(', ')}`);
+        }
+        await saveConfigToDb(config);
+    } catch (error) {
+        console.error('Error saving config:', error);
+        throw error;
+    }
+}
+
+export { validateConfig } from './config';
+
+================================================
+FILE: lib/db.ts
+================================================
+
+import { sql } from '@vercel/postgres';
+import { SiteConfig, defaultConfig } from './config';
+import bcrypt from 'bcryptjs';
+
+// ============ CONFIG FUNCTIONS ============
+
+export interface DbConfig {
+    shipping_cost: number;
+    shipping_to_pristina: number;
+    contact_email: string;
+    contact_phone: string;
+    site_name: string;
+    currency: string;
+    vehicle_types: any;
+}
+
+function dbToSiteConfig(db: DbConfig): SiteConfig {
+    return {
+        shippingCost: db.shipping_cost,
+        shippingToPristina: db.shipping_to_pristina,
+        contactEmail: db.contact_email,
+        contactPhone: db.contact_phone,
+        siteName: db.site_name,
+        currency: db.currency as 'EUR' | 'USD' | 'ALL',
+        vehicleTypes: db.vehicle_types
+    };
+}
+
+// Get config from database
+export async function getConfigFromDb(): Promise<SiteConfig> {
+    try {
+        const { rows } = await sql<DbConfig>`
+            SELECT * FROM site_config WHERE id = 1 LIMIT 1
+        `;
+
+        if (rows.length === 0) {
+            // Insert default config
+            await sql`
+                INSERT INTO site_config (
+                    shipping_cost, shipping_to_pristina, contact_email, 
+                    contact_phone, site_name, currency, vehicle_types
+                ) VALUES (
+                    ${defaultConfig.shippingCost},
+                    ${defaultConfig.shippingToPristina},
+                    ${defaultConfig.contactEmail},
+                    ${defaultConfig.contactPhone},
+                    ${defaultConfig.siteName},
+                    ${defaultConfig.currency},
+                    ${JSON.stringify(defaultConfig.vehicleTypes)}::jsonb
+                )
+            `;
+            return defaultConfig;
+        }
+
+        return dbToSiteConfig(rows[0]);
+    } catch (error) {
+        console.error('Error getting config from DB:', error);
+        return defaultConfig;
+    }
+}
+
+// Save config to database
+export async function saveConfigToDb(config: SiteConfig): Promise<void> {
+    try {
+        await sql`
+            UPDATE site_config SET
+                shipping_cost = ${config.shippingCost},
+                shipping_to_pristina = ${config.shippingToPristina},
+                contact_email = ${config.contactEmail},
+                contact_phone = ${config.contactPhone},
+                site_name = ${config.siteName},
+                currency = ${config.currency},
+                vehicle_types = ${JSON.stringify(config.vehicleTypes)}::jsonb,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = 1
+        `;
+        console.log('✅ Config saved to database');
+    } catch (error) {
+        console.error('Error saving config to DB:', error);
+        throw error;
+    }
+}
+
+// ============ ADMIN FUNCTIONS ============
+
+export async function validateAdmin(password: string): Promise<boolean> {
+    try {
+        const { rows } = await sql<{ password_hash: string }>`
+            SELECT password_hash FROM admin WHERE id = 1
+        `;
+
+        if (rows.length === 0) return false;
+
+        return bcrypt.compare(password, rows[0].password_hash);
+    } catch (error) {
+        console.error('Admin validation error:', error);
+        return false;
+    }
+}
+
+export async function updateAdminPassword(newPassword: string): Promise<void> {
+    const hash = await bcrypt.hash(newPassword, 10);
+    await sql`
+        UPDATE admin SET password_hash = ${hash}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = 1
+    `;
+}
+
+================================================
+FILE: app/api/config/route.ts
+================================================
+
+import { NextResponse } from 'next/server';
+import { getConfig, saveConfig } from '@/lib/configServer';
+import { validateConfig } from '@/lib/config';
+import { headers } from 'next/headers';
+import { rateLimit } from '@/lib/rateLimit';
+
+const publicLimiter = rateLimit({ interval: 60 * 1000, max: 60 });
+const adminLimiter = rateLimit({ interval: 60 * 1000, max: 10 });
+
+// GET /api/config - Public endpoint (no auth needed)
+export async function GET() {
+    try {
+        const headersList = await headers();
+        const forwardedFor = headersList.get('x-forwarded-for');
+        const ip = forwardedFor ? forwardedFor.split(',')[0] : 'unknown';
+
+        const { success } = await publicLimiter.check(ip);
+
+        if (!success) {
+            return NextResponse.json(
+                { error: 'Too many requests' },
+                { status: 429 }
+            );
+        }
+
+        const config = await getConfig();
+        return NextResponse.json(config);
+    } catch (error) {
+        console.error('Error fetching config:', error);
+        return NextResponse.json(
+            { error: 'Failed to fetch configuration' },
+            { status: 500 }
+        );
+    }
+}
+
+// POST /api/config - Admin only
+export async function POST(request: Request) {
+    try {
+        const headersList = await headers();
+
+        // Check for admin session cookie
+        const cookie = headersList.get('cookie') || '';
+        const hasAdminSession = cookie.includes('admin_session=');
+
+        if (!hasAdminSession) {
+            console.log('❌ Unauthorized: No admin session cookie');
+            return NextResponse.json(
+                { error: 'Unauthorized' },
+                { status: 401 }
+            );
+        }
+
+        // Rate limiting for admin actions
+        const forwardedFor = headersList.get('x-forwarded-for');
+        const ip = forwardedFor ? forwardedFor.split(',')[0] : 'unknown';
+        const { success } = await adminLimiter.check(ip);
+
+        if (!success) {
+            return NextResponse.json(
+                { error: 'Too many requests' },
+                { status: 429 }
+            );
+        }
+
+        const body = await request.json();
+
+        // Validate the config
+        const { valid, errors } = validateConfig(body);
+        if (!valid) {
+            return NextResponse.json(
+                { error: 'Invalid configuration', details: errors },
+                { status: 400 }
+            );
+        }
+
+        // Save to database
+        await saveConfig(body);
+
+        return NextResponse.json({
+            success: true,
+            message: 'Configuration updated successfully'
+        });
+    } catch (error) {
+        console.error('Error saving config:', error);
+        return NextResponse.json(
+            { error: 'Failed to save configuration' },
+            { status: 500 }
+        );
+    }
+}
+
+================================================
+FILE: app/admin/page.tsx
+================================================
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import SearchParamsWrapper from '@/components/SearchParamsWrapper';
 import {
-    Search,
+    Save,
+    Settings,
+    Truck,
+    LogIn,
+    Lock,
+    Shield,
+    AlertCircle,
+    LogOut,
+    Mail,
+    Phone,
+    Building2,
+    ChevronDown,
+    ChevronUp,
     Car,
-    Calendar,
-    DollarSign,
-    X
+    ToggleLeft,
+    ToggleRight,
+    Euro
 } from 'lucide-react';
-import { fetchFilterData, fetchModels } from '@/lib/api';
-import { getStaticManufacturers } from '@/lib/translations'; // Changed import
-import CustomSelect from './CustomSelect';
-import type { Option } from './CustomSelect'; // Import Option type
+import { useConfig } from '@/lib/ConfigContext';
 
-interface CompactSearchProps {
-    variant?: 'header' | 'hero';
-    onSearch?: () => void;
-}
+// Maximum number of login attempts
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minuta
 
-interface SearchFilters {
-    manufacturerId: string;
-    modelId: string;
-    fromYear: string;
-    toYear: string;
-    priceTo: string;
-}
+// Vehicle types
+const VEHICLE_TYPES = [
+    { id: 'suv', label: 'SUV', description: 'Automjete të mëdha, kamioneta' },
+    { id: 'sedan', label: 'Sedan', description: 'Makina familjare' },
+    { id: 'hatchback', label: 'Hatchback', description: 'Makina kompakte' },
+    { id: 'wagon', label: 'Kombi', description: 'Makina me hapësirë' },
+    { id: 'coupe', label: 'Kupe', description: 'Makina sportive' },
+    { id: 'van', label: 'Furgon', description: 'Automjete komerciale' },
+    { id: 'pickup', label: 'Pickup', description: 'Kamioneta' },
+    { id: 'default', label: 'Default', description: 'Vlerat standarde për të gjitha të tjerat' }
+];
 
-// Inner component that uses searchParams
-function CompactSearchContent({ searchParams, variant, onSearch }: any) {
+export default function AdminPage() {
     const router = useRouter();
-    const [loading, setLoading] = useState({
-        manufacturers: false,
-        models: false
-    });
-    const [filterData, setFilterData] = useState({
-        manufacturers: [] as Option[], // Use Option type from CustomSelect
-        models: [] as Array<{ id: number; name: string; manufacturer_id: number }>,
-        years: [] as number[]
-    });
+    const { config, updateConfig, validateConfig } = useConfig();
 
-    const [filters, setFilters] = useState<SearchFilters>({
-        manufacturerId: searchParams.get('manufacturer_id') || '',
-        modelId: searchParams.get('model_id') || '',
-        fromYear: searchParams.get('from_year') || '',
-        toYear: searchParams.get('to_year') || '',
-        priceTo: searchParams.get('buy_now_price_to') || '',
-    });
+    // Local state for form
+    const [localConfig, setLocalConfig] = useState(config);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [password, setPassword] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveMessage, setSaveMessage] = useState({ text: '', type: '' });
+    const [expandedVehicleType, setExpandedVehicleType] = useState<string | null>(null);
 
-    // Load manufacturers and years
+    // Security state
+    const [loginAttempts, setLoginAttempts] = useState(0);
+    const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Update local config when context config changes
     useEffect(() => {
-        const loadInitialData = async () => {
-            try {
-                setLoading(prev => ({ ...prev, manufacturers: true }));
-                // Use static manufacturers directly - no API call needed!
-                setFilterData(prev => ({
-                    ...prev,
-                    manufacturers: getStaticManufacturers(), // Now returns Option[] directly
-                    years: Array.from({ length: 30 }, (_, i) => new Date().getFullYear() - i) // Generate years directly
-                }));
-            } catch (error) {
-                console.error('Error loading filters:', error);
-            } finally {
-                setLoading(prev => ({ ...prev, manufacturers: false }));
+        setLocalConfig(config);
+    }, [config]);
+
+    // Check if already authenticated via session cookie
+    useEffect(() => {
+        const checkAuth = () => {
+            // Check for admin_session cookie
+            const cookies = document.cookie.split(';');
+            const hasSession = cookies.some(c => c.trim().startsWith('admin_session='));
+
+            if (hasSession) {
+                setIsAuthenticated(true);
             }
+            setIsLoading(false);
         };
-        loadInitialData();
+        checkAuth();
     }, []);
 
-    // Load models when manufacturer changes
-    useEffect(() => {
-        const loadModels = async () => {
-            if (!filters.manufacturerId) {
-                setFilterData(prev => ({ ...prev, models: [] }));
-                return;
-            }
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
 
-            try {
-                setLoading(prev => ({ ...prev, models: true }));
-                const models = await fetchModels(parseInt(filters.manufacturerId), 'cars');
-                setFilterData(prev => ({ ...prev, models }));
-            } catch (error) {
-                console.error('Error loading models:', error);
-            } finally {
-                setLoading(prev => ({ ...prev, models: false }));
-            }
-        };
-        loadModels();
-    }, [filters.manufacturerId]);
+        // Check lockout
+        if (lockoutUntil && Date.now() < lockoutUntil) {
+            const minutesLeft = Math.ceil((lockoutUntil - Date.now()) / 60000);
+            setSaveMessage({
+                text: `Shumë përpjekje. Provo përsëri pas ${minutesLeft} minutash.`,
+                type: 'error'
+            });
+            return;
+        }
 
-    const updateFilter = (key: keyof SearchFilters, value: string) => {
-        setFilters(prev => ({ ...prev, [key]: value }));
-        if (key === 'manufacturerId') {
-            setFilters(prev => ({ ...prev, modelId: '' }));
+        setIsLoading(true);
+
+        try {
+            const response = await fetch('/api/admin/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                setLoginAttempts(0);
+                setLockoutUntil(null);
+                setIsAuthenticated(true);
+                setSaveMessage({ text: '', type: '' });
+            } else {
+                const newAttempts = loginAttempts + 1;
+                setLoginAttempts(newAttempts);
+
+                if (newAttempts >= MAX_ATTEMPTS) {
+                    const lockout = Date.now() + LOCKOUT_TIME;
+                    setLockoutUntil(lockout);
+                    setSaveMessage({
+                        text: `Shumë përpjekje të dështuara. Llogaria është bllokuar për 15 minuta.`,
+                        type: 'error'
+                    });
+                } else {
+                    setSaveMessage({
+                        text: `Fjalëkalimi i gabuar. ${MAX_ATTEMPTS - newAttempts} përpjekje të mbetura.`,
+                        type: 'error'
+                    });
+                }
+            }
+        } catch (error) {
+            setSaveMessage({ text: 'Hyrja dështoi. Provo përsëri.', type: 'error' });
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const handleSearch = () => {
-        const params = new URLSearchParams();
-
-        if (filters.manufacturerId) params.set('manufacturer_id', filters.manufacturerId);
-        if (filters.modelId) params.set('model_id', filters.modelId);
-        if (filters.fromYear) params.set('from_year', filters.fromYear);
-        if (filters.toYear) params.set('to_year', filters.toYear);
-        if (filters.priceTo) params.set('buy_now_price_to', filters.priceTo);
-
-        params.set('page', '1');
-        params.set('per_page', '12');
-        params.set('vehicle_type', '1');
-
-        router.push(`/cars?${params.toString()}`);
-        onSearch?.();
+    const handleLogout = async () => {
+        try {
+            await fetch('/api/admin/verify', { method: 'DELETE' });
+            document.cookie = 'admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+        setIsAuthenticated(false);
+        setPassword('');
     };
 
-    const clearFilters = () => {
-        setFilters({
-            manufacturerId: '',
-            modelId: '',
-            fromYear: '',
-            toYear: '',
-            priceTo: ''
+    const handleSave = async () => {
+        setIsSaving(true);
+
+        try {
+            await updateConfig(localConfig);
+            setSaveMessage({
+                text: '✅ Cilësimet u ruajtën me sukses për të gjithë përdoruesit!',
+                type: 'success'
+            });
+        } catch (error) {
+            setSaveMessage({
+                text: `Gabim: ${error instanceof Error ? error.message : 'Ruajtja dështoi'}`,
+                type: 'error'
+            });
+        } finally {
+            setIsSaving(false);
+            setTimeout(() => setSaveMessage({ text: '', type: '' }), 3000);
+        }
+    };
+
+    const handleReset = () => {
+        if (confirm('A jeni i sigurt që doni të riktheni vlerat e paracaktuara?')) {
+            const defaultConfig = {
+                shippingCost: 3500,
+                shippingToPristina: 350,
+                contactEmail: 'blerart@outlook.com',
+                contactPhone: '+383 49 195 414',
+                siteName: 'Vetura Korea Kosovë',
+                currency: 'EUR' as const,
+                vehicleTypes: {
+                    suv: { shippingCost: 4500, enabled: false },
+                    sedan: { shippingCost: 3500, enabled: true },
+                    hatchback: { shippingCost: 3500, enabled: true },
+                    wagon: { shippingCost: 3500, enabled: true },
+                    coupe: { shippingCost: 3500, enabled: true },
+                    van: { shippingCost: 3800, enabled: true },
+                    pickup: { shippingCost: 4000, enabled: true },
+                    default: { shippingCost: 3500, enabled: true }
+                }
+            };
+            setLocalConfig(defaultConfig);
+            updateConfig(defaultConfig);
+            setSaveMessage({ text: '✅ U rikthye në vlerat e paracaktuara', type: 'success' });
+        }
+    };
+
+    const updateField = (field: keyof typeof localConfig, value: any) => {
+        setLocalConfig(prev => ({ ...prev, [field]: value }));
+    };
+
+    const updateVehicleType = (type: string, field: string, value: any) => {
+        setLocalConfig(prev => ({
+            ...prev,
+            vehicleTypes: {
+                ...prev.vehicleTypes,
+                [type]: {
+                    ...(prev.vehicleTypes[type as keyof typeof prev.vehicleTypes] || {
+                        shippingCost: 3500,
+                        enabled: false
+                    }),
+                    [field]: value
+                }
+            }
+        }));
+    };
+
+    const toggleVehicleType = (type: string) => {
+        setLocalConfig(prev => {
+            const currentConfig = prev.vehicleTypes[type as keyof typeof prev.vehicleTypes];
+            return {
+                ...prev,
+                vehicleTypes: {
+                    ...prev.vehicleTypes,
+                    [type]: {
+                        ...(currentConfig || {
+                            shippingCost: 3500,
+                            enabled: false
+                        }),
+                        enabled: !(currentConfig?.enabled || false)
+                    }
+                }
+            };
         });
-        router.push('/cars');
     };
 
-    const activeFilterCount = Object.values(filters).filter(v => v !== '').length;
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-dark-blue via-dark-blue to-navy flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"></div>
+            </div>
+        );
+    }
 
-    // Prepare options
-    const manufacturerOptions = filterData.manufacturers; // Already in Option format
+    // Login Screen
+    if (!isAuthenticated) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-dark-blue via-dark-blue to-navy flex items-center justify-center p-4">
+                <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 w-full max-w-md relative">
+                    {/* Security Badge */}
+                    <div className="absolute -top-3 -right-3 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                        <Shield size={12} />
+                        E Sigurt
+                    </div>
 
-    const modelOptions = filterData.models.map(model => ({
-        value: model.id.toString(),
-        label: model.name
-    }));
+                    <div className="text-center mb-8">
+                        <div className="w-20 h-20 bg-orange-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 relative">
+                            <Lock className="w-10 h-10 text-orange-500" />
+                            {loginAttempts > 0 && (
+                                <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs">
+                                    {loginAttempts}
+                                </div>
+                            )}
+                        </div>
+                        <h1 className="text-2xl font-bold text-white mb-2">Hyrja për Administratorë</h1>
+                        <p className="text-white/60 text-sm">Shkruani fjalëkalimin për të menaxhuar cilësimet</p>
+                    </div>
 
-    const yearOptions = [
-        { value: '', label: 'Viti' },
-        ...filterData.years.map(year => ({
-            value: year.toString(),
-            label: year.toString()
-        }))
-    ];
+                    <form onSubmit={handleLogin}>
+                        <div className="relative mb-6">
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Shkruani fjalëkalimin"
+                                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-orange-500 text-center text-lg"
+                                autoFocus
+                                disabled={isLoading || (lockoutUntil !== null && Date.now() < lockoutUntil)}
+                            />
+                            {lockoutUntil && Date.now() < lockoutUntil && (
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    <AlertCircle className="w-5 h-5 text-red-500" />
+                                </div>
+                            )}
+                        </div>
 
-    const priceOptions = [
-        { value: '', label: 'Çmimi max' },
-        { value: '5000', label: '€5,000' },
-        { value: '10000', label: '€10,000' },
-        { value: '15000', label: '€15,000' },
-        { value: '20000', label: '€20,000' },
-        { value: '25000', label: '€25,000' },
-        { value: '30000', label: '€30,000' },
-        { value: '40000', label: '€40,000' },
-        { value: '50000', label: '€50,000' },
-        { value: '75000', label: '€75,000' },
-        { value: '100000', label: '€100,000' },
-    ];
+                        {saveMessage.text && (
+                            <div className={`mb-4 p-3 rounded-lg text-sm text-center ${saveMessage.type === 'error'
+                                    ? 'bg-red-500/10 text-red-500 border border-red-500/20'
+                                    : 'bg-green-500/10 text-green-500 border border-green-500/20'
+                                }`}>
+                                {saveMessage.text}
+                            </div>
+                        )}
 
-    const isHero = variant === 'hero';
+                        <button
+                            type="submit"
+                            disabled={isLoading || (lockoutUntil !== null && Date.now() < lockoutUntil)}
+                            className="w-full py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isLoading ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+                                    Duke verifikuar...
+                                </span>
+                            ) : (
+                                <span className="flex items-center justify-center gap-2">
+                                    <LogIn className="w-5 h-5" />
+                                    Hyr në Panelin Administrator
+                                </span>
+                            )}
+                        </button>
+                    </form>
+
+                    <div className="mt-6 text-center">
+                        <p className="text-xs text-white/40">
+                            ⚡ Maksimumi {MAX_ATTEMPTS} përpjekje | Bllokim {LOCKOUT_TIME / 60000} minuta
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Main Admin Panel
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-dark-blue via-dark-blue to-navy py-8">
+            <div className="container mx-auto px-4 max-w-4xl">
+                {/* Header */}
+                <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 mb-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 bg-orange-500/20 rounded-xl">
+                                <Settings className="w-6 h-6 text-orange-500" />
+                            </div>
+                            <div>
+                                <h1 className="text-xl font-bold text-white">Cilësimet e Faqes</h1>
+                                <p className="text-sm text-white/60">Rregulloni transportin dhe kontaktet</p>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-2 w-full sm:w-auto">
+                            <button
+                                onClick={handleReset}
+                                className="px-4 py-2 text-sm bg-white/10 text-white rounded-lg hover:bg-white/20 transition border border-white/10"
+                            >
+                                Rikthe
+                            </button>
+                            <button
+                                onClick={handleLogout}
+                                className="px-4 py-2 text-sm bg-white/10 text-white rounded-lg hover:bg-white/20 transition border border-white/10 flex items-center gap-2"
+                            >
+                                <LogOut size={16} />
+                                Dil
+                            </button>
+                            <button
+                                onClick={handleSave}
+                                disabled={isSaving}
+                                className="px-4 py-2 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition flex items-center gap-2 disabled:opacity-50"
+                            >
+                                <Save size={16} />
+                                {isSaving ? 'Duke ruajtur...' : 'Ruaj'}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Success Message */}
+                    {saveMessage.text && (
+                        <div className={`mt-4 p-3 rounded-lg text-sm ${saveMessage.type === 'success'
+                                ? 'bg-green-500/10 text-green-500 border border-green-500/20'
+                                : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                            }`}>
+                            {saveMessage.text}
+                        </div>
+                    )}
+                </div>
+
+                {/* Shipping Costs */}
+                <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 mb-6">
+                    <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <Truck className="text-orange-500" size={20} />
+                        <span>Transporti</span>
+                    </h2>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Transporti Durrës */}
+                        <div>
+                            <label className="block text-sm text-white/70 mb-2">
+                                Transporti Korea → Durrës (€)
+                            </label>
+                            <input
+                                type="number"
+                                value={localConfig.shippingCost}
+                                onChange={(e) => updateField('shippingCost', Number(e.target.value))}
+                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                step="100"
+                                min="0"
+                            />
+                            <p className="text-xs text-white/40 mt-1">Transporti detar nga Korea në Durrës</p>
+                        </div>
+
+                        {/* Transporti Prishtinë */}
+                        <div>
+                            <label className="block text-sm text-white/70 mb-2">
+                                Transporti Durrës → Prishtinë (€)
+                            </label>
+                            <input
+                                type="number"
+                                value={localConfig.shippingToPristina}
+                                onChange={(e) => updateField('shippingToPristina', Number(e.target.value))}
+                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                step="10"
+                                min="0"
+                            />
+                            <p className="text-xs text-white/40 mt-1">Transporti tokësor nga Durrësi në Prishtinë</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Vehicle Types */}
+                <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 mb-6">
+                    <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <Car className="text-orange-500" size={20} />
+                        <span>Transporti sipas llojit të automjetit</span>
+                    </h2>
+
+                    <p className="text-sm text-white/60 mb-4">
+                        Aktivizoni çmime të veçanta për lloje të ndryshme të automjeteve.
+                    </p>
+
+                    <div className="space-y-3">
+                        {VEHICLE_TYPES.map((type) => {
+                            const typeConfig = localConfig.vehicleTypes[type.id as keyof typeof localConfig.vehicleTypes];
+                            const isExpanded = expandedVehicleType === type.id;
+
+                            return (
+                                <div
+                                    key={type.id}
+                                    className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
+                                >
+                                    {/* Header */}
+                                    <div
+                                        className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/5 transition-colors"
+                                        onClick={() => setExpandedVehicleType(isExpanded ? null : type.id)}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    toggleVehicleType(type.id);
+                                                }}
+                                                className="focus:outline-none"
+                                            >
+                                                {typeConfig?.enabled ? (
+                                                    <ToggleRight className="w-6 h-6 text-orange-500" />
+                                                ) : (
+                                                    <ToggleLeft className="w-6 h-6 text-white/40" />
+                                                )}
+                                            </button>
+                                            <div>
+                                                <span className="font-medium text-white">{type.label}</span>
+                                                <p className="text-xs text-white/40 mt-0.5">{type.description}</p>
+                                            </div>
+                                            {typeConfig?.enabled && (
+                                                <span className="text-xs bg-orange-500/20 text-orange-500 px-2 py-0.5 rounded-full">
+                                                    Aktiv
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            {typeConfig?.enabled && (
+                                                <span className="text-sm text-white/60 hidden sm:block">
+                                                    Transport: €{typeConfig.shippingCost}
+                                                </span>
+                                            )}
+                                            {isExpanded ? (
+                                                <ChevronUp className="w-5 h-5 text-white/40" />
+                                            ) : (
+                                                <ChevronDown className="w-5 h-5 text-white/40" />
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Expanded Content */}
+                                    {isExpanded && typeConfig && (
+                                        <div className="p-4 border-t border-white/10 bg-white/5">
+                                            <div className="max-w-xs">
+                                                <label className="block text-sm text-white/70 mb-2">
+                                                    Transporti (€)
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    value={typeConfig.shippingCost}
+                                                    onChange={(e) => updateVehicleType(type.id, 'shippingCost', Number(e.target.value))}
+                                                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                                    step="100"
+                                                    min="0"
+                                                    disabled={!typeConfig.enabled}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Contact Information */}
+                <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 mb-6">
+                    <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <Building2 className="text-orange-500" size={20} />
+                        <span>Informacionet e Kontaktit</span>
+                    </h2>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm text-white/70 mb-2">Emri i Faqes</label>
+                            <input
+                                type="text"
+                                value={localConfig.siteName}
+                                onChange={(e) => updateField('siteName', e.target.value)}
+                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm text-white/70 mb-2 flex items-center gap-1">
+                                <Mail size={14} /> Email-i
+                            </label>
+                            <input
+                                type="email"
+                                value={localConfig.contactEmail}
+                                onChange={(e) => updateField('contactEmail', e.target.value)}
+                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm text-white/70 mb-2 flex items-center gap-1">
+                                <Phone size={14} /> Telefoni
+                            </label>
+                            <input
+                                type="tel"
+                                value={localConfig.contactPhone}
+                                onChange={(e) => updateField('contactPhone', e.target.value)}
+                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm text-white/70 mb-2 flex items-center gap-1">
+                                <Euro size={14} /> Valuta
+                            </label>
+                            <select
+                                value={localConfig.currency}
+                                onChange={(e) => updateField('currency', e.target.value)}
+                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            >
+                                <option value="EUR">Euro (€)</option>
+                                <option value="USD">USD ($)</option>
+                                <option value="ALL">Lekë (Lek)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Live Preview */}
+                <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6">
+                    <h2 className="text-lg font-semibold text-white mb-4">Parapamje e Çmimeve</h2>
+
+                    <div className="bg-white/5 rounded-lg p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Sedan Example */}
+                            <div>
+                                <h3 className="text-sm font-medium text-white mb-3">Shembull: Sedan</h3>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between text-white/70">
+                                        <span>Çmimi i makinës:</span>
+                                        <span className="text-white">€15,000</span>
+                                    </div>
+                                    <div className="flex justify-between text-white/70">
+                                        <span>Transporti Korea → Durrës:</span>
+                                        <span className="text-white">€{localConfig.shippingCost}</span>
+                                    </div>
+                                    <div className="flex justify-between text-white/70">
+                                        <span>Transporti Durrës → Prishtinë:</span>
+                                        <span className="text-white">€{localConfig.shippingToPristina}</span>
+                                    </div>
+                                    <div className="flex justify-between font-bold pt-2 border-t border-white/10 text-white">
+                                        <span>Totali:</span>
+                                        <span className="text-orange-500">
+                                            €{(15000 + localConfig.shippingCost + localConfig.shippingToPristina).toLocaleString()}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* SUV Example */}
+                            <div>
+                                <h3 className="text-sm font-medium text-white mb-3">Shembull: SUV</h3>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between text-white/70">
+                                        <span>Çmimi i makinës:</span>
+                                        <span className="text-white">€25,000</span>
+                                    </div>
+                                    <div className="flex justify-between text-white/70">
+                                        <span>Transporti Korea → Durrës:</span>
+                                        <span className="text-white">
+                                            €{localConfig.vehicleTypes.suv?.enabled ? localConfig.vehicleTypes.suv.shippingCost : localConfig.shippingCost}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between text-white/70">
+                                        <span>Transporti Durrës → Prishtinë:</span>
+                                        <span className="text-white">€{localConfig.shippingToPristina}</span>
+                                    </div>
+                                    <div className="flex justify-between font-bold pt-2 border-t border-white/10 text-white">
+                                        <span>Totali:</span>
+                                        <span className="text-orange-500">
+                                            €{(25000 + (localConfig.vehicleTypes.suv?.enabled ? localConfig.vehicleTypes.suv.shippingCost : localConfig.shippingCost) + localConfig.shippingToPristina).toLocaleString()}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Security Notice */}
+                <div className="mt-6 p-4 bg-white/5 rounded-lg border border-white/10">
+                    <div className="flex items-start gap-3">
+                        <Shield className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
+                        <div>
+                            <p className="text-sm text-white/70">
+                                <span className="font-medium text-orange-500">Sesion i Sigurt:</span> Do të dilni automatikisht pas 2 orësh pa aktivitet.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+================================================
+FILE: app/api/admin/verify/route.ts
+================================================
+
+import { NextResponse } from 'next/server';
+import { validateAdmin } from '@/lib/db';
+import { cookies } from 'next/headers';
+
+export async function POST(request: Request) {
+    try {
+        const { password } = await request.json();
+
+        const isValid = await validateAdmin(password);
+
+        if (isValid) {
+            // Create session (simple cookie)
+            const cookieStore = await cookies();
+            cookieStore.set('admin_session', 'authenticated', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                maxAge: 2 * 60 * 60, // 2 hours
+                path: '/',
+            });
+
+            return NextResponse.json({ success: true });
+        }
+
+        return NextResponse.json(
+            { success: false, message: 'Fjalëkalimi i gabuar' },
+            { status: 401 }
+        );
+
+    } catch (error) {
+        console.error('Login error:', error);
+        return NextResponse.json(
+            { success: false, message: 'Gabim gjatë hyrjes' },
+            { status: 500 }
+        );
+    }
+}
+
+================================================
+FILE: lib/rateLimit.ts
+================================================
+
+interface RateLimitConfig {
+    interval: number;
+    max: number;
+}
+
+interface RateLimitStore {
+    [key: string]: {
+        count: number;
+        resetTime: number;
+    };
+}
+
+// Simple in-memory store (for development)
+// For production, you might want to use Redis or similar
+const store: RateLimitStore = {};
+
+// Clean up expired entries every minute
+if (typeof setInterval !== 'undefined') {
+    setInterval(() => {
+        const now = Date.now();
+        Object.keys(store).forEach(key => {
+            if (now > store[key].resetTime) {
+                delete store[key];
+            }
+        });
+    }, 60 * 1000);
+}
+
+export function rateLimit(config: RateLimitConfig) {
+    return {
+        check: async (key: string): Promise<{ success: boolean; limit: number; remaining: number; resetTime: number }> => {
+            const now = Date.now();
+            const record = store[key];
+
+            // Clean up if expired
+            if (record && now > record.resetTime) {
+                delete store[key];
+                return createNewRecord(key, config, now);
+            }
+
+            if (!record) {
+                return createNewRecord(key, config, now);
+            }
+
+            if (record.count >= config.max) {
+                return {
+                    success: false,
+                    limit: config.max,
+                    remaining: 0,
+                    resetTime: record.resetTime
+                };
+            }
+
+            // Increment count
+            record.count++;
+            return {
+                success: true,
+                limit: config.max,
+                remaining: config.max - record.count,
+                resetTime: record.resetTime
+            };
+        }
+    };
+}
+
+function createNewRecord(key: string, config: RateLimitConfig, now: number) {
+    const resetTime = now + config.interval;
+    store[key] = {
+        count: 1,
+        resetTime
+    };
+    return {
+        success: true,
+        limit: config.max,
+        remaining: config.max - 1,
+        resetTime
+    };
+}
+
+================================================
+FILE: components/cars/CarDetailClient.tsx
+================================================
+
+// components/cars/CarDetailClient.tsx
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useConfig } from '@/lib/ConfigContext';
+import { type Car, formatMileage } from '@/lib/api';
+import { translateFuel, translateTransmission, translateColor } from '@/lib/translations';
+// import CarSpecs from '@/components/cars/CarSpecs';
+import {
+    Calendar,
+    Gauge,
+    Fuel,
+    Settings,
+    MapPin,
+    Phone,
+    Mail,
+    Building2,
+    Database,
+    Hash,
+    Tag,
+    AlertCircle,
+    ArrowLeft,
+    Car as CarIcon
+} from 'lucide-react';
+import Link from 'next/link';
+import RecentlyViewedTracker from '@/components/cars/RecentlyViewedTracker';
+import ImageGallery from './ImageGallery';
+import CarDetailTabs from './CarDetailTabs';
+
+
+interface CarDetailClientProps {
+    car: Car;
+}
+
+export function CarDetailClient({ car }: CarDetailClientProps) {
+    const { config, formatPrice, calculateFinalPrice, getVehicleTypeLabel } = useConfig();
+    const [mounted, setMounted] = useState(false);
+    const [imageLoadError, setImageLoadError] = useState(false);
+
+    // Handle hydration
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // Safely access nested properties
+    const lot = car.lots?.[0];
+    const price = lot?.price_with_margin_and_kosovo || lot?.step5 || lot?.buy_now || 0;
+    const mileage = lot?.odometer?.km || 0;
+
+    // Filter valid images
+    const images = lot?.images?.big || lot?.images?.normal || [];
+    const validImages = images.filter(img => img && typeof img === 'string');
+
+    const location = lot?.location?.city?.name || 'Korea';
+    const lotNumber = lot?.lot || null;
+
+    const manufacturerName = car.manufacturer?.name || 'Makina';
+    const modelName = car.model?.name || '';
+    const carTitle = car.title || `${manufacturerName} ${modelName}`.trim() || 'Makina pa emër';
+
+    // Get vehicle type from car data - THIS IS THE KEY FIX
+    // The API returns body_type.name which could be "Suv", "Sedan", etc.
+    const rawBodyType = car.body_type?.name || '';
+
+    // Normalize to lowercase for comparison with config keys
+    const vehicleType = rawBodyType.toLowerCase();
+
+    // Check if this vehicle type exists in our config and is enabled
+    const hasTypeConfig = vehicleType &&
+        Object.keys(config.vehicleTypes).includes(vehicleType) &&
+        config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes]?.enabled;
+
+    // Use the vehicle type if available and enabled, otherwise use 'default'
+    const effectiveVehicleType = hasTypeConfig ? vehicleType : 'default';
+
+    // Calculate price details with the correct vehicle type
+    const priceDetails = mounted ? calculateFinalPrice(price, effectiveVehicleType) : {
+        basePrice: price,
+        shippingCost: config.shippingCost,
+        shippingToPristina: config.shippingToPristina,
+        finalPrice: price + config.shippingCost + config.shippingToPristina,
+        vehicleTypeUsed: effectiveVehicleType
+    };
+
+    // For display, use the original API name with proper capitalization
+    const displayBodyType = rawBodyType
+        ? rawBodyType.charAt(0).toUpperCase() + rawBodyType.slice(1).toLowerCase()
+        : null;
+
+    // Check if we have essential data
+    const hasEssentialData = car.manufacturer?.name || car.model?.name || car.year;
+
+    // During SSR or before mount, show a simpler version
+    if (!mounted) {
+        return (
+            <main className="min-h-screen bg-primary">
+                <div className="container-swiss py-8 lg:py-12">
+                    <div className="animate-pulse">
+                        <div className="h-8 bg-surface-2 rounded w-3/4 mb-4"></div>
+                        <div className="h-4 bg-surface-2 rounded w-1/2 mb-8"></div>
+                        <div className="grid lg:grid-cols-3 gap-8">
+                            <div className="lg:col-span-2">
+                                <div className="h-96 bg-surface-2 rounded-xl mb-8"></div>
+                                <div className="grid grid-cols-4 gap-4">
+                                    {[...Array(4)].map((_, i) => (
+                                        <div key={i} className="h-24 bg-surface-2 rounded-xl"></div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="space-y-4">
+                                <div className="h-64 bg-surface-2 rounded-xl"></div>
+                                <div className="h-48 bg-surface-2 rounded-xl"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        );
+    }
+
+    // Error state if car data is invalid
+    if (!car || !car.manufacturer) {
+        return (
+            <div className="min-h-screen bg-primary flex items-center justify-center">
+                <div className="text-center">
+                    <CarIcon className="w-16 h-16 text-orange-500 mx-auto mb-4" />
+                    <h2 className="text-2xl font-bold text-primary mb-2">Makina nuk u gjet</h2>
+                    <p className="text-secondary mb-6">Nuk mund të ngarkohen detajet e makinës.</p>
+                    <Link href="/cars" className="btn-primary">
+                        Kthehu te Makinat
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <>
-            {/* Desktop Version */}
-            <div className="hidden md:block w-full md:w-fit">
-                <div className={`
-                    flex items-center gap-2 
-                    ${isHero
-                        ? 'bg-orange-500 backdrop-blur-md border border-white/20'
-                        : 'bg-orange-500 border border-light/20'
-                    } 
-                    rounded-xl p-1.5 shadow-lg
-                `}>
-                    {/* Search Icon */}
-                    <div className="flex items-center justify-center w-9 h-9 shrink-0">
-                        <Search size={16} className={isHero ? 'text-white/70' : 'text-muted'} />
-                    </div>
-
-                    {/* Filters */}
-                    <div className="flex-1 flex flex-wrap items-center gap-1.5 min-w-0">
-                        <CustomSelect
-                            value={filters.manufacturerId}
-                            onChange={(value) => updateFilter('manufacturerId', value)}
-                            options={manufacturerOptions}
-                            placeholder="Prodhuesi"
-                            icon={<Car size={14} />}
-                            loading={loading.manufacturers}
-                            variant={isHero ? 'hero' : 'default'}
-                            className="w-32" // Changed from w-[130px]
-                        />
-
-                        {filters.manufacturerId && (
-                            <CustomSelect
-                                value={filters.modelId}
-                                onChange={(value) => updateFilter('modelId', value)}
-                                options={modelOptions}
-                                placeholder="Modeli"
-                                icon={<Car size={14} />}
-                                loading={loading.models}
-                                variant={isHero ? 'hero' : 'default'}
-                                className="w-30" // Changed from w-[120px]
-                            />
-                        )}
-
-                        <CustomSelect
-                            value={filters.fromYear}
-                            onChange={(value) => updateFilter('fromYear', value)}
-                            options={yearOptions}
-                            placeholder="Nga"
-                            icon={<Calendar size={14} />}
-                            variant={isHero ? 'hero' : 'default'}
-                            className="w-20" // Changed from w-[85px]
-                        />
-
-                        <CustomSelect
-                            value={filters.toYear}
-                            onChange={(value) => updateFilter('toYear', value)}
-                            options={yearOptions}
-                            placeholder="Deri"
-                            icon={<Calendar size={14} />}
-                            variant={isHero ? 'hero' : 'default'}
-                            className="w-20" // Changed from w-[85px]
-                        />
-
-                        <CustomSelect
-                            value={filters.priceTo}
-                            onChange={(value) => updateFilter('priceTo', value)}
-                            options={priceOptions}
-                            placeholder="Max"
-                            icon={<DollarSign size={14} />}
-                            variant={isHero ? 'hero' : 'default'}
-                            className="w-24" // Changed from w-[100px]
-                        />
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-1 shrink-0">
-                        {activeFilterCount > 0 && (
-                            <button
-                                onClick={clearFilters}
-                                className={`
-                                    w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-200
-                                    ${isHero
-                                        ? 'text-white/70 hover:text-white hover:bg-white/10'
-                                        : 'text-muted hover:text-orange-primary hover:bg-surface-2'
-                                    }
-                                `}
-                                title="Pastro filtrat"
-                                aria-label="Pastro filtrat"
-                            >
-                                <X size={16} />
-                            </button>
-                        )}
-
-                        <button
-                            onClick={handleSearch}
-                            className={`
-                                h-9 px-4 rounded-lg text-sm font-medium transition-all duration-200 
-                                flex items-center gap-1.5 whitespace-nowrap
-                                ${isHero
-                                    ? 'bg-white text-orange-600 hover:bg-gray-100'
-                                    : 'bg-orange-600 text-white hover:bg-orange-700'
-                                }
-                            `}
-                            aria-label="Kërko"
-                        >
-                            <Search size={14} />
-                            <span className="hidden sm:inline">Kërko</span>
-                            {activeFilterCount > 0 && (
-                                <span className={`
-                                    ml-0.5 px-1.5 py-0.5 text-xs rounded-full font-medium
-                                    ${isHero ? 'bg-orange-100 text-orange-600' : 'bg-white/20 text-white'}
-                                `}>
-                                    {activeFilterCount}
-                                </span>
+            <RecentlyViewedTracker car={car} />
+            <main className="min-h-screen bg-primary">
+                {/* Breadcrumb */}
+                <div className="border-b border-light bg-surface/80 sticky top-4 z-sticky backdrop-blur-sm z-10">
+                    <div className="container-swiss py-3">
+                        <nav className="flex items-center gap-2 text-sm flex-wrap" aria-label="Breadcrumb">
+                            <Link href="/" className="text-muted hover:text-orange-500 transition focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
+                                {config.siteName}
+                            </Link>
+                            <span className="text-muted" aria-hidden="true">/</span>
+                            <Link href="/cars" className="text-muted hover:text-orange-500 transition focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
+                                Makina
+                            </Link>
+                            {car.manufacturer?.id && (
+                                <>
+                                    <span className="text-muted" aria-hidden="true">/</span>
+                                    <Link
+                                        href={`/cars?manufacturer_id=${car.manufacturer.id}`}
+                                        className="text-muted hover:text-orange-500 transition focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded"
+                                    >
+                                        {car.manufacturer.name}
+                                    </Link>
+                                </>
                             )}
-                        </button>
+                            {car.model?.name && (
+                                <>
+                                    <span className="text-muted" aria-hidden="true">/</span>
+                                    <span className="text-orange-500" aria-current="page">
+                                        {car.model.name}
+                                    </span>
+                                </>
+                            )}
+                        </nav>
                     </div>
                 </div>
-            </div>
 
-            {/* Mobile Version */}
-            <div className="md:hidden w-full">
-                <div className={`
-                    rounded-xl p-3 shadow-lg space-y-3
-                    ${isHero
-                        ? 'bg-orange-500/95 backdrop-blur-md border border-white/20'
-                        : 'bg-surface border border-light/20'
-                    }
-                `}>
-                    {/* Filter Row */}
-                    <div className="grid grid-cols-2 gap-2">
-                        <CustomSelect
-                            value={filters.manufacturerId}
-                            onChange={(value) => updateFilter('manufacturerId', value)}
-                            options={manufacturerOptions}
-                            placeholder="Prodhuesi"
-                            icon={<Car size={16} />}
-                            loading={loading.manufacturers}
-                            variant={isHero ? 'hero' : 'default'}
-                            fullWidth
-                        />
+                <div className="container-swiss py-8 lg:py-12">
+                    {/* Title Section */}
+                    <div className="mb-8">
+                        <h1 className="text-3xl lg:text-4xl font-bold mb-2">{carTitle}</h1>
+                        <div className="flex items-center gap-4 text-sm text-muted flex-wrap">
+                            <span className="flex items-center gap-1">
+                                <MapPin size={16} className="shrink-0" />
+                                {location}
+                            </span>
+                            <span className="w-1 h-1 rounded-full bg-muted" aria-hidden="true" />
+                            <span className="badge badge-success">Në dispozicion</span>
 
-                        {filters.manufacturerId && (
-                            <CustomSelect
-                                value={filters.modelId}
-                                onChange={(value) => updateFilter('modelId', value)}
-                                options={modelOptions}
-                                placeholder="Modeli"
-                                icon={<Car size={16} />}
-                                loading={loading.models}
-                                variant={isHero ? 'hero' : 'default'}
-                                fullWidth
-                            />
-                        )}
+                            {/* Vehicle Type Badge */}
+                            {/* {displayBodyType && (
+                                <>
+                                    <span className="w-1 h-1 rounded-full bg-muted" aria-hidden="true" />
+                                    <span className="flex items-center gap-1">
+                                        <CarIcon size={14} className="shrink-0" />
+                                        {displayBodyType}
+                                        {hasTypeConfig && (
+                                            <span className="text-xs bg-orange-100 text-orange-500 px-1.5 py-0.5 rounded-full ml-1">
+                                                Aktive
+                                            </span>
+                                        )}
+                                    </span>
+                                </>
+                            )} */}
 
-                        {!filters.manufacturerId && (
-                            <>
-                                <CustomSelect
-                                    value={filters.fromYear}
-                                    onChange={(value) => updateFilter('fromYear', value)}
-                                    options={yearOptions}
-                                    placeholder="Nga viti"
-                                    icon={<Calendar size={16} />}
-                                    variant={isHero ? 'hero' : 'default'}
-                                    fullWidth
-                                />
-                                <CustomSelect
-                                    value={filters.toYear}
-                                    onChange={(value) => updateFilter('toYear', value)}
-                                    options={yearOptions}
-                                    placeholder="Deri viti"
-                                    icon={<Calendar size={16} />}
-                                    variant={isHero ? 'hero' : 'default'}
-                                    fullWidth
-                                />
-                            </>
-                        )}
+                            {lotNumber && (
+                                <>
+                                    <span className="w-1 h-1 rounded-full bg-muted" aria-hidden="true" />
+                                    <span className="flex items-center gap-1">
+                                        <Hash size={14} className="shrink-0" />
+                                        Lot: {lotNumber}
+                                    </span>
+                                </>
+                            )}
+                            {car.vin && (
+                                <>
+                                    <span className="w-1 h-1 rounded-full bg-muted" aria-hidden="true" />
+                                    <span className="flex items-center gap-1 font-mono text-xs">
+                                        VIN: {car.vin}
+                                    </span>
+                                </>
+                            )}
+                        </div>
                     </div>
 
-                    {/* Second Row */}
-                    {filters.manufacturerId && (
-                        <div className="grid grid-cols-2 gap-2">
-                            <CustomSelect
-                                value={filters.fromYear}
-                                onChange={(value) => updateFilter('fromYear', value)}
-                                options={yearOptions}
-                                placeholder="Nga viti"
-                                icon={<Calendar size={16} />}
-                                variant={isHero ? 'hero' : 'default'}
-                                fullWidth
-                            />
-                            <CustomSelect
-                                value={filters.toYear}
-                                onChange={(value) => updateFilter('toYear', value)}
-                                options={yearOptions}
-                                placeholder="Deri viti"
-                                icon={<Calendar size={16} />}
-                                variant={isHero ? 'hero' : 'default'}
-                                fullWidth
-                            />
+                    {/* Warning for incomplete data */}
+                    {!hasEssentialData && (
+                        <div className="mb-8 p-4 bg-warning-bg border border-warning-border rounded-lg flex items-center gap-3">
+                            <AlertCircle size={20} className="text-warning-text shrink-0" />
+                            <p className="text-sm text-warning-text">
+                                Disa të dhëna të makinës nuk janë të plota. Informacioni mund të jetë i paplotë.
+                            </p>
                         </div>
                     )}
 
-                    {/* Price and Search Row */}
-                    <div className="flex items-center gap-2">
-                        <div className="flex-1">
-                            <CustomSelect
-                                value={filters.priceTo}
-                                onChange={(value) => updateFilter('priceTo', value)}
-                                options={priceOptions}
-                                placeholder="Çmimi max"
-                                icon={<DollarSign size={16} />}
-                                variant={isHero ? 'hero' : 'default'}
-                                fullWidth
-                            />
+                    {/* Main Grid */}
+                    <div className="grid lg:grid-cols-3 gap-8">
+                        {/* Left Column - Images & Details */}
+                        <div className="lg:col-span-2 space-y-8">
+                            {/* Gallery */}
+                            <div className="card overflow-hidden">
+                                <ImageGallery images={images} carName={carTitle} />
+                                {imageLoadError && validImages.length === 0 && (
+                                    <div className="text-xs text-warning-text text-center py-2 bg-warning-bg">
+                                        Some images could not be loaded
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Quick Stats */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                <div className="card p-4 text-center">
+                                    <div className="text-2xl font-semibold text-orange-500 mb-1">
+                                        {formatPrice(priceDetails.basePrice)}
+                                    </div>
+                                    <div className="text-xs text-muted">Çmimi bazë</div>
+                                </div>
+                                <div className="card p-4 text-center">
+                                    <div className="text-2xl font-semibold text-primary mb-1">
+                                        {car.year || 'N/A'}
+                                    </div>
+                                    <div className="text-xs text-muted">Viti</div>
+                                </div>
+                                <div className="card p-4 text-center">
+                                    <div className="text-2xl font-semibold text-primary mb-1">
+                                        {formatMileage(mileage)}
+                                    </div>
+                                    <div className="text-xs text-muted">Kilometrazha</div>
+                                </div>
+                                <div className="card p-4 text-center">
+                                    <div className="text-2xl font-semibold text-primary mb-1">
+                                        {car.fuel?.name ? translateFuel(car.fuel.name) : 'N/A'}
+                                    </div>
+                                    <div className="text-xs text-muted">Karburanti</div>
+                                </div>
+                            </div>
+
+                            {/* Key Features */}
+                            <div className="card p-6">
+                                <h2 className="text-lg font-semibold mb-4">Karakteristikat kryesore</h2>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    {car.year && (
+                                        <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
+                                            <Calendar size={20} className="text-orange-500 shrink-0" />
+                                            <div className="min-w-0">
+                                                <p className="text-xs text-muted">Viti</p>
+                                                <p className="font-medium text-primary truncate">{car.year}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
+                                        <Gauge size={20} className="text-orange-500 shrink-0" />
+                                        <div className="min-w-0">
+                                            <p className="text-xs text-muted">Kilometrazha</p>
+                                            <p className="font-medium text-primary truncate">{formatMileage(mileage)}</p>
+                                        </div>
+                                    </div>
+                                    {car.fuel?.name && (
+                                        <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
+                                            <Fuel size={20} className="text-orange-500 shrink-0" />
+                                            <div className="min-w-0">
+                                                <p className="text-xs text-muted">Karburanti</p>
+                                                <p className="font-medium text-primary truncate">{translateFuel(car.fuel.name)}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {car.transmission?.name && (
+                                        <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
+                                            <Settings size={20} className="text-orange-500 shrink-0" />
+                                            <div className="min-w-0">
+                                                <p className="text-xs text-muted">Transmisioni</p>
+                                                <p className="font-medium text-primary truncate">{translateTransmission(car.transmission.name)}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {car.engine?.name && (
+                                        <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
+                                            <Database size={20} className="text-orange-500 shrink-0" />
+                                            <div className="min-w-0">
+                                                <p className="text-xs text-muted">Motori</p>
+                                                <p className="font-medium text-primary truncate">{car.engine.name}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {car.color?.name && (
+                                        <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
+                                            <Tag size={20} className="text-orange-500 shrink-0" />
+                                            <div className="min-w-0">
+                                                <p className="text-xs text-muted">Ngjyra</p>
+                                                <p className="font-medium text-primary truncate">{translateColor(car.color.name)}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="mt-8">
+                                <CarDetailTabs car={car} />
+                            </div>
+
+                            {/* Full Specifications */}
+                            {/* <CarSpecs car={car} /> */}
                         </div>
 
-                        <button
-                            onClick={handleSearch}
-                            className={`
-                                px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
-                                flex items-center justify-center gap-2 min-w-24 // Changed from min-w-[100px]
-                                ${isHero
-                                    ? 'bg-white text-orange-600 hover:bg-gray-100'
-                                    : 'bg-orange-600 text-white hover:bg-orange-700'
-                                }
-                            `}
-                        >
-                            <Search size={16} />
-                            <span>Kërko</span>
-                            {activeFilterCount > 0 && (
-                                <span className={`
-                                    px-1.5 py-0.5 text-xs rounded-full
-                                    ${isHero ? 'bg-orange-100 text-orange-600' : 'bg-white/20 text-white'}
-                                `}>
-                                    {activeFilterCount}
-                                </span>
-                            )}
-                        </button>
+                        {/* Right Column - Contact */}
+                        <div className="lg:col-span-1">
+                            <div className="sticky top-24 space-y-4">
+                                {/* Price Card */}
+                                <div className="card p-6">
+                                    <div className="text-3xl font-bold text-orange-500 mb-2">
+                                        {formatPrice(priceDetails.finalPrice)}
+                                    </div>
 
-                        {activeFilterCount > 0 && (
-                            <button
-                                onClick={clearFilters}
-                                className={`
-                                    p-2.5 rounded-lg transition-all duration-200
-                                    ${isHero
-                                        ? 'text-white/70 hover:text-white hover:bg-white/10'
-                                        : 'text-muted hover:text-orange-primary hover:bg-surface-2'
-                                    }
-                                `}
-                                aria-label="Pastro filtrat"
-                            >
-                                <X size={18} />
-                            </button>
-                        )}
+                                    {/* Vehicle Type Pricing Badge */}
+                                    {displayBodyType && (
+                                        <div className="mb-3 inline-flex items-center gap-1 px-2 py-1 bg-orange-5 text-orange-500 rounded-lg text-xs">
+                                            <CarIcon size={12} />
+                                            <span>
+                                                {hasTypeConfig
+                                                    ? `Çmimi për ${displayBodyType} (i personalizuar)`
+                                                    : `Çmimi për ${displayBodyType} (bazë)`}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    <p className="text-xs text-muted mb-4">
+                                        Çmimi përfundimtar (përfshirë transportin dhe marzhën)
+                                    </p>
+
+                                    <div className="space-y-3">
+                                        <div className="p-4 bg-surface-2 rounded-lg">
+                                            <h3 className="font-semibold mb-3 flex items-center gap-2">
+                                                <Building2 size={18} className="text-orange-500 shrink-0" />
+                                                Shitësi
+                                            </h3>
+                                            <div className="space-y-2 text-sm">
+                                                <p className="text-secondary">
+                                                    veturakoreakosove
+                                                </p>
+                                                <p className="flex items-center gap-2 text-secondary hover:text-orange-500 transition-colors">
+                                                    <Phone size={14} className="text-orange-500 shrink-0" />
+                                                    <a href={`tel:${config.contactPhone}`} className="hover:underline focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
+                                                        {config.contactPhone}
+                                                    </a>
+                                                </p>
+                                                <p className="flex items-center gap-2 text-secondary hover:text-orange-500 transition-colors">
+                                                    <Mail size={14} className="text-orange-500 shrink-0" />
+                                                    <a href={`mailto:${config.contactEmail}`} className="hover:underline focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
+                                                        {config.contactEmail}
+                                                    </a>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <a
+                                            href={`https://wa.me/${config.contactPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                                                `Përshëndetje, jam i interesuar për makinën:\n\n` +
+                                                `*${carTitle}*\n` +
+                                                `🔗 Linku: ${typeof window !== 'undefined' ? window.location.href : ''}`
+                                            )}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="btn-primary bg-green-500 hover:bg-green-600 w-full flex items-center justify-center gap-2"
+                                        >
+                                            WhatsApp
+                                        </a>
+                                        <a
+                                            href={`mailto:${config.contactEmail}?subject=Interest in ${car.vin} - ${carTitle}`}
+                                            className="btn-primary w-full"
+                                        >
+                                            Email
+                                        </a>
+                                    </div>
+                                </div>
+
+                                {/* Cost Estimate */}
+                                {/* Cost Estimate */}
+                                <div className="card p-6">
+                                    <h3 className="font-semibold mb-3">Shpenzime të përafërta</h3>
+                                    <div className="space-y-2 text-sm">
+                                        {/* Base Price */}
+                                        <div className="flex justify-between">
+                                            <span className="text-muted">Makina:</span>
+                                            <span className="font-medium text-primary">{formatPrice(priceDetails.basePrice)}</span>
+                                        </div>
+
+                                        {/* Shipping to Durres */}
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-muted">Transporti deri në Durrës:</span>
+                                            <div className="text-right">
+                                                <span className="font-medium text-primary block">{formatPrice(priceDetails.shippingCost)}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Shipping to Pristina */}
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-muted">Transporti deri në Prishtinë:</span>
+                                            <div className="text-right">
+                                                <span className="font-medium text-primary block">{formatPrice(priceDetails.shippingToPristina)}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Total */}
+                                        <div className="border-t border-light my-2 pt-2">
+                                            <div className="flex justify-between font-semibold">
+                                                <span>Totali:</span>
+                                                <span className="text-orange-500">
+                                                    {formatPrice(priceDetails.finalPrice)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* VIN Quick Reference */}
+                                <div className="card p-4 bg-surface-2/50">
+                                    <div className="flex items-center gap-2 text-xs text-muted">
+                                        <CarIcon size={14} className="shrink-0" />
+                                        <span className="truncate">VIN: {car.vin}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Back Link */}
+                    <div className="mt-12 text-center">
+                        <Link
+                            href="/cars"
+                            className="inline-flex items-center gap-2 text-muted hover:text-orange-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded-lg px-4 py-2"
+                        >
+                            <ArrowLeft size={16} />
+                            Kthehu te të gjitha makinat
+                        </Link>
                     </div>
                 </div>
-            </div>
+            </main >
         </>
     );
 }
 
-// Main export with Suspense wrapper
-export default function CompactSearch(props: CompactSearchProps) {
+================================================
+FILE: components/cars/CarCard.tsx
+================================================
+
+// components/cars/CarCard.tsx
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Fuel, Gauge, Calendar, Settings } from 'lucide-react';
+import { type Car, formatMileage, getFuelTypeAlbanian, getTransmissionAlbanian } from '@/lib/api';
+import { addToRecentlyViewed } from '@/lib/recentlyViewed';
+import { useConfig } from '@/lib/ConfigContext';
+
+interface CarCardProps {
+    car: Car;
+    priority?: boolean;
+}
+
+export default function CarCard({ car, priority = false }: CarCardProps) {
+    const { formatPrice } = useConfig();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // Safely access nested properties with optional chaining and fallbacks
+    const lot = car.lots?.[0];
+    const price = lot?.price_with_margin_and_kosovo || lot?.step5 || lot?.buy_now || 0;
+    const mileage = lot?.odometer?.km || 0;
+    const image = lot?.images?.normal?.[0] || lot?.images?.downloaded?.[0] || '';
+
+    // Safely get manufacturer and model names
+    const manufacturerName = car.manufacturer?.name || 'Unknown';
+    const modelName = car.model?.name || 'Unknown';
+    const fuelName = car.fuel?.name || '';
+    const transmissionName = car.transmission?.name || '';
+
+    const handleClick = () => {
+        addToRecentlyViewed({
+            id: car.vin || car.id.toString(),
+            title: car.title || `${manufacturerName} ${modelName}`,
+            image: image,
+            price: price
+        });
+    };
+
+    const carTitle = car.title || `${manufacturerName} ${modelName}`;
+    const detailUrl = car.vin ? `/cars/${car.vin}` : `/cars/${car.id}`;
+
     return (
-        <SearchParamsWrapper fallback={
-            <div className="h-11 bg-surface-2 rounded-xl animate-pulse w-full md:order-2 order-1" />
-        }>
-            {(searchParams) => <CompactSearchContent searchParams={searchParams} {...props} />}
-        </SearchParamsWrapper>
+        <Link
+            href={detailUrl}
+            onClick={handleClick}
+            className="group block h-full focus:outline-none focus:ring-2 focus:ring-orange-primary/40 rounded-2xl"
+            aria-label={`Shiko detajet për ${carTitle}`}
+        >
+            <article className="card h-full flex flex-col">
+                {/* Image Container */}
+                <div className="relative aspect-[4/3] overflow-hidden bg-surface-2">
+                    {image ? (
+                        <img
+                            src={image}
+                            alt={carTitle}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            loading={priority ? 'eager' : 'lazy'}
+                            onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                                const fallback = e.currentTarget.parentElement?.querySelector('.fallback');
+                                if (fallback) {
+                                    (fallback as HTMLElement).style.display = 'flex';
+                                }
+                            }}
+                        />
+                    ) : null}
+
+                    {/* Fallback when no image */}
+                    <div
+                        className="fallback absolute inset-0 flex items-center justify-center text-muted text-sm bg-surface-2"
+                        style={{ display: image ? 'none' : 'flex' }}
+                    >
+                        No image
+                    </div>
+
+                    {/* VIN badge for development */}
+                    {/* {process.env.NODE_ENV === 'development' && car.vin && (
+                        <div className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
+                            VIN: {car.vin.slice(0, 8)}...
+                        </div>
+                    )} */}
+                </div>
+
+                {/* Content */}
+                <div className="p-5 flex-1 flex flex-col">
+                    <h3 className="text-base font-medium text-primary mb-3 line-clamp-1 group-hover:text-orange-500 transition-colors">
+                        {carTitle}
+                    </h3>
+
+                    {/* Specs Grid */}
+                    <div className="grid grid-cols-2 gap-y-2 gap-x-3 mb-4">
+                        <div className="flex items-center gap-2">
+                            <Calendar size={14} className="text-muted shrink-0" />
+                            <span className="text-sm text-secondary truncate">{car.year || 'N/A'}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Gauge size={14} className="text-muted shrink-0" />
+                            <span className="text-sm text-secondary truncate">
+                                {mounted ? formatMileage(mileage) : '...'}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Fuel size={14} className="text-muted shrink-0" />
+                            <span className="text-sm text-secondary truncate">{getFuelTypeAlbanian(fuelName)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Settings size={14} className="text-muted shrink-0" />
+                            <span className="text-sm text-secondary truncate">{getTransmissionAlbanian(transmissionName)}</span>
+                        </div>
+                    </div>
+
+                    {/* Price */}
+                    <div className="mt-auto pt-3 border-t border-light">
+                        <div className="flex items-baseline justify-between">
+                            <span className="text-xl font-semibold text-orange-500">
+                                {formatPrice(price)}
+                            </span>
+                            {car.engine?.name && (
+                                <span className="text-xs text-muted">
+                                    {car.engine.name}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </Link>
     );
 }
-=========================================
-FILE: app/globals.css
-=========================================
-/* app/globals.css */
-@import "tailwindcss";
 
-@theme {
-  /* Refined Swiss Design Colors - Fixed variable naming */
-  --color-orange-500: #FF6B00;
-  --color-orange-600: #CC5500;
-  --color-orange-400: #FF8C42;
-  --color-orange-300: #FFB347;
+================================================
+FILE: components/layout/Footer.tsx
+================================================
 
-  /* Dark Blue palette - consistent naming */
-  --color-blue-950: #0A1929;
-  --color-blue-900: #102336;
-  --color-blue-800: #1A2C40;
-  --color-blue-700: #132F4C;
-  --color-blue-600: #1E3A5A;
-  --color-blue-500: #244562;
+// components/layout/Footer.tsx
+'use client';
 
-  /* Typography */
-  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+import Link from 'next/link';
+import { Car, Mail, Phone, MapPin, ArrowUp } from 'lucide-react';
+import { useConfig } from '@/lib/ConfigContext';
 
-  /* Spacing - 8px grid */
-  --spacing-1: 0.25rem;
-  --spacing-2: 0.5rem;
-  --spacing-3: 0.75rem;
-  --spacing-4: 1rem;
-  --spacing-5: 1.25rem;
-  --spacing-6: 1.5rem;
-  --spacing-8: 2rem;
-  --spacing-10: 2.5rem;
-  --spacing-12: 3rem;
-  --spacing-16: 4rem;
-  --spacing-20: 5rem;
-  --spacing-24: 6rem;
+export default function Footer() {
+    const { config } = useConfig();
+    const currentYear = new Date().getFullYear();
 
-  /* Animation */
-  --duration-fast: 0.2s;
-  --duration-base: 0.3s;
-  --duration-slow: 0.5s;
-  --easing-standard: cubic-bezier(0.16, 1, 0.3, 1);
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const navigation = {
+        main: [
+            { name: 'Ballina', href: '/' },
+            { name: 'Makina', href: '/cars' },
+            { name: 'Shikuar së fundmi', href: '/recently-viewed' },
+        ],
+        legal: [
+            { name: 'Privatësia', href: '/privacy' },
+            { name: 'Kushtet', href: '/terms' },
+            { name: 'Cookies', href: '/cookies' },
+        ],
+    };
+
+    return (
+        <footer className="bg-surface border-t border-light mt-20">
+            <div className="container-swiss py-16">
+                {/* Main Footer Content */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+                    {/* Brand */}
+                    <div className="lg:col-span-1">
+                        <div className="flex items-center space-x-2 mb-4">
+                            <Car className="w-8 h-8 text-orange-500" />
+                            <span className="text-xl font-semibold text-primary">
+                                {config.siteName}
+                            </span>
+                        </div>
+                        <p className="text-secondary text-sm leading-relaxed mb-6">
+                            Importoni makina cilësore nga Korea me çmime konkurruese.
+                            BMW, Audi, Mercedes-Benz dhe makina të tjera direkt në Kosovë.
+                        </p>
+                        <div className="flex space-x-3">
+                            <div className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center hover:bg-orange-10 transition-colors cursor-pointer">
+                                <span className="text-xs font-medium text-secondary hover:text-orange-500">FB</span>
+                            </div>
+                            <div className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center hover:bg-orange-10 transition-colors cursor-pointer">
+                                <span className="text-xs font-medium text-secondary hover:text-orange-500">IG</span>
+                            </div>
+                            <div className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center hover:bg-orange-10 transition-colors cursor-pointer">
+                                <span className="text-xs font-medium text-secondary hover:text-orange-500">YT</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Navigation */}
+                    <div>
+                        <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-4">
+                            Navigimi
+                        </h3>
+                        <ul className="space-y-3">
+                            {navigation.main.map((item) => (
+                                <li key={item.name}>
+                                    <Link
+                                        href={item.href}
+                                        className="text-secondary hover:text-orange-500 transition-colors text-sm"
+                                    >
+                                        {item.name}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {/* Contact */}
+                    <div>
+                        <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-4">
+                            Kontakti
+                        </h3>
+                        <ul className="space-y-3">
+                            {process.env.NODE_ENV === 'development' && (
+                                <li>
+                                    <Link href="/admin" className="text-secondary hover:text-orange-500 transition-colors text-sm">
+                                        Admin
+                                    </Link>
+                                </li>
+                            )}
+                            <li className="flex items-start gap-3">
+                                <Mail size={16} className="text-muted mt-0.5" />
+                                <a href={`mailto:${config.contactEmail}`} className="text-secondary hover:text-orange-500 transition-colors text-sm">
+                                    {config.contactEmail}
+                                </a>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <Phone size={16} className="text-muted mt-0.5" />
+                                <a href={`tel:${config.contactPhone}`} className="text-secondary hover:text-orange-500 transition-colors text-sm">
+                                    {config.contactPhone}
+                                </a>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <MapPin size={16} className="text-muted mt-0.5" />
+                                <span className="text-secondary text-sm">
+                                    Skenderaj, Kosovë
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                {/* Bottom Bar */}
+                <div className="mt-16 pt-8 border-t border-light flex flex-col md:flex-row justify-between items-center gap-4">
+                    <p className="text-muted text-sm">
+                        © {currentYear} {config.siteName}. Të gjitha të drejtat e rezervuara.
+                    </p>
+                    <button
+                        onClick={scrollToTop}
+                        className="flex items-center gap-2 text-sm text-secondary hover:text-orange-500 transition-colors group"
+                    >
+                        <span>Kthehu lart</span>
+                        <ArrowUp size={16} className="group-hover:-translate-y-1 transition-transform" />
+                    </button>
+                </div>
+            </div>
+        </footer>
+    );
 }
 
-@layer base {
-  :root {
-    /* Dark theme backgrounds - fixed variable names */
-    --bg-primary: #0A1929;
-    --bg-secondary: #102336;
-    --bg-tertiary: #1A2C40;
-    --bg-surface: #132F4C;
-    --bg-surface-2: #1E3A5A;
-    --bg-elevated: #244562;
+================================================
+FILE: components/layout/Header.tsx
+================================================
 
-    /* Borders - consistent opacity */
-    --border-light: rgba(255, 255, 255, 0.08);
-    --border-medium: rgba(255, 255, 255, 0.12);
-    --border-strong: rgba(255, 255, 255, 0.2);
+// components/layout/Header.tsx
+'use client';
 
-    /* Text - WCAG contrast compliant */
-    --text-primary: #FFFFFF;
-    --text-secondary: rgba(255, 255, 255, 0.85);
-    --text-tertiary: rgba(255, 255, 255, 0.65);
-    --text-muted: rgba(255, 255, 255, 0.45);
-    --text-disabled: rgba(255, 255, 255, 0.25);
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { Menu, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useConfig } from '@/lib/ConfigContext';
+import { useFilter } from '@/contexts/FilterContext';
 
-    /* Link colors - subtle */
-    --link-default: rgba(255, 255, 255, 0.85);
-    --link-hover: #FF6B00;
-    --link-active: #FF6B00;
-    --link-visited: rgba(255, 255, 255, 0.6);
+export default function Header() {
+    const { config } = useConfig();
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
+    const pathname = usePathname();
 
-    /* Icon colors - harmonious */
-    --icon-default: rgba(255, 255, 255, 0.7);
-    --icon-hover: #FF6B00;
-    --icon-muted: rgba(255, 255, 255, 0.4);
-
-    /* Status colors */
-    --success-bg: rgba(74, 222, 128, 0.1);
-    --success-text: #4ADE80;
-    --success-border: rgba(74, 222, 128, 0.2);
-
-    --warning-bg: rgba(251, 191, 36, 0.1);
-    --warning-text: #FBBF24;
-    --warning-border: rgba(251, 191, 36, 0.2);
-
-    --error-bg: rgba(248, 113, 113, 0.1);
-    --error-text: #F87171;
-    --error-border: rgba(248, 113, 113, 0.2);
-
-    --info-bg: rgba(96, 165, 250, 0.1);
-    --info-text: #60A5FA;
-    --info-border: rgba(96, 165, 250, 0.2);
-
-    /* Orange opacities - fixed */
-    --orange-50: rgba(255, 107, 0, 0.05);
-    --orange-100: rgba(255, 107, 0, 0.1);
-    --orange-150: rgba(255, 107, 0, 0.15);
-    --orange-200: rgba(255, 107, 0, 0.2);
-    --orange-250: rgba(255, 107, 0, 0.25);
-    --orange-300: rgba(255, 107, 0, 0.3);
-
-    /* Shadows - fixed layering */
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
-    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.25);
-    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.3);
-    --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.35);
-
-    /* Focus rings */
-    --ring-offset: 2px;
-    --ring-color: rgba(255, 107, 0, 0.5);
-
-    /* Z-index layers - fixed */
-    --z-dropdown: 100;
-    --z-sticky: 200;
-    --z-fixed: 300;
-    --z-modal: 400;
-    --z-popover: 500;
-    --z-tooltip: 600;
-    --z-toast: 700;
-  }
-
-  /* Base styles - FIXED */
-  * {
-    border-color: var(--border-light);
-    box-sizing: border-box;
-  }
-
-  /* Only constrain these specific elements */
-  html,
-  body,
-  #__next,
-  main,
-  .container-swiss,
-  .container-custom,
-  .w-full {
-    max-width: 100vw;
-    overflow-x: hidden;
-  }
-
-  body {
-    font-family: var(--font-sans);
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
-  }
-
-  /* Typography - fixed responsive sizes */
-  h1 {
-    font-size: clamp(2rem, 5vw, 2.5rem);
-    font-weight: 600;
-    line-height: 1.2;
-    letter-spacing: -0.02em;
-    margin-bottom: 1rem;
-  }
-
-  h2 {
-    font-size: clamp(1.5rem, 4vw, 2rem);
-    font-weight: 500;
-    line-height: 1.3;
-    letter-spacing: -0.01em;
-    margin-bottom: 0.875rem;
-  }
-
-  h3 {
-    font-size: clamp(1.25rem, 3vw, 1.5rem);
-    font-weight: 500;
-    line-height: 1.4;
-    margin-bottom: 0.75rem;
-  }
-
-  h4 {
-    font-size: clamp(1rem, 2vw, 1.25rem);
-    font-weight: 500;
-    line-height: 1.5;
-    margin-bottom: 0.5rem;
-  }
-
-  p {
-    font-size: 1rem;
-    line-height: 1.6;
-    color: var(--text-secondary);
-    margin-bottom: 1rem;
-  }
-
-  small {
-    font-size: 0.875rem;
-    line-height: 1.5;
-    color: var(--text-tertiary);
-  }
-
-  /* Selection */
-  ::selection {
-    background: var(--orange-200);
-    color: var(--text-primary);
-  }
-}
-
-/* Animations - fixed with will-change */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(-20px);
-    opacity: 0;
-  }
-
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes scaleIn {
-  from {
-    transform: scale(0.98);
-    opacity: 0;
-  }
-
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-@keyframes pulse {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.7;
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-/* Animation classes */
-.animate-fadeIn {
-  animation: fadeIn var(--duration-base) var(--easing-standard);
-  will-change: transform, opacity;
-}
-
-.animate-slideIn {
-  animation: slideIn var(--duration-fast) var(--easing-standard);
-  will-change: transform, opacity;
-}
-
-.animate-slideUp {
-  animation: slideUp var(--duration-base) var(--easing-standard);
-  will-change: transform, opacity;
-}
-
-.animate-scaleIn {
-  animation: scaleIn var(--duration-fast) var(--easing-standard);
-  will-change: transform, opacity;
-}
-
-.animate-pulse-slow {
-  animation: pulse 2s var(--easing-standard) infinite;
-}
-
-@layer components {
-
-  /* Container - fixed responsive */
-  .container-swiss {
-    width: 100%;
-    max-width: 1280px;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: clamp(1rem, 5vw, 2rem);
-    padding-right: clamp(1rem, 5vw, 2rem);
-  }
-
-  @media (min-width: 1440px) {
-    .container-swiss {
-      max-width: 1440px;
+    // Only use filter context on cars page
+    let isFilterOpen = false;
+    try {
+        const filterContext = useFilter();
+        isFilterOpen = filterContext?.isFilterOpen || false;
+    } catch {
+        // Not on cars page or no provider, ignore
     }
-  }
 
-  /* Buttons */
-  .btn-primary {
-    background-color: var(--color-orange-500);
-    color: white;
-    padding: 0.75rem 1.75rem;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    font-size: 0.875rem;
-    letter-spacing: 0.01em;
-    transition: all var(--duration-fast) var(--easing-standard);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    box-shadow: var(--shadow-sm);
-    border: 1px solid transparent;
-    position: relative;
-    overflow: hidden;
-  }
+    const isCarsPage = pathname === '/cars';
 
-  .btn-primary:hover:not(:disabled) {
-    background-color: var(--color-orange-600);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-  }
+    useEffect(() => {
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 20);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
-  .btn-primary:active:not(:disabled) {
-    transform: translateY(0);
-    box-shadow: var(--shadow-sm);
-  }
+    useEffect(() => {
+        setIsMenuOpen(false);
+    }, [pathname]);
 
-  .btn-primary:focus-visible {
-    outline: 2px solid var(--color-orange-500);
-    outline-offset: 2px;
-  }
+    // Close mobile menu when filter sidebar opens (only on cars page)
+    useEffect(() => {
+        if (isCarsPage && isFilterOpen) {
+            setIsMenuOpen(false);
+        }
+    }, [isCarsPage, isFilterOpen]);
 
-  .btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+    const navigation = [
+        { name: 'Ballina', href: '/' },
+        { name: 'Makina', href: '/cars' },
+        { name: 'Shikuar së fundmi', href: '/recently-viewed' },
+    ];
 
-  .btn-secondary {
-    background-color: transparent;
-    border: 1px solid var(--border-medium);
-    color: var(--text-primary);
-    padding: 0.75rem 1.75rem;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    font-size: 0.875rem;
-    letter-spacing: 0.01em;
-    transition: all var(--duration-fast) var(--easing-standard);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    background-color: rgba(255, 255, 255, 0.02);
-  }
+    const isActive = (path: string) => pathname === path;
 
-  .btn-secondary:hover:not(:disabled) {
-    border-color: var(--color-orange-500);
-    color: var(--color-orange-500);
-    background-color: var(--orange-50);
-    transform: translateY(-1px);
-  }
+    // Only hide mobile menu button on cars page when filter is open
+    const showMobileMenuButton = !(isCarsPage && isFilterOpen);
 
-  .btn-secondary:active:not(:disabled) {
-    transform: translateY(0);
-  }
+    return (
+        <header
+            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled || isMenuOpen
+                ? 'bg-surface/95 backdrop-blur-xl border-b border-light/10 py-3'
+                : 'bg-transparent py-4 md:py-5'
+                }`}
+        >
+            <nav className="container-swiss">
+                <div className="flex items-center justify-between">
+                    {/* Logo */}
+                    <Link
+                        href="/"
+                        className="flex items-center space-x-3 group shrink-0"
+                    >
+                        <div className="relative">
+                            <img src="/logo.webp" className="md:w-12 md:h-12 w-10 h-10" alt="Vetura Korea Kosovë Logo" />
+                        </div>
+                        <span
+                            className={`text-base md:text-lg font-semibold tracking-tight hidden sm:block ${scrolled ? 'text-primary' : 'text-white'
+                                }`}
+                        >
+                            {config.siteName}
+                        </span>
+                    </Link>
 
-  .btn-secondary:focus-visible {
-    outline: 2px solid var(--color-orange-500);
-    outline-offset: 2px;
-  }
+                    {/* Desktop Navigation */}
+                    <div className="hidden lg:flex items-center space-x-2">
+                        {navigation.map((item) => (
+                            <Link
+                                key={item.name}
+                                href={item.href}
+                                className={`relative px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${scrolled
+                                    ? 'focus:ring-orange-primary/50 focus:ring-offset-surface'
+                                    : 'focus:ring-white/50 focus:ring-offset-transparent'
+                                    } ${isActive(item.href)
+                                        ? scrolled
+                                            ? 'text-orange-500 bg-orange-10'
+                                            : 'text-white bg-white/20'
+                                        : scrolled
+                                            ? 'text-secondary hover:text-primary hover:bg-surface-2/50'
+                                            : 'text-white/90 hover:text-white hover:bg-white/10'
+                                    }`}
+                            >
+                                {item.name}
+                            </Link>
+                        ))}
+                    </div>
 
-  .btn-secondary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+                    {/* Mobile menu button - Hidden on cars page when filter is open */}
+                    {showMobileMenuButton && (
+                        <button
+                            onClick={() => setIsMenuOpen(!isMenuOpen)}
+                            className={`lg:hidden relative w-10 h-10 rounded-xl transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-offset-2 ${scrolled
+                                ? 'bg-surface-2/50 hover:bg-surface-2 focus:ring-orange-primary/50 focus:ring-offset-surface'
+                                : 'bg-white/10 hover:bg-white/20 focus:ring-white/50 focus:ring-offset-transparent'
+                                }`}
+                            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+                        >
+                            {isMenuOpen ? (
+                                <X className={`w-5 h-5 ${scrolled ? 'text-primary' : 'text-white'}`} />
+                            ) : (
+                                <Menu className={`w-5 h-5 ${scrolled ? 'text-primary' : 'text-white'}`} />
+                            )}
+                        </button>
+                    )}
 
-  /* Cards */
-  .card {
-    background-color: var(--bg-surface);
-    border: 1px solid var(--border-light);
-    border-radius: 1rem;
-    transition: all var(--duration-base) var(--easing-standard);
-    overflow: hidden;
-    box-shadow: var(--shadow-xs);
-    position: relative;
-    isolation: isolate;
-  }
+                    {/* Empty placeholder when button is hidden - maintains layout */}
+                    {!showMobileMenuButton && (
+                        <div className="lg:hidden w-10 h-10" />
+                    )}
+                </div>
 
-  .card:hover {
-    border-color: var(--border-medium);
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
-  }
-
-  .card-elevated {
-    background-color: var(--bg-elevated);
-    border: 1px solid var(--border-medium);
-    border-radius: 1rem;
-    box-shadow: var(--shadow-md);
-  }
-
-  /* Inputs */
-  .input {
-    background-color: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border-light);
-    color: var(--text-primary);
-    border-radius: 0.5rem;
-    padding: 0.75rem 1rem;
-    font-size: 0.875rem;
-    transition: all var(--duration-fast) ease;
-    width: 100%;
-    backdrop-filter: blur(4px);
-  }
-
-  .input:hover:not(:disabled) {
-    border-color: var(--border-medium);
-    background-color: rgba(255, 255, 255, 0.05);
-  }
-
-  .input:focus {
-    outline: none;
-    border-color: var(--color-orange-500);
-    background-color: rgba(255, 107, 0, 0.05);
-    box-shadow: 0 0 0 3px var(--orange-100);
-  }
-
-  .input::placeholder {
-    color: var(--text-muted);
-    font-weight: 300;
-  }
-
-  .input:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background-color: rgba(255, 255, 255, 0.02);
-  }
-
-  /* Select inputs */
-  .select {
-    background-color: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border-light);
-    color: var(--text-primary);
-    border-radius: 0.5rem;
-    padding: 0.75rem 2rem 0.75rem 1rem;
-    font-size: 0.875rem;
-    transition: all var(--duration-fast) ease;
-    width: 100%;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 0.75rem center;
-    background-size: 1rem;
-  }
-
-  .select:hover:not(:disabled) {
-    border-color: var(--border-medium);
-    background-color: rgba(255, 255, 255, 0.05);
-  }
-
-  .select:focus {
-    outline: none;
-    border-color: var(--color-orange-500);
-    background-color: rgba(255, 107, 0, 0.05);
-    box-shadow: 0 0 0 3px var(--orange-100);
-  }
-
-  .select:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  /* Badges */
-  .badge {
-    padding: 0.25rem 0.875rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    letter-spacing: 0.01em;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    line-height: 1.5;
-    border: 1px solid transparent;
-  }
-
-  .badge-success {
-    background-color: var(--success-bg);
-    color: var(--success-text);
-    border-color: var(--success-border);
-  }
-
-  .badge-warning {
-    background-color: var(--warning-bg);
-    color: var(--warning-text);
-    border-color: var(--warning-border);
-  }
-
-  .badge-error {
-    background-color: var(--error-bg);
-    color: var(--error-text);
-    border-color: var(--error-border);
-  }
-
-  .badge-info {
-    background-color: var(--info-bg);
-    color: var(--info-text);
-    border-color: var(--info-border);
-  }
-
-  /* Dividers */
-  .divider {
-    height: 1px;
-    background: linear-gradient(to right,
-        transparent,
-        var(--border-medium) 20%,
-        var(--border-medium) 80%,
-        transparent);
-    width: 100%;
-    margin: var(--spacing-6) 0;
-  }
-
-  .divider-vertical {
-    width: 1px;
-    background: linear-gradient(to bottom,
-        transparent,
-        var(--border-medium) 20%,
-        var(--border-medium) 80%,
-        transparent);
-    height: 100%;
-  }
-
-  /* Skeleton */
-  .skeleton {
-    background: linear-gradient(90deg,
-        var(--bg-surface-2) 25%,
-        var(--border-light) 37%,
-        var(--bg-surface-2) 63%);
-    background-size: 400% 100%;
-    animation: shimmer 1.4s ease infinite;
-    border-radius: 0.5rem;
-  }
-
-  /* Glass effect */
-  .glass {
-    background: rgba(19, 47, 76, 0.6);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid var(--border-light);
-  }
-
-  .glass-hover:hover {
-    background: rgba(19, 47, 76, 0.7);
-    backdrop-filter: blur(12px);
-    border-color: var(--border-medium);
-  }
-
-  /* Focus ring */
-  .focus-ring {
-    transition: box-shadow var(--duration-fast) ease;
-  }
-
-  .focus-ring:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 var(--ring-offset) var(--bg-primary), 0 0 0 calc(var(--ring-offset) + 2px) var(--ring-color);
-  }
-
-  /* Truncation */
-  .line-clamp-1 {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 1;
-  }
-
-  .line-clamp-2 {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-  }
-
-  .line-clamp-3 {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-  }
-
-  /* Background utilities */
-  .bg-surface-3 {
-    background-color: var(--bg-surface-2);
-    filter: brightness(1.2);
-  }
-
-  /* Image Gallery Specific Styles */
-  .thumbnail-scroll {
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    position: relative;
-    width: 100%;
-  }
-
-  .thumbnail-scroll::-webkit-scrollbar {
-    display: none;
-  }
-
-  .thumbnail-gradient-left {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 2rem;
-    background: linear-gradient(to right, var(--bg-primary), transparent);
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  .thumbnail-gradient-right {
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: 2rem;
-    background: linear-gradient(to left, var(--bg-primary), transparent);
-    pointer-events: none;
-    z-index: 1;
-  }
-}
-
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--bg-surface-2);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border-medium);
-  border-radius: 4px;
-  transition: background var(--duration-fast) ease;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-orange-500);
-}
-
-::-webkit-scrollbar-corner {
-  background: var(--bg-primary);
-}
-
-/* Firefox scrollbar */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-medium) var(--bg-surface-2);
-}
-
-/* Custom scrollbar */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: var(--bg-surface-2);
-  border-radius: 8px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--border-medium);
-  border-radius: 8px;
-  transition: background var(--duration-fast) ease;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--color-orange-500);
-}
-
-/* Hide scrollbar */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-/* Number input */
-input[type=number]::-webkit-inner-spin-button,
-input[type=number]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-input[type=number] {
-  -moz-appearance: textfield;
-}
-
-/* Select options */
-select option,
-.dropdown-option {
-  background-color: var(--bg-surface-2);
-  color: var(--text-primary);
-}
-
-select option:hover,
-select option:focus,
-select option:checked {
-  background: linear-gradient(0deg, var(--orange-100) 0%, var(--orange-100) 100%);
-  background-color: var(--orange-100) !important;
-  color: var(--color-orange-500);
-}
-
-/* Selection color for inputs */
-input::selection,
-textarea::selection {
-  background: var(--orange-200);
-  color: var(--text-primary);
-}
-
-/* Media queries */
-@media (min-width: 480px) {
-  .xs\:inline {
-    display: inline;
-  }
-}
-
-/* Print styles */
-@media print {
-  body {
-    background-color: white;
-    color: black;
-  }
-
-  .no-print {
-    display: none;
-  }
+                {/* Mobile Navigation - Only show when menu is open AND (not on cars page or filter is closed) */}
+                <AnimatePresence>
+                    {isMenuOpen && (!isCarsPage || !isFilterOpen) && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="lg:hidden overflow-hidden"
+                        >
+                            <div className="py-4 mt-2 border-t border-light/10 space-y-2">
+                                {navigation.map((item) => (
+                                    <Link
+                                        key={item.name}
+                                        href={item.href}
+                                        className={`block py-3 px-4 rounded-xl text-sm font-medium transition-all ${isActive(item.href)
+                                            ? scrolled
+                                                ? 'bg-orange-10 text-orange-500'
+                                                : 'bg-white/20 text-white'
+                                            : scrolled
+                                                ? 'text-secondary hover:text-primary hover:bg-surface-2/50'
+                                                : 'text-white/80 hover:text-white hover:bg-white/10'
+                                            }`}
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        {item.name}
+                                    </Link>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </nav>
+        </header>
+    );
 }

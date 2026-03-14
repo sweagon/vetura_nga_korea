@@ -9,7 +9,7 @@ export default function LocationMap() {
         {
             icon: Building2,
             label: 'Adresa',
-            value: 'Rr. Fehmi Agani, Skenderaj 10000, Kosovë',
+            value: 'Na vizitoni në Skenderaj, Kosovë',
         },
         {
             icon: Phone,

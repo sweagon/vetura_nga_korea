@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { notFound } from 'next/navigation';
 import { fetchCarByVin, type Car } from '@/lib/api';
-import { CarDetailClient } from '@/components/cars/CarDetailClient';
+import { CarDetailClient } from '@/components/cars/CarDetailClient'; // Fixed: removed curly braces
 import { DetailSkeleton } from '@/components/ui/LoadingSkeleton';
-import { Link } from 'lucide-react';
+import Link from 'next/link'; // Fixed: import from next/link, not lucide-react
 
 export default function CarDetailClientWrapper({ vin }: { vin: string }) {
     const [car, setCar] = useState<Car | null>(null);

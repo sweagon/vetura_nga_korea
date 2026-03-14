@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Shield, Truck, Award, Users, Clock, ThumbsUp, Sparkles, FileCheck, Heart, TrendingUp, FileText } from 'lucide-react';
+import { Shield, Truck, Award, Users, Clock, ThumbsUp, Sparkles, FileCheck, Heart, TrendingUp, File } from 'lucide-react';
 
 export default function AboutSection() {
     const features = [
@@ -16,7 +16,7 @@ export default function AboutSection() {
             description: 'Ju asistojmë nga zgjedhja e veturës deri te dorëzimi final në Kosovë.',
         },
         {
-            icon: FileText,
+            icon: File,
             title: 'Dokumentacion i rregullt për import',
             description: 'Sigurojmë të gjitha dokumentet e nevojshme për transport dhe procedurat e importit.',
         },

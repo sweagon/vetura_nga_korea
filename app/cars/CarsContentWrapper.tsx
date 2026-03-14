@@ -11,7 +11,7 @@ import AdvancedFilterSidebar from '@/components/filters/AdvancedFilterSidebar';
 import Pagination from '@/components/ui/Pagination';
 import { useCarFilters } from '@/hooks/useCarFilters';
 import { useFilter } from '@/contexts/FilterContext';
-import { type Car } from '@/lib/api';
+import { type Car, getBestPrice } from '@/lib/api';
 
 interface SortOption {
     value: string;
@@ -92,15 +92,54 @@ export default function CarsContentWrapper() {
         goToPage
     } = useCarFilters(serverFilters, clientFilters);
 
+    // Helper function to get the best price for sorting
+    const getCarPrice = useCallback((car: Car): number => {
+        const lot = car.lots?.[0];
+        return lot?.price_with_margin_and_kosovo || lot?.step5 || lot?.buy_now || 0;
+    }, []);
+
+    // Helper function to get mileage
+    const getCarMileage = useCallback((car: Car): number => {
+        return car.lots?.[0]?.odometer?.km || 0;
+    }, []);
+
     const sortOptionsList = useMemo<SortOption[]>(() => [
-        { value: 'recommended', label: 'Përditësimet e fundit', sortFn: () => 0 },
-        { value: 'price_asc', label: 'Çmimi: Nga më i ulëti', sortFn: (a, b) => (a.lots?.[0]?.buy_now || 0) - (b.lots?.[0]?.buy_now || 0) },
-        { value: 'price_desc', label: 'Çmimi: Nga më i larti', sortFn: (a, b) => (b.lots?.[0]?.buy_now || 0) - (a.lots?.[0]?.buy_now || 0) },
-        { value: 'year_desc', label: 'Viti: Më të rijtë', sortFn: (a, b) => b.year - a.year },
-        { value: 'year_asc', label: 'Viti: Më të vjetrit', sortFn: (a, b) => a.year - b.year },
-        { value: 'mileage_asc', label: 'Kilometrazha: Më e ulët', sortFn: (a, b) => (a.lots?.[0]?.odometer?.km || 0) - (b.lots?.[0]?.odometer?.km || 0) },
-        { value: 'mileage_desc', label: 'Kilometrazha: Më e lartë', sortFn: (a, b) => (b.lots?.[0]?.odometer?.km || 0) - (a.lots?.[0]?.odometer?.km || 0) },
-    ], []);
+        {
+            value: 'recommended',
+            label: 'Të rekomanduara',
+            sortFn: () => 0 // Keep original order
+        },
+        {
+            value: 'price_asc',
+            label: 'Çmimi: Nga më i ulëti',
+            sortFn: (a, b) => getCarPrice(a) - getCarPrice(b)
+        },
+        {
+            value: 'price_desc',
+            label: 'Çmimi: Nga më i larti',
+            sortFn: (a, b) => getCarPrice(b) - getCarPrice(a)
+        },
+        {
+            value: 'year_desc',
+            label: 'Viti: Më të rijtë',
+            sortFn: (a, b) => b.year - a.year
+        },
+        {
+            value: 'year_asc',
+            label: 'Viti: Më të vjetrit',
+            sortFn: (a, b) => a.year - b.year
+        },
+        {
+            value: 'mileage_asc',
+            label: 'Kilometrazha: Më e ulët',
+            sortFn: (a, b) => getCarMileage(a) - getCarMileage(b)
+        },
+        {
+            value: 'mileage_desc',
+            label: 'Kilometrazha: Më e lartë',
+            sortFn: (a, b) => getCarMileage(b) - getCarMileage(a)
+        },
+    ], [getCarPrice, getCarMileage]);
 
     const sortSelectOptions = useMemo(() =>
         sortOptionsList.map(opt => ({ value: opt.value, label: opt.label })),

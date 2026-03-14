@@ -74,14 +74,11 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
     const effectiveVehicleType = hasTypeConfig ? vehicleType : 'default';
 
     // Calculate price details with the correct vehicle type
-    // Calculate price details with the correct vehicle type
     const priceDetails = mounted ? calculateFinalPrice(price, effectiveVehicleType) : {
         basePrice: price,
         shippingCost: config.shippingCost,
-        shippingToPristina: config.shippingToPristina, // Add this
-        markupAmount: 0,
-        finalPrice: price,
-        appliedMarkup: 'none' as const, // Change from 'percentage' to 'none'
+        shippingToPristina: config.shippingToPristina,
+        finalPrice: price + config.shippingCost + config.shippingToPristina,
         vehicleTypeUsed: effectiveVehicleType
     };
 
@@ -416,51 +413,27 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                 <div className="card p-6">
                                     <h3 className="font-semibold mb-3">Shpenzime të përafërta</h3>
                                     <div className="space-y-2 text-sm">
-                                        {/* Base Price - always show */}
+                                        {/* Base Price */}
                                         <div className="flex justify-between">
                                             <span className="text-muted">Makina:</span>
                                             <span className="font-medium text-primary">{formatPrice(priceDetails.basePrice)}</span>
                                         </div>
 
-                                        {/* Shipping to Durres - always show */}
+                                        {/* Shipping to Durres */}
                                         <div className="flex justify-between items-center">
                                             <span className="text-muted">Transporti deri në Durrës:</span>
                                             <div className="text-right">
                                                 <span className="font-medium text-primary block">{formatPrice(priceDetails.shippingCost)}</span>
-                                                {/* <span className="text-xs text-orange-500">përfshirë transportin detar</span> */}
                                             </div>
                                         </div>
 
-                                        {/* Additional shipping to Pristina - always show (since it's a fixed cost) */}
+                                        {/* Shipping to Pristina */}
                                         <div className="flex justify-between items-center">
                                             <span className="text-muted">Transporti deri në Prishtinë:</span>
                                             <div className="text-right">
                                                 <span className="font-medium text-primary block">{formatPrice(priceDetails.shippingToPristina)}</span>
-                                                {/* <span className="text-xs text-orange-500">+{formatPrice(priceDetails.shippingToPristina)} nga Durrësi</span> */}
                                             </div>
                                         </div>
-
-                                        {/* Margin - only show if > 0 */}
-                                        {priceDetails.markupAmount > 0 && (
-                                            <>
-                                                <div className="flex justify-between">
-                                                    <span className="text-muted flex items-center gap-1">
-                                                        Marzha:
-                                                        {priceDetails.appliedMarkup === 'minimum' && (
-                                                            <span className="text-xs bg-orange-100 text-orange-500 px-2 py-0.5 rounded-full">
-                                                                Minimale
-                                                            </span>
-                                                        )}
-                                                    </span>
-                                                    <span className="font-medium text-primary">{formatPrice(priceDetails.markupAmount)}</span>
-                                                </div>
-                                                {config.markupPercentage > 0 && priceDetails.appliedMarkup === 'percentage' && (
-                                                    <div className="text-xs text-muted text-right">
-                                                        ({config.markupPercentage}% e çmimit)
-                                                    </div>
-                                                )}
-                                            </>
-                                        )}
 
                                         {/* Total */}
                                         <div className="border-t border-light my-2 pt-2">

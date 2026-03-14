@@ -1,4 +1,3 @@
-// app/cars/CarsFilter.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,6 +6,56 @@ import { Search, Car, Calendar, DollarSign, X } from 'lucide-react';
 import CustomSelect from '@/components/ui/CustomSelect';
 import { fetchFilterData, fetchModels } from '@/lib/api';
 import { getTranslatedManufacturers } from '@/lib/translations';
+
+// Kosovo market priority order for manufacturers
+const KOSOVO_MANUFACTURER_ORDER = [
+    'Volkswagen',
+    'Mercedes-Benz',
+    'BMW',
+    'Audi',
+    'Renault',
+    'Renault Samsung',
+    'Peugeot',
+    'Citroen',
+    'Opel',
+    'Land Rover',
+    'Jaguar',
+    'Fiat',
+    'SEAT',
+    'Skoda',
+    'Dacia',
+    'Toyota',
+    'Honda',
+    'Nissan',
+    'Mazda',
+    'Mitsubishi',
+    'Suzuki',
+    'Hyundai',
+    'Kia',
+    'SsangYong',
+    'Volvo',
+    'Ford',
+    'Jeep',
+    'Chevrolet',
+    'Porsche',
+    'Maserati',
+    'Alfa Romeo',
+    'Lexus',
+    'Infiniti',
+    'Acura',
+    'Genesis',
+    'Bentley',
+    'Rolls-Royce',
+    'Lamborghini',
+    'Ferrari',
+    'Aston Martin',
+    'McLaren',
+    'Lotus',
+    'Cadillac',
+    'Lincoln',
+    'Mini',
+    'Smart'
+];
 
 interface FilterState {
     manufacturerId: string;
@@ -43,8 +92,22 @@ export default function CarsFilter() {
             try {
                 setLoading(prev => ({ ...prev, manufacturers: true }));
                 const data = await fetchFilterData();
+
+                // Sort manufacturers by Kosovo priority
+                const sortedManufacturers = [...data.manufacturers].sort((a, b) => {
+                    const indexA = KOSOVO_MANUFACTURER_ORDER.indexOf(a.name);
+                    const indexB = KOSOVO_MANUFACTURER_ORDER.indexOf(b.name);
+
+                    if (indexA !== -1 && indexB !== -1) {
+                        return indexA - indexB;
+                    }
+                    if (indexA !== -1) return -1;
+                    if (indexB !== -1) return 1;
+                    return a.name.localeCompare(b.name);
+                });
+
                 setFilterData({
-                    manufacturers: getTranslatedManufacturers(data.manufacturers),
+                    manufacturers: getTranslatedManufacturers(sortedManufacturers),
                     models: [],
                     years: data.years
                 });
@@ -114,7 +177,7 @@ export default function CarsFilter() {
 
     const activeFilterCount = Object.values(filters).filter(v => v !== '').length;
 
-    // Prepare options
+    // Prepare options (already sorted by Kosovo priority)
     const manufacturerOptions = filterData.manufacturers.map(({ id, translated }) => ({
         value: id.toString(),
         label: translated
