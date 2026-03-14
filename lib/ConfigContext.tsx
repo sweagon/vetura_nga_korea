@@ -74,7 +74,7 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                credentials: 'include', // ← ADD THIS ONE LINE
+                credentials: 'include', // ← MAKE SURE THIS IS HERE
                 body: JSON.stringify(newConfig),
             });
 

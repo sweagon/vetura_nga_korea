@@ -79,7 +79,6 @@ export default function AdminPage() {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Check lockout
         if (lockoutUntil && Date.now() < lockoutUntil) {
             const minutesLeft = Math.ceil((lockoutUntil - Date.now()) / 60000);
             setSaveMessage({
@@ -95,6 +94,7 @@ export default function AdminPage() {
             const response = await fetch('/api/admin/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include', // ← ADD THIS
                 body: JSON.stringify({ password })
             });
 
@@ -106,22 +106,7 @@ export default function AdminPage() {
                 setIsAuthenticated(true);
                 setSaveMessage({ text: '', type: '' });
             } else {
-                const newAttempts = loginAttempts + 1;
-                setLoginAttempts(newAttempts);
-
-                if (newAttempts >= MAX_ATTEMPTS) {
-                    const lockout = Date.now() + LOCKOUT_TIME;
-                    setLockoutUntil(lockout);
-                    setSaveMessage({
-                        text: `Shumë përpjekje të dështuara. Llogaria është bllokuar për 15 minuta.`,
-                        type: 'error'
-                    });
-                } else {
-                    setSaveMessage({
-                        text: `Fjalëkalimi i gabuar. ${MAX_ATTEMPTS - newAttempts} përpjekje të mbetura.`,
-                        type: 'error'
-                    });
-                }
+                // ... rest of your error handling
             }
         } catch (error) {
             setSaveMessage({ text: 'Hyrja dështoi. Provo përsëri.', type: 'error' });
@@ -278,8 +263,8 @@ export default function AdminPage() {
 
                         {saveMessage.text && (
                             <div className={`mb-4 p-3 rounded-lg text-sm text-center ${saveMessage.type === 'error'
-                                    ? 'bg-red-500/10 text-red-500 border border-red-500/20'
-                                    : 'bg-green-500/10 text-green-500 border border-green-500/20'
+                                ? 'bg-red-500/10 text-red-500 border border-red-500/20'
+                                : 'bg-green-500/10 text-green-500 border border-green-500/20'
                                 }`}>
                                 {saveMessage.text}
                             </div>
@@ -359,8 +344,8 @@ export default function AdminPage() {
                     {/* Success Message */}
                     {saveMessage.text && (
                         <div className={`mt-4 p-3 rounded-lg text-sm ${saveMessage.type === 'success'
-                                ? 'bg-green-500/10 text-green-500 border border-green-500/20'
-                                : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                            ? 'bg-green-500/10 text-green-500 border border-green-500/20'
+                            : 'bg-red-500/10 text-red-500 border border-red-500/20'
                             }`}>
                             {saveMessage.text}
                         </div>

@@ -9,11 +9,13 @@ export async function POST(request: Request) {
         const isValid = await validateAdmin(password);
 
         if (isValid) {
-            // Create session (simple cookie)
             const cookieStore = await cookies();
+
+            // Set cookie with proper settings for production
             cookieStore.set('admin_session', 'authenticated', {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
+                secure: true, // Always true on Vercel (HTTPS)
+                sameSite: 'lax', // Important for cross-origin
                 maxAge: 2 * 60 * 60, // 2 hours
                 path: '/',
             });
@@ -33,4 +35,11 @@ export async function POST(request: Request) {
             { status: 500 }
         );
     }
+}
+
+// Add logout endpoint
+export async function DELETE() {
+    const cookieStore = await cookies();
+    cookieStore.delete('admin_session');
+    return NextResponse.json({ success: true });
 }
