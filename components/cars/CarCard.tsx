@@ -29,7 +29,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
     useEffect(() => {
         if (lot) {
             const price = getRawKoreanPrice(lot);
-            setKoreanPrice(price);
+            setKoreanPrice(price - 3190);
         }
     }, [lot]);
 

@@ -11,7 +11,7 @@ import AdvancedFilterSidebar from '@/components/filters/AdvancedFilterSidebar';
 import Pagination from '@/components/ui/Pagination';
 import { useCarFilters } from '@/hooks/useCarFilters';
 import { useFilter } from '@/contexts/FilterContext';
-import { type Car, getBestPrice } from '@/lib/api';
+import { type Car, getDisplayPrice } from '@/lib/api';
 
 interface SortOption {
     value: string;
@@ -92,10 +92,9 @@ export default function CarsContentWrapper() {
         goToPage
     } = useCarFilters(serverFilters, clientFilters);
 
-    // Helper function to get the best price for sorting
-    const getCarPrice = useCallback((car: Car): number => {
-        const lot = car.lots?.[0];
-        return lot?.price_with_margin_and_kosovo || lot?.step5 || lot?.buy_now || 0;
+    // Helper function to get the display price for sorting (includes our pricing logic)
+    const getCarDisplayPrice = useCallback((car: Car): number => {
+        return getDisplayPrice(car);
     }, []);
 
     // Helper function to get mileage
@@ -112,12 +111,12 @@ export default function CarsContentWrapper() {
         {
             value: 'price_asc',
             label: 'Çmimi: Nga më i ulëti',
-            sortFn: (a, b) => getCarPrice(a) - getCarPrice(b)
+            sortFn: (a, b) => getCarDisplayPrice(a) - getCarDisplayPrice(b)
         },
         {
             value: 'price_desc',
             label: 'Çmimi: Nga më i larti',
-            sortFn: (a, b) => getCarPrice(b) - getCarPrice(a)
+            sortFn: (a, b) => getCarDisplayPrice(b) - getCarDisplayPrice(a)
         },
         {
             value: 'year_desc',
@@ -139,7 +138,7 @@ export default function CarsContentWrapper() {
             label: 'Kilometrazha: Më e lartë',
             sortFn: (a, b) => getCarMileage(b) - getCarMileage(a)
         },
-    ], [getCarPrice, getCarMileage]);
+    ], [getCarDisplayPrice, getCarMileage]);
 
     const sortSelectOptions = useMemo(() =>
         sortOptionsList.map(opt => ({ value: opt.value, label: opt.label })),

@@ -777,3 +777,23 @@ export function getBodyTypeAlbanian(bodyType: string): string {
   };
   return bodyMap[bodyType.toLowerCase()] || bodyType;
 }
+
+/**
+ * Get the display price for a car (competitor price - their transport)
+ * This is what we show to customers
+ */
+export function getDisplayPrice(car: Car): number {
+  const lot = car.lots?.[0];
+  if (!lot) return 0;
+
+  // Get competitor's price
+  const competitorPrice = getOldSitePrice(lot);
+  if (competitorPrice > 0) {
+    // Remove their transport (€3,850) to get base price
+    const theirTransport = 3850;
+    return competitorPrice - theirTransport;
+  }
+
+  // Fallback to raw Korean price
+  return getRawKoreanPrice(lot);
+}
