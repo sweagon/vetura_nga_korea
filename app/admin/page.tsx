@@ -6,6 +6,7 @@ import {
     Save,
     Settings,
     Truck,
+    Percent,
     LogIn,
     Lock,
     Shield,
@@ -36,8 +37,80 @@ const VEHICLE_TYPES = [
     { id: 'coupe', label: 'Kupe', description: 'Makina sportive' },
     { id: 'van', label: 'Furgon', description: 'Automjete komerciale' },
     { id: 'pickup', label: 'Pickup', description: 'Kamioneta' },
+    { id: 'sport_car', label: 'Makinë Sportive', description: 'Ferrari, Lamborghini, etj.' },
     { id: 'default', label: 'Default', description: 'Vlerat standarde për të gjitha të tjerat' }
 ];
+
+// Custom Number Input Component to prevent focus loss
+const NumberInput = ({
+    value,
+    onChange,
+    className = '',
+    step = '1',
+    min = '0',
+    max,
+    disabled = false,
+    placeholder = '0'
+}: {
+    value: number;
+    onChange: (value: number) => void;
+    className?: string;
+    step?: string;
+    min?: string;
+    max?: string;
+    disabled?: boolean;
+    placeholder?: string;
+}) => {
+    const [inputValue, setInputValue] = useState(value.toString());
+
+    // Update local state when prop changes, but only if different
+    useEffect(() => {
+        const newValue = value.toString();
+        if (inputValue !== newValue && !isNaN(Number(inputValue))) {
+            setInputValue(newValue);
+        }
+    }, [value]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = e.target.value;
+        setInputValue(newValue);
+
+        // Allow empty string temporarily
+        if (newValue === '') {
+            return;
+        }
+
+        // Only update parent if it's a valid number
+        if (!isNaN(Number(newValue))) {
+            onChange(Number(newValue));
+        }
+    };
+
+    const handleBlur = () => {
+        // On blur, if empty, set to 0
+        if (inputValue === '') {
+            setInputValue('0');
+            onChange(0);
+        } else {
+            // Format the number
+            const num = Number(inputValue);
+            setInputValue(num.toString());
+        }
+    };
+
+    return (
+        <input
+            type="text"
+            inputMode="numeric"
+            value={inputValue}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            className={className}
+            disabled={disabled}
+            placeholder={placeholder}
+        />
+    );
+};
 
 export default function AdminPage() {
     const router = useRouter();
@@ -118,7 +191,6 @@ export default function AdminPage() {
                 setSaveMessage({ text: '✅ Hyrja e suksesshme!', type: 'success' });
                 setPassword('');
 
-                // Redirect or update UI
                 setTimeout(() => setSaveMessage({ text: '', type: '' }), 2000);
             } else {
                 const newAttempts = loginAttempts + 1;
@@ -188,8 +260,8 @@ export default function AdminPage() {
             const defaultConfig = {
                 shippingCost: 3500,
                 shippingToPristina: 350,
-                defaultMarginPercentage: 15,      // ADD THIS
-                defaultMinimumMargin: 1000,        // ADD THIS
+                defaultMarginPercentage: 15,
+                defaultMinimumMargin: 1000,
                 contactEmail: 'blerart@outlook.com',
                 contactPhone: '+383 49 195 414',
                 siteName: 'Vetura Korea Kosovë',
@@ -202,6 +274,7 @@ export default function AdminPage() {
                     coupe: { shippingCost: 3500, marginPercentage: 15, minimumMargin: 1000, enabled: true },
                     van: { shippingCost: 3800, marginPercentage: 12, minimumMargin: 800, enabled: true },
                     pickup: { shippingCost: 4000, marginPercentage: 12, minimumMargin: 800, enabled: true },
+                    sport_car: { shippingCost: 3500, marginPercentage: 15, minimumMargin: 1500, enabled: true },
                     default: { shippingCost: 3500, marginPercentage: 15, minimumMargin: 1000, enabled: true }
                 }
             };
@@ -223,6 +296,8 @@ export default function AdminPage() {
                 [type]: {
                     ...(prev.vehicleTypes[type as keyof typeof prev.vehicleTypes] || {
                         shippingCost: 3500,
+                        marginPercentage: 15,
+                        minimumMargin: 1000,
                         enabled: false
                     }),
                     [field]: value
@@ -241,6 +316,8 @@ export default function AdminPage() {
                     [type]: {
                         ...(currentConfig || {
                             shippingCost: 3500,
+                            marginPercentage: 15,
+                            minimumMargin: 1000,
                             enabled: false
                         }),
                         enabled: !(currentConfig?.enabled || false)
@@ -351,7 +428,7 @@ export default function AdminPage() {
                             </div>
                             <div>
                                 <h1 className="text-xl font-bold text-white">Cilësimet e Faqes</h1>
-                                <p className="text-sm text-white/60">Rregulloni transportin dhe kontaktet</p>
+                                <p className="text-sm text-white/60">Rregulloni transportin, marzhën dhe kontaktet</p>
                             </div>
                         </div>
 
@@ -391,6 +468,45 @@ export default function AdminPage() {
                     )}
                 </div>
 
+                {/* Global Margin Settings */}
+                <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 mb-6">
+                    <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <Percent className="text-orange-500" size={20} />
+                        <span>Cilësimet Globale të Marzhës</span>
+                    </h2>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm text-white/70 mb-2">
+                                Përqindja e Marzhës (%)
+                            </label>
+                            <NumberInput
+                                value={localConfig.defaultMarginPercentage ?? 15}
+                                onChange={(value) => updateField('defaultMarginPercentage', value)}
+                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                step="1"
+                                min="0"
+                                max="100"
+                            />
+                            <p className="text-xs text-white/40 mt-1">Përqindja standarde për të gjitha automjetet</p>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm text-white/70 mb-2">
+                                Marzha Minimale (€)
+                            </label>
+                            <NumberInput
+                                value={localConfig.defaultMinimumMargin ?? 1000}
+                                onChange={(value) => updateField('defaultMinimumMargin', value)}
+                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                step="100"
+                                min="0"
+                            />
+                            <p className="text-xs text-white/40 mt-1">Fitimi minimal për çdo automjet</p>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Shipping Costs */}
                 <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 mb-6">
                     <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -404,10 +520,9 @@ export default function AdminPage() {
                             <label className="block text-sm text-white/70 mb-2">
                                 Transporti Korea → Durrës (€)
                             </label>
-                            <input
-                                type="number"
+                            <NumberInput
                                 value={localConfig.shippingCost}
-                                onChange={(e) => updateField('shippingCost', Number(e.target.value))}
+                                onChange={(value) => updateField('shippingCost', value)}
                                 className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                                 step="100"
                                 min="0"
@@ -420,10 +535,9 @@ export default function AdminPage() {
                             <label className="block text-sm text-white/70 mb-2">
                                 Transporti Durrës → Prishtinë (€)
                             </label>
-                            <input
-                                type="number"
+                            <NumberInput
                                 value={localConfig.shippingToPristina}
-                                onChange={(e) => updateField('shippingToPristina', Number(e.target.value))}
+                                onChange={(value) => updateField('shippingToPristina', value)}
                                 className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                                 step="10"
                                 min="0"
@@ -432,15 +546,16 @@ export default function AdminPage() {
                         </div>
                     </div>
                 </div>
+
                 {/* Vehicle Types */}
                 <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 mb-6">
                     <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                         <Car className="text-orange-500" size={20} />
-                        <span>Transporti sipas llojit të automjetit</span>
+                        <span>Konfigurimi sipas llojit të automjetit</span>
                     </h2>
 
                     <p className="text-sm text-white/60 mb-4">
-                        Aktivizoni çmime të veçanta për lloje të ndryshme të automjeteve.
+                        Aktivizoni dhe rregulloni çmime të veçanta për lloje të ndryshme të automjeteve.
                     </p>
 
                     <div className="space-y-3">
@@ -485,7 +600,7 @@ export default function AdminPage() {
                                         <div className="flex items-center gap-4">
                                             {typeConfig?.enabled && (
                                                 <span className="text-sm text-white/60 hidden sm:block">
-                                                    Transport: €{typeConfig.shippingCost}
+                                                    Transport: €{typeConfig.shippingCost} | Marzha: {typeConfig.marginPercentage}% | Min: €{typeConfig.minimumMargin}
                                                 </span>
                                             )}
                                             {isExpanded ? (
@@ -504,10 +619,9 @@ export default function AdminPage() {
                                                     <label className="block text-sm text-white/70 mb-2">
                                                         Transporti (€)
                                                     </label>
-                                                    <input
-                                                        type="number"
-                                                        value={typeConfig.shippingCost || 3500}
-                                                        onChange={(e) => updateVehicleType(type.id, 'shippingCost', Number(e.target.value))}
+                                                    <NumberInput
+                                                        value={typeConfig.shippingCost ?? 3500}
+                                                        onChange={(value) => updateVehicleType(type.id, 'shippingCost', value)}
                                                         className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                                                         step="100"
                                                         min="0"
@@ -518,10 +632,9 @@ export default function AdminPage() {
                                                     <label className="block text-sm text-white/70 mb-2">
                                                         Marzha (%)
                                                     </label>
-                                                    <input
-                                                        type="number"
-                                                        value={typeConfig.marginPercentage || 15}
-                                                        onChange={(e) => updateVehicleType(type.id, 'marginPercentage', Number(e.target.value))}
+                                                    <NumberInput
+                                                        value={typeConfig.marginPercentage ?? 15}
+                                                        onChange={(value) => updateVehicleType(type.id, 'marginPercentage', value)}
                                                         className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                                                         step="1"
                                                         min="0"
@@ -533,10 +646,9 @@ export default function AdminPage() {
                                                     <label className="block text-sm text-white/70 mb-2">
                                                         Marzha Minimale (€)
                                                     </label>
-                                                    <input
-                                                        type="number"
-                                                        value={typeConfig.minimumMargin || 1000}
-                                                        onChange={(e) => updateVehicleType(type.id, 'minimumMargin', Number(e.target.value))}
+                                                    <NumberInput
+                                                        value={typeConfig.minimumMargin ?? 1000}
+                                                        onChange={(value) => updateVehicleType(type.id, 'minimumMargin', value)}
                                                         className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                                                         step="100"
                                                         min="0"
@@ -630,19 +742,31 @@ export default function AdminPage() {
                                 <h3 className="text-sm font-medium text-white mb-3">Shembull: Sedan</h3>
                                 <div className="space-y-2 text-sm">
                                     <div className="flex justify-between text-white/70">
-                                        <span>Makina (me transport):</span>
+                                        <span>Çmimi bazë:</span>
+                                        <span className="text-white">€15,000</span>
+                                    </div>
+                                    <div className="flex justify-between text-white/70">
+                                        <span>Transporti Durrës:</span>
+                                        <span className="text-white">+€{localConfig.shippingCost}</span>
+                                    </div>
+                                    <div className="flex justify-between text-white/70">
+                                        <span>Marzha ({localConfig.defaultMarginPercentage}%):</span>
                                         <span className="text-white">
-                                            €{(15000 + localConfig.shippingCost).toLocaleString()}
+                                            +€{Math.max(Math.round(15000 * (localConfig.defaultMarginPercentage || 15) / 100), localConfig.defaultMinimumMargin || 1000).toLocaleString()}
                                         </span>
                                     </div>
                                     <div className="flex justify-between text-white/70">
                                         <span>Transporti Prishtinë:</span>
-                                        <span className="text-white">€{localConfig.shippingToPristina}</span>
+                                        <span className="text-white">+€{localConfig.shippingToPristina}</span>
                                     </div>
                                     <div className="flex justify-between font-bold pt-2 border-t border-white/10 text-white">
                                         <span>Totali:</span>
                                         <span className="text-orange-500">
-                                            €{(15000 + localConfig.shippingCost + localConfig.shippingToPristina).toLocaleString()}
+                                            €{(15000 +
+                                                (localConfig.shippingCost || 3500) +
+                                                (localConfig.shippingToPristina || 350) +
+                                                Math.max(Math.round(15000 * (localConfig.defaultMarginPercentage || 15) / 100), localConfig.defaultMinimumMargin || 1000)
+                                            ).toLocaleString()}
                                         </span>
                                     </div>
                                 </div>
@@ -653,19 +777,41 @@ export default function AdminPage() {
                                 <h3 className="text-sm font-medium text-white mb-3">Shembull: SUV</h3>
                                 <div className="space-y-2 text-sm">
                                     <div className="flex justify-between text-white/70">
-                                        <span>Makina (me transport):</span>
+                                        <span>Çmimi bazë:</span>
+                                        <span className="text-white">€25,000</span>
+                                    </div>
+                                    <div className="flex justify-between text-white/70">
+                                        <span>Transporti Durrës:</span>
                                         <span className="text-white">
-                                            €{(25000 + (localConfig.vehicleTypes.suv?.enabled ? localConfig.vehicleTypes.suv.shippingCost : localConfig.shippingCost)).toLocaleString()}
+                                            +€{localConfig.vehicleTypes.suv?.enabled ? localConfig.vehicleTypes.suv.shippingCost : localConfig.shippingCost}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between text-white/70">
+                                        <span>Marzha:</span>
+                                        <span className="text-white">
+                                            {localConfig.vehicleTypes.suv?.enabled ? (
+                                                <>+€{Math.max(Math.round(25000 * (localConfig.vehicleTypes.suv.marginPercentage || 15) / 100), localConfig.vehicleTypes.suv.minimumMargin || 1000).toLocaleString()} ({localConfig.vehicleTypes.suv.marginPercentage || 15}%)</>
+                                            ) : (
+                                                <>+€{Math.max(Math.round(25000 * (localConfig.defaultMarginPercentage || 15) / 100), localConfig.defaultMinimumMargin || 1000).toLocaleString()} ({localConfig.defaultMarginPercentage || 15}%)</>
+                                            )}
                                         </span>
                                     </div>
                                     <div className="flex justify-between text-white/70">
                                         <span>Transporti Prishtinë:</span>
-                                        <span className="text-white">€{localConfig.shippingToPristina}</span>
+                                        <span className="text-white">+€{localConfig.shippingToPristina}</span>
                                     </div>
                                     <div className="flex justify-between font-bold pt-2 border-t border-white/10 text-white">
                                         <span>Totali:</span>
                                         <span className="text-orange-500">
-                                            €{(25000 + (localConfig.vehicleTypes.suv?.enabled ? localConfig.vehicleTypes.suv.shippingCost : localConfig.shippingCost) + localConfig.shippingToPristina).toLocaleString()}
+                                            €{(
+                                                25000 +
+                                                (localConfig.vehicleTypes.suv?.enabled ? localConfig.vehicleTypes.suv.shippingCost : localConfig.shippingCost) +
+                                                (localConfig.shippingToPristina || 350) +
+                                                (localConfig.vehicleTypes.suv?.enabled
+                                                    ? Math.max(Math.round(25000 * (localConfig.vehicleTypes.suv.marginPercentage || 15) / 100), localConfig.vehicleTypes.suv.minimumMargin || 1000)
+                                                    : Math.max(Math.round(25000 * (localConfig.defaultMarginPercentage || 15) / 100), localConfig.defaultMinimumMargin || 1000)
+                                                )
+                                            ).toLocaleString()}
                                         </span>
                                     </div>
                                 </div>

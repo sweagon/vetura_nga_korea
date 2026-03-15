@@ -11,7 +11,8 @@ import AdvancedFilterSidebar from '@/components/filters/AdvancedFilterSidebar';
 import Pagination from '@/components/ui/Pagination';
 import { useCarFilters } from '@/hooks/useCarFilters';
 import { useFilter } from '@/contexts/FilterContext';
-import { type Car, getDisplayPrice } from '@/lib/api';
+import { type Car, getOldSitePrice, getRawKoreanPrice } from '@/lib/api';
+import { useConfig } from '@/lib/ConfigContext';
 
 interface SortOption {
     value: string;
@@ -21,6 +22,7 @@ interface SortOption {
 
 export default function CarsContentWrapper() {
     const { isFilterOpen, setIsFilterOpen } = useFilter();
+    const { config } = useConfig();
     const [currentSort, setCurrentSort] = useState('recommended');
     const contentRef = useRef<HTMLDivElement>(null);
 
@@ -92,10 +94,27 @@ export default function CarsContentWrapper() {
         goToPage
     } = useCarFilters(serverFilters, clientFilters);
 
-    // Helper function to get the display price for sorting (includes our pricing logic)
+    // Helper function to get the display price for sorting (matches detail page logic)
     const getCarDisplayPrice = useCallback((car: Car): number => {
-        return getDisplayPrice(car);
-    }, []);
+        const lot = car.lots?.[0];
+        if (!lot) return 0;
+
+        // Get competitor's price
+        const competitorPrice = getOldSitePrice(lot);
+
+        if (competitorPrice > 0) {
+            // Remove their transport (€3,850) to get base price
+            const theirTransport = 3850; // €3,500 (Korea→Durrës) + €350 (Prishtina)
+            const basePrice = competitorPrice - theirTransport;
+
+            // Add our shipping costs
+            return basePrice + (config?.shippingCost || 3500) + (config?.shippingToPristina || 350);
+        }
+
+        // Fallback to raw Korean price + our shipping
+        const rawPrice = getRawKoreanPrice(lot);
+        return rawPrice + (config?.shippingCost || 3500) + (config?.shippingToPristina || 350);
+    }, [config]);
 
     // Helper function to get mileage
     const getCarMileage = useCallback((car: Car): number => {

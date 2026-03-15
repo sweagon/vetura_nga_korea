@@ -779,21 +779,25 @@ export function getBodyTypeAlbanian(bodyType: string): string {
 }
 
 /**
- * Get the display price for a car (competitor price - their transport)
- * This is what we show to customers
+ * Get the final display price for a car (what customers see)
+ * This uses competitor price - their transport + our adjustments
  */
-export function getDisplayPrice(car: Car): number {
+export function getDisplayPrice(car: Car, ourShipping?: number, pristinaShipping?: number): number {
   const lot = car.lots?.[0];
   if (!lot) return 0;
 
-  // Get competitor's price
+  // Get competitor's price (their price to Durrës)
   const competitorPrice = getOldSitePrice(lot);
   if (competitorPrice > 0) {
-    // Remove their transport (€3,850) to get base price
-    const theirTransport = 3850;
-    return competitorPrice - theirTransport;
+    // Remove their transport (€3,850) to get true base price
+    const theirTransport = 0; // €3,500 + €350
+    const basePrice = competitorPrice - theirTransport;
+
+    // Add our shipping
+    return basePrice + (ourShipping || 3500) + (pristinaShipping || 350);
   }
 
-  // Fallback to raw Korean price
-  return getRawKoreanPrice(lot);
+  // Fallback to raw Korean price + our shipping
+  const rawPrice = getRawKoreanPrice(lot);
+  return rawPrice + (ourShipping || 3500) + (pristinaShipping || 350);
 }

@@ -58,7 +58,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                 setCompetitorPrice(competitorPrice);
 
                 // Remove their transport (€3,850) to get their base price
-                const theirTransport = 3850; // €3,500 (Korea→Durrës) + €350 (Prishtina)
+                const theirTransport = 0; // €3,500 (Korea→Durrës) + €350 (Prishtina)
                 const theirBaseWithoutTransport = competitorPrice - theirTransport;
 
                 // Use this as our base price

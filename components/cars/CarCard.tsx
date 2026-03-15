@@ -4,7 +4,14 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Fuel, Gauge, Calendar, Settings } from 'lucide-react';
-import { type Car, formatMileage, getFuelTypeAlbanian, getTransmissionAlbanian, getRawKoreanPrice } from '@/lib/api';
+import {
+    type Car,
+    formatMileage,
+    getFuelTypeAlbanian,
+    getTransmissionAlbanian,
+    getRawKoreanPrice,
+    getOldSitePrice
+} from '@/lib/api';
 import { addToRecentlyViewed } from '@/lib/recentlyViewed';
 import { useConfig } from '@/lib/ConfigContext';
 
@@ -16,7 +23,7 @@ interface CarCardProps {
 export default function CarCard({ car, priority = false }: CarCardProps) {
     const { config, formatPrice } = useConfig();
     const [mounted, setMounted] = useState(false);
-    const [koreanPrice, setKoreanPrice] = useState(0);
+    const [displayPrice, setDisplayPrice] = useState(0);
 
     useEffect(() => {
         setMounted(true);
@@ -25,13 +32,42 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
     // Safely access nested properties
     const lot = car.lots?.[0];
 
-    // Get raw Korean price
+    // Calculate display price using same logic as detail page
     useEffect(() => {
-        if (lot) {
-            const price = getRawKoreanPrice(lot);
-            setKoreanPrice(price - 3190);
+        if (lot && config) {
+            // Get competitor's price (their price to Durrës)
+            const competitorPrice = getOldSitePrice(lot);
+
+            if (competitorPrice > 0) {
+                // Remove their transport (€3,850) to get base price
+                const theirTransport = 0; // €3,500 (Korea→Durrës) + €350 (Prishtina)
+                const basePrice = competitorPrice - theirTransport;
+
+                // Add our shipping costs
+                const finalPrice = basePrice +
+                    (config.shippingCost || 3500) +
+                    (config.shippingToPristina || 350);
+
+                setDisplayPrice(finalPrice);
+
+                console.log('💰 CarCard price:', {
+                    competitorPrice,
+                    basePrice,
+                    shipping: config.shippingCost,
+                    pristina: config.shippingToPristina,
+                    finalPrice
+                });
+            } else {
+                // Fallback to raw Korean price + our shipping
+                const rawPrice = getRawKoreanPrice(lot);
+                const finalPrice = rawPrice +
+                    (config.shippingCost || 3500) +
+                    (config.shippingToPristina || 350);
+
+                setDisplayPrice(finalPrice);
+            }
         }
-    }, [lot]);
+    }, [lot, config]);
 
     const mileage = lot?.odometer?.km || 0;
     const image = lot?.images?.normal?.[0] || lot?.images?.downloaded?.[0] || '';
@@ -46,19 +82,12 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
             id: car.vin || car.id.toString(),
             title: car.title || `${manufacturerName} ${modelName}`,
             image: image,
-            price: koreanPrice
+            price: displayPrice // Use displayPrice instead of koreanPrice
         });
     };
 
     const carTitle = car.title || `${manufacturerName} ${modelName}`;
     const detailUrl = car.vin ? `/cars/${car.vin}` : `/cars/${car.id}`;
-
-    // Calculate final price with all costs
-    // Note: In a real scenario, you'd calculate margin properly
-    const estimatedFinalPrice = koreanPrice +
-        (config?.shippingCost || 3500) +
-        (config?.shippingToPristina || 350) +
-        (config?.defaultMinimumMargin || 1000);
 
     return (
         <Link
@@ -128,7 +157,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
                         <div className="flex items-baseline justify-between">
                             <div>
                                 <span className="text-xl font-semibold text-orange-500">
-                                    {formatPrice(estimatedFinalPrice)}
+                                    {formatPrice(displayPrice)}
                                 </span>
                                 <span className="text-xs text-muted ml-1">
                                     me transport
