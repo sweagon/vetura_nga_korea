@@ -188,19 +188,21 @@ export default function AdminPage() {
             const defaultConfig = {
                 shippingCost: 3500,
                 shippingToPristina: 350,
+                defaultMarginPercentage: 15,      // ADD THIS
+                defaultMinimumMargin: 1000,        // ADD THIS
                 contactEmail: 'blerart@outlook.com',
                 contactPhone: '+383 49 195 414',
                 siteName: 'Vetura Korea Kosovë',
                 currency: 'EUR' as const,
                 vehicleTypes: {
-                    suv: { shippingCost: 4500, enabled: false },
-                    sedan: { shippingCost: 3500, enabled: true },
-                    hatchback: { shippingCost: 3500, enabled: true },
-                    wagon: { shippingCost: 3500, enabled: true },
-                    coupe: { shippingCost: 3500, enabled: true },
-                    van: { shippingCost: 3800, enabled: true },
-                    pickup: { shippingCost: 4000, enabled: true },
-                    default: { shippingCost: 3500, enabled: true }
+                    suv: { shippingCost: 4500, marginPercentage: 18, minimumMargin: 1500, enabled: true },
+                    sedan: { shippingCost: 3500, marginPercentage: 15, minimumMargin: 1000, enabled: true },
+                    hatchback: { shippingCost: 3500, marginPercentage: 15, minimumMargin: 1000, enabled: true },
+                    wagon: { shippingCost: 3500, marginPercentage: 15, minimumMargin: 1000, enabled: true },
+                    coupe: { shippingCost: 3500, marginPercentage: 15, minimumMargin: 1000, enabled: true },
+                    van: { shippingCost: 3800, marginPercentage: 12, minimumMargin: 800, enabled: true },
+                    pickup: { shippingCost: 4000, marginPercentage: 12, minimumMargin: 800, enabled: true },
+                    default: { shippingCost: 3500, marginPercentage: 15, minimumMargin: 1000, enabled: true }
                 }
             };
             setLocalConfig(defaultConfig);
@@ -497,20 +499,56 @@ export default function AdminPage() {
                                     {/* Expanded Content */}
                                     {isExpanded && typeConfig && (
                                         <div className="p-4 border-t border-white/10 bg-white/5">
-                                            <div className="max-w-xs">
-                                                <label className="block text-sm text-white/70 mb-2">
-                                                    Transporti (€)
-                                                </label>
-                                                <input
-                                                    type="number"
-                                                    value={typeConfig.shippingCost}
-                                                    onChange={(e) => updateVehicleType(type.id, 'shippingCost', Number(e.target.value))}
-                                                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                                    step="100"
-                                                    min="0"
-                                                    disabled={!typeConfig.enabled}
-                                                />
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div>
+                                                    <label className="block text-sm text-white/70 mb-2">
+                                                        Transporti (€)
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        value={typeConfig.shippingCost || 3500}
+                                                        onChange={(e) => updateVehicleType(type.id, 'shippingCost', Number(e.target.value))}
+                                                        className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                                        step="100"
+                                                        min="0"
+                                                        disabled={!typeConfig.enabled}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm text-white/70 mb-2">
+                                                        Marzha (%)
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        value={typeConfig.marginPercentage || 15}
+                                                        onChange={(e) => updateVehicleType(type.id, 'marginPercentage', Number(e.target.value))}
+                                                        className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                                        step="1"
+                                                        min="0"
+                                                        max="100"
+                                                        disabled={!typeConfig.enabled}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm text-white/70 mb-2">
+                                                        Marzha Minimale (€)
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        value={typeConfig.minimumMargin || 1000}
+                                                        onChange={(e) => updateVehicleType(type.id, 'minimumMargin', Number(e.target.value))}
+                                                        className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                                        step="100"
+                                                        min="0"
+                                                        disabled={!typeConfig.enabled}
+                                                    />
+                                                </div>
                                             </div>
+                                            {type.id === 'default' && (
+                                                <p className="text-xs text-white/40 mt-3 bg-white/5 p-2 rounded">
+                                                    ⚡ Këto vlera përdoren si default për të gjitha llojet që nuk kanë vlera specifike
+                                                </p>
+                                            )}
                                         </div>
                                     )}
                                 </div>

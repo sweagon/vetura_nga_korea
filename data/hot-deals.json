@@ -1,0 +1,802 @@
+[
+  {
+    "vin": "WVWZZZBUXPM017859",
+    "title": "Volkswagen Jetta",
+    "year": 2023,
+    "price": 16614,
+    "expectedPrice": 41000,
+    "dealScore": 24386,
+    "url": "http://localhost:3000/cars/WVWZZZBUXPM017859",
+    "status": "HOT"
+  },
+  {
+    "vin": "ENCAR36566591",
+    "title": "Volkswagen Golf",
+    "year": 2022,
+    "price": 13945,
+    "expectedPrice": 38000,
+    "dealScore": 24055,
+    "url": "http://localhost:3000/cars/ENCAR36566591",
+    "status": "HOT"
+  },
+  {
+    "vin": "WAUZZZF46PA013929",
+    "title": "Audi A4",
+    "year": 2023,
+    "price": 19950,
+    "expectedPrice": 41000,
+    "dealScore": 21050,
+    "url": "http://localhost:3000/cars/WAUZZZF46PA013929",
+    "status": "HOT"
+  },
+  {
+    "vin": "WAUZZZGY9PA115615",
+    "title": "Audi A3",
+    "year": 2023,
+    "price": 20351,
+    "expectedPrice": 41000,
+    "dealScore": 20649,
+    "url": "http://localhost:3000/cars/WAUZZZGY9PA115615",
+    "status": "HOT"
+  },
+  {
+    "vin": "WBA7M9104M5S99908",
+    "title": "BMW 1er",
+    "year": 2021,
+    "price": 15280,
+    "expectedPrice": 35000,
+    "dealScore": 19720,
+    "url": "http://localhost:3000/cars/WBA7M9104M5S99908",
+    "status": "HOT"
+  },
+  {
+    "vin": "WVWZZZCDZNW119120",
+    "title": "Volkswagen Golf",
+    "year": 2022,
+    "price": 18683,
+    "expectedPrice": 38000,
+    "dealScore": 19317,
+    "url": "http://localhost:3000/cars/WVWZZZCDZNW119120",
+    "status": "HOT"
+  },
+  {
+    "vin": "WVGZZZ5N6PM045433",
+    "title": "Volkswagen Tiguan",
+    "year": 2023,
+    "price": 22686,
+    "expectedPrice": 41000,
+    "dealScore": 18314,
+    "url": "http://localhost:3000/cars/WVGZZZ5N6PM045433",
+    "status": "HOT"
+  },
+  {
+    "vin": "WVWZZZ3HZKE011480",
+    "title": "Volkswagen Arteon",
+    "year": 2019,
+    "price": 11410,
+    "expectedPrice": 29000,
+    "dealScore": 17590,
+    "url": "http://localhost:3000/cars/WVWZZZ3HZKE011480",
+    "status": "HOT"
+  },
+  {
+    "vin": "WVWZZZ3HZPE003910",
+    "title": "Volkswagen Arteon",
+    "year": 2022,
+    "price": 20951,
+    "expectedPrice": 38000,
+    "dealScore": 17049,
+    "url": "http://localhost:3000/cars/WVWZZZ3HZPE003910",
+    "status": "HOT"
+  },
+  {
+    "vin": "WVGZZZE2ZNP042938",
+    "title": "Volkswagen ID.4",
+    "year": 2022,
+    "price": 21950,
+    "expectedPrice": 38000,
+    "dealScore": 16050,
+    "url": "http://localhost:3000/cars/WVGZZZE2ZNP042938",
+    "status": "HOT"
+  },
+  {
+    "vin": "WDDWF1FB2KR521751",
+    "title": "Mercedes-Benz C-klasse",
+    "year": 2019,
+    "price": 13010,
+    "expectedPrice": 29000,
+    "dealScore": 15990,
+    "url": "http://localhost:3000/cars/WDDWF1FB2KR521751",
+    "status": "HOT"
+  },
+  {
+    "vin": "WVGZZZ5N2PM001106",
+    "title": "Volkswagen Tiguan",
+    "year": 2022,
+    "price": 22152,
+    "expectedPrice": 38000,
+    "dealScore": 15848,
+    "url": "http://localhost:3000/cars/WVGZZZ5N2PM001106",
+    "status": "HOT"
+  },
+  {
+    "vin": "WAUZZZF25MN037982",
+    "title": "Audi A6",
+    "year": 2021,
+    "price": 19227,
+    "expectedPrice": 35000,
+    "dealScore": 15773,
+    "url": "http://localhost:3000/cars/WAUZZZF25MN037982",
+    "status": "HOT"
+  },
+  {
+    "vin": "WVWZZZ3HZKE009730",
+    "title": "Volkswagen Arteon",
+    "year": 2019,
+    "price": 13306,
+    "expectedPrice": 29000,
+    "dealScore": 15694,
+    "url": "http://localhost:3000/cars/WVWZZZ3HZKE009730",
+    "status": "HOT"
+  },
+  {
+    "vin": "WBA61FS04PFP99650",
+    "title": "BMW 3er",
+    "year": 2023,
+    "price": 25688,
+    "expectedPrice": 41000,
+    "dealScore": 15312,
+    "url": "http://localhost:3000/cars/WBA61FS04PFP99650",
+    "status": "HOT"
+  },
+  {
+    "vin": "WVGZZZ5NZLM173361",
+    "title": "Volkswagen Tiguan",
+    "year": 2020,
+    "price": 16913,
+    "expectedPrice": 32000,
+    "dealScore": 15087,
+    "url": "http://localhost:3000/cars/WVGZZZ5NZLM173361",
+    "status": "HOT"
+  },
+  {
+    "vin": "WAUZZZ4G0JN107009",
+    "title": "Audi A6",
+    "year": 2018,
+    "price": 11010,
+    "expectedPrice": 26000,
+    "dealScore": 14990,
+    "url": "http://localhost:3000/cars/WAUZZZ4G0JN107009",
+    "status": "HOT"
+  },
+  {
+    "vin": "WVWZZZCDZNW146371",
+    "title": "Volkswagen Golf",
+    "year": 2022,
+    "price": 23286,
+    "expectedPrice": 38000,
+    "dealScore": 14714,
+    "url": "http://localhost:3000/cars/WVWZZZCDZNW146371",
+    "status": "HOT"
+  },
+  {
+    "vin": "WAUZZZF58PA050747",
+    "title": "Audi A5",
+    "year": 2023,
+    "price": 26415,
+    "expectedPrice": 41000,
+    "dealScore": 14585,
+    "url": "http://localhost:3000/cars/WAUZZZF58PA050747",
+    "status": "HOT"
+  },
+  {
+    "vin": "WDDZF0FB5KA690491",
+    "title": "Mercedes-Benz E-klasse",
+    "year": 2019,
+    "price": 14546,
+    "expectedPrice": 29000,
+    "dealScore": 14454,
+    "url": "http://localhost:3000/cars/WDDZF0FB5KA690491",
+    "status": "HOT"
+  },
+  {
+    "vin": "WAUZZZF24PN056558",
+    "title": "Audi A6",
+    "year": 2023,
+    "price": 26620,
+    "expectedPrice": 41000,
+    "dealScore": 14380,
+    "url": "http://localhost:3000/cars/WAUZZZF24PN056558",
+    "status": "HOT"
+  },
+  {
+    "vin": "WAUZZZF2XLN075075",
+    "title": "Audi A6",
+    "year": 2020,
+    "price": 18009,
+    "expectedPrice": 32000,
+    "dealScore": 13991,
+    "url": "http://localhost:3000/cars/WAUZZZF2XLN075075",
+    "status": "HOT"
+  },
+  {
+    "vin": "WDCTG4FB1KJ574199",
+    "title": "Mercedes-Benz GLA-klasse",
+    "year": 2018,
+    "price": 12945,
+    "expectedPrice": 26000,
+    "dealScore": 13055,
+    "url": "http://localhost:3000/cars/WDCTG4FB1KJ574199",
+    "status": "HOT"
+  },
+  {
+    "vin": "WVWZZZ3HZJE517457",
+    "title": "Volkswagen Arteon",
+    "year": 2018,
+    "price": 13005,
+    "expectedPrice": 26000,
+    "dealScore": 12995,
+    "url": "http://localhost:3000/cars/WVWZZZ3HZJE517457",
+    "status": "HOT"
+  },
+  {
+    "vin": "WVWZZZ3CZJE122535",
+    "title": "Volkswagen Passat",
+    "year": 2018,
+    "price": 13211,
+    "expectedPrice": 26000,
+    "dealScore": 12789,
+    "url": "http://localhost:3000/cars/WVWZZZ3CZJE122535",
+    "status": "HOT"
+  },
+  {
+    "vin": "W1N4M4EB4LW070151",
+    "title": "Mercedes-Benz GLB",
+    "year": 2020,
+    "price": 19343,
+    "expectedPrice": 32000,
+    "dealScore": 12657,
+    "url": "http://localhost:3000/cars/W1N4M4EB4LW070151",
+    "status": "HOT"
+  },
+  {
+    "vin": "WAUZZZF22LN029031",
+    "title": "Audi A6",
+    "year": 2020,
+    "price": 19682,
+    "expectedPrice": 32000,
+    "dealScore": 12318,
+    "url": "http://localhost:3000/cars/WAUZZZF22LN029031",
+    "status": "HOT"
+  },
+  {
+    "vin": "WAUZZZF26PN032066",
+    "title": "Audi A6",
+    "year": 2023,
+    "price": 28824,
+    "expectedPrice": 41000,
+    "dealScore": 12176,
+    "url": "http://localhost:3000/cars/WAUZZZF26PN032066",
+    "status": "HOT"
+  },
+  {
+    "vin": "WBA8A9105HK882296",
+    "title": "BMW 3er",
+    "year": 2016,
+    "price": 7874,
+    "expectedPrice": 20000,
+    "dealScore": 12126,
+    "url": "http://localhost:3000/cars/WBA8A9105HK882296",
+    "status": "HOT"
+  },
+  {
+    "vin": "WVGZZZ5N111111111",
+    "title": "Volkswagen Tiguan",
+    "year": 2024,
+    "price": 31934,
+    "expectedPrice": 44000,
+    "dealScore": 12066,
+    "url": "http://localhost:3000/cars/WVGZZZ5N111111111",
+    "status": "HOT"
+  },
+  {
+    "vin": "1VWZZZA3ZGC024035",
+    "title": "Volkswagen Passat",
+    "year": 2016,
+    "price": 7940,
+    "expectedPrice": 20000,
+    "dealScore": 12060,
+    "url": "http://localhost:3000/cars/1VWZZZA3ZGC024035",
+    "status": "HOT"
+  },
+  {
+    "vin": "WDDWF4HB3JR411823",
+    "title": "Mercedes-Benz C-klasse",
+    "year": 2018,
+    "price": 13945,
+    "expectedPrice": 26000,
+    "dealScore": 12055,
+    "url": "http://localhost:3000/cars/WDDWF4HB3JR411823",
+    "status": "HOT"
+  },
+  {
+    "vin": "WDDBF4DB9JJ617926",
+    "title": "Mercedes-Benz A-klasse",
+    "year": 2017,
+    "price": 11209,
+    "expectedPrice": 23000,
+    "dealScore": 11791,
+    "url": "http://localhost:3000/cars/WDDBF4DB9JJ617926",
+    "status": "HOT"
+  },
+  {
+    "vin": "WBA8A9108JAD29477",
+    "title": "BMW 3er",
+    "year": 2017,
+    "price": 11275,
+    "expectedPrice": 23000,
+    "dealScore": 11725,
+    "url": "http://localhost:3000/cars/WBA8A9108JAD29477",
+    "status": "HOT"
+  },
+  {
+    "vin": "WBA4S3101JAC84696",
+    "title": "BMW 4er",
+    "year": 2018,
+    "price": 14671,
+    "expectedPrice": 26000,
+    "dealScore": 11329,
+    "url": "http://localhost:3000/cars/WBA4S3101JAC84696",
+    "status": "HOT"
+  },
+  {
+    "vin": "W1KWJ8AB4NG106073",
+    "title": "Mercedes-Benz C-klasse",
+    "year": 2022,
+    "price": 26680,
+    "expectedPrice": 38000,
+    "dealScore": 11320,
+    "url": "http://localhost:3000/cars/W1KWJ8AB4NG106073",
+    "status": "HOT"
+  },
+  {
+    "vin": "WVWZZZAUZGP007843",
+    "title": "Volkswagen Golf",
+    "year": 2016,
+    "price": 8808,
+    "expectedPrice": 20000,
+    "dealScore": 11192,
+    "url": "http://localhost:3000/cars/WVWZZZAUZGP007843",
+    "status": "HOT"
+  },
+  {
+    "vin": "WAUZZZF29NN058657",
+    "title": "Audi A6",
+    "year": 2022,
+    "price": 26889,
+    "expectedPrice": 38000,
+    "dealScore": 11111,
+    "url": "http://localhost:3000/cars/WAUZZZF29NN058657",
+    "status": "HOT"
+  },
+  {
+    "vin": "WVWZZZAUZGW064178",
+    "title": "Volkswagen Golf",
+    "year": 2016,
+    "price": 9001,
+    "expectedPrice": 20000,
+    "dealScore": 10999,
+    "url": "http://localhost:3000/cars/WVWZZZAUZGW064178",
+    "status": "HOT"
+  },
+  {
+    "vin": "WBA5A5108GG178526",
+    "title": "BMW 5er",
+    "year": 2016,
+    "price": 9334,
+    "expectedPrice": 20000,
+    "dealScore": 10666,
+    "url": "http://localhost:3000/cars/WBA5A5108GG178526",
+    "status": "HOT"
+  },
+  {
+    "vin": "WBAJW8108KBK94039",
+    "title": "BMW 6er",
+    "year": 2019,
+    "price": 18347,
+    "expectedPrice": 29000,
+    "dealScore": 10653,
+    "url": "http://localhost:3000/cars/WBAJW8108KBK94039",
+    "status": "HOT"
+  },
+  {
+    "vin": "WAUZZZ4G7GN036545",
+    "title": "Audi A6",
+    "year": 2016,
+    "price": 9668,
+    "expectedPrice": 20000,
+    "dealScore": 10332,
+    "url": "http://localhost:3000/cars/WAUZZZ4G7GN036545",
+    "status": "HOT"
+  },
+  {
+    "vin": "WAUZZZ8T4GA021659",
+    "title": "Audi A5",
+    "year": 2016,
+    "price": 9809,
+    "expectedPrice": 20000,
+    "dealScore": 10191,
+    "url": "http://localhost:3000/cars/WAUZZZ8T4GA021659",
+    "status": "HOT"
+  },
+  {
+    "vin": "WDDSJ5CB5GN378639",
+    "title": "Mercedes-Benz CLA-klasse",
+    "year": 2016,
+    "price": 9942,
+    "expectedPrice": 20000,
+    "dealScore": 10058,
+    "url": "http://localhost:3000/cars/WDDSJ5CB5GN378639",
+    "status": "HOT"
+  },
+  {
+    "vin": "WVWZZZ3HZJE512064",
+    "title": "Volkswagen Arteon",
+    "year": 2018,
+    "price": 16006,
+    "expectedPrice": 26000,
+    "dealScore": 9994,
+    "url": "http://localhost:3000/cars/WVWZZZ3HZJE512064",
+    "status": "GOOD"
+  },
+  {
+    "vin": "WBA3V7109H5G62566",
+    "title": "BMW 4er",
+    "year": 2017,
+    "price": 13278,
+    "expectedPrice": 23000,
+    "dealScore": 9722,
+    "url": "http://localhost:3000/cars/WBA3V7109H5G62566",
+    "status": "GOOD"
+  },
+  {
+    "vin": "WBAJD9104KB277721",
+    "title": "BMW 5er",
+    "year": 2019,
+    "price": 19341,
+    "expectedPrice": 29000,
+    "dealScore": 9659,
+    "url": "http://localhost:3000/cars/WBAJD9104KB277721",
+    "status": "GOOD"
+  },
+  {
+    "vin": "WAUZZZFY7L2079347",
+    "title": "Audi Q5",
+    "year": 2020,
+    "price": 22352,
+    "expectedPrice": 32000,
+    "dealScore": 9648,
+    "url": "http://localhost:3000/cars/WAUZZZFY7L2079347",
+    "status": "GOOD"
+  },
+  {
+    "vin": "WAUZZZF27PN012134",
+    "title": "Audi A6",
+    "year": 2022,
+    "price": 28357,
+    "expectedPrice": 38000,
+    "dealScore": 9643,
+    "url": "http://localhost:3000/cars/WAUZZZF27PN012134",
+    "status": "GOOD"
+  },
+  {
+    "vin": "WAUZZZF5XMN005037",
+    "title": "Audi A5",
+    "year": 2021,
+    "price": 25955,
+    "expectedPrice": 35000,
+    "dealScore": 9045,
+    "url": "http://localhost:3000/cars/WAUZZZF5XMN005037",
+    "status": "GOOD"
+  },
+  {
+    "vin": "WDDZF4KB9KA604483",
+    "title": "Mercedes-Benz E-klasse",
+    "year": 2019,
+    "price": 20010,
+    "expectedPrice": 29000,
+    "dealScore": 8990,
+    "url": "http://localhost:3000/cars/WDDZF4KB9KA604483",
+    "status": "GOOD"
+  },
+  {
+    "vin": "WBAJD3100KWW02645",
+    "title": "BMW 5er",
+    "year": 2019,
+    "price": 20010,
+    "expectedPrice": 29000,
+    "dealScore": 8990,
+    "url": "http://localhost:3000/cars/WBAJD3100KWW02645",
+    "status": "GOOD"
+  },
+  {
+    "vin": "WBAJX4104LCE18201",
+    "title": "BMW 6er",
+    "year": 2020,
+    "price": 23019,
+    "expectedPrice": 32000,
+    "dealScore": 8981,
+    "url": "http://localhost:3000/cars/WBAJX4104LCE18201",
+    "status": "GOOD"
+  },
+  {
+    "vin": "W1N4N4HB9PJ437055",
+    "title": "Mercedes-Benz GLA-klasse",
+    "year": 2022,
+    "price": 29355,
+    "expectedPrice": 38000,
+    "dealScore": 8645,
+    "url": "http://localhost:3000/cars/W1N4N4HB9PJ437055",
+    "status": "GOOD"
+  },
+  {
+    "vin": "WDC0G6EB0KF529399",
+    "title": "Mercedes-Benz GLC",
+    "year": 2019,
+    "price": 21218,
+    "expectedPrice": 29000,
+    "dealScore": 7782,
+    "url": "http://localhost:3000/cars/WDC0G6EB0KF529399",
+    "status": "GOOD"
+  },
+  {
+    "vin": "WBAJC5103HG468814",
+    "title": "BMW 5er",
+    "year": 2017,
+    "price": 17013,
+    "expectedPrice": 23000,
+    "dealScore": 5987,
+    "url": "http://localhost:3000/cars/WBAJC5103HG468814",
+    "status": "GOOD"
+  },
+  {
+    "vin": "W1N4N5DB9NJ382633",
+    "title": "Mercedes-Benz GLA-klasse",
+    "year": 2022,
+    "price": 32017,
+    "expectedPrice": 38000,
+    "dealScore": 5983,
+    "url": "http://localhost:3000/cars/W1N4N5DB9NJ382633",
+    "status": "GOOD"
+  },
+  {
+    "vin": "ENCAR30228622",
+    "title": "Volkswagen Arteon",
+    "year": 2020,
+    "price": 26353,
+    "expectedPrice": 32000,
+    "dealScore": 5647,
+    "url": "http://localhost:3000/cars/ENCAR30228622",
+    "status": "GOOD"
+  },
+  {
+    "vin": "WAUZZZ4M9KD041637",
+    "title": "Audi Q7",
+    "year": 2019,
+    "price": 23884,
+    "expectedPrice": 29000,
+    "dealScore": 5116,
+    "url": "http://localhost:3000/cars/WAUZZZ4M9KD041637",
+    "status": "GOOD"
+  },
+  {
+    "vin": "WAUZZZF39N1117772",
+    "title": "Audi Q3",
+    "year": 2022,
+    "price": 33361,
+    "expectedPrice": 38000,
+    "dealScore": 4639,
+    "url": "http://localhost:3000/cars/WAUZZZF39N1117772",
+    "status": "OK"
+  },
+  {
+    "vin": "WBAVJ5106KLP63587",
+    "title": "BMW X4",
+    "year": 2019,
+    "price": 25288,
+    "expectedPrice": 29000,
+    "dealScore": 3712,
+    "url": "http://localhost:3000/cars/WBAVJ5106KLP63587",
+    "status": "OK"
+  },
+  {
+    "vin": "WBA21AP04PCL19411",
+    "title": "BMW 4er",
+    "year": 2022,
+    "price": 34362,
+    "expectedPrice": 38000,
+    "dealScore": 3638,
+    "url": "http://localhost:3000/cars/WBA21AP04PCL19411",
+    "status": "OK"
+  },
+  {
+    "vin": "WBA6E4103GG378135",
+    "title": "BMW 6er",
+    "year": 2016,
+    "price": 16479,
+    "expectedPrice": 20000,
+    "dealScore": 3521,
+    "url": "http://localhost:3000/cars/WBA6E4103GG378135",
+    "status": "OK"
+  },
+  {
+    "vin": "WDDZF4KB1HA118405",
+    "title": "Mercedes-Benz E-klasse",
+    "year": 2016,
+    "price": 17013,
+    "expectedPrice": 20000,
+    "dealScore": 2987,
+    "url": "http://localhost:3000/cars/WDDZF4KB1HA118405",
+    "status": "OK"
+  },
+  {
+    "vin": "WBA7C410XJG948195",
+    "title": "BMW 7er",
+    "year": 2018,
+    "price": 24220,
+    "expectedPrice": 26000,
+    "dealScore": 1780,
+    "url": "http://localhost:3000/cars/WBA7C410XJG948195",
+    "status": "OK"
+  },
+  {
+    "vin": "WAUZZZ4M4ND020943",
+    "title": "Audi Q7",
+    "year": 2022,
+    "price": 36631,
+    "expectedPrice": 38000,
+    "dealScore": 1369,
+    "url": "http://localhost:3000/cars/WAUZZZ4M4ND020943",
+    "status": "OK"
+  },
+  {
+    "vin": "W1K1K6JBXLF136337",
+    "title": "Mercedes-Benz E-klasse",
+    "year": 2020,
+    "price": 31023,
+    "expectedPrice": 32000,
+    "dealScore": 977,
+    "url": "http://localhost:3000/cars/W1K1K6JBXLF136337",
+    "status": "OK"
+  },
+  {
+    "vin": "W1K5J5EB2MN198069",
+    "title": "Mercedes-Benz CLA-klasse",
+    "year": 2021,
+    "price": 34928,
+    "expectedPrice": 35000,
+    "dealScore": 72,
+    "url": "http://localhost:3000/cars/W1K5J5EB2MN198069",
+    "status": "OK"
+  },
+  {
+    "vin": "WVGZZZ5N9PW024810",
+    "title": "Volkswagen Tiguan",
+    "year": 2023,
+    "price": 42235,
+    "expectedPrice": 41000,
+    "dealScore": -1235,
+    "url": "http://localhost:3000/cars/WVGZZZ5N9PW024810",
+    "status": "OK"
+  },
+  {
+    "vin": "WAUZZZF2XNN040460",
+    "title": "Audi A7",
+    "year": 2022,
+    "price": 39926,
+    "expectedPrice": 38000,
+    "dealScore": -1926,
+    "url": "http://localhost:3000/cars/WAUZZZF2XNN040460",
+    "status": "OK"
+  },
+  {
+    "vin": "WDDUG8FB7GA282376",
+    "title": "Mercedes-Benz S-klasse",
+    "year": 2016,
+    "price": 22002,
+    "expectedPrice": 20000,
+    "dealScore": -2002,
+    "url": "http://localhost:3000/cars/WDDUG8FB7GA282376",
+    "status": "OK"
+  },
+  {
+    "vin": "W1K1K5KB6MF156692",
+    "title": "Mercedes-Benz E-klasse",
+    "year": 2021,
+    "price": 37294,
+    "expectedPrice": 35000,
+    "dealScore": -2294,
+    "url": "http://localhost:3000/cars/W1K1K5KB6MF156692",
+    "status": "OK"
+  },
+  {
+    "vin": "WDDWF8GB4GF330204",
+    "title": "Mercedes-Benz C-klasse",
+    "year": 2016,
+    "price": 23284,
+    "expectedPrice": 20000,
+    "dealScore": -3284,
+    "url": "http://localhost:3000/cars/WDDWF8GB4GF330204",
+    "status": "OK"
+  },
+  {
+    "vin": "W1K1K5KB0NF177572",
+    "title": "Mercedes-Benz E-klasse",
+    "year": 2022,
+    "price": 42365,
+    "expectedPrice": 38000,
+    "dealScore": -4365,
+    "url": "http://localhost:3000/cars/W1K1K5KB0NF177572",
+    "status": "OK"
+  },
+  {
+    "vin": "WBA7V4109LCE47595",
+    "title": "BMW 7er",
+    "year": 2020,
+    "price": 36804,
+    "expectedPrice": 32000,
+    "dealScore": -4804,
+    "url": "http://localhost:3000/cars/WBA7V4109LCE47595",
+    "status": "OK"
+  },
+  {
+    "vin": "WAUZZZF29LN046019",
+    "title": "Audi A7",
+    "year": 2020,
+    "price": 37228,
+    "expectedPrice": 32000,
+    "dealScore": -5228,
+    "url": "http://localhost:3000/cars/WAUZZZF29LN046019",
+    "status": "OK"
+  },
+  {
+    "vin": "WDDWJ8GB5JF639346",
+    "title": "Mercedes-Benz C-klasse",
+    "year": 2018,
+    "price": 32017,
+    "expectedPrice": 26000,
+    "dealScore": -6017,
+    "url": "http://localhost:3000/cars/WDDWJ8GB5JF639346",
+    "status": "OK"
+  },
+  {
+    "vin": "WBAJU8101N9L65132",
+    "title": "BMW X5",
+    "year": 2022,
+    "price": 46368,
+    "expectedPrice": 38000,
+    "dealScore": -8368,
+    "url": "http://localhost:3000/cars/WBAJU8101N9L65132",
+    "status": "OK"
+  },
+  {
+    "vin": "WBAGV4109LBP45695",
+    "title": "BMW 8er",
+    "year": 2019,
+    "price": 37783,
+    "expectedPrice": 29000,
+    "dealScore": -8783,
+    "url": "http://localhost:3000/cars/WBAGV4109LBP45695",
+    "status": "OK"
+  },
+  {
+    "vin": "WBACV0100KLK53332",
+    "title": "BMW X5",
+    "year": 2019,
+    "price": 39360,
+    "expectedPrice": 29000,
+    "dealScore": -10360,
+    "url": "http://localhost:3000/cars/WBACV0100KLK53332",
+    "status": "OK"
+  }
+]

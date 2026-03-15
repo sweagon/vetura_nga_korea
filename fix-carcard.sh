@@ -1,10 +1,19 @@
+#!/bin/bash
+
+echo "🔧 Fixing CarCard.tsx duplicate variable issue..."
+
+# Backup the file first
+cp components/cars/CarCard.tsx components/cars/CarCard.tsx.backup2
+
+# Create the fixed CarCard.tsx
+cat > components/cars/CarCard.tsx << 'EOF'
 // components/cars/CarCard.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Fuel, Gauge, Calendar, Settings } from 'lucide-react';
-import { type Car, formatMileage, getFuelTypeAlbanian, getTransmissionAlbanian, getRawKoreanPrice } from '@/lib/api';
+import { type Car, formatMileage, getFuelTypeAlbanian, getTransmissionAlbanian, getApiPrice } from '@/lib/api';
 import { addToRecentlyViewed } from '@/lib/recentlyViewed';
 import { useConfig } from '@/lib/ConfigContext';
 
@@ -16,7 +25,7 @@ interface CarCardProps {
 export default function CarCard({ car, priority = false }: CarCardProps) {
     const { config, formatPrice } = useConfig();
     const [mounted, setMounted] = useState(false);
-    const [koreanPrice, setKoreanPrice] = useState(0);
+    const [apiPrice, setApiPrice] = useState(0);
 
     useEffect(() => {
         setMounted(true);
@@ -24,12 +33,12 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
 
     // Safely access nested properties
     const lot = car.lots?.[0];
-
-    // Get raw Korean price
+    
+    // Get API price (matches other sites)
     useEffect(() => {
         if (lot) {
-            const price = getRawKoreanPrice(lot);
-            setKoreanPrice(price);
+            const price = getApiPrice(lot);
+            setApiPrice(price);
         }
     }, [lot]);
 
@@ -46,19 +55,15 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
             id: car.vin || car.id.toString(),
             title: car.title || `${manufacturerName} ${modelName}`,
             image: image,
-            price: koreanPrice
+            price: apiPrice
         });
     };
 
     const carTitle = car.title || `${manufacturerName} ${modelName}`;
     const detailUrl = car.vin ? `/cars/${car.vin}` : `/cars/${car.id}`;
 
-    // Calculate final price with all costs
-    // Note: In a real scenario, you'd calculate margin properly
-    const estimatedFinalPrice = koreanPrice +
-        (config?.shippingCost || 3500) +
-        (config?.shippingToPristina || 350) +
-        (config?.defaultMinimumMargin || 1000);
+    // Calculate final price with Prishtina shipping
+    const finalDisplayPrice = apiPrice + (config?.shippingToPristina || 350);
 
     return (
         <Link
@@ -128,7 +133,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
                         <div className="flex items-baseline justify-between">
                             <div>
                                 <span className="text-xl font-semibold text-orange-500">
-                                    {formatPrice(estimatedFinalPrice)}
+                                    {formatPrice(finalDisplayPrice)}
                                 </span>
                                 <span className="text-xs text-muted ml-1">
                                     me transport
@@ -146,3 +151,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
         </Link>
     );
 }
+EOF
+
+echo -e "\n✅ Fixed CarCard.tsx - renamed variable to finalDisplayPrice to avoid duplication"
+echo -e "\n📊 Now run: npm run build"

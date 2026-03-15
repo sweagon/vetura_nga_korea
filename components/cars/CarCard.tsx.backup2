@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Fuel, Gauge, Calendar, Settings } from 'lucide-react';
-import { type Car, formatMileage, getFuelTypeAlbanian, getTransmissionAlbanian, getRawKoreanPrice } from '@/lib/api';
+import { type Car, formatMileage, getFuelTypeAlbanian, getTransmissionAlbanian } from '@/lib/api';
 import { addToRecentlyViewed } from '@/lib/recentlyViewed';
 import { useConfig } from '@/lib/ConfigContext';
 
@@ -14,9 +14,8 @@ interface CarCardProps {
 }
 
 export default function CarCard({ car, priority = false }: CarCardProps) {
-    const { config, formatPrice } = useConfig();
+    const { config, formatPrice } = useConfig(); // ✅ Get config here
     const [mounted, setMounted] = useState(false);
-    const [koreanPrice, setKoreanPrice] = useState(0);
 
     useEffect(() => {
         setMounted(true);
@@ -24,15 +23,16 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
 
     // Safely access nested properties
     const lot = car.lots?.[0];
-
-    // Get raw Korean price
+    const [apiPrice, setApiPrice] = useState(0);
+    
     useEffect(() => {
         if (lot) {
-            const price = getRawKoreanPrice(lot);
-            setKoreanPrice(price);
+            const { getApiPrice } = require("@/lib/api");
+            setApiPrice(getApiPrice(lot));
         }
     }, [lot]);
-
+    
+    const finalPrice = apiPrice + (config?.shippingToPristina || 350);
     const mileage = lot?.odometer?.km || 0;
     const image = lot?.images?.normal?.[0] || lot?.images?.downloaded?.[0] || '';
 
@@ -46,19 +46,15 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
             id: car.vin || car.id.toString(),
             title: car.title || `${manufacturerName} ${modelName}`,
             image: image,
-            price: koreanPrice
+            price: price
         });
     };
 
     const carTitle = car.title || `${manufacturerName} ${modelName}`;
     const detailUrl = car.vin ? `/cars/${car.vin}` : `/cars/${car.id}`;
 
-    // Calculate final price with all costs
-    // Note: In a real scenario, you'd calculate margin properly
-    const estimatedFinalPrice = koreanPrice +
-        (config?.shippingCost || 3500) +
-        (config?.shippingToPristina || 350) +
-        (config?.defaultMinimumMargin || 1000);
+    // Calculate final price with Prishtina shipping
+    const finalPrice = price + (config?.shippingToPristina || 350);
 
     return (
         <Link
@@ -128,7 +124,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
                         <div className="flex items-baseline justify-between">
                             <div>
                                 <span className="text-xl font-semibold text-orange-500">
-                                    {formatPrice(estimatedFinalPrice)}
+                                    {formatPrice(finalPrice)}
                                 </span>
                                 <span className="text-xs text-muted ml-1">
                                     me transport

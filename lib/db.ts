@@ -9,6 +9,8 @@ import crypto from 'crypto';
 export interface DbConfig {
     shipping_cost: number;
     shipping_to_pristina: number;
+    default_margin_percentage: number;
+    default_minimum_margin: number;
     contact_email: string;
     contact_phone: string;
     site_name: string;
@@ -20,6 +22,8 @@ function dbToSiteConfig(db: DbConfig): SiteConfig {
     return {
         shippingCost: db.shipping_cost,
         shippingToPristina: db.shipping_to_pristina,
+        defaultMarginPercentage: db.default_margin_percentage,  // Add this
+        defaultMinimumMargin: db.default_minimum_margin,        // Add this
         contactEmail: db.contact_email,
         contactPhone: db.contact_phone,
         siteName: db.site_name,
@@ -39,11 +43,14 @@ export async function getConfigFromDb(): Promise<SiteConfig> {
             // Insert default config
             await sql`
                 INSERT INTO site_config (
-                    shipping_cost, shipping_to_pristina, contact_email, 
-                    contact_phone, site_name, currency, vehicle_types
+                    shipping_cost, shipping_to_pristina, 
+                    default_margin_percentage, default_minimum_margin,
+                    contact_email, contact_phone, site_name, currency, vehicle_types
                 ) VALUES (
                     ${defaultConfig.shippingCost},
                     ${defaultConfig.shippingToPristina},
+                    ${defaultConfig.defaultMarginPercentage},
+                    ${defaultConfig.defaultMinimumMargin},
                     ${defaultConfig.contactEmail},
                     ${defaultConfig.contactPhone},
                     ${defaultConfig.siteName},
@@ -68,6 +75,8 @@ export async function saveConfigToDb(config: SiteConfig): Promise<void> {
             UPDATE site_config SET
                 shipping_cost = ${config.shippingCost},
                 shipping_to_pristina = ${config.shippingToPristina},
+                default_margin_percentage = ${config.defaultMarginPercentage},
+                default_minimum_margin = ${config.defaultMinimumMargin},
                 contact_email = ${config.contactEmail},
                 contact_phone = ${config.contactPhone},
                 site_name = ${config.siteName},
@@ -83,7 +92,7 @@ export async function saveConfigToDb(config: SiteConfig): Promise<void> {
     }
 }
 
-// ============ ADMIN AUTH FUNCTIONS ============
+// ============ ADMIN FUNCTIONS ============
 
 export async function validateAdmin(password: string): Promise<boolean> {
     try {

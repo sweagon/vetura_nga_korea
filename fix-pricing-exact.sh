@@ -1,13 +1,217 @@
+#!/bin/bash
+
+echo "🚀 FIXING PRICING TO MATCH API EXACTLY"
+echo "========================================"
+
+# Colors
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+# Backup function
+backup_file() {
+    local file=$1
+    cp "$file" "$file.backup-$(date +%Y%m%d-%H%M%S)"
+    echo -e "${GREEN}✅ Backed up $file${NC}"
+}
+
+echo ""
+echo "📁 Step 1: Updating exchange rates in lib/priceCalculator.ts"
+echo "-----------------------------------------------------------"
+
+if [ -f "lib/priceCalculator.ts" ]; then
+    backup_file "lib/priceCalculator.ts"
+    
+    # Update the exchange rates to match API
+    cat > lib/priceCalculator.ts << 'EOF'
+// lib/priceCalculator.ts
+import { Lot } from './api';
+
+export interface CalculatedPrice {
+    basePriceEur: number;
+    exchangeRate: {
+        usdToEur: number;
+        krwToEur: number;
+    };
+    source: 'original_price' | 'buy_now' | 'api_price' | 'fallback';
+    originalCurrency: 'KRW' | 'USD' | 'EUR' | 'N/A';
+    originalAmount: number;
+}
+
+// API's actual exchange rates (from debug data)
+// API uses: 6.28 per 10,000 KRW = 0.000628
+const API_KRW_TO_EUR = 0.000628; // Exactly what API uses
+const API_USD_TO_EUR = 0.93; // Approximate
+
+export async function calculateBasePriceInEUR(lot: Lot | undefined): Promise<CalculatedPrice> {
+    if (!lot) {
+        return {
+            basePriceEur: 0,
+            exchangeRate: { usdToEur: API_USD_TO_EUR, krwToEur: API_KRW_TO_EUR },
+            source: 'fallback',
+            originalCurrency: 'N/A',
+            originalAmount: 0
+        };
+    }
+
+    // PRIORITY 1: Use API's pre-calculated price if available (matches other site)
+    if (lot.price_with_margin_and_kosovo) {
+        return {
+            basePriceEur: lot.price_with_margin_and_kosovo,
+            exchangeRate: { usdToEur: API_USD_TO_EUR, krwToEur: API_KRW_TO_EUR },
+            source: 'api_price',
+            originalCurrency: 'EUR',
+            originalAmount: lot.price_with_margin_and_kosovo
+        };
+    }
+
+    if (lot.step5) {
+        return {
+            basePriceEur: lot.step5,
+            exchangeRate: { usdToEur: API_USD_TO_EUR, krwToEur: API_KRW_TO_EUR },
+            source: 'api_price',
+            originalCurrency: 'EUR',
+            originalAmount: lot.step5
+        };
+    }
+
+    // PRIORITY 2: original_price in KRW with API's exact rate
+    if (lot.details?.original_price) {
+        const basePriceEur = Math.round(lot.details.original_price * API_KRW_TO_EUR);
+        return {
+            basePriceEur,
+            exchangeRate: { usdToEur: API_USD_TO_EUR, krwToEur: API_KRW_TO_EUR },
+            source: 'original_price',
+            originalCurrency: 'KRW',
+            originalAmount: lot.details.original_price
+        };
+    }
+
+    // PRIORITY 3: buy_now in USD
+    if (lot.buy_now) {
+        const basePriceEur = Math.round(lot.buy_now * API_USD_TO_EUR);
+        return {
+            basePriceEur,
+            exchangeRate: { usdToEur: API_USD_TO_EUR, krwToEur: API_KRW_TO_EUR },
+            source: 'buy_now',
+            originalCurrency: 'USD',
+            originalAmount: lot.buy_now
+        };
+    }
+
+    // Fallback
+    return {
+        basePriceEur: 0,
+        exchangeRate: { usdToEur: API_USD_TO_EUR, krwToEur: API_KRW_TO_EUR },
+        source: 'fallback',
+        originalCurrency: 'N/A',
+        originalAmount: 0
+    };
+}
+
+// For client-side caching
+let cachedRates = { usdToEur: API_USD_TO_EUR, krwToEur: API_KRW_TO_EUR };
+
+export async function getCachedExchangeRates(): Promise<{ usdToEur: number; krwToEur: number }> {
+    return cachedRates;
+}
+
+// Synchronous version for backward compatibility
+export function getBasePriceInEUR(lot: Lot | undefined): number {
+    if (!lot) return 0;
+    
+    if (lot.price_with_margin_and_kosovo) {
+        return lot.price_with_margin_and_kosovo;
+    }
+    
+    if (lot.step5) {
+        return lot.step5;
+    }
+    
+    if (lot.details?.original_price) {
+        return Math.round(lot.details.original_price * API_KRW_TO_EUR);
+    }
+    
+    if (lot.buy_now) {
+        return Math.round(lot.buy_now * API_USD_TO_EUR);
+    }
+    
+    return 0;
+}
+EOF
+    echo -e "${GREEN}✅ Updated lib/priceCalculator.ts with API's exact exchange rates${NC}"
+else
+    echo -e "${RED}❌ lib/priceCalculator.ts not found${NC}"
+fi
+
+echo ""
+echo "📁 Step 2: Updating lib/api.ts with price priority"
+echo "--------------------------------------------------"
+
+if [ -f "lib/api.ts" ]; then
+    backup_file "lib/api.ts"
+    
+    # Append/update the price functions
+    cat >> lib/api.ts << 'EOF'
+
+// ============ FIXED PRICING FUNCTIONS ============
+// These use API's exact exchange rates and prioritize API pre-calculated prices
+
+const API_KRW_TO_EUR = 0.000628; // API's exact rate
+const API_USD_TO_EUR = 0.93;
+
+// Get the best price matching what other sites use
+export function getApiPrice(lot: Lot | undefined): number {
+    if (!lot) return 0;
+    
+    // Priority 1: Use API's pre-calculated price (matches other site)
+    if (lot.price_with_margin_and_kosovo) {
+        return lot.price_with_margin_and_kosovo;
+    }
+    
+    // Priority 2: Use step5 (same as above)
+    if (lot.step5) {
+        return lot.step5;
+    }
+    
+    // Priority 3: Calculate from original_price with API's rate
+    if (lot.details?.original_price) {
+        return Math.round(lot.details.original_price * API_KRW_TO_EUR);
+    }
+    
+    // Priority 4: Calculate from buy_now
+    if (lot.buy_now) {
+        return Math.round(lot.buy_now * API_USD_TO_EUR);
+    }
+    
+    return 0;
+}
+
+// Async version that matches API exactly
+export async function getApiPriceAsync(lot: Lot | undefined): Promise<number> {
+    return getApiPrice(lot);
+}
+EOF
+    echo -e "${GREEN}✅ Updated lib/api.ts with priority pricing${NC}"
+else
+    echo -e "${RED}❌ lib/api.ts not found${NC}"
+fi
+
+echo ""
+echo "📁 Step 3: Updating CarDetailClient.tsx to use API price"
+echo "--------------------------------------------------------"
+
+if [ -f "components/cars/CarDetailClient.tsx" ]; then
+    backup_file "components/cars/CarDetailClient.tsx"
+    
+    # Create a modified version
+    cat > components/cars/CarDetailClient.tsx.tmp << 'EOF'
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useConfig } from '@/lib/ConfigContext';
-import {
-    type Car,
-    formatMileage,
-    getRawKoreanPrice,
-    getOldSitePrice
-} from '@/lib/api';
+import { type Car, formatMileage, getApiPrice } from '@/lib/api';
 import { translateFuel, translateTransmission, translateColor } from '@/lib/translations';
 import {
     Calendar,
@@ -35,52 +239,26 @@ interface CarDetailClientProps {
 }
 
 export function CarDetailClient({ car }: CarDetailClientProps) {
-    const { config, formatPrice } = useConfig();
+    const { config, formatPrice, calculateFinalPrice, getVehicleTypeLabel } = useConfig();
     const [mounted, setMounted] = useState(false);
     const [imageLoadError, setImageLoadError] = useState(false);
-    const [basePrice, setBasePrice] = useState(0);
-    const [competitorPrice, setCompetitorPrice] = useState(0);
-    const [loadingPrice, setLoadingPrice] = useState(true);
+    const [apiPrice, setApiPrice] = useState(0);
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
+    // Safely access nested properties
     const lot = car.lots?.[0];
-
-    // Calculate prices
+    
+    // Use API price immediately (matches other site)
     useEffect(() => {
-        if (lot && config) {
-            setLoadingPrice(true);
-            try {
-                // Get competitor's price (their price to Durrës)
-                const competitorPrice = getOldSitePrice(lot) || 0;
-                setCompetitorPrice(competitorPrice);
-
-                // Remove their transport (€3,850) to get their base price
-                const theirTransport = 3850; // €3,500 (Korea→Durrës) + €350 (Prishtina)
-                const theirBaseWithoutTransport = competitorPrice - theirTransport;
-
-                // Use this as our base price
-                setBasePrice(theirBaseWithoutTransport);
-
-                console.log('💰 Price Calculation:', {
-                    competitorPrice,
-                    theirTransport,
-                    theirBaseWithoutTransport,
-                    ourShipping: config.shippingCost,
-                    ourPrishtina: config.shippingToPristina
-                });
-            } catch (error) {
-                console.error('Error calculating price:', error);
-                // Fallback to raw Korean price
-                const rawPrice = getRawKoreanPrice(lot) || 0;
-                setBasePrice(rawPrice);
-            } finally {
-                setLoadingPrice(false);
-            }
+        if (lot) {
+            const price = getApiPrice(lot);
+            setApiPrice(price);
+            console.log('💰 Using API price:', price);
         }
-    }, [lot, config]);
+    }, [lot]);
 
     const mileage = lot?.odometer?.km || 0;
     const images = lot?.images?.big || lot?.images?.normal || [];
@@ -99,14 +277,14 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
         config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes]?.enabled;
     const effectiveVehicleType = hasTypeConfig ? vehicleType : 'default';
 
-    // Get shipping costs
-    const shippingCost = config.shippingCost || 3500;
-    const pristinaShipping = config.shippingToPristina || 350;
-
-    // Calculate price with Durrës shipping included in the base
-    const priceWithDurresShipping = basePrice + shippingCost;
-    // Final price includes Prishtina shipping
-    const finalPrice = priceWithDurresShipping + pristinaShipping;
+    // Calculate price details using API price as base
+    const priceDetails = mounted ? calculateFinalPrice(apiPrice, effectiveVehicleType) : {
+        basePrice: apiPrice,
+        shippingCost: config.shippingCost,
+        shippingToPristina: config.shippingToPristina,
+        finalPrice: apiPrice + config.shippingCost + config.shippingToPristina,
+        vehicleTypeUsed: effectiveVehicleType
+    };
 
     const displayBodyType = rawBodyType
         ? rawBodyType.charAt(0).toUpperCase() + rawBodyType.slice(1).toLowerCase()
@@ -250,9 +428,9 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                 <div className="card p-4 text-center">
                                     <div className="text-2xl font-semibold text-orange-500 mb-1">
-                                        {formatPrice(priceWithDurresShipping)}
+                                        {formatPrice(apiPrice)}
                                     </div>
-                                    <div className="text-xs text-muted">Çmimi me transport deri në Durrës</div>
+                                    <div className="text-xs text-muted">Çmimi nga Korea</div>
                                 </div>
                                 <div className="card p-4 text-center">
                                     <div className="text-2xl font-semibold text-primary mb-1">
@@ -340,7 +518,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                             <div className="sticky top-24 space-y-4">
                                 <div className="card p-6">
                                     <div className="text-3xl font-bold text-orange-500 mb-2">
-                                        {formatPrice(finalPrice)}
+                                        {formatPrice(priceDetails.finalPrice)}
                                     </div>
 
                                     {displayBodyType && (
@@ -355,7 +533,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                     )}
 
                                     <p className="text-xs text-muted mb-4">
-                                        Çmimi përfundimtar (përfshirë transportin detar dhe tokësor)
+                                        Çmimi përfundimtar (përfshirë transportin në Prishtinë)
                                     </p>
 
                                     <div className="space-y-3">
@@ -403,33 +581,33 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                     </div>
                                 </div>
 
-                                {/* Cost Estimate - Simple and Clean */}
                                 <div className="card p-6">
                                     <h3 className="font-semibold mb-3">Shpenzime të përafërta</h3>
-
                                     <div className="space-y-2 text-sm">
-                                        {/* Price with Durrës shipping included */}
                                         <div className="flex justify-between">
-                                            <span className="text-muted">Makina (përfshirë transportin detar):</span>
-                                            <span className="font-medium text-primary">{formatPrice(priceWithDurresShipping)}</span>
+                                            <span className="text-muted">Makina (Korea):</span>
+                                            <span className="font-medium text-primary">{formatPrice(apiPrice)}</span>
                                         </div>
 
-                                        {/* Only show Prishtina shipping separately */}
-                                        <div className="flex justify-between">
-                                            <span className="text-muted">Transporti Prishtinë:</span>
-                                            <span className="font-medium text-primary">{formatPrice(pristinaShipping)}</span>
-                                        </div>
-
-                                        {/* Total */}
-                                        <div className="border-t border-light my-2 pt-2">
-                                            <div className="flex justify-between font-semibold">
-                                                <span>Totali:</span>
-                                                <span className="text-orange-500">{formatPrice(finalPrice)}</span>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-muted">Transporti deri në Prishtinë:</span>
+                                            <div className="text-right">
+                                                <span className="font-medium text-primary block">
+                                                    {formatPrice(config.shippingToPristina)}
+                                                </span>
                                             </div>
                                         </div>
 
+                                        <div className="border-t border-light my-2 pt-2">
+                                            <div className="flex justify-between font-semibold">
+                                                <span>Totali:</span>
+                                                <span className="text-orange-500">
+                                                    {formatPrice(apiPrice + config.shippingToPristina)}
+                                                </span>
+                                            </div>
+                                        </div>
                                         <p className="text-xs text-muted mt-2">
-                                            *Transporti detar Korea-Durrës është i përfshirë në çmim
+                                            *Çmimi i makinës përfshin transportin detar Korea-Durrës
                                         </p>
                                     </div>
                                 </div>
@@ -458,3 +636,98 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
         </>
     );
 }
+EOF
+
+    # Replace the original file
+    mv components/cars/CarDetailClient.tsx.tmp components/cars/CarDetailClient.tsx
+    echo -e "${GREEN}✅ Updated CarDetailClient.tsx to use API price${NC}"
+else
+    echo -e "${RED}❌ components/cars/CarDetailClient.tsx not found${NC}"
+fi
+
+echo ""
+echo "📁 Step 4: Updating CarCard.tsx to use API price"
+echo "------------------------------------------------"
+
+if [ -f "components/cars/CarCard.tsx" ]; then
+    backup_file "components/cars/CarCard.tsx"
+    
+    # Update the price section in CarCard
+    sed -i 's/const price =.*/const [apiPrice, setApiPrice] = useState(0);\
+    \
+    useEffect(() => {\
+        if (lot) {\
+            const { getApiPrice } = require("@\/lib\/api");\
+            setApiPrice(getApiPrice(lot));\
+        }\
+    }, [lot]);\
+    \
+    const finalPrice = apiPrice + (config?.shippingToPristina || 350);/g' components/cars/CarCard.tsx
+    
+    echo -e "${GREEN}✅ Updated CarCard.tsx to use API price${NC}"
+else
+    echo -e "${RED}❌ components/cars/CarCard.tsx not found${NC}"
+fi
+
+echo ""
+echo "📁 Step 5: Creating debug script to verify prices"
+echo "------------------------------------------------"
+
+cat > scripts/verify-api-prices.js << 'EOF'
+// scripts/verify-api-prices.js
+const { getApiPrice } = require('../lib/api');
+
+const VINS = [
+    'SCBFT63W0GC057590', // Your test Bentley
+    // Add more VINs as needed
+];
+
+async function verifyPrices() {
+    console.log('🔍 Verifying API prices match other site\n');
+    
+    for (const vin of VINS) {
+        try {
+            const response = await fetch(`http://localhost:3000/api/proxy/vin/${vin}`);
+            const car = await response.json();
+            const lot = car.lots?.[0];
+            
+            if (!lot) continue;
+            
+            const ourPrice = getApiPrice(lot);
+            
+            console.log(`VIN: ${vin}`);
+            console.log(`Car: ${car.manufacturer?.name} ${car.model?.name} ${car.year}`);
+            console.log(`Our price: €${ourPrice.toLocaleString()}`);
+            console.log(`API price_with_margin: €${lot.price_with_margin_and_kosovo?.toLocaleString()}`);
+            console.log(`Match: ${ourPrice === lot.price_with_margin_and_kosovo ? '✅ YES' : '❌ NO'}`);
+            console.log('-'.repeat(40));
+        } catch (error) {
+            console.error(`Error checking ${vin}:`, error.message);
+        }
+    }
+}
+
+verifyPrices();
+EOF
+
+echo -e "${GREEN}✅ Created scripts/verify-api-prices.js${NC}"
+
+echo ""
+echo "📁 Step 6: Summary of changes"
+echo "=============================="
+echo -e "${GREEN}✅ Fixed exchange rate to match API: 0.000628 (was 0.00068)${NC}"
+echo -e "${GREEN}✅ Added priority to use price_with_margin_and_kosovo first${NC}"
+echo -e "${GREEN}✅ Updated CarDetailClient to show correct breakdown${NC}"
+echo -e "${GREEN}✅ Shipping now shown correctly:${NC}"
+echo "   - Car price includes Korea→Durrës shipping"
+echo "   - Only Prishtina shipping shown separately"
+echo "   - Total matches API + Prishtina"
+
+echo ""
+echo "🚀 To apply changes and test:"
+echo "=============================="
+echo "1. npm run dev"
+echo "2. Check a car page - price should now be ~€42,713 + €350 = €43,063"
+echo "3. Run verification: node scripts/verify-api-prices.js"
+echo ""
+echo "The €24,316 difference should now be fixed! 🎉"
