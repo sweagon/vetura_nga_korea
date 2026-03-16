@@ -97,23 +97,34 @@ export default function CarsContentWrapper() {
     // Helper function to get the display price for sorting (matches detail page logic)
     const getCarDisplayPrice = useCallback((car: Car): number => {
         const lot = car.lots?.[0];
-        if (!lot) return 0;
+        if (!lot || !config) return 0;
 
-        // Get competitor's price
         const competitorPrice = getOldSitePrice(lot);
 
         if (competitorPrice > 0) {
-            // Remove their transport (€3,850) to get base price
-            const theirTransport = 3850; // €3,500 (Korea→Durrës) + €350 (Prishtina)
+            // Remove THEIR transport costs (using config values)
+            const theirTransport = (config.shippingCost || 3500) + (config.shippingToPristina || 350);
             const basePrice = competitorPrice - theirTransport;
 
-            // Add our shipping costs
-            return basePrice + (config?.shippingCost || 3500) + (config?.shippingToPristina || 350);
+            // Get default margin values
+            const marginPercentage = config.defaultMarginPercentage || 15;
+            const minimumMargin = config.defaultMinimumMargin || 1000;
+
+            // Calculate margin
+            const calculatedMargin = Math.round(basePrice * (marginPercentage / 100));
+            const marginAmount = Math.max(calculatedMargin, minimumMargin);
+
+            return basePrice +
+                (config.shippingCost || 3500) +
+                marginAmount +
+                (config.shippingToPristina || 350);
         }
 
-        // Fallback to raw Korean price + our shipping
+        // Fallback to raw Korean price
         const rawPrice = getRawKoreanPrice(lot);
-        return rawPrice + (config?.shippingCost || 3500) + (config?.shippingToPristina || 350);
+        return rawPrice +
+            (config.shippingCost || 3500) +
+            (config.shippingToPristina || 350);
     }, [config]);
 
     // Helper function to get mileage

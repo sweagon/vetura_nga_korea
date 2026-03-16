@@ -1,3 +1,4 @@
+import { SiteConfig } from './config';
 import { STATIC_MANUFACTURERS } from './staticManufacturers';
 
 export interface Car {
@@ -800,4 +801,50 @@ export function getDisplayPrice(car: Car, ourShipping?: number, pristinaShipping
   // Fallback to raw Korean price + our shipping
   const rawPrice = getRawKoreanPrice(lot);
   return rawPrice + (ourShipping || 3500) + (pristinaShipping || 350);
+}
+
+/**
+ * Calculate the final price for a car using config values
+ */
+export function calculateFinalPrice(
+  car: Car,
+  config: SiteConfig,
+  vehicleType?: string
+): number {
+  const lot = car.lots?.[0];
+  if (!lot) return 0;
+
+  // Get competitor's price (their price to Durrës)
+  const competitorPrice = getOldSitePrice(lot);
+
+  if (competitorPrice > 0) {
+    // Remove THEIR transport costs (using config values)
+    const theirTransport = (config.shippingCost || 3500) + (config.shippingToPristina || 350);
+    const basePrice = competitorPrice - theirTransport;
+
+    // Get vehicle-specific config
+    let shippingCost = config.shippingCost;
+    let marginPercentage = config.defaultMarginPercentage;
+    let minimumMargin = config.defaultMinimumMargin;
+
+    if (vehicleType && config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes]) {
+      const typeConfig = config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes];
+      if (typeConfig?.enabled) {
+        shippingCost = typeConfig.shippingCost;
+        marginPercentage = typeConfig.marginPercentage;
+        minimumMargin = typeConfig.minimumMargin;
+      }
+    }
+
+    // Calculate margin
+    const calculatedMargin = Math.round(basePrice * (marginPercentage / 100));
+    const marginAmount = Math.max(calculatedMargin, minimumMargin);
+
+    // Final price: base + shipping + margin + Prishtina
+    return basePrice + shippingCost + marginAmount + config.shippingToPristina;
+  }
+
+  // Fallback to raw Korean price
+  const rawPrice = getRawKoreanPrice(lot);
+  return rawPrice + (config.shippingCost || 3500) + (config.shippingToPristina || 350);
 }

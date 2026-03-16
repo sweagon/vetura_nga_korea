@@ -14,6 +14,7 @@ import {
 } from '@/lib/api';
 import { addToRecentlyViewed } from '@/lib/recentlyViewed';
 import { useConfig } from '@/lib/ConfigContext';
+import { VehicleTypeConfig } from '@/lib/config';
 
 interface CarCardProps {
     car: Car;
@@ -32,33 +33,68 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
     // Safely access nested properties
     const lot = car.lots?.[0];
 
+    // Get vehicle type from car data
+    const rawBodyType = car.body_type?.name || '';
+    const vehicleType = rawBodyType.toLowerCase();
+
+    // Check if vehicle type exists in config and is enabled
+    const hasTypeConfig = vehicleType &&
+        config.vehicleTypes &&
+        Object.prototype.hasOwnProperty.call(config.vehicleTypes, vehicleType) &&
+        (config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes] as VehicleTypeConfig | undefined)?.enabled === true;
+
+    // Use vehicle type if available, otherwise use default
+    const effectiveVehicleType = hasTypeConfig ? vehicleType : 'default';
+
     // Calculate display price using same logic as detail page
     useEffect(() => {
         if (lot && config) {
-            // Get competitor's price (their price to Durrës)
             const competitorPrice = getOldSitePrice(lot);
 
             if (competitorPrice > 0) {
-                // Remove their transport (€3,850) to get base price
-                const theirTransport = 0; // €3,500 (Korea→Durrës) + €350 (Prishtina)
+                // Remove THEIR transport costs (using config values)
+                const theirTransport = (config.shippingCost || 3500) + (config.shippingToPristina || 350);
                 const basePrice = competitorPrice - theirTransport;
 
-                // Add our shipping costs
+                // Get vehicle-specific config
+                let shippingCost = config.shippingCost;
+                let marginPercentage = config.defaultMarginPercentage;
+                let minimumMargin = config.defaultMinimumMargin;
+
+                // Safe type checking for vehicle types
+                if (effectiveVehicleType !== 'default' && config.vehicleTypes) {
+                    const typeConfig = config.vehicleTypes[effectiveVehicleType as keyof typeof config.vehicleTypes] as VehicleTypeConfig | undefined;
+                    if (typeConfig?.enabled) {
+                        shippingCost = typeConfig.shippingCost;
+                        marginPercentage = typeConfig.marginPercentage;
+                        minimumMargin = typeConfig.minimumMargin;
+                    }
+                }
+
+                // Calculate margin
+                const calculatedMargin = Math.round(basePrice * (marginPercentage / 100));
+                const marginAmount = Math.max(calculatedMargin, minimumMargin);
+
                 const finalPrice = basePrice +
-                    (config.shippingCost || 3500) +
+                    shippingCost +
+                    marginAmount +
                     (config.shippingToPristina || 350);
 
                 setDisplayPrice(finalPrice);
 
                 console.log('💰 CarCard price:', {
+                    vehicleType: effectiveVehicleType,
                     competitorPrice,
+                    theirTransport,
                     basePrice,
-                    shipping: config.shippingCost,
+                    shippingCost,
+                    marginPercentage,
+                    marginAmount,
                     pristina: config.shippingToPristina,
                     finalPrice
                 });
             } else {
-                // Fallback to raw Korean price + our shipping
+                // Fallback to raw Korean price
                 const rawPrice = getRawKoreanPrice(lot);
                 const finalPrice = rawPrice +
                     (config.shippingCost || 3500) +
@@ -67,7 +103,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
                 setDisplayPrice(finalPrice);
             }
         }
-    }, [lot, config]);
+    }, [lot, config, effectiveVehicleType]);
 
     const mileage = lot?.odometer?.km || 0;
     const image = lot?.images?.normal?.[0] || lot?.images?.downloaded?.[0] || '';
@@ -82,7 +118,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
             id: car.vin || car.id.toString(),
             title: car.title || `${manufacturerName} ${modelName}`,
             image: image,
-            price: displayPrice // Use displayPrice instead of koreanPrice
+            price: displayPrice
         });
     };
 
