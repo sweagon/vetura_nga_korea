@@ -464,11 +464,11 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                             </div>
                                         </div>
 
-                                        {competitorPrice > 0 && (
+                                        {/* {competitorPrice > 0 && (
                                             <p className="text-xs text-muted mt-2">
                                                 *Çmimi i konkurrentit: €{competitorPrice.toLocaleString()} (Durrës)
                                             </p>
-                                        )}
+                                        )} */}
                                     </div>
                                 </div>
 
