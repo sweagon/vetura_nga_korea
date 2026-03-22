@@ -1,3 +1,4 @@
+// app/cars/CarsContentWrapper.tsx
 'use client';
 
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
@@ -11,7 +12,7 @@ import AdvancedFilterSidebar from '@/components/filters/AdvancedFilterSidebar';
 import Pagination from '@/components/ui/Pagination';
 import { useCarFilters } from '@/hooks/useCarFilters';
 import { useFilter } from '@/contexts/FilterContext';
-import { type Car, getOldSitePrice, getRawKoreanPrice } from '@/lib/api';
+import { type Car, getRealAuctionPriceFromApi } from '@/lib/api';
 import { useConfig } from '@/lib/ConfigContext';
 
 interface SortOption {
@@ -20,13 +21,22 @@ interface SortOption {
     sortFn: (a: Car, b: Car) => number;
 }
 
+// Simple in-memory cache for price calculations
+const priceCache = new Map<number, number>();
+
 export default function CarsContentWrapper() {
     const { isFilterOpen, setIsFilterOpen } = useFilter();
     const { config } = useConfig();
     const [currentSort, setCurrentSort] = useState('recommended');
     const contentRef = useRef<HTMLDivElement>(null);
+    const [isClient, setIsClient] = useState(false);
 
     const searchParams = useSearchParams();
+
+    // Fix hydration issues
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     // Lock body scroll when filter is open on mobile
     useEffect(() => {
@@ -94,37 +104,52 @@ export default function CarsContentWrapper() {
         goToPage
     } = useCarFilters(serverFilters, clientFilters);
 
-    // Helper function to get the display price for sorting (matches detail page logic)
+    // Helper function to get the display price using real auction price (with caching)
     const getCarDisplayPrice = useCallback((car: Car): number => {
+        // Check cache first
+        if (priceCache.has(car.id)) {
+            return priceCache.get(car.id) || 0;
+        }
+
         const lot = car.lots?.[0];
         if (!lot || !config) return 0;
 
-        const competitorPrice = getOldSitePrice(lot);
+        try {
+            // Use real auction price (70% of MSRP)
+            const realAuctionPrice = getRealAuctionPriceFromApi(lot);
 
-        if (competitorPrice > 0) {
-            // Remove THEIR transport costs (using config values)
-            const theirTransport = (config.shippingCost || 3500) + (config.shippingToPristina || 350);
-            const basePrice = competitorPrice - theirTransport;
+            if (realAuctionPrice > 0) {
+                // Get vehicle type
+                const rawBodyType = car.body_type?.name || '';
+                const vehicleType = rawBodyType.toLowerCase();
 
-            // Get default margin values
-            const marginPercentage = config.defaultMarginPercentage || 15;
-            const minimumMargin = config.defaultMinimumMargin || 1000;
+                // Get shipping cost (vehicle-specific or global)
+                let shippingCost = config.shippingCost;
+                if (vehicleType && config.vehicleTypes) {
+                    const typeConfig = config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes];
+                    if (typeConfig?.enabled && typeConfig.shippingCost) {
+                        shippingCost = typeConfig.shippingCost;
+                    }
+                }
 
-            // Calculate margin
-            const calculatedMargin = Math.round(basePrice * (marginPercentage / 100));
-            const marginAmount = Math.max(calculatedMargin, minimumMargin);
+                // Calculate margin using global settings
+                const marginPercentage = config.defaultMarginPercentage || 15;
+                const minimumMargin = config.defaultMinimumMargin || 1000;
+                const calculatedMargin = Math.round(realAuctionPrice * (marginPercentage / 100));
+                const marginAmount = Math.max(calculatedMargin, minimumMargin);
 
-            return basePrice +
-                (config.shippingCost || 3500) +
-                marginAmount +
-                (config.shippingToPristina || 350);
+                const finalPrice = realAuctionPrice + shippingCost + marginAmount + (config.shippingToPristina || 350);
+
+                // Cache the result
+                priceCache.set(car.id, finalPrice);
+
+                return finalPrice;
+            }
+        } catch (err) {
+            console.error('Error calculating price for car:', car.id, err);
         }
 
-        // Fallback to raw Korean price
-        const rawPrice = getRawKoreanPrice(lot);
-        return rawPrice +
-            (config.shippingCost || 3500) +
-            (config.shippingToPristina || 350);
+        return 0;
     }, [config]);
 
     // Helper function to get mileage
@@ -208,6 +233,23 @@ export default function CarsContentWrapper() {
     const hasResults = cars.length > 0;
     const isDoneSearching = !isSearching && !loading;
 
+    // Don't render on server to avoid hydration mismatch
+    if (!isClient) {
+        return (
+            <div className="flex flex-col lg:flex-row gap-8">
+                <div className="hidden lg:block lg:w-72 lg:shrink-0"></div>
+                <div className="flex-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                        {[...Array(12)].map((_, i) => (
+                            <CarCardSkeleton key={i} />
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Show error state
     if (error) {
         return (
             <div className="flex flex-col lg:flex-row gap-8">

@@ -2,10 +2,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const API_BASE_URL = process.env.API_BASE_URL || 'https://api.bestautomarket.com/api';
+const TIMEOUT = 8000; // 8 seconds (within Vercel's 10s limit)
+const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes cache
 
 // Simple in-memory cache
-const cache: Record<string, { data: any; timestamp: number }> = {};
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const cache = new Map<string, { data: any; timestamp: number }>();
 
 export async function GET(
     request: NextRequest,
@@ -16,13 +17,13 @@ export async function GET(
         const searchParams = request.nextUrl.searchParams;
         const cacheKey = `${path.join('/')}?${searchParams.toString()}`;
 
-        // Check cache first
-        const cached = cache[cacheKey];
+        // Check cache first - return immediately if fresh
+        const cached = cache.get(cacheKey);
         if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-            console.log('📦 Proxy cache hit for:', cacheKey);
+            console.log('📦 Cache HIT:', cacheKey);
             return NextResponse.json(cached.data, {
                 headers: {
-                    'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+                    'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200',
                     'X-Cache': 'HIT'
                 }
             });
@@ -37,9 +38,9 @@ export async function GET(
 
         console.log('🔁 Proxying to:', url);
 
-        // Increase timeout to 45 seconds for slow API
+        // Use AbortController with timeout
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 45000);
+        const timeoutId = setTimeout(() => controller.abort(), TIMEOUT);
 
         const response = await fetch(url, {
             headers: {
@@ -48,33 +49,46 @@ export async function GET(
                 'User-Agent': 'VeturaNgaKorea/1.0',
             },
             signal: controller.signal,
-            cache: 'force-cache' // Use fetch cache
         }).finally(() => clearTimeout(timeoutId));
 
         const text = await response.text();
 
         // Check if response is HTML (error page)
-        if (text.trim().startsWith('<!DOCTYPE')) {
+        if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
             console.error(`⚠️ API returned HTML for ${url}`);
             return NextResponse.json(
-                { error: 'API returned HTML instead of JSON' },
+                { error: 'API returned HTML instead of JSON', data: [], cars: [] },
                 { status: 404 }
             );
         }
 
         // Parse JSON
-        const data = JSON.parse(text);
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            console.error('❌ Failed to parse JSON:', text.substring(0, 200));
+            return NextResponse.json(
+                { error: 'Invalid JSON response from API', data: [], cars: [] },
+                { status: 500 }
+            );
+        }
+
+        // Ensure data has expected structure
+        if (!data.data && !data.cars) {
+            data = { data: data.data || data.cars || [], ...data };
+        }
 
         // Store in cache
-        cache[cacheKey] = {
+        cache.set(cacheKey, {
             data,
             timestamp: Date.now()
-        };
+        });
 
         return NextResponse.json(data, {
             status: response.status,
             headers: {
-                'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+                'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200',
                 'X-Cache': 'MISS'
             }
         });
@@ -84,13 +98,14 @@ export async function GET(
 
         if (error.name === 'AbortError') {
             return NextResponse.json(
-                { error: 'Request timeout - API took too long to respond' },
+                { error: 'Request timeout. Please try again.', data: [], cars: [] },
                 { status: 504 }
             );
         }
 
+        // Return empty data structure to prevent frontend errors
         return NextResponse.json(
-            { error: 'Failed to fetch data' },
+            { error: 'Failed to fetch data', data: [], cars: [] },
             { status: 500 }
         );
     }
