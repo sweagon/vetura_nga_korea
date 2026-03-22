@@ -859,7 +859,7 @@ export function getRealAuctionPriceFromApi(lot: Lot | undefined): number {
 
   // Use original_price directly - NO DISCOUNT
   if (lot.details?.original_price) {
-    const EXCHANGE_RATE = 0.000635;
+    const EXCHANGE_RATE = 0.000573;
     return Math.round(lot.details.original_price * EXCHANGE_RATE);
   }
 
@@ -880,7 +880,7 @@ export function getOriginalKoreanPriceFromApi(lot: Lot | undefined): number {
 
   // Use original_price directly
   if (lot.details?.original_price) {
-    const EXCHANGE_RATE = 0.000635; // Should come from admin
+    const EXCHANGE_RATE = 0.000573; // Should come from admin
     return Math.round(lot.details.original_price * EXCHANGE_RATE);
   }
 
