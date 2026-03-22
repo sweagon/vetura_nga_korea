@@ -14,6 +14,7 @@ import {
 import { addToRecentlyViewed } from '@/lib/recentlyViewed';
 import { useConfig } from '@/lib/ConfigContext';
 import { VehicleTypeConfig } from '@/lib/config';
+import { getOriginalKoreanPriceFromApi } from '@/lib/api';
 
 interface CarCardProps {
     car: Car;
@@ -55,33 +56,30 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
     // Calculate display price using REAL auction price
     useEffect(() => {
         if (lot && config) {
-            // Get real auction price (what dealers actually pay)
-            const realAuctionPrice = getRealAuctionPriceFromApi(lot);
-            
-            if (realAuctionPrice > 0) {
+            // Get original Korean price directly (no discount)
+            const originalPrice = getOriginalKoreanPriceFromApi(lot);
+
+            if (originalPrice > 0) {
                 const shippingCost = getShippingCost();
                 const marginPercentage = config.defaultMarginPercentage;
                 const minimumMargin = config.defaultMinimumMargin;
-                
-                // Calculate margin based on real auction price
-                const calculatedMargin = Math.round(realAuctionPrice * (marginPercentage / 100));
+
+                // Calculate margin based on original price
+                const calculatedMargin = Math.round(originalPrice * (marginPercentage / 100));
                 const marginAmount = Math.max(calculatedMargin, minimumMargin);
-                
-                // Final price: Real auction price + Shipping + Margin + Pristina shipping
-                const finalPrice = realAuctionPrice + shippingCost + marginAmount + config.shippingToPristina;
+
+                // Final price: Original price + Shipping + Margin + Pristina shipping
+                const finalPrice = originalPrice + shippingCost + marginAmount + config.shippingToPristina;
                 setDisplayPrice(finalPrice);
-                
-                console.log('💰 CarCard price (real auction):', {
-                    vehicleType,
-                    realAuctionPrice,
+
+                console.log('💰 CarCard price (original Korean):', {
+                    originalPrice,
                     shippingCost,
                     marginPercentage,
                     marginAmount,
                     pristina: config.shippingToPristina,
                     finalPrice
                 });
-            } else {
-                setDisplayPrice(0);
             }
         }
     }, [lot, config, vehicleType, hasTypeConfig]);

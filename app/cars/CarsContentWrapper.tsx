@@ -14,6 +14,7 @@ import { useCarFilters } from '@/hooks/useCarFilters';
 import { useFilter } from '@/contexts/FilterContext';
 import { type Car, getRealAuctionPriceFromApi } from '@/lib/api';
 import { useConfig } from '@/lib/ConfigContext';
+import { getOriginalKoreanPriceFromApi } from '@/lib/api';
 
 interface SortOption {
     value: string;
@@ -115,15 +116,15 @@ export default function CarsContentWrapper() {
         if (!lot || !config) return 0;
 
         try {
-            // Use real auction price (70% of MSRP)
-            const realAuctionPrice = getRealAuctionPriceFromApi(lot);
+            // Use original Korean price directly (no discount)
+            const originalPrice = getOriginalKoreanPriceFromApi(lot);
 
-            if (realAuctionPrice > 0) {
+            if (originalPrice > 0) {
                 // Get vehicle type
                 const rawBodyType = car.body_type?.name || '';
                 const vehicleType = rawBodyType.toLowerCase();
 
-                // Get shipping cost (vehicle-specific or global)
+                // Get shipping cost
                 let shippingCost = config.shippingCost;
                 if (vehicleType && config.vehicleTypes) {
                     const typeConfig = config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes];
@@ -132,13 +133,13 @@ export default function CarsContentWrapper() {
                     }
                 }
 
-                // Calculate margin using global settings
+                // Calculate margin
                 const marginPercentage = config.defaultMarginPercentage || 15;
                 const minimumMargin = config.defaultMinimumMargin || 1000;
-                const calculatedMargin = Math.round(realAuctionPrice * (marginPercentage / 100));
+                const calculatedMargin = Math.round(originalPrice * (marginPercentage / 100));
                 const marginAmount = Math.max(calculatedMargin, minimumMargin);
 
-                const finalPrice = realAuctionPrice + shippingCost + marginAmount + (config.shippingToPristina || 350);
+                const finalPrice = originalPrice + shippingCost + marginAmount + (config.shippingToPristina || 350);
 
                 // Cache the result
                 priceCache.set(car.id, finalPrice);

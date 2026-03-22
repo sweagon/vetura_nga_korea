@@ -32,6 +32,7 @@ import RecentlyViewedTracker from '@/components/cars/RecentlyViewedTracker';
 import ImageGallery from './ImageGallery';
 import CarDetailTabs from './CarDetailTabs';
 import { VehicleTypeConfig } from '@/lib/config';
+import { getOriginalKoreanPriceFromApi } from '@/lib/api';
 
 interface CarDetailClientProps {
     car: Car;
@@ -105,29 +106,29 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
         if (lot && config) {
             setLoadingPrice(true);
             try {
-                const auctionPrice = getRealAuctionPriceFromApi(lot);
-                setRealPrice(auctionPrice);
+                // Get original Korean price directly (no discount)
+                const originalPrice = getOriginalKoreanPriceFromApi(lot);
+                setRealPrice(originalPrice);
 
-                if (auctionPrice > 0) {
+                if (originalPrice > 0) {
                     const shipping = getShippingCost();
                     const marginPercent = config.defaultMarginPercentage;
                     const minMargin = config.defaultMinimumMargin;
 
-                    const calculatedMargin = Math.round(auctionPrice * (marginPercent / 100));
+                    const calculatedMargin = Math.round(originalPrice * (marginPercent / 100));
                     const finalMarginAmount = Math.max(calculatedMargin, minMargin);
 
                     setShippingCost(shipping);
                     setMarginAmount(finalMarginAmount);
                     setMarginPercentage(marginPercent);
 
-                    console.log('💰 Price Calculation (real auction):', {
-                        vehicleType,
-                        auctionPrice,
+                    console.log('💰 Price Calculation (original Korean):', {
+                        originalPrice,
                         shippingCost: shipping,
                         marginPercentage: marginPercent,
                         marginAmount: finalMarginAmount,
                         pristina: config.shippingToPristina,
-                        finalPrice: auctionPrice + shipping + finalMarginAmount + config.shippingToPristina
+                        finalPrice: originalPrice + shipping + finalMarginAmount + config.shippingToPristina
                     });
                 }
             } catch (error) {
@@ -413,7 +414,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                             <div className="p-4 bg-white/5 rounded-lg space-y-2 text-sm">
                                                 <h4 className="font-medium text-white mb-2">Detajet e çmimit:</h4>
                                                 <div className="flex justify-between">
-                                                    <span className="text-white/60">Çmimi bazë (auksioni Korea):</span>
+                                                    <span className="text-white/60">Çmimi bazë (Korea):</span>
                                                     <span className="text-white">{formatPrice(realPrice)}</span>
                                                 </div>
                                                 <div className="flex justify-between">

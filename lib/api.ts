@@ -857,16 +857,36 @@ const REAL_KRW_TO_EUR = 0.000645;
 export function getRealAuctionPriceFromApi(lot: Lot | undefined): number {
   if (!lot) return 0;
 
-  // Priority 1: Use original_price (MSRP) and apply auction discount
+  // Use original_price directly - NO DISCOUNT
   if (lot.details?.original_price) {
-    const auctionPriceKRW = Math.round(lot.details.original_price * REAL_AUCTION_DISCOUNT);
-    return Math.round(auctionPriceKRW * REAL_KRW_TO_EUR);
+    const EXCHANGE_RATE = 0.000635;
+    return Math.round(lot.details.original_price * EXCHANGE_RATE);
   }
 
-  // Priority 2: Fallback to buy_now in USD
+  // Fallback
   if (lot.buy_now) {
-    const USD_TO_EUR = 0.93;
-    return Math.round(lot.buy_now * USD_TO_EUR);
+    return Math.round(lot.buy_now * 0.93);
+  }
+
+  return 0;
+}
+
+/**
+ * Get the original Korean price directly from API (no discount)
+ * This is the actual retail price listed on Encar
+ */
+export function getOriginalKoreanPriceFromApi(lot: Lot | undefined): number {
+  if (!lot) return 0;
+
+  // Use original_price directly
+  if (lot.details?.original_price) {
+    const EXCHANGE_RATE = 0.000635; // Should come from admin
+    return Math.round(lot.details.original_price * EXCHANGE_RATE);
+  }
+
+  // Fallback to buy_now in USD
+  if (lot.buy_now) {
+    return Math.round(lot.buy_now * 0.93);
   }
 
   return 0;
