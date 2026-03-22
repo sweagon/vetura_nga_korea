@@ -1,11 +1,11 @@
 // app/api/exchange-rates/route.ts
 import { NextResponse } from 'next/server';
-import { getExchangeRatesServer } from '@/lib/exchangeRates';
+import { getExchangeRatesFromDb } from '@/lib/db';
 
 export async function GET() {
     try {
-        const rates = await getExchangeRatesServer();
-        
+        const rates = await getExchangeRatesFromDb();
+
         return NextResponse.json({
             success: true,
             rates,
@@ -15,10 +15,11 @@ export async function GET() {
         console.error('Error fetching exchange rates:', error);
         return NextResponse.json({
             success: false,
-            rates: {
-                usdToEur: 0.93,
-                krwToEur: 0.00068
-            },
+            rates: [
+                { from: 'KRW', to: 'EUR', rate: 0.00068, lastUpdated: new Date().toISOString() },
+                { from: 'USD', to: 'EUR', rate: 0.93, lastUpdated: new Date().toISOString() },
+                { from: 'JPY', to: 'EUR', rate: 0.0059, lastUpdated: new Date().toISOString() }
+            ],
             timestamp: new Date().toISOString(),
             error: 'Using fallback rates'
         });

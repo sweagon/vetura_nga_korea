@@ -1,28 +1,44 @@
-// scripts/check-config.js
+require('dotenv').config({ path: '.env' });
 const { sql } = require('@vercel/postgres');
-require('dotenv').config({ path: '.env.local' });
 
 async function checkConfig() {
-    console.log('🔍 Checking database configuration...\n');
+    console.log('🔍 Checking database config...\n');
 
-    const { rows } = await sql`SELECT * FROM site_config WHERE id = 1`;
-    const config = rows[0];
+    try {
+        // Check site_config
+        const { rows: configRows } = await sql`
+            SELECT * FROM site_config WHERE id = 1
+        `;
 
-    console.log('📋 Current config:');
-    console.log('------------------');
-    console.log(`shipping_cost: €${config.shipping_cost}`);
-    console.log(`shipping_to_pristina: €${config.shipping_to_pristina}`);
-    console.log(`defaultMarginPercentage: ${config.defaultMarginPercentage || 'NOT SET'}`);
-    console.log(`defaultMinimumMargin: €${config.defaultMinimumMargin || 'NOT SET'}`);
+        if (configRows.length === 0) {
+            console.log('❌ No config found in database!');
+        } else {
+            console.log('✅ Config found:');
+            console.log('   - Shipping Cost:', configRows[0].shipping_cost);
+            console.log('   - Default Margin:', configRows[0].default_margin_percentage);
+            console.log('   - Vehicle Types:', Object.keys(configRows[0].vehicle_types).join(', '));
+        }
 
-    console.log('\n🚗 Vehicle Types:');
-    Object.entries(config.vehicle_types).forEach(([key, value]) => {
-        console.log(`  ${key}:`);
-        console.log(`    enabled: ${value.enabled}`);
-        console.log(`    shippingCost: €${value.shippingCost}`);
-        console.log(`    marginPercentage: ${value.marginPercentage || 15}%`);
-        console.log(`    minimumMargin: €${value.minimumMargin || 1000}`);
-    });
+        // Check admin sessions
+        const { rows: sessionRows } = await sql`
+            SELECT COUNT(*) as count FROM admin_sessions WHERE expires_at > NOW()
+        `;
+        console.log('\n📊 Active sessions:', sessionRows[0].count);
+
+        // Check exchange rates
+        const { rows: ratesRows } = await sql`
+            SELECT * FROM exchange_rates WHERE id = 1
+        `;
+
+        if (ratesRows.length === 0) {
+            console.log('❌ No exchange rates found!');
+        } else {
+            console.log('✅ Exchange rates found');
+        }
+
+    } catch (error) {
+        console.error('Error checking config:', error);
+    }
 }
 
 checkConfig();

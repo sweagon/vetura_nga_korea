@@ -1,140 +1,27 @@
+// app/admin/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-    Save,
-    Settings,
-    Truck,
-    Percent,
     LogIn,
     Lock,
     Shield,
-    AlertCircle,
-    LogOut,
-    Mail,
-    Phone,
-    Building2,
-    ChevronDown,
-    ChevronUp,
-    Car,
-    ToggleLeft,
-    ToggleRight,
-    Euro
+    AlertCircle
 } from 'lucide-react';
-import { useConfig } from '@/lib/ConfigContext';
 
-// Maximum number of login attempts
 const MAX_ATTEMPTS = 5;
-const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minuta
-
-// Vehicle types
-const VEHICLE_TYPES = [
-    { id: 'suv', label: 'SUV', description: 'Automjete të mëdha, kamioneta' },
-    { id: 'sedan', label: 'Sedan', description: 'Makina familjare' },
-    { id: 'hatchback', label: 'Hatchback', description: 'Makina kompakte' },
-    { id: 'wagon', label: 'Kombi', description: 'Makina me hapësirë' },
-    { id: 'coupe', label: 'Kupe', description: 'Makina sportive' },
-    { id: 'van', label: 'Furgon', description: 'Automjete komerciale' },
-    { id: 'pickup', label: 'Pickup', description: 'Kamioneta' },
-    { id: 'sport_car', label: 'Makinë Sportive', description: 'Ferrari, Lamborghini, etj.' },
-    { id: 'default', label: 'Default', description: 'Vlerat standarde për të gjitha të tjerat' }
-];
-
-// Custom Number Input Component to prevent focus loss
-const NumberInput = ({
-    value,
-    onChange,
-    className = '',
-    step = '1',
-    min = '0',
-    max,
-    disabled = false,
-    placeholder = '0'
-}: {
-    value: number;
-    onChange: (value: number) => void;
-    className?: string;
-    step?: string;
-    min?: string;
-    max?: string;
-    disabled?: boolean;
-    placeholder?: string;
-}) => {
-    const [inputValue, setInputValue] = useState(value.toString());
-
-    // Update local state when prop changes, but only if different
-    useEffect(() => {
-        const newValue = value.toString();
-        if (inputValue !== newValue && !isNaN(Number(inputValue))) {
-            setInputValue(newValue);
-        }
-    }, [value]);
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newValue = e.target.value;
-        setInputValue(newValue);
-
-        // Allow empty string temporarily
-        if (newValue === '') {
-            return;
-        }
-
-        // Only update parent if it's a valid number
-        if (!isNaN(Number(newValue))) {
-            onChange(Number(newValue));
-        }
-    };
-
-    const handleBlur = () => {
-        // On blur, if empty, set to 0
-        if (inputValue === '') {
-            setInputValue('0');
-            onChange(0);
-        } else {
-            // Format the number
-            const num = Number(inputValue);
-            setInputValue(num.toString());
-        }
-    };
-
-    return (
-        <input
-            type="text"
-            inputMode="numeric"
-            value={inputValue}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            className={className}
-            disabled={disabled}
-            placeholder={placeholder}
-        />
-    );
-};
+const LOCKOUT_TIME = 15 * 60 * 1000;
 
 export default function AdminPage() {
     const router = useRouter();
-    const { config, updateConfig, validateConfig } = useConfig();
-
-    // Local state for form
-    const [localConfig, setLocalConfig] = useState(config);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
-    const [isSaving, setIsSaving] = useState(false);
-    const [saveMessage, setSaveMessage] = useState({ text: '', type: '' });
-    const [expandedVehicleType, setExpandedVehicleType] = useState<string | null>(null);
-
-    // Security state
+    const [isLoading, setIsLoading] = useState(false);
     const [loginAttempts, setLoginAttempts] = useState(0);
     const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState('');
 
-    // Update local config when context config changes
-    useEffect(() => {
-        setLocalConfig(config);
-    }, [config]);
-
-    // Check if already authenticated via session cookie
+    // Check if already authenticated
     useEffect(() => {
         const checkAuth = async () => {
             try {
@@ -142,33 +29,25 @@ export default function AdminPage() {
                     credentials: 'include'
                 });
                 const data = await response.json();
-                setIsAuthenticated(data.authenticated);
 
                 if (data.authenticated) {
-                    console.log('✅ Valid session found');
-                } else {
-                    console.log('❌ No valid session');
+                    router.push('/admin/pricing');
                 }
             } catch (error) {
                 console.error('Session check error:', error);
-                setIsAuthenticated(false);
-            } finally {
-                setIsLoading(false);
             }
         };
 
         checkAuth();
-    }, []);
+    }, [router]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError('');
 
         if (lockoutUntil && Date.now() < lockoutUntil) {
             const minutesLeft = Math.ceil((lockoutUntil - Date.now()) / 60000);
-            setSaveMessage({
-                text: `Shumë përpjekje. Provo përsëri pas ${minutesLeft} minutash.`,
-                type: 'error'
-            });
+            setError(`Shumë përpjekje. Provo përsëri pas ${minutesLeft} minutash.`);
             return;
         }
 
@@ -187,11 +66,7 @@ export default function AdminPage() {
             if (response.ok && data.success) {
                 setLoginAttempts(0);
                 setLockoutUntil(null);
-                setIsAuthenticated(true);
-                setSaveMessage({ text: '✅ Hyrja e suksesshme!', type: 'success' });
-                setPassword('');
-
-                setTimeout(() => setSaveMessage({ text: '', type: '' }), 2000);
+                router.push('/admin/pricing');
             } else {
                 const newAttempts = loginAttempts + 1;
                 setLoginAttempts(newAttempts);
@@ -199,637 +74,86 @@ export default function AdminPage() {
                 if (newAttempts >= MAX_ATTEMPTS) {
                     const lockout = Date.now() + LOCKOUT_TIME;
                     setLockoutUntil(lockout);
-                    setSaveMessage({
-                        text: `Shumë përpjekje të dështuara. Llogaria është bllokuar për 15 minuta.`,
-                        type: 'error'
-                    });
+                    setError('Shumë përpjekje të dështuara. Llogaria është bllokuar për 15 minuta.');
                 } else {
-                    setSaveMessage({
-                        text: `Fjalëkalimi i gabuar. ${MAX_ATTEMPTS - newAttempts} përpjekje të mbetura.`,
-                        type: 'error'
-                    });
+                    setError(`Fjalëkalimi i gabuar. ${MAX_ATTEMPTS - newAttempts} përpjekje të mbetura.`);
                 }
             }
         } catch (error) {
-            setSaveMessage({ text: 'Hyrja dështoi. Provo përsëri.', type: 'error' });
+            setError('Hyrja dështoi. Provo përsëri.');
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleLogout = async () => {
-        try {
-            const response = await fetch('/api/admin/verify', {
-                method: 'DELETE',
-                credentials: 'include'
-            });
+    return (
+        <div className="w-full max-w-md">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 relative">
+                <div className="absolute -top-3 -right-3 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                    <Shield size={12} />
+                    E Sigurt
+                </div>
 
-            if (response.ok) {
-                setIsAuthenticated(false);
-                setPassword('');
-                setSaveMessage({ text: '✅ Jeni shkyçur me sukses', type: 'success' });
-                setTimeout(() => setSaveMessage({ text: '', type: '' }), 2000);
-            }
-        } catch (error) {
-            console.error('Logout error:', error);
-        }
-    };
-
-    const handleSave = async () => {
-        setIsSaving(true);
-
-        try {
-            await updateConfig(localConfig);
-            setSaveMessage({
-                text: '✅ Cilësimet u ruajtën me sukses për të gjithë përdoruesit!',
-                type: 'success'
-            });
-        } catch (error) {
-            setSaveMessage({
-                text: `Gabim: ${error instanceof Error ? error.message : 'Ruajtja dështoi'}`,
-                type: 'error'
-            });
-        } finally {
-            setIsSaving(false);
-            setTimeout(() => setSaveMessage({ text: '', type: '' }), 3000);
-        }
-    };
-
-    const handleReset = () => {
-        if (confirm('A jeni i sigurt që doni të riktheni vlerat e paracaktuara?')) {
-            const defaultConfig = {
-                shippingCost: 3500,
-                shippingToPristina: 350,
-                defaultMarginPercentage: 15,
-                defaultMinimumMargin: 1000,
-                contactEmail: 'blerart@outlook.com',
-                contactPhone: '+383 49 195 414',
-                siteName: 'Vetura Korea Kosovë',
-                currency: 'EUR' as const,
-                vehicleTypes: {
-                    suv: { shippingCost: 4500, marginPercentage: 18, minimumMargin: 1500, enabled: true },
-                    sedan: { shippingCost: 3500, marginPercentage: 15, minimumMargin: 1000, enabled: true },
-                    hatchback: { shippingCost: 3500, marginPercentage: 15, minimumMargin: 1000, enabled: true },
-                    wagon: { shippingCost: 3500, marginPercentage: 15, minimumMargin: 1000, enabled: true },
-                    coupe: { shippingCost: 3500, marginPercentage: 15, minimumMargin: 1000, enabled: true },
-                    van: { shippingCost: 3800, marginPercentage: 12, minimumMargin: 800, enabled: true },
-                    pickup: { shippingCost: 4000, marginPercentage: 12, minimumMargin: 800, enabled: true },
-                    sport_car: { shippingCost: 3500, marginPercentage: 15, minimumMargin: 1500, enabled: true },
-                    default: { shippingCost: 3500, marginPercentage: 15, minimumMargin: 1000, enabled: true }
-                }
-            };
-            setLocalConfig(defaultConfig);
-            updateConfig(defaultConfig);
-            setSaveMessage({ text: '✅ U rikthye në vlerat e paracaktuara', type: 'success' });
-        }
-    };
-
-    const updateField = (field: keyof typeof localConfig, value: any) => {
-        setLocalConfig(prev => ({ ...prev, [field]: value }));
-    };
-
-    const updateVehicleType = (type: string, field: string, value: any) => {
-        setLocalConfig(prev => ({
-            ...prev,
-            vehicleTypes: {
-                ...prev.vehicleTypes,
-                [type]: {
-                    ...(prev.vehicleTypes[type as keyof typeof prev.vehicleTypes] || {
-                        shippingCost: 3500,
-                        marginPercentage: 15,
-                        minimumMargin: 1000,
-                        enabled: false
-                    }),
-                    [field]: value
-                }
-            }
-        }));
-    };
-
-    const toggleVehicleType = (type: string) => {
-        setLocalConfig(prev => {
-            const currentConfig = prev.vehicleTypes[type as keyof typeof prev.vehicleTypes];
-            return {
-                ...prev,
-                vehicleTypes: {
-                    ...prev.vehicleTypes,
-                    [type]: {
-                        ...(currentConfig || {
-                            shippingCost: 3500,
-                            marginPercentage: 15,
-                            minimumMargin: 1000,
-                            enabled: false
-                        }),
-                        enabled: !(currentConfig?.enabled || false)
-                    }
-                }
-            };
-        });
-    };
-
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-dark-blue via-dark-blue to-navy flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"></div>
-            </div>
-        );
-    }
-
-    // Login Screen
-    if (!isAuthenticated) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-dark-blue via-dark-blue to-navy flex items-center justify-center p-4">
-                <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 w-full max-w-md relative">
-                    {/* Security Badge */}
-                    <div className="absolute -top-3 -right-3 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-                        <Shield size={12} />
-                        E Sigurt
-                    </div>
-
-                    <div className="text-center mb-8">
-                        <div className="w-20 h-20 bg-orange-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 relative">
-                            <Lock className="w-10 h-10 text-orange-500" />
-                            {loginAttempts > 0 && (
-                                <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs">
-                                    {loginAttempts}
-                                </div>
-                            )}
-                        </div>
-                        <h1 className="text-2xl font-bold text-white mb-2">Hyrja për Administratorë</h1>
-                        <p className="text-white/60 text-sm">Shkruani fjalëkalimin për të menaxhuar cilësimet</p>
-                    </div>
-
-                    <form onSubmit={handleLogin}>
-                        <div className="relative mb-6">
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="Shkruani fjalëkalimin"
-                                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-orange-500 text-center text-lg"
-                                autoFocus
-                                disabled={isLoading || (lockoutUntil !== null && Date.now() < lockoutUntil)}
-                            />
-                            {lockoutUntil && Date.now() < lockoutUntil && (
-                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                    <AlertCircle className="w-5 h-5 text-red-500" />
-                                </div>
-                            )}
-                        </div>
-
-                        {saveMessage.text && (
-                            <div className={`mb-4 p-3 rounded-lg text-sm text-center ${saveMessage.type === 'error'
-                                ? 'bg-red-500/10 text-red-500 border border-red-500/20'
-                                : 'bg-green-500/10 text-green-500 border border-green-500/20'
-                                }`}>
-                                {saveMessage.text}
+                <div className="text-center mb-8">
+                    <div className="w-20 h-20 bg-orange-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 relative">
+                        <Lock className="w-10 h-10 text-orange-500" />
+                        {loginAttempts > 0 && (
+                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs">
+                                {loginAttempts}
                             </div>
                         )}
-
-                        <button
-                            type="submit"
-                            disabled={isLoading || (lockoutUntil !== null && Date.now() < lockoutUntil)}
-                            className="w-full py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isLoading ? (
-                                <span className="flex items-center justify-center gap-2">
-                                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
-                                    Duke verifikuar...
-                                </span>
-                            ) : (
-                                <span className="flex items-center justify-center gap-2">
-                                    <LogIn className="w-5 h-5" />
-                                    Hyr në Panelin Administrator
-                                </span>
-                            )}
-                        </button>
-                    </form>
-
-                    <div className="mt-6 text-center">
-                        <p className="text-xs text-white/40">
-                            ⚡ Maksimumi {MAX_ATTEMPTS} përpjekje | Bllokim {LOCKOUT_TIME / 60000} minuta
-                        </p>
                     </div>
+                    <h1 className="text-2xl font-bold text-white mb-2">Hyrja për Administratorë</h1>
+                    <p className="text-white/60 text-sm">Shkruani fjalëkalimin për të menaxhuar cilësimet</p>
                 </div>
-            </div>
-        );
-    }
 
-    // Main Admin Panel
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-dark-blue via-dark-blue to-navy py-8">
-            <div className="container mx-auto px-4 max-w-4xl">
-                {/* Header */}
-                <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 mb-6">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <div className="p-3 bg-orange-500/20 rounded-xl">
-                                <Settings className="w-6 h-6 text-orange-500" />
+                <form onSubmit={handleLogin}>
+                    <div className="relative mb-6">
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Shkruani fjalëkalimin"
+                            className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-orange-500 text-center text-lg"
+                            autoFocus
+                            disabled={isLoading || (lockoutUntil !== null && Date.now() < lockoutUntil)}
+                        />
+                        {lockoutUntil && Date.now() < lockoutUntil && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                <AlertCircle className="w-5 h-5 text-red-500" />
                             </div>
-                            <div>
-                                <h1 className="text-xl font-bold text-white">Cilësimet e Faqes</h1>
-                                <p className="text-sm text-white/60">Rregulloni transportin, marzhën dhe kontaktet</p>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-2 w-full sm:w-auto">
-                            <button
-                                onClick={handleReset}
-                                className="px-4 py-2 text-sm bg-white/10 text-white rounded-lg hover:bg-white/20 transition border border-white/10"
-                            >
-                                Rikthe
-                            </button>
-                            <button
-                                onClick={handleLogout}
-                                className="px-4 py-2 text-sm bg-white/10 text-white rounded-lg hover:bg-white/20 transition border border-white/10 flex items-center gap-2"
-                            >
-                                <LogOut size={16} />
-                                Dil
-                            </button>
-                            <button
-                                onClick={handleSave}
-                                disabled={isSaving}
-                                className="px-4 py-2 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition flex items-center gap-2 disabled:opacity-50"
-                            >
-                                <Save size={16} />
-                                {isSaving ? 'Duke ruajtur...' : 'Ruaj'}
-                            </button>
-                        </div>
+                        )}
                     </div>
 
-                    {/* Success Message */}
-                    {saveMessage.text && (
-                        <div className={`mt-4 p-3 rounded-lg text-sm ${saveMessage.type === 'success'
-                            ? 'bg-green-500/10 text-green-500 border border-green-500/20'
-                            : 'bg-red-500/10 text-red-500 border border-red-500/20'
-                            }`}>
-                            {saveMessage.text}
+                    {error && (
+                        <div className="mb-4 p-3 rounded-lg text-sm text-center bg-red-500/10 text-red-500 border border-red-500/20">
+                            {error}
                         </div>
                     )}
-                </div>
 
-                {/* Global Margin Settings */}
-                <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 mb-6">
-                    <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                        <Percent className="text-orange-500" size={20} />
-                        <span>Cilësimet Globale të Marzhës</span>
-                    </h2>
+                    <button
+                        type="submit"
+                        disabled={isLoading || (lockoutUntil !== null && Date.now() < lockoutUntil)}
+                        className="w-full py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isLoading ? (
+                            <span className="flex items-center justify-center gap-2">
+                                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+                                Duke verifikuar...
+                            </span>
+                        ) : (
+                            <span className="flex items-center justify-center gap-2">
+                                <LogIn className="w-5 h-5" />
+                                Hyr në Panelin Administrator
+                            </span>
+                        )}
+                    </button>
+                </form>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm text-white/70 mb-2">
-                                Përqindja e Marzhës (%)
-                            </label>
-                            <NumberInput
-                                value={localConfig.defaultMarginPercentage ?? 15}
-                                onChange={(value) => updateField('defaultMarginPercentage', value)}
-                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                step="1"
-                                min="0"
-                                max="100"
-                            />
-                            <p className="text-xs text-white/40 mt-1">Përqindja standarde për të gjitha automjetet</p>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm text-white/70 mb-2">
-                                Marzha Minimale (€)
-                            </label>
-                            <NumberInput
-                                value={localConfig.defaultMinimumMargin ?? 1000}
-                                onChange={(value) => updateField('defaultMinimumMargin', value)}
-                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                step="100"
-                                min="0"
-                            />
-                            <p className="text-xs text-white/40 mt-1">Fitimi minimal për çdo automjet</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Shipping Costs */}
-                <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 mb-6">
-                    <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                        <Truck className="text-orange-500" size={20} />
-                        <span>Transporti</span>
-                    </h2>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Transporti Durrës */}
-                        <div>
-                            <label className="block text-sm text-white/70 mb-2">
-                                Transporti Korea → Durrës (€)
-                            </label>
-                            <NumberInput
-                                value={localConfig.shippingCost}
-                                onChange={(value) => updateField('shippingCost', value)}
-                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                step="100"
-                                min="0"
-                            />
-                            <p className="text-xs text-white/40 mt-1">Transporti detar nga Korea në Durrës</p>
-                        </div>
-
-                        {/* Transporti Prishtinë */}
-                        <div>
-                            <label className="block text-sm text-white/70 mb-2">
-                                Transporti Durrës → Prishtinë (€)
-                            </label>
-                            <NumberInput
-                                value={localConfig.shippingToPristina}
-                                onChange={(value) => updateField('shippingToPristina', value)}
-                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                step="10"
-                                min="0"
-                            />
-                            <p className="text-xs text-white/40 mt-1">Transporti tokësor nga Durrësi në Prishtinë</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Vehicle Types */}
-                <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 mb-6">
-                    <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                        <Car className="text-orange-500" size={20} />
-                        <span>Konfigurimi sipas llojit të automjetit</span>
-                    </h2>
-
-                    <p className="text-sm text-white/60 mb-4">
-                        Aktivizoni dhe rregulloni çmime të veçanta për lloje të ndryshme të automjeteve.
+                <div className="mt-6 text-center">
+                    <p className="text-xs text-white/40">
+                        ⚡ Maksimumi {MAX_ATTEMPTS} përpjekje | Bllokim {LOCKOUT_TIME / 60000} minuta
                     </p>
-
-                    <div className="space-y-3">
-                        {VEHICLE_TYPES.map((type) => {
-                            const typeConfig = localConfig.vehicleTypes[type.id as keyof typeof localConfig.vehicleTypes];
-                            const isExpanded = expandedVehicleType === type.id;
-
-                            return (
-                                <div
-                                    key={type.id}
-                                    className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
-                                >
-                                    {/* Header */}
-                                    <div
-                                        className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/5 transition-colors"
-                                        onClick={() => setExpandedVehicleType(isExpanded ? null : type.id)}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    toggleVehicleType(type.id);
-                                                }}
-                                                className="focus:outline-none"
-                                            >
-                                                {typeConfig?.enabled ? (
-                                                    <ToggleRight className="w-6 h-6 text-orange-500" />
-                                                ) : (
-                                                    <ToggleLeft className="w-6 h-6 text-white/40" />
-                                                )}
-                                            </button>
-                                            <div>
-                                                <span className="font-medium text-white">{type.label}</span>
-                                                <p className="text-xs text-white/40 mt-0.5">{type.description}</p>
-                                            </div>
-                                            {typeConfig?.enabled && (
-                                                <span className="text-xs bg-orange-500/20 text-orange-500 px-2 py-0.5 rounded-full">
-                                                    Aktiv
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="flex items-center gap-4">
-                                            {typeConfig?.enabled && (
-                                                <span className="text-sm text-white/60 hidden sm:block">
-                                                    Transport: €{typeConfig.shippingCost} | Marzha: {typeConfig.marginPercentage}% | Min: €{typeConfig.minimumMargin}
-                                                </span>
-                                            )}
-                                            {isExpanded ? (
-                                                <ChevronUp className="w-5 h-5 text-white/40" />
-                                            ) : (
-                                                <ChevronDown className="w-5 h-5 text-white/40" />
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Expanded Content */}
-                                    {isExpanded && typeConfig && (
-                                        <div className="p-4 border-t border-white/10 bg-white/5">
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                <div>
-                                                    <label className="block text-sm text-white/70 mb-2">
-                                                        Transporti (€)
-                                                    </label>
-                                                    <NumberInput
-                                                        value={typeConfig.shippingCost ?? 3500}
-                                                        onChange={(value) => updateVehicleType(type.id, 'shippingCost', value)}
-                                                        className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                                        step="100"
-                                                        min="0"
-                                                        disabled={!typeConfig.enabled}
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm text-white/70 mb-2">
-                                                        Marzha (%)
-                                                    </label>
-                                                    <NumberInput
-                                                        value={typeConfig.marginPercentage ?? 15}
-                                                        onChange={(value) => updateVehicleType(type.id, 'marginPercentage', value)}
-                                                        className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                                        step="1"
-                                                        min="0"
-                                                        max="100"
-                                                        disabled={!typeConfig.enabled}
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm text-white/70 mb-2">
-                                                        Marzha Minimale (€)
-                                                    </label>
-                                                    <NumberInput
-                                                        value={typeConfig.minimumMargin ?? 1000}
-                                                        onChange={(value) => updateVehicleType(type.id, 'minimumMargin', value)}
-                                                        className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                                        step="100"
-                                                        min="0"
-                                                        disabled={!typeConfig.enabled}
-                                                    />
-                                                </div>
-                                            </div>
-                                            {type.id === 'default' && (
-                                                <p className="text-xs text-white/40 mt-3 bg-white/5 p-2 rounded">
-                                                    ⚡ Këto vlera përdoren si default për të gjitha llojet që nuk kanë vlera specifike
-                                                </p>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                {/* Contact Information */}
-                <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 mb-6">
-                    <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                        <Building2 className="text-orange-500" size={20} />
-                        <span>Informacionet e Kontaktit</span>
-                    </h2>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm text-white/70 mb-2">Emri i Faqes</label>
-                            <input
-                                type="text"
-                                value={localConfig.siteName}
-                                onChange={(e) => updateField('siteName', e.target.value)}
-                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                placeholder="Vetura Korea Kosovë"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm text-white/70 mb-2 flex items-center gap-1">
-                                <Mail size={14} /> Email-i
-                            </label>
-                            <input
-                                type="email"
-                                value={localConfig.contactEmail}
-                                onChange={(e) => updateField('contactEmail', e.target.value)}
-                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                placeholder="blerart@outlook.com"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm text-white/70 mb-2 flex items-center gap-1">
-                                <Phone size={14} /> Telefoni
-                            </label>
-                            <input
-                                type="tel"
-                                value={localConfig.contactPhone}
-                                onChange={(e) => updateField('contactPhone', e.target.value)}
-                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                placeholder="+383 49 195 414"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm text-white/70 mb-2 flex items-center gap-1">
-                                <Euro size={14} /> Valuta
-                            </label>
-                            <select
-                                value={localConfig.currency}
-                                onChange={(e) => updateField('currency', e.target.value)}
-                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-                            >
-                                <option value="EUR">Euro (€)</option>
-                                <option value="USD">USD ($)</option>
-                                <option value="ALL">Lekë (Lek)</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Live Preview */}
-                <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6">
-                    <h2 className="text-lg font-semibold text-white mb-4">Parapamje e Çmimeve</h2>
-
-                    <div className="bg-white/5 rounded-lg p-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Sedan Example */}
-                            <div>
-                                <h3 className="text-sm font-medium text-white mb-3">Shembull: Sedan</h3>
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between text-white/70">
-                                        <span>Çmimi bazë:</span>
-                                        <span className="text-white">€15,000</span>
-                                    </div>
-                                    <div className="flex justify-between text-white/70">
-                                        <span>Transporti Durrës:</span>
-                                        <span className="text-white">+€{localConfig.shippingCost}</span>
-                                    </div>
-                                    <div className="flex justify-between text-white/70">
-                                        <span>Marzha ({localConfig.defaultMarginPercentage}%):</span>
-                                        <span className="text-white">
-                                            +€{Math.max(Math.round(15000 * (localConfig.defaultMarginPercentage || 15) / 100), localConfig.defaultMinimumMargin || 1000).toLocaleString()}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between text-white/70">
-                                        <span>Transporti Prishtinë:</span>
-                                        <span className="text-white">+€{localConfig.shippingToPristina}</span>
-                                    </div>
-                                    <div className="flex justify-between font-bold pt-2 border-t border-white/10 text-white">
-                                        <span>Totali:</span>
-                                        <span className="text-orange-500">
-                                            €{(15000 +
-                                                (localConfig.shippingCost || 3500) +
-                                                (localConfig.shippingToPristina || 350) +
-                                                Math.max(Math.round(15000 * (localConfig.defaultMarginPercentage || 15) / 100), localConfig.defaultMinimumMargin || 1000)
-                                            ).toLocaleString()}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* SUV Example */}
-                            <div>
-                                <h3 className="text-sm font-medium text-white mb-3">Shembull: SUV</h3>
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between text-white/70">
-                                        <span>Çmimi bazë:</span>
-                                        <span className="text-white">€25,000</span>
-                                    </div>
-                                    <div className="flex justify-between text-white/70">
-                                        <span>Transporti Durrës:</span>
-                                        <span className="text-white">
-                                            +€{localConfig.vehicleTypes.suv?.enabled ? localConfig.vehicleTypes.suv.shippingCost : localConfig.shippingCost}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between text-white/70">
-                                        <span>Marzha:</span>
-                                        <span className="text-white">
-                                            {localConfig.vehicleTypes.suv?.enabled ? (
-                                                <>+€{Math.max(Math.round(25000 * (localConfig.vehicleTypes.suv.marginPercentage || 15) / 100), localConfig.vehicleTypes.suv.minimumMargin || 1000).toLocaleString()} ({localConfig.vehicleTypes.suv.marginPercentage || 15}%)</>
-                                            ) : (
-                                                <>+€{Math.max(Math.round(25000 * (localConfig.defaultMarginPercentage || 15) / 100), localConfig.defaultMinimumMargin || 1000).toLocaleString()} ({localConfig.defaultMarginPercentage || 15}%)</>
-                                            )}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between text-white/70">
-                                        <span>Transporti Prishtinë:</span>
-                                        <span className="text-white">+€{localConfig.shippingToPristina}</span>
-                                    </div>
-                                    <div className="flex justify-between font-bold pt-2 border-t border-white/10 text-white">
-                                        <span>Totali:</span>
-                                        <span className="text-orange-500">
-                                            €{(
-                                                25000 +
-                                                (localConfig.vehicleTypes.suv?.enabled ? localConfig.vehicleTypes.suv.shippingCost : localConfig.shippingCost) +
-                                                (localConfig.shippingToPristina || 350) +
-                                                (localConfig.vehicleTypes.suv?.enabled
-                                                    ? Math.max(Math.round(25000 * (localConfig.vehicleTypes.suv.marginPercentage || 15) / 100), localConfig.vehicleTypes.suv.minimumMargin || 1000)
-                                                    : Math.max(Math.round(25000 * (localConfig.defaultMarginPercentage || 15) / 100), localConfig.defaultMinimumMargin || 1000)
-                                                )
-                                            ).toLocaleString()}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Security Notice */}
-                <div className="mt-6 p-4 bg-white/5 rounded-lg border border-white/10">
-                    <div className="flex items-start gap-3">
-                        <Shield className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
-                        <div>
-                            <p className="text-sm text-white/70">
-                                <span className="font-medium text-orange-500">Sesion i Sigurt:</span> Do të dilni automatikisht pas 2 orësh pa aktivitet.
-                            </p>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

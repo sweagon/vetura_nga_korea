@@ -1,4 +1,4 @@
-// components/cars/CarCard.tsx
+// components/cars/CarCard.tsx - FIXED
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -30,7 +30,6 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
         setMounted(true);
     }, []);
 
-    // Safely access nested properties
     const lot = car.lots?.[0];
 
     // Get vehicle type from car data
@@ -43,50 +42,40 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
         Object.prototype.hasOwnProperty.call(config.vehicleTypes, vehicleType) &&
         (config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes] as VehicleTypeConfig | undefined)?.enabled === true;
 
-    // Use vehicle type if available, otherwise use default
-    const effectiveVehicleType = hasTypeConfig ? vehicleType : 'default';
+    // Get shipping cost (vehicle-specific or global)
+    const getShippingCost = () => {
+        if (hasTypeConfig && config.vehicleTypes) {
+            const typeConfig = config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes] as VehicleTypeConfig | undefined;
+            if (typeConfig?.enabled && typeConfig.shippingCost) {
+                return typeConfig.shippingCost;
+            }
+        }
+        return config.shippingCost;
+    };
 
-    // Calculate display price using same logic as detail page
+    // Calculate display price - SIMPLIFIED
     useEffect(() => {
         if (lot && config) {
-            const competitorPrice = getOldSitePrice(lot);
+            // Get raw Korean price (our base cost)
+            const rawPrice = getRawKoreanPrice(lot);
 
-            if (competitorPrice > 0) {
-                // Remove THEIR transport costs (using config values)
-                const theirTransport = (config.shippingCost || 3500) + (config.shippingToPristina || 350);
-                const basePrice = competitorPrice - theirTransport;
-
-                // Get vehicle-specific config
-                let shippingCost = config.shippingCost;
-                let marginPercentage = config.defaultMarginPercentage;
-                let minimumMargin = config.defaultMinimumMargin;
-
-                // Safe type checking for vehicle types
-                if (effectiveVehicleType !== 'default' && config.vehicleTypes) {
-                    const typeConfig = config.vehicleTypes[effectiveVehicleType as keyof typeof config.vehicleTypes] as VehicleTypeConfig | undefined;
-                    if (typeConfig?.enabled) {
-                        shippingCost = typeConfig.shippingCost;
-                        marginPercentage = typeConfig.marginPercentage;
-                        minimumMargin = typeConfig.minimumMargin;
-                    }
-                }
+            if (rawPrice > 0) {
+                // Calculate using our own formula
+                const shippingCost = getShippingCost();
+                const marginPercentage = config.defaultMarginPercentage;
+                const minimumMargin = config.defaultMinimumMargin;
 
                 // Calculate margin
-                const calculatedMargin = Math.round(basePrice * (marginPercentage / 100));
+                const calculatedMargin = Math.round(rawPrice * (marginPercentage / 100));
                 const marginAmount = Math.max(calculatedMargin, minimumMargin);
 
-                const finalPrice = basePrice +
-                    shippingCost +
-                    marginAmount +
-                    (config.shippingToPristina || 350);
-
+                // Final price: Raw price + Shipping + Margin + Pristina shipping
+                const finalPrice = rawPrice + shippingCost + marginAmount + config.shippingToPristina;
                 setDisplayPrice(finalPrice);
 
-                console.log('💰 CarCard price:', {
-                    vehicleType: effectiveVehicleType,
-                    competitorPrice,
-                    theirTransport,
-                    basePrice,
+                console.log('💰 CarCard price (simplified):', {
+                    vehicleType,
+                    rawPrice,
                     shippingCost,
                     marginPercentage,
                     marginAmount,
@@ -94,16 +83,16 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
                     finalPrice
                 });
             } else {
-                // Fallback to raw Korean price
-                const rawPrice = getRawKoreanPrice(lot);
-                const finalPrice = rawPrice +
-                    (config.shippingCost || 3500) +
-                    (config.shippingToPristina || 350);
-
-                setDisplayPrice(finalPrice);
+                // Fallback to competitor price if raw price not available
+                const competitorPrice = getOldSitePrice(lot);
+                if (competitorPrice > 0) {
+                    setDisplayPrice(competitorPrice);
+                } else {
+                    setDisplayPrice(0);
+                }
             }
         }
-    }, [lot, config, effectiveVehicleType]);
+    }, [lot, config, vehicleType, hasTypeConfig]);
 
     const mileage = lot?.odometer?.km || 0;
     const image = lot?.images?.normal?.[0] || lot?.images?.downloaded?.[0] || '';

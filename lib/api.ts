@@ -814,37 +814,35 @@ export function calculateFinalPrice(
   const lot = car.lots?.[0];
   if (!lot) return 0;
 
-  // Get competitor's price (their price to Durrës)
-  const competitorPrice = getOldSitePrice(lot);
+  // Get raw Korean price (our base cost)
+  const rawPrice = getRawKoreanPrice(lot);
 
-  if (competitorPrice > 0) {
-    // Remove THEIR transport costs (using config values)
-    const theirTransport = (config.shippingCost || 3500) + (config.shippingToPristina || 350);
-    const basePrice = competitorPrice - theirTransport;
-
-    // Get vehicle-specific config
+  if (rawPrice > 0) {
+    // Get vehicle-specific shipping (or global if not enabled)
     let shippingCost = config.shippingCost;
-    let marginPercentage = config.defaultMarginPercentage;
-    let minimumMargin = config.defaultMinimumMargin;
 
     if (vehicleType && config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes]) {
       const typeConfig = config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes];
-      if (typeConfig?.enabled) {
+      if (typeConfig?.enabled && typeConfig.shippingCost) {
         shippingCost = typeConfig.shippingCost;
-        marginPercentage = typeConfig.marginPercentage;
-        minimumMargin = typeConfig.minimumMargin;
       }
     }
 
-    // Calculate margin
-    const calculatedMargin = Math.round(basePrice * (marginPercentage / 100));
-    const marginAmount = Math.max(calculatedMargin, minimumMargin);
+    // Calculate margin using global settings
+    const calculatedMargin = Math.round(rawPrice * (config.defaultMarginPercentage / 100));
+    const marginAmount = Math.max(calculatedMargin, config.defaultMinimumMargin);
 
-    // Final price: base + shipping + margin + Prishtina
-    return basePrice + shippingCost + marginAmount + config.shippingToPristina;
+    // Final price: raw price + shipping + margin + Prishtina
+    return rawPrice + shippingCost + marginAmount + config.shippingToPristina;
   }
 
-  // Fallback to raw Korean price
-  const rawPrice = getRawKoreanPrice(lot);
-  return rawPrice + (config.shippingCost || 3500) + (config.shippingToPristina || 350);
+  // Fallback to competitor price if raw price not available
+  const competitorPrice = getOldSitePrice(lot);
+  if (competitorPrice > 0) {
+    // Estimate using competitor price minus estimated costs
+    const estimatedRawPrice = competitorPrice - 3500 - 350;
+    return estimatedRawPrice + config.shippingCost + config.defaultMinimumMargin + config.shippingToPristina;
+  }
+
+  return 0;
 }

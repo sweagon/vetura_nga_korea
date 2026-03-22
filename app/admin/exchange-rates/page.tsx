@@ -1,89 +1,219 @@
+// app/admin/exchange-rates/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, RefreshCw } from 'lucide-react';
+import {
+    DollarSign,
+    RefreshCw,
+    Save,
+    AlertCircle,
+    CheckCircle,
+    TrendingUp,
+    TrendingDown
+} from 'lucide-react';
+import Breadcrumb from '../components/Breadcrumb';
+
+interface ExchangeRate {
+    from: string;
+    to: string;
+    rate: number;
+    lastUpdated: string;
+    trend?: 'up' | 'down' | 'stable';
+}
 
 export default function ExchangeRatesPage() {
-    const [rates, setRates] = useState({ usdToEur: 0.93, krwToEur: 0.00068 });
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState('');
+    const [rates, setRates] = useState<ExchangeRate[]>([
+        { from: 'KRW', to: 'EUR', rate: 0.000628, lastUpdated: new Date().toISOString(), trend: 'stable' },
+        { from: 'USD', to: 'EUR', rate: 0.93, lastUpdated: new Date().toISOString(), trend: 'stable' },
+        { from: 'JPY', to: 'EUR', rate: 0.0059, lastUpdated: new Date().toISOString(), trend: 'stable' }
+    ]);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [saveStatus, setSaveStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({
+        type: null,
+        message: ''
+    });
 
-    useEffect(() => {
-        fetchRates();
-    }, []);
-
-    const fetchRates = async () => {
-        setLoading(true);
-        try {
-            const response = await fetch('/api/exchange-rates');
-            const data = await response.json();
-            setRates(data.rates);
-            setMessage('Kurset u rifreskuan');
-            setTimeout(() => setMessage(''), 3000);
-        } catch (error) {
-            console.error('Error fetching rates:', error);
-            setMessage('Gabim gjatë rifreskimit');
-        } finally {
-            setLoading(false);
-        }
+    const handleRateChange = (index: number, newRate: number) => {
+        const updated = [...rates];
+        updated[index].rate = newRate;
+        updated[index].lastUpdated = new Date().toISOString();
+        setRates(updated);
     };
 
     const handleSave = async () => {
-        // Here you would save to your database
-        setMessage('Kurset u ruajtën');
-        setTimeout(() => setMessage(''), 3000);
+        setIsSaving(true);
+        setSaveStatus({ type: null, message: '' });
+
+        try {
+            const response = await fetch('/api/admin/exchange-rates', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ rates })
+            });
+
+            if (response.ok) {
+                setSaveStatus({
+                    type: 'success',
+                    message: '✅ Kurset e këmbimit u ruajtën me sukses!'
+                });
+                setTimeout(() => setSaveStatus({ type: null, message: '' }), 3000);
+            } else {
+                throw new Error('Ruajtja dështoi');
+            }
+        } catch (error) {
+            setSaveStatus({
+                type: 'error',
+                message: '❌ Gabim gjatë ruajtjes së kurseve të këmbimit'
+            });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleRefresh = async () => {
+        setIsRefreshing(true);
+        setSaveStatus({ type: null, message: '' });
+
+        try {
+            const response = await fetch('/api/admin/exchange-rates/refresh', {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setRates(data.rates);
+                setSaveStatus({
+                    type: 'success',
+                    message: '✅ Kurset e këmbimit u përditësuan automatikisht!'
+                });
+                setTimeout(() => setSaveStatus({ type: null, message: '' }), 3000);
+            } else {
+                throw new Error('Përditësimi dështoi');
+            }
+        } catch (error) {
+            setSaveStatus({
+                type: 'error',
+                message: '❌ Gabim gjatë përditësimit të kurseve'
+            });
+        } finally {
+            setIsRefreshing(false);
+        }
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-dark-blue via-dark-blue to-navy py-8">
-            <div className="container mx-auto px-4 max-w-2xl">
-                <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6">
-                    <h1 className="text-2xl font-bold text-white mb-6">Kurset e Këmbimit</h1>
-
-                    {message && (
-                        <div className="mb-4 p-3 bg-green-500/20 text-green-500 rounded-lg">
-                            {message}
-                        </div>
-                    )}
-
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-white/70 mb-2">USD → EUR</label>
-                            <div className="flex gap-2">
-                                <input
-                                    type="number"
-                                    value={rates.usdToEur}
-                                    onChange={(e) => setRates({ ...rates, usdToEur: parseFloat(e.target.value) })}
-                                    className="flex-1 px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-                                    step="0.01"
-                                />
-                                <button
-                                    onClick={fetchRates}
-                                    className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
-                                >
-                                    <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
-                                </button>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-white/70 mb-2">KRW → EUR</label>
-                            <input
-                                type="number"
-                                value={rates.krwToEur}
-                                onChange={(e) => setRates({ ...rates, krwToEur: parseFloat(e.target.value) })}
-                                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-                                step="0.00001"
-                            />
-                        </div>
-
+        <div className="space-y-6">
+            <Breadcrumb />
+            {/* Header */}
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h1 className="text-2xl font-bold text-white">Kurset e Këmbimit</h1>
+                        <p className="text-white/60 mt-1">Menaxho kurset e këmbimit për llogaritjen e çmimeve</p>
+                    </div>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={handleRefresh}
+                            disabled={isRefreshing}
+                            className="px-4 py-2 bg-white/10 text-white rounded-xl hover:bg-white/20 transition flex items-center gap-2 disabled:opacity-50"
+                        >
+                            <RefreshCw size={18} className={isRefreshing ? 'animate-spin' : ''} />
+                            {isRefreshing ? 'Duke përditësuar...' : 'Përditëso Automatikisht'}
+                        </button>
                         <button
                             onClick={handleSave}
-                            className="w-full mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 flex items-center justify-center gap-2"
+                            disabled={isSaving}
+                            className="px-6 py-2 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition flex items-center gap-2 disabled:opacity-50 font-medium"
                         >
-                            <Save size={20} />
-                            Ruaj Ndryshimet
+                            <Save size={18} />
+                            {isSaving ? 'Duke ruajtur...' : 'Ruaj Ndryshimet'}
                         </button>
+                    </div>
+                </div>
+
+                {/* Status Message */}
+                {saveStatus.type && (
+                    <div className={`mt-4 p-3 rounded-lg flex items-center gap-2 ${saveStatus.type === 'success'
+                        ? 'bg-green-500/10 text-green-500 border border-green-500/20'
+                        : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                        }`}>
+                        {saveStatus.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
+                        <span className="text-sm">{saveStatus.message}</span>
+                    </div>
+                )}
+            </div>
+
+            {/* Exchange Rates Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {rates.map((rate, index) => (
+                    <div
+                        key={rate.from}
+                        className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6"
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 bg-orange-500/20 rounded-xl flex items-center justify-center">
+                                    <DollarSign className="w-6 h-6 text-orange-500" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-white">
+                                        {rate.from} → {rate.to}
+                                    </h3>
+                                    <p className="text-xs text-white/40">
+                                        Përditësuar: {new Date(rate.lastUpdated).toLocaleString()}
+                                    </p>
+                                </div>
+                            </div>
+                            {rate.trend === 'up' && <TrendingUp className="w-5 h-5 text-green-500" />}
+                            {rate.trend === 'down' && <TrendingDown className="w-5 h-5 text-red-500" />}
+                        </div>
+
+                        <div className="space-y-3">
+                            <div>
+                                <label className="block text-sm text-white/70 mb-2">Kursi i Këmbimit</label>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        inputMode="decimal"
+                                        value={rate.rate}
+                                        onChange={(e) => {
+                                            const val = parseFloat(e.target.value);
+                                            if (!isNaN(val)) handleRateChange(index, val);
+                                        }}
+                                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white text-lg font-mono focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                    />
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 text-sm">
+                                        1 {rate.from} = ? {rate.to}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="pt-3 border-t border-white/10">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-white/60">Shembull:</span>
+                                    <span className="text-white">
+                                        1,000,000 {rate.from} = {(1000000 * rate.rate).toLocaleString()} {rate.to}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Info Card */}
+            <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-6">
+                <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-orange-500 mt-0.5" />
+                    <div>
+                        <h3 className="text-sm font-medium text-orange-500 mb-1">Informacion i Rëndësishëm</h3>
+                        <p className="text-sm text-white/60">
+                            Kurset e këmbimit ndikojnë drejtpërdrejt në llogaritjen e çmimeve të automjeteve.
+                            Përdorni butonin "Përditëso Automatikisht" për të marrë kurset më të fundit nga burime të besueshme,
+                            ose futni manualisht kurset e dëshiruara.
+                        </p>
                     </div>
                 </div>
             </div>

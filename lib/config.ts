@@ -1,12 +1,9 @@
-// lib/config.ts - Client-safe types with margins
+// lib/config.ts
 export interface VehicleTypeConfig {
     shippingCost: number;
-    marginPercentage: number;
-    minimumMargin: number;
     enabled: boolean;
 }
 
-// In lib/config.ts, update the SiteConfig interface
 export interface SiteConfig {
     shippingCost: number;
     shippingToPristina: number;
@@ -18,29 +15,16 @@ export interface SiteConfig {
     currency: 'EUR' | 'USD' | 'ALL';
     vehicleTypes: {
         suv?: VehicleTypeConfig;
-        default?: VehicleTypeConfig;
         sedan?: VehicleTypeConfig;
         hatchback?: VehicleTypeConfig;
         wagon?: VehicleTypeConfig;
         coupe?: VehicleTypeConfig;
-        convertible?: VehicleTypeConfig;
         van?: VehicleTypeConfig;
         pickup?: VehicleTypeConfig;
-        sport_car?: VehicleTypeConfig;  // ADD THIS
+        sport_car?: VehicleTypeConfig;
     };
 }
 
-export interface PriceDetails {
-    basePrice: number;
-    shippingCost: number; // Shipping to Durres
-    shippingToPristina: number; // Additional to Pristina
-    marginAmount: number;
-    marginPercentage: number;
-    finalPrice: number;
-    vehicleTypeUsed: string;
-}
-
-// Update defaultConfig to include sport_car
 export const defaultConfig: SiteConfig = {
     shippingCost: 3500,
     shippingToPristina: 350,
@@ -51,19 +35,17 @@ export const defaultConfig: SiteConfig = {
     siteName: 'Vetura Korea Kosova',
     currency: 'EUR',
     vehicleTypes: {
-        suv: { shippingCost: 4500, marginPercentage: 18, minimumMargin: 1500, enabled: true },
-        sedan: { shippingCost: 3500, marginPercentage: 15, minimumMargin: 1000, enabled: true },
-        hatchback: { shippingCost: 3500, marginPercentage: 15, minimumMargin: 1000, enabled: true },
-        wagon: { shippingCost: 3500, marginPercentage: 15, minimumMargin: 1000, enabled: true },
-        coupe: { shippingCost: 3500, marginPercentage: 15, minimumMargin: 1000, enabled: true },
-        van: { shippingCost: 3800, marginPercentage: 12, minimumMargin: 800, enabled: true },
-        pickup: { shippingCost: 4000, marginPercentage: 12, minimumMargin: 800, enabled: true },
-        sport_car: { shippingCost: 3500, marginPercentage: 15, minimumMargin: 1500, enabled: true }, // ADD THIS
-        default: { shippingCost: 3500, marginPercentage: 15, minimumMargin: 1000, enabled: true }
+        suv: { shippingCost: 4500, enabled: false },
+        sedan: { shippingCost: 3500, enabled: false },
+        hatchback: { shippingCost: 3500, enabled: false },
+        wagon: { shippingCost: 3500, enabled: false },
+        coupe: { shippingCost: 3500, enabled: false },
+        van: { shippingCost: 3800, enabled: false },
+        pickup: { shippingCost: 4000, enabled: false },
+        sport_car: { shippingCost: 3500, enabled: false }
     }
 };
 
-// Validation function
 export function validateConfig(config: Partial<SiteConfig>): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 

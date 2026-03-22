@@ -1,7 +1,18 @@
+// lib/ConfigContext.tsx
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { SiteConfig, defaultConfig, PriceDetails, validateConfig } from './config';
+import { SiteConfig, defaultConfig, validateConfig } from './config';
+
+export interface PriceDetails {
+    basePrice: number;
+    shippingCost: number;
+    shippingToPristina: number;
+    marginAmount: number;
+    marginPercentage: number;
+    finalPrice: number;
+    vehicleTypeUsed: string;
+}
 
 interface ConfigContextType {
     config: SiteConfig;
@@ -25,6 +36,7 @@ const vehicleTypeLabels: Record<string, string> = {
     convertible: 'Kabriolet',
     van: 'Furgon',
     pickup: 'Pickup',
+    sport_car: 'Makinë Sportive',
     default: 'Tjetër'
 };
 
@@ -33,7 +45,6 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Load config from server on mount
     useEffect(() => {
         const fetchConfig = async () => {
             try {
@@ -94,64 +105,32 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
     };
 
     const calculateFinalPrice = useCallback((basePrice: number, vehicleType?: string): PriceDetails => {
-        // Ensure basePrice is a valid number
         const validBasePrice = typeof basePrice === 'number' && !isNaN(basePrice) ? Math.max(0, basePrice) : 0;
 
-        console.log('💰 calculateFinalPrice called with:', {
-            validBasePrice,
-            vehicleType,
-            config: {
-                shippingCost: config.shippingCost,
-                shippingToPristina: config.shippingToPristina,
-                defaultMarginPercentage: config.defaultMarginPercentage,
-                defaultMinimumMargin: config.defaultMinimumMargin
-            }
-        });
-
-        // Get vehicle-specific config
-        let vehicleShipping = config.shippingCost || 3500;
-        let marginPercentage = config.defaultMarginPercentage || 15;
-        let minimumMargin = config.defaultMinimumMargin || 1000;
+        // Get vehicle-specific shipping cost
+        let vehicleShipping = config.shippingCost;
         let usedType = 'default';
 
         if (vehicleType && config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes]) {
             const typeConfig = config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes];
-            if (typeConfig?.enabled) {
-                vehicleShipping = typeConfig.shippingCost || vehicleShipping;
-                marginPercentage = typeConfig.marginPercentage || marginPercentage;
-                minimumMargin = typeConfig.minimumMargin || minimumMargin;
+            if (typeConfig?.enabled && typeConfig.shippingCost) {
+                vehicleShipping = typeConfig.shippingCost;
                 usedType = vehicleType;
             }
         }
 
-        // Calculate margin (percentage of base price)
-        const calculatedMargin = Math.round(validBasePrice * (marginPercentage / 100));
+        // Calculate margin using global settings
+        const calculatedMargin = Math.round(validBasePrice * (config.defaultMarginPercentage / 100));
+        const marginAmount = Math.max(calculatedMargin, config.defaultMinimumMargin);
 
-        // Use minimum margin if calculated is lower, ensure it's a valid number
-        const marginAmount = !isNaN(calculatedMargin) && !isNaN(minimumMargin)
-            ? Math.max(calculatedMargin, minimumMargin)
-            : (minimumMargin || 1000);
-
-        // Build final price: base + shipping + margin + Prishtina
         const finalPrice = validBasePrice + vehicleShipping + marginAmount + config.shippingToPristina;
-
-        console.log('📊 Price calculation result:', {
-            validBasePrice,
-            vehicleShipping,
-            marginPercentage,
-            calculatedMargin,
-            minimumMargin,
-            marginAmount,
-            shippingToPristina: config.shippingToPristina,
-            finalPrice
-        });
 
         return {
             basePrice: validBasePrice,
             shippingCost: vehicleShipping,
             shippingToPristina: config.shippingToPristina,
             marginAmount: Math.round(marginAmount),
-            marginPercentage,
+            marginPercentage: config.defaultMarginPercentage,
             finalPrice: Math.round(finalPrice),
             vehicleTypeUsed: usedType
         };
@@ -167,21 +146,9 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
         }).format(price || 0);
     }, [config.currency]);
 
-    const validateConfigWrapper = (configToValidate: Partial<SiteConfig>) => {
-        return validateConfig(configToValidate);
-    };
-
     const getVehicleTypeLabel = (type: string): string => {
         return vehicleTypeLabels[type] || type;
     };
-
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"></div>
-            </div>
-        );
-    }
 
     return (
         <ConfigContext.Provider value={{
@@ -189,7 +156,7 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
             updateConfig,
             calculateFinalPrice,
             formatPrice,
-            validateConfig: validateConfigWrapper,
+            validateConfig,
             getVehicleTypeLabel,
             loading,
             error

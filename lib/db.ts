@@ -195,3 +195,54 @@ export async function cleanupExpiredSessions(): Promise<void> {
     const { rowCount } = await sql`DELETE FROM admin_sessions WHERE expires_at < NOW()`;
     console.log(`🧹 Cleaned up ${rowCount} expired sessions`);
 }
+
+export interface ExchangeRate {
+    from: string;
+    to: string;
+    rate: number;
+    lastUpdated: string;
+}
+
+// Get exchange rates from database
+export async function getExchangeRatesFromDb(): Promise<ExchangeRate[]> {
+    try {
+        const { rows } = await sql`
+            SELECT rates FROM exchange_rates WHERE id = 1 LIMIT 1
+        `;
+
+        if (rows.length === 0) {
+            // Return default rates
+            return [
+                { from: 'KRW', to: 'EUR', rate: 0.00068, lastUpdated: new Date().toISOString() },
+                { from: 'USD', to: 'EUR', rate: 0.93, lastUpdated: new Date().toISOString() },
+                { from: 'JPY', to: 'EUR', rate: 0.0059, lastUpdated: new Date().toISOString() }
+            ];
+        }
+
+        return rows[0].rates;
+    } catch (error) {
+        console.error('Error getting exchange rates from DB:', error);
+        // Return default rates
+        return [
+            { from: 'KRW', to: 'EUR', rate: 0.00068, lastUpdated: new Date().toISOString() },
+            { from: 'USD', to: 'EUR', rate: 0.93, lastUpdated: new Date().toISOString() },
+            { from: 'JPY', to: 'EUR', rate: 0.0059, lastUpdated: new Date().toISOString() }
+        ];
+    }
+}
+
+// Save exchange rates to database
+export async function saveExchangeRatesToDb(rates: ExchangeRate[]): Promise<void> {
+    try {
+        await sql`
+            INSERT INTO exchange_rates (id, rates, updated_at) 
+            VALUES (1, ${JSON.stringify(rates)}::jsonb, NOW())
+            ON CONFLICT (id) DO UPDATE 
+            SET rates = EXCLUDED.rates, updated_at = NOW()
+        `;
+        console.log('✅ Exchange rates saved to database');
+    } catch (error) {
+        console.error('Error saving exchange rates to DB:', error);
+        throw error;
+    }
+}

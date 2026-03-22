@@ -23,7 +23,11 @@ import {
     Tag,
     AlertCircle,
     ArrowLeft,
-    Car as CarIcon
+    Car as CarIcon,
+    ChevronDown,
+    ChevronUp,
+    Eye,
+    EyeOff
 } from 'lucide-react';
 import Link from 'next/link';
 import RecentlyViewedTracker from '@/components/cars/RecentlyViewedTracker';
@@ -35,91 +39,161 @@ interface CarDetailClientProps {
     car: Car;
 }
 
+// Helper function to map body types to our vehicle type IDs
+const getVehicleTypeId = (bodyTypeName: string): string => {
+    const typeMap: Record<string, string> = {
+        // Standard types
+        'sedan': 'sedan',
+        'suv': 'suv',
+        'hatchback': 'hatchback',
+        'wagon': 'wagon',
+        'coupe': 'coupe',
+        'van': 'van',
+        'pickup': 'pickup',
+        'sport_car': 'sport_car',
+
+        // Variations
+        'hatch': 'hatchback',
+        'hatch back': 'hatchback',
+        '5 door': 'hatchback',
+        '3 door': 'hatchback',
+        '5dr': 'hatchback',
+        '3dr': 'hatchback',
+
+        // Specific models
+        'gti': 'hatchback',
+        'golf': 'hatchback',
+        'focus': 'hatchback',
+        'civic': 'sedan',
+        'passat': 'sedan',
+        'tiguan': 'suv',
+        'touareg': 'suv',
+        'q5': 'suv',
+        'q7': 'suv',
+        'x5': 'suv',
+        'x3': 'suv',
+        'a4': 'sedan',
+        'a6': 'sedan',
+        'a3': 'hatchback',
+        '1 series': 'hatchback',
+        '3 series': 'sedan',
+        '5 series': 'sedan'
+    };
+
+    const normalized = bodyTypeName?.toLowerCase().trim() || '';
+
+    // Check exact match first
+    if (typeMap[normalized]) {
+        return typeMap[normalized];
+    }
+
+    // Check partial match
+    for (const [key, value] of Object.entries(typeMap)) {
+        if (normalized.includes(key)) {
+            return value;
+        }
+    }
+
+    return 'default';
+};
+
 export function CarDetailClient({ car }: CarDetailClientProps) {
     const { config, formatPrice } = useConfig();
     const [mounted, setMounted] = useState(false);
     const [imageLoadError, setImageLoadError] = useState(false);
-    const [basePrice, setBasePrice] = useState(0);
-    const [competitorPrice, setCompetitorPrice] = useState(0);
+    const [rawPrice, setRawPrice] = useState(0);
     const [loadingPrice, setLoadingPrice] = useState(true);
     const [shippingCost, setShippingCost] = useState(0);
     const [marginAmount, setMarginAmount] = useState(0);
     const [marginPercentage, setMarginPercentage] = useState(0);
+    const [showTransportSeparately, setShowTransportSeparately] = useState(false);
+    const [detectedVehicleType, setDetectedVehicleType] = useState<string>('default');
 
     useEffect(() => {
         setMounted(true);
+        const savedPreference = localStorage.getItem('showTransportSeparately');
+        if (savedPreference !== null) {
+            setShowTransportSeparately(savedPreference === 'true');
+        }
     }, []);
 
     const lot = car.lots?.[0];
 
-    // Get vehicle type
-    const rawBodyType = car.body_type?.name || '';
-    const vehicleType = rawBodyType.toLowerCase();
+    // Improved vehicle type detection
+    const rawBodyType = car.body_type?.name || car.vehicle_type?.name || '';
+    const vehicleType = getVehicleTypeId(rawBodyType);
 
-    // Safely check if vehicle type exists in config
-    const hasTypeConfig = vehicleType &&
+    // Also check the model name for better detection
+    const modelName = car.model?.name?.toLowerCase() || '';
+    const modelBasedType = getVehicleTypeId(modelName);
+
+    // Use the most specific detection (body type has priority, then model name)
+    const finalVehicleType = vehicleType !== 'default' ? vehicleType : modelBasedType;
+
+    useEffect(() => {
+        setDetectedVehicleType(finalVehicleType);
+    }, [finalVehicleType]);
+
+    // Check if vehicle type exists in config and is enabled for custom shipping
+    const hasTypeConfig = finalVehicleType !== 'default' &&
         config.vehicleTypes &&
-        Object.prototype.hasOwnProperty.call(config.vehicleTypes, vehicleType) &&
-        (config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes] as VehicleTypeConfig | undefined)?.enabled === true;
+        Object.prototype.hasOwnProperty.call(config.vehicleTypes, finalVehicleType) &&
+        (config.vehicleTypes[finalVehicleType as keyof typeof config.vehicleTypes] as VehicleTypeConfig | undefined)?.enabled === true;
 
-    // Use the vehicle type if available and enabled, otherwise use 'default'
-    const effectiveVehicleType = hasTypeConfig ? vehicleType : 'default';
+    // Get shipping cost (vehicle-specific or global)
+    const getShippingCost = () => {
+        if (hasTypeConfig && config.vehicleTypes) {
+            const typeConfig = config.vehicleTypes[finalVehicleType as keyof typeof config.vehicleTypes] as VehicleTypeConfig | undefined;
+            if (typeConfig?.enabled && typeConfig.shippingCost) {
+                console.log(`✅ Using ${finalVehicleType} shipping: ${typeConfig.shippingCost}€`);
+                return typeConfig.shippingCost;
+            }
+        }
+        console.log(`⚠️ Using global shipping: ${config.shippingCost}€ (${finalVehicleType} not enabled)`);
+        return config.shippingCost;
+    };
 
     // Calculate prices
     useEffect(() => {
         if (lot && config) {
             setLoadingPrice(true);
             try {
-                // Get competitor's price
-                const competitorPrice = getOldSitePrice(lot) || 0;
-                setCompetitorPrice(competitorPrice);
+                const baseRawPrice = getRawKoreanPrice(lot) || 0;
+                setRawPrice(baseRawPrice);
 
-                if (competitorPrice > 0) {
-                    // Remove THEIR transport costs (using config values)
-                    const theirTransport = (config.shippingCost || 3500) + (config.shippingToPristina || 350);
-                    const calculatedBasePrice = competitorPrice - theirTransport;
+                if (baseRawPrice > 0) {
+                    const shipping = getShippingCost();
+                    const marginPercent = config.defaultMarginPercentage;
+                    const minMargin = config.defaultMinimumMargin;
 
-                    // Get vehicle-specific config
-                    let vehicleShippingCost = config.shippingCost;
-                    let vehicleMarginPercentage = config.defaultMarginPercentage;
-                    let vehicleMinimumMargin = config.defaultMinimumMargin;
+                    const calculatedMargin = Math.round(baseRawPrice * (marginPercent / 100));
+                    const finalMarginAmount = Math.max(calculatedMargin, minMargin);
 
-                    // Safe type checking for vehicle types
-                    if (effectiveVehicleType !== 'default' && config.vehicleTypes) {
-                        const typeConfig = config.vehicleTypes[effectiveVehicleType as keyof typeof config.vehicleTypes] as VehicleTypeConfig | undefined;
-                        if (typeConfig?.enabled) {
-                            vehicleShippingCost = typeConfig.shippingCost;
-                            vehicleMarginPercentage = typeConfig.marginPercentage;
-                            vehicleMinimumMargin = typeConfig.minimumMargin;
-                        }
-                    }
-
-                    // Calculate margin
-                    const calculatedMargin = Math.round(calculatedBasePrice * (vehicleMarginPercentage / 100));
-                    const finalMarginAmount = Math.max(calculatedMargin, vehicleMinimumMargin);
-
-                    setBasePrice(calculatedBasePrice);
-                    setShippingCost(vehicleShippingCost);
+                    setShippingCost(shipping);
                     setMarginAmount(finalMarginAmount);
-                    setMarginPercentage(vehicleMarginPercentage);
+                    setMarginPercentage(marginPercent);
 
                     console.log('💰 Price Calculation:', {
-                        competitorPrice,
-                        theirTransport,
-                        basePrice: calculatedBasePrice,
-                        shippingCost: vehicleShippingCost,
-                        marginPercentage: vehicleMarginPercentage,
+                        carTitle: car.title,
+                        rawBodyType,
+                        detectedType: finalVehicleType,
+                        hasTypeConfig,
+                        rawPrice: baseRawPrice,
+                        shippingCost: shipping,
+                        marginPercentage: marginPercent,
                         marginAmount: finalMarginAmount,
                         pristina: config.shippingToPristina,
-                        finalPrice: calculatedBasePrice + vehicleShippingCost + finalMarginAmount + config.shippingToPristina
+                        finalPrice: baseRawPrice + shipping + finalMarginAmount + config.shippingToPristina
                     });
                 } else {
-                    // Fallback to raw Korean price
-                    const rawPrice = getRawKoreanPrice(lot) || 0;
-                    setBasePrice(rawPrice);
-                    setShippingCost(config.shippingCost || 3500);
-                    setMarginAmount(0);
-                    setMarginPercentage(0);
+                    const competitorPrice = getOldSitePrice(lot);
+                    if (competitorPrice > 0) {
+                        const estimatedRawPrice = competitorPrice - 3500 - 350;
+                        setRawPrice(estimatedRawPrice);
+                        setShippingCost(config.shippingCost);
+                        setMarginAmount(0);
+                        setMarginPercentage(config.defaultMarginPercentage);
+                    }
                 }
             } catch (error) {
                 console.error('Error calculating price:', error);
@@ -127,7 +201,13 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                 setLoadingPrice(false);
             }
         }
-    }, [lot, config, effectiveVehicleType]);
+    }, [lot, config, finalVehicleType, hasTypeConfig, car.title, rawBodyType]);
+
+    const toggleTransportDisplay = () => {
+        const newValue = !showTransportSeparately;
+        setShowTransportSeparately(newValue);
+        localStorage.setItem('showTransportSeparately', String(newValue));
+    };
 
     const mileage = lot?.odometer?.km || 0;
     const images = lot?.images?.big || lot?.images?.normal || [];
@@ -135,11 +215,11 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
     const location = lot?.location?.city?.name || 'Korea';
     const lotNumber = lot?.lot || null;
     const manufacturerName = car.manufacturer?.name || 'Makina';
-    const modelName = car.model?.name || '';
-    const carTitle = car.title || `${manufacturerName} ${modelName}`.trim() || 'Makina pa emër';
+    const modelNameDisplay = car.model?.name || '';
+    const carTitle = car.title || `${manufacturerName} ${modelNameDisplay}`.trim() || 'Makina pa emër';
 
     // Calculate final price
-    const priceWithDurresShipping = basePrice + shippingCost;
+    const priceWithDurresShipping = rawPrice + shippingCost;
     const finalPrice = priceWithDurresShipping + marginAmount + (config.shippingToPristina || 350);
 
     const displayBodyType = rawBodyType
@@ -147,6 +227,9 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
         : null;
 
     const hasEssentialData = car.manufacturer?.name || car.model?.name || car.year;
+
+    // Don't show margin if it's 0%
+    const shouldShowMargin = marginAmount > 0;
 
     // During SSR or before mount, show skeleton
     if (!mounted) {
@@ -259,6 +342,14 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                 </>
                             )}
                         </div>
+                        {/* Debug info - remove in production */}
+                        {process.env.NODE_ENV === 'development' && (
+                            <div className="mt-2 text-xs text-muted">
+                                🚗 Detected type: {detectedVehicleType} |
+                                Body: {rawBodyType || 'N/A'} |
+                                Shipping: {hasTypeConfig ? `${shippingCost}€ (custom)` : `${shippingCost}€ (global)`}
+                            </div>
+                        )}
                     </div>
 
                     {!hasEssentialData && (
@@ -377,14 +468,10 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                         {formatPrice(finalPrice)}
                                     </div>
 
-                                    {displayBodyType && (
+                                    {displayBodyType && hasTypeConfig && (
                                         <div className="mb-3 inline-flex items-center gap-1 px-2 py-1 bg-orange-5 text-orange-500 rounded-lg text-xs">
                                             <CarIcon size={12} />
-                                            <span>
-                                                {hasTypeConfig
-                                                    ? `Çmimi për ${displayBodyType} (i personalizuar)`
-                                                    : `Çmimi për ${displayBodyType} (bazë)`}
-                                            </span>
+                                            <span>Transporti i personalizuar për {displayBodyType}</span>
                                         </div>
                                     )}
 
@@ -416,10 +503,59 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                                 </p>
                                             </div>
                                         </div>
+
+                                        {/* Toggle Button for Transport Display */}
+                                        <button
+                                            onClick={toggleTransportDisplay}
+                                            className="w-full flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
+                                        >
+                                            <span className="text-sm text-white/70 flex items-center gap-2">
+                                                {showTransportSeparately ? <Eye size={14} /> : <EyeOff size={14} />}
+                                                {showTransportSeparately ? 'Fshi detajet e transportit' : 'Shfaq detajet e transportit'}
+                                            </span>
+                                        </button>
+
+                                        {/* Price Breakdown - Only show if toggled on */}
+                                        {showTransportSeparately && (
+                                            <div className="p-4 bg-white/5 rounded-lg space-y-2 text-sm">
+                                                <h4 className="font-medium text-white mb-2">Detajet e çmimit:</h4>
+
+                                                <div className="flex justify-between">
+                                                    <span className="text-white/60">Çmimi bazë (Korea):</span>
+                                                    <span className="text-white">{formatPrice(rawPrice)}</span>
+                                                </div>
+
+                                                <div className="flex justify-between">
+                                                    <span className="text-white/60">Transporti detar (Korea → Durrës):</span>
+                                                    <span className="text-white">{formatPrice(shippingCost)}</span>
+                                                </div>
+
+                                                {shouldShowMargin && (
+                                                    <div className="flex justify-between">
+                                                        <span className="text-white/60">Marzha jonë ({marginPercentage}%):</span>
+                                                        <span className="text-white">{formatPrice(marginAmount)}</span>
+                                                    </div>
+                                                )}
+
+                                                <div className="flex justify-between">
+                                                    <span className="text-white/60">Transporti tokësor (Durrës → Prishtinë):</span>
+                                                    <span className="text-white">{formatPrice(config.shippingToPristina || 350)}</span>
+                                                </div>
+
+                                                <div className="border-t border-white/10 my-2 pt-2">
+                                                    <div className="flex justify-between font-bold">
+                                                        <span>Totali:</span>
+                                                        <span className="text-orange-500">{formatPrice(finalPrice)}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         <a
                                             href={`https://wa.me/${config.contactPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
                                                 `Përshëndetje, jam i interesuar për makinën:\n\n` +
                                                 `*${carTitle}*\n` +
+                                                `💰 Çmimi: ${formatPrice(finalPrice)}\n` +
                                                 `🔗 Linku: ${typeof window !== 'undefined' ? window.location.href : ''}`
                                             )}`}
                                             target="_blank"
@@ -429,7 +565,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                             WhatsApp
                                         </a>
                                         <a
-                                            href={`mailto:${config.contactEmail}?subject=Interest in ${car.vin} - ${carTitle}`}
+                                            href={`mailto:${config.contactEmail}?subject=Interest in ${car.vin} - ${carTitle}&body=I'm interested in this car: ${carTitle}\nPrice: ${formatPrice(finalPrice)}\nLink: ${typeof window !== 'undefined' ? window.location.href : ''}`}
                                             className="btn-primary w-full"
                                         >
                                             Email
@@ -437,7 +573,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                     </div>
                                 </div>
 
-                                {/* Cost Estimate */}
+                                {/* Simplified Cost Estimate */}
                                 <div className="card p-6">
                                     <h3 className="font-semibold mb-3">Shpenzime të përafërta</h3>
 
@@ -447,10 +583,12 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                             <span className="font-medium text-primary">{formatPrice(priceWithDurresShipping)}</span>
                                         </div>
 
-                                        <div className="flex justify-between">
-                                            <span className="text-muted">Marzha jonë ({marginPercentage}%):</span>
-                                            <span className="font-medium text-primary">{formatPrice(marginAmount)}</span>
-                                        </div>
+                                        {shouldShowMargin && (
+                                            <div className="flex justify-between">
+                                                <span className="text-muted">Marzha jonë ({marginPercentage}%):</span>
+                                                <span className="font-medium text-primary">{formatPrice(marginAmount)}</span>
+                                            </div>
+                                        )}
 
                                         <div className="flex justify-between">
                                             <span className="text-muted">Transporti Prishtinë:</span>
@@ -463,12 +601,6 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                                 <span className="text-orange-500">{formatPrice(finalPrice)}</span>
                                             </div>
                                         </div>
-
-                                        {/* {competitorPrice > 0 && (
-                                            <p className="text-xs text-muted mt-2">
-                                                *Çmimi i konkurrentit: €{competitorPrice.toLocaleString()} (Durrës)
-                                            </p>
-                                        )} */}
                                     </div>
                                 </div>
 
