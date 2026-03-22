@@ -10,7 +10,7 @@ export interface CalculatedPrice {
 }
 
 // Exchange rate (should come from admin panel)
-const KRW_TO_EUR = 0.000635; // Current market rate
+const KRW_TO_EUR = 0.000573; // Current market rate
 const USD_TO_EUR = 0.93;
 
 /**
