@@ -206,7 +206,7 @@ export function getBestPrice(lot: Lot | undefined): { price: number; source: str
 
 // ============ RAW KOREAN PRICING (NO MARGINS) ============
 
-const KRW_TO_EUR = 0.000645; // Exchange rate: 1 KRW = 0.000628 EUR
+const KRW_TO_EUR = 0.000628; // Exchange rate: 1 KRW = 0.000628 EUR
 const USD_TO_EUR = 0.93; // Approximate USD to EUR
 const COMPETITOR_SHIPPING = 3500; // Their estimated shipping cost to Durrës
 
@@ -841,64 +841,6 @@ export function calculateFinalPrice(
   if (competitorPrice > 0) {
     console.warn('⚠️ Raw price not available, using competitor price as estimate');
     return competitorPrice;
-  }
-
-  return 0;
-}
-// ============ REAL AUCTION PRICE (70% of MSRP) ============
-
-const REAL_AUCTION_DISCOUNT = 0.7;
-const REAL_KRW_TO_EUR = 0.000645;
-
-/**
- * Get the real auction price (70% of MSRP)
- * This is what dealers actually pay at Korean auctions
- */
-export function getRealAuctionPriceFromApi(lot: Lot | undefined): number {
-  if (!lot) return 0;
-
-  // Priority 1: Use original_price (MSRP) and apply auction discount
-  if (lot.details?.original_price) {
-    const auctionPriceKRW = Math.round(lot.details.original_price * REAL_AUCTION_DISCOUNT);
-    return Math.round(auctionPriceKRW * REAL_KRW_TO_EUR);
-  }
-
-  // Priority 2: Fallback to buy_now in USD
-  if (lot.buy_now) {
-    const USD_TO_EUR = 0.93;
-    return Math.round(lot.buy_now * USD_TO_EUR);
-  }
-
-  return 0;
-}
-
-// lib/api.ts - Add this function
-export async function getRealAuctionPriceWithRate(lot: Lot | undefined): Promise<number> {
-  if (!lot) return 0;
-
-  // Get exchange rate from database (or use default)
-  const { sql } = require('@vercel/postgres');
-  let krwToEur = 0.000645; // Default
-
-  try {
-    const { rows } = await sql`SELECT rates FROM exchange_rates WHERE id = 1`;
-    if (rows.length > 0 && rows[0].rates) {
-      const krwRate = rows[0].rates.find((r: any) => r.from === 'KRW');
-      if (krwRate) {
-        krwToEur = krwRate.rate;
-      }
-    }
-  } catch (error) {
-    console.error('Error fetching exchange rate:', error);
-  }
-
-  if (lot.details?.original_price) {
-    const auctionPriceKRW = Math.round(lot.details.original_price * 0.7);
-    return Math.round(auctionPriceKRW * krwToEur);
-  }
-
-  if (lot.buy_now) {
-    return Math.round(lot.buy_now * 0.93);
   }
 
   return 0;

@@ -1,4 +1,4 @@
-// components/cars/CarCard.tsx - UPDATED with real auction pricing
+// components/cars/CarCard.tsx - FIXED
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,7 +9,8 @@ import {
     formatMileage,
     getFuelTypeAlbanian,
     getTransmissionAlbanian,
-    getRealAuctionPriceFromApi
+    getRawKoreanPrice,
+    getOldSitePrice
 } from '@/lib/api';
 import { addToRecentlyViewed } from '@/lib/recentlyViewed';
 import { useConfig } from '@/lib/ConfigContext';
@@ -52,36 +53,46 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
         return config.shippingCost;
     };
 
-    // Calculate display price using REAL auction price
+    // Calculate display price - SIMPLIFIED
     useEffect(() => {
         if (lot && config) {
-            // Get real auction price (what dealers actually pay)
-            const realAuctionPrice = getRealAuctionPriceFromApi(lot);
-            
-            if (realAuctionPrice > 0) {
-                const shippingCost = getShippingCost();
-                const marginPercentage = config.defaultMarginPercentage;
-                const minimumMargin = config.defaultMinimumMargin;
-                
-                // Calculate margin based on real auction price
-                const calculatedMargin = Math.round(realAuctionPrice * (marginPercentage / 100));
-                const marginAmount = Math.max(calculatedMargin, minimumMargin);
-                
-                // Final price: Real auction price + Shipping + Margin + Pristina shipping
-                const finalPrice = realAuctionPrice + shippingCost + marginAmount + config.shippingToPristina;
+            // Get RAW Korean price (actual car cost, no margins)
+            const rawPrice = getRawKoreanPrice(lot);
+
+            if (rawPrice > 0) {
+                // Get shipping cost (global or vehicle-specific)
+                let shippingCost = config.shippingCost;
+                if (hasTypeConfig && config.vehicleTypes) {
+                    const typeConfig = config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes];
+                    if (typeConfig?.enabled && typeConfig.shippingCost) {
+                        shippingCost = typeConfig.shippingCost;
+                    }
+                }
+
+                // Calculate YOUR margin using YOUR global settings
+                const calculatedMargin = Math.round(rawPrice * (config.defaultMarginPercentage / 100));
+                const marginAmount = Math.max(calculatedMargin, config.defaultMinimumMargin);
+
+                // FINAL PRICE = Raw Price + Shipping + YOUR Margin + Pristina Shipping
+                const finalPrice = rawPrice + shippingCost + marginAmount + config.shippingToPristina;
+
                 setDisplayPrice(finalPrice);
-                
-                console.log('💰 CarCard price (real auction):', {
-                    vehicleType,
-                    realAuctionPrice,
+
+                console.log('💰 CarCard price (RAW base):', {
+                    rawPrice,  // Actual car cost in Korea
                     shippingCost,
-                    marginPercentage,
+                    marginPercentage: config.defaultMarginPercentage,
                     marginAmount,
                     pristina: config.shippingToPristina,
                     finalPrice
                 });
             } else {
-                setDisplayPrice(0);
+                // Fallback: use competitor price as estimate (but warn)
+                const competitorPrice = getOldSitePrice(lot);
+                if (competitorPrice > 0) {
+                    console.warn('⚠️ Using competitor price as fallback - raw price not available');
+                    setDisplayPrice(competitorPrice);
+                }
             }
         }
     }, [lot, config, vehicleType, hasTypeConfig]);

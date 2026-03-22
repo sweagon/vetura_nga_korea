@@ -1,4 +1,3 @@
-// components/cars/CarDetailClient.tsx - UPDATED with real auction pricing
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,7 +5,8 @@ import { useConfig } from '@/lib/ConfigContext';
 import {
     type Car,
     formatMileage,
-    getRealAuctionPriceFromApi
+    getRawKoreanPrice,
+    getOldSitePrice
 } from '@/lib/api';
 import { translateFuel, translateTransmission, translateColor } from '@/lib/translations';
 import {
@@ -24,6 +24,8 @@ import {
     AlertCircle,
     ArrowLeft,
     Car as CarIcon,
+    ChevronDown,
+    ChevronUp,
     Eye,
     EyeOff
 } from 'lucide-react';
@@ -37,21 +39,59 @@ interface CarDetailClientProps {
     car: Car;
 }
 
-// Helper function to map body types
-const getVehicleTypeId = (bodyTypeName: string, modelName: string): string => {
+// Helper function to map body types to our vehicle type IDs
+const getVehicleTypeId = (bodyTypeName: string): string => {
+    const typeMap: Record<string, string> = {
+        // Standard types
+        'sedan': 'sedan',
+        'suv': 'suv',
+        'hatchback': 'hatchback',
+        'wagon': 'wagon',
+        'coupe': 'coupe',
+        'van': 'van',
+        'pickup': 'pickup',
+        'sport_car': 'sport_car',
+
+        // Variations
+        'hatch': 'hatchback',
+        'hatch back': 'hatchback',
+        '5 door': 'hatchback',
+        '3 door': 'hatchback',
+        '5dr': 'hatchback',
+        '3dr': 'hatchback',
+
+        // Specific models
+        'gti': 'hatchback',
+        'golf': 'hatchback',
+        'focus': 'hatchback',
+        'civic': 'sedan',
+        'passat': 'sedan',
+        'tiguan': 'suv',
+        'touareg': 'suv',
+        'q5': 'suv',
+        'q7': 'suv',
+        'x5': 'suv',
+        'x3': 'suv',
+        'a4': 'sedan',
+        'a6': 'sedan',
+        'a3': 'hatchback',
+        '1 series': 'hatchback',
+        '3 series': 'sedan',
+        '5 series': 'sedan'
+    };
+
     const normalized = bodyTypeName?.toLowerCase().trim() || '';
-    const model = modelName?.toLowerCase().trim() || '';
 
-    if (normalized.includes('suv')) return 'suv';
-    if (normalized.includes('sedan')) return 'sedan';
-    if (normalized.includes('hatchback') || normalized.includes('hatch') || normalized.includes('gti')) return 'hatchback';
-    if (normalized.includes('wagon') || normalized.includes('estate')) return 'wagon';
-    if (normalized.includes('coupe')) return 'coupe';
-    if (normalized.includes('van')) return 'van';
-    if (normalized.includes('pickup')) return 'pickup';
+    // Check exact match first
+    if (typeMap[normalized]) {
+        return typeMap[normalized];
+    }
 
-    if (model.includes('golf') || model.includes('focus') || model.includes('a3') || model.includes('1 series')) {
-        return 'hatchback';
+    // Check partial match
+    for (const [key, value] of Object.entries(typeMap)) {
+        if (normalized.includes(key)) {
+            return value;
+        }
     }
 
     return 'default';
@@ -61,12 +101,13 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
     const { config, formatPrice } = useConfig();
     const [mounted, setMounted] = useState(false);
     const [imageLoadError, setImageLoadError] = useState(false);
-    const [realPrice, setRealPrice] = useState(0);
+    const [rawPrice, setRawPrice] = useState(0);
     const [loadingPrice, setLoadingPrice] = useState(true);
     const [shippingCost, setShippingCost] = useState(0);
     const [marginAmount, setMarginAmount] = useState(0);
     const [marginPercentage, setMarginPercentage] = useState(0);
     const [showTransportSeparately, setShowTransportSeparately] = useState(false);
+    const [detectedVehicleType, setDetectedVehicleType] = useState<string>('default');
 
     useEffect(() => {
         setMounted(true);
@@ -78,57 +119,84 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
 
     const lot = car.lots?.[0];
 
-    // Vehicle type detection
-    const rawBodyType = car.body_type?.name || '';
-    const modelName = car.model?.name || '';
-    const vehicleType = getVehicleTypeId(rawBodyType, modelName);
+    // Improved vehicle type detection
+    const rawBodyType = car.body_type?.name || car.vehicle_type?.name || '';
+    const vehicleType = getVehicleTypeId(rawBodyType);
 
-    // Check if vehicle type is enabled for custom shipping
-    const hasTypeConfig = vehicleType !== 'default' &&
+    // Also check the model name for better detection
+    const modelName = car.model?.name?.toLowerCase() || '';
+    const modelBasedType = getVehicleTypeId(modelName);
+
+    // Use the most specific detection (body type has priority, then model name)
+    const finalVehicleType = vehicleType !== 'default' ? vehicleType : modelBasedType;
+
+    useEffect(() => {
+        setDetectedVehicleType(finalVehicleType);
+    }, [finalVehicleType]);
+
+    // Check if vehicle type exists in config and is enabled for custom shipping
+    const hasTypeConfig = finalVehicleType !== 'default' &&
         config.vehicleTypes &&
-        Object.prototype.hasOwnProperty.call(config.vehicleTypes, vehicleType) &&
-        (config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes] as VehicleTypeConfig | undefined)?.enabled === true;
+        Object.prototype.hasOwnProperty.call(config.vehicleTypes, finalVehicleType) &&
+        (config.vehicleTypes[finalVehicleType as keyof typeof config.vehicleTypes] as VehicleTypeConfig | undefined)?.enabled === true;
 
-    // Get shipping cost
+    // Get shipping cost (vehicle-specific or global)
     const getShippingCost = () => {
         if (hasTypeConfig && config.vehicleTypes) {
-            const typeConfig = config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes] as VehicleTypeConfig | undefined;
+            const typeConfig = config.vehicleTypes[finalVehicleType as keyof typeof config.vehicleTypes] as VehicleTypeConfig | undefined;
             if (typeConfig?.enabled && typeConfig.shippingCost) {
+                console.log(`✅ Using ${finalVehicleType} shipping: ${typeConfig.shippingCost}€`);
                 return typeConfig.shippingCost;
             }
         }
+        console.log(`⚠️ Using global shipping: ${config.shippingCost}€ (${finalVehicleType} not enabled)`);
         return config.shippingCost;
     };
 
-    // Calculate prices using REAL auction price
+    // Calculate prices
     useEffect(() => {
         if (lot && config) {
             setLoadingPrice(true);
             try {
-                const auctionPrice = getRealAuctionPriceFromApi(lot);
-                setRealPrice(auctionPrice);
+                // Get RAW Korean price (actual car cost, no margins)
+                const rawPrice = getRawKoreanPrice(lot) || 0;
+                setRawPrice(rawPrice);
 
-                if (auctionPrice > 0) {
-                    const shipping = getShippingCost();
-                    const marginPercent = config.defaultMarginPercentage;
-                    const minMargin = config.defaultMinimumMargin;
+                if (rawPrice > 0) {
+                    // Get shipping cost (global or vehicle-specific)
+                    let shipping = config.shippingCost;
+                    if (hasTypeConfig && config.vehicleTypes) {
+                        const typeConfig = config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes];
+                        if (typeConfig?.enabled && typeConfig.shippingCost) {
+                            shipping = typeConfig.shippingCost;
+                        }
+                    }
 
-                    const calculatedMargin = Math.round(auctionPrice * (marginPercent / 100));
-                    const finalMarginAmount = Math.max(calculatedMargin, minMargin);
+                    // Calculate YOUR margin using YOUR global settings
+                    const calculatedMargin = Math.round(rawPrice * (config.defaultMarginPercentage / 100));
+                    const finalMarginAmount = Math.max(calculatedMargin, config.defaultMinimumMargin);
 
                     setShippingCost(shipping);
                     setMarginAmount(finalMarginAmount);
-                    setMarginPercentage(marginPercent);
+                    setMarginPercentage(config.defaultMarginPercentage);
 
-                    console.log('💰 Price Calculation (real auction):', {
-                        vehicleType,
-                        auctionPrice,
+                    console.log('💰 Price Calculation (RAW base - CORRECT):', {
+                        rawPrice,  // Actual car cost in Korea
                         shippingCost: shipping,
-                        marginPercentage: marginPercent,
+                        marginPercentage: config.defaultMarginPercentage,
                         marginAmount: finalMarginAmount,
                         pristina: config.shippingToPristina,
-                        finalPrice: auctionPrice + shipping + finalMarginAmount + config.shippingToPristina
+                        finalPrice: rawPrice + shipping + finalMarginAmount + config.shippingToPristina
                     });
+                } else {
+                    // Fallback to competitor price
+                    const competitorPrice = getOldSitePrice(lot);
+                    if (competitorPrice > 0) {
+                        console.warn('⚠️ Using competitor price as fallback - raw price not available');
+                        setRawPrice(competitorPrice);
+                        setShippingCost(0);
+                        setMarginAmount(0);
+                    }
                 }
             } catch (error) {
                 console.error('Error calculating price:', error);
@@ -137,7 +205,6 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
             }
         }
     }, [lot, config, vehicleType, hasTypeConfig]);
-
     const toggleTransportDisplay = () => {
         const newValue = !showTransportSeparately;
         setShowTransportSeparately(newValue);
@@ -150,20 +217,24 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
     const location = lot?.location?.city?.name || 'Korea';
     const lotNumber = lot?.lot || null;
     const manufacturerName = car.manufacturer?.name || 'Makina';
-    const carTitle = car.title || `${manufacturerName} ${modelName}`.trim() || 'Makina pa emër';
+    const modelNameDisplay = car.model?.name || '';
+    const carTitle = car.title || `${manufacturerName} ${modelNameDisplay}`.trim() || 'Makina pa emër';
 
     // Calculate final price
-    const priceWithDurresShipping = realPrice + shippingCost;
-    const finalPrice = priceWithDurresShipping + marginAmount + config.shippingToPristina;
+    const priceWithDurresShipping = rawPrice + shippingCost;
+    const finalPrice = priceWithDurresShipping + marginAmount + (config.shippingToPristina || 350);
 
     const displayBodyType = rawBodyType
         ? rawBodyType.charAt(0).toUpperCase() + rawBodyType.slice(1).toLowerCase()
         : null;
 
+    const hasEssentialData = car.manufacturer?.name || car.model?.name || car.year;
+
+    // Don't show margin if it's 0%
     const shouldShowMargin = marginAmount > 0;
 
-    // Loading state
-    if (!mounted || loadingPrice) {
+    // During SSR or before mount, show skeleton
+    if (!mounted) {
         return (
             <main className="min-h-screen bg-primary">
                 <div className="container-swiss py-8 lg:py-12">
@@ -197,7 +268,9 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                     <CarIcon className="w-16 h-16 text-orange-500 mx-auto mb-4" />
                     <h2 className="text-2xl font-bold text-primary mb-2">Makina nuk u gjet</h2>
                     <p className="text-secondary mb-6">Nuk mund të ngarkohen detajet e makinës.</p>
-                    <Link href="/cars" className="btn-primary">Kthehu te Makinat</Link>
+                    <Link href="/cars" className="btn-primary">
+                        Kthehu te Makinat
+                    </Link>
                 </div>
             </div>
         );
@@ -210,26 +283,31 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                 {/* Breadcrumb */}
                 <div className="border-b border-light bg-surface/80 sticky top-4 z-sticky backdrop-blur-sm z-10">
                     <div className="container-swiss py-3">
-                        <nav className="flex items-center gap-2 text-sm flex-wrap">
-                            <Link href="/" className="text-muted hover:text-orange-500 transition">
+                        <nav className="flex items-center gap-2 text-sm flex-wrap" aria-label="Breadcrumb">
+                            <Link href="/" className="text-muted hover:text-orange-500 transition focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
                                 {config.siteName}
                             </Link>
-                            <span className="text-muted">/</span>
-                            <Link href="/cars" className="text-muted hover:text-orange-500 transition">
+                            <span className="text-muted" aria-hidden="true">/</span>
+                            <Link href="/cars" className="text-muted hover:text-orange-500 transition focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
                                 Makina
                             </Link>
                             {car.manufacturer?.id && (
                                 <>
-                                    <span className="text-muted">/</span>
-                                    <Link href={`/cars?manufacturer_id=${car.manufacturer.id}`} className="text-muted hover:text-orange-500 transition">
+                                    <span className="text-muted" aria-hidden="true">/</span>
+                                    <Link
+                                        href={`/cars?manufacturer_id=${car.manufacturer.id}`}
+                                        className="text-muted hover:text-orange-500 transition focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded"
+                                    >
                                         {car.manufacturer.name}
                                     </Link>
                                 </>
                             )}
                             {car.model?.name && (
                                 <>
-                                    <span className="text-muted">/</span>
-                                    <span className="text-orange-500">{car.model.name}</span>
+                                    <span className="text-muted" aria-hidden="true">/</span>
+                                    <span className="text-orange-500" aria-current="page">
+                                        {car.model.name}
+                                    </span>
                                 </>
                             )}
                         </nav>
@@ -242,35 +320,58 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                         <h1 className="text-3xl lg:text-4xl font-bold mb-2">{carTitle}</h1>
                         <div className="flex items-center gap-4 text-sm text-muted flex-wrap">
                             <span className="flex items-center gap-1">
-                                <MapPin size={16} />
+                                <MapPin size={16} className="shrink-0" />
                                 {location}
                             </span>
-                            <span className="w-1 h-1 rounded-full bg-muted" />
+                            <span className="w-1 h-1 rounded-full bg-muted" aria-hidden="true" />
                             <span className="badge badge-success">Në dispozicion</span>
+
                             {lotNumber && (
                                 <>
-                                    <span className="w-1 h-1 rounded-full bg-muted" />
+                                    <span className="w-1 h-1 rounded-full bg-muted" aria-hidden="true" />
                                     <span className="flex items-center gap-1">
-                                        <Hash size={14} />
+                                        <Hash size={14} className="shrink-0" />
                                         Lot: {lotNumber}
                                     </span>
                                 </>
                             )}
                             {car.vin && (
                                 <>
-                                    <span className="w-1 h-1 rounded-full bg-muted" />
+                                    <span className="w-1 h-1 rounded-full bg-muted" aria-hidden="true" />
                                     <span className="flex items-center gap-1 font-mono text-xs">
                                         VIN: {car.vin}
                                     </span>
                                 </>
                             )}
                         </div>
+                        {/* Debug info - remove in production */}
+                        {process.env.NODE_ENV === 'development' && (
+                            <div className="mt-2 text-xs text-muted">
+                                🚗 Detected type: {detectedVehicleType} |
+                                Body: {rawBodyType || 'N/A'} |
+                                Shipping: {hasTypeConfig ? `${shippingCost}€ (custom)` : `${shippingCost}€ (global)`}
+                            </div>
+                        )}
                     </div>
+
+                    {!hasEssentialData && (
+                        <div className="mb-8 p-4 bg-warning-bg border border-warning-border rounded-lg flex items-center gap-3">
+                            <AlertCircle size={20} className="text-warning-text shrink-0" />
+                            <p className="text-sm text-warning-text">
+                                Disa të dhëna të makinës nuk janë të plota. Informacioni mund të jetë i paplotë.
+                            </p>
+                        </div>
+                    )}
 
                     <div className="grid lg:grid-cols-3 gap-8">
                         <div className="lg:col-span-2 space-y-8">
                             <div className="card overflow-hidden">
                                 <ImageGallery images={images} carName={carTitle} />
+                                {imageLoadError && validImages.length === 0 && (
+                                    <div className="text-xs text-warning-text text-center py-2 bg-warning-bg">
+                                        Some images could not be loaded
+                                    </div>
+                                )}
                             </div>
 
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -305,53 +406,53 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                     {car.year && (
                                         <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
-                                            <Calendar size={20} className="text-orange-500" />
-                                            <div>
+                                            <Calendar size={20} className="text-orange-500 shrink-0" />
+                                            <div className="min-w-0">
                                                 <p className="text-xs text-muted">Viti</p>
-                                                <p className="font-medium text-primary">{car.year}</p>
+                                                <p className="font-medium text-primary truncate">{car.year}</p>
                                             </div>
                                         </div>
                                     )}
                                     <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
-                                        <Gauge size={20} className="text-orange-500" />
-                                        <div>
+                                        <Gauge size={20} className="text-orange-500 shrink-0" />
+                                        <div className="min-w-0">
                                             <p className="text-xs text-muted">Kilometrazha</p>
-                                            <p className="font-medium text-primary">{formatMileage(mileage)}</p>
+                                            <p className="font-medium text-primary truncate">{formatMileage(mileage)}</p>
                                         </div>
                                     </div>
                                     {car.fuel?.name && (
                                         <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
-                                            <Fuel size={20} className="text-orange-500" />
-                                            <div>
+                                            <Fuel size={20} className="text-orange-500 shrink-0" />
+                                            <div className="min-w-0">
                                                 <p className="text-xs text-muted">Karburanti</p>
-                                                <p className="font-medium text-primary">{translateFuel(car.fuel.name)}</p>
+                                                <p className="font-medium text-primary truncate">{translateFuel(car.fuel.name)}</p>
                                             </div>
                                         </div>
                                     )}
                                     {car.transmission?.name && (
                                         <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
-                                            <Settings size={20} className="text-orange-500" />
-                                            <div>
+                                            <Settings size={20} className="text-orange-500 shrink-0" />
+                                            <div className="min-w-0">
                                                 <p className="text-xs text-muted">Transmisioni</p>
-                                                <p className="font-medium text-primary">{translateTransmission(car.transmission.name)}</p>
+                                                <p className="font-medium text-primary truncate">{translateTransmission(car.transmission.name)}</p>
                                             </div>
                                         </div>
                                     )}
                                     {car.engine?.name && (
                                         <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
-                                            <Database size={20} className="text-orange-500" />
-                                            <div>
+                                            <Database size={20} className="text-orange-500 shrink-0" />
+                                            <div className="min-w-0">
                                                 <p className="text-xs text-muted">Motori</p>
-                                                <p className="font-medium text-primary">{car.engine.name}</p>
+                                                <p className="font-medium text-primary truncate">{car.engine.name}</p>
                                             </div>
                                         </div>
                                     )}
                                     {car.color?.name && (
                                         <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-lg">
-                                            <Tag size={20} className="text-orange-500" />
-                                            <div>
+                                            <Tag size={20} className="text-orange-500 shrink-0" />
+                                            <div className="min-w-0">
                                                 <p className="text-xs text-muted">Ngjyra</p>
-                                                <p className="font-medium text-primary">{translateColor(car.color.name)}</p>
+                                                <p className="font-medium text-primary truncate">{translateColor(car.color.name)}</p>
                                             </div>
                                         </div>
                                     )}
@@ -383,53 +484,66 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                     <div className="space-y-3">
                                         <div className="p-4 bg-surface-2 rounded-lg">
                                             <h3 className="font-semibold mb-3 flex items-center gap-2">
-                                                <Building2 size={18} className="text-orange-500" />
+                                                <Building2 size={18} className="text-orange-500 shrink-0" />
                                                 Shitësi
                                             </h3>
                                             <div className="space-y-2 text-sm">
-                                                <p className="text-secondary">veturakoreakosove</p>
-                                                <p className="flex items-center gap-2 text-secondary hover:text-orange-500 transition-colors">
-                                                    <Phone size={14} className="text-orange-500" />
-                                                    <a href={`tel:${config.contactPhone}`}>{config.contactPhone}</a>
+                                                <p className="text-secondary">
+                                                    veturakoreakosove
                                                 </p>
                                                 <p className="flex items-center gap-2 text-secondary hover:text-orange-500 transition-colors">
-                                                    <Mail size={14} className="text-orange-500" />
-                                                    <a href={`mailto:${config.contactEmail}`}>{config.contactEmail}</a>
+                                                    <Phone size={14} className="text-orange-500 shrink-0" />
+                                                    <a href={`tel:${config.contactPhone}`} className="hover:underline focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
+                                                        {config.contactPhone}
+                                                    </a>
+                                                </p>
+                                                <p className="flex items-center gap-2 text-secondary hover:text-orange-500 transition-colors">
+                                                    <Mail size={14} className="text-orange-500 shrink-0" />
+                                                    <a href={`mailto:${config.contactEmail}`} className="hover:underline focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded">
+                                                        {config.contactEmail}
+                                                    </a>
                                                 </p>
                                             </div>
                                         </div>
 
+                                        {/* Toggle Button for Transport Display */}
                                         <button
                                             onClick={toggleTransportDisplay}
                                             className="w-full flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
                                         >
                                             <span className="text-sm text-white/70 flex items-center gap-2">
                                                 {showTransportSeparately ? <Eye size={14} /> : <EyeOff size={14} />}
-                                                {showTransportSeparately ? 'Fshi detajet e transportit' : 'Shfaq detajet e transportit'}
+                                                {showTransportSeparately ? 'Fshih detajet e transportit' : 'Shfaq detajet e transportit'}
                                             </span>
                                         </button>
 
+                                        {/* Price Breakdown - Only show if toggled on */}
                                         {showTransportSeparately && (
                                             <div className="p-4 bg-white/5 rounded-lg space-y-2 text-sm">
                                                 <h4 className="font-medium text-white mb-2">Detajet e çmimit:</h4>
+
                                                 <div className="flex justify-between">
-                                                    <span className="text-white/60">Çmimi bazë (auksioni Korea):</span>
-                                                    <span className="text-white">{formatPrice(realPrice)}</span>
+                                                    <span className="text-white/60">Çmimi bazë (Korea):</span>
+                                                    <span className="text-white">{formatPrice(rawPrice)}</span>
                                                 </div>
+
                                                 <div className="flex justify-between">
                                                     <span className="text-white/60">Transporti detar (Korea → Durrës):</span>
                                                     <span className="text-white">{formatPrice(shippingCost)}</span>
                                                 </div>
+
                                                 {shouldShowMargin && (
                                                     <div className="flex justify-between">
                                                         <span className="text-white/60">Marzha jonë ({marginPercentage}%):</span>
                                                         <span className="text-white">{formatPrice(marginAmount)}</span>
                                                     </div>
                                                 )}
+
                                                 <div className="flex justify-between">
                                                     <span className="text-white/60">Transporti tokësor (Durrës → Prishtinë):</span>
-                                                    <span className="text-white">{formatPrice(config.shippingToPristina)}</span>
+                                                    <span className="text-white">{formatPrice(config.shippingToPristina || 350)}</span>
                                                 </div>
+
                                                 <div className="border-t border-white/10 my-2 pt-2">
                                                     <div className="flex justify-between font-bold">
                                                         <span>Totali:</span>
@@ -441,7 +555,10 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
 
                                         <a
                                             href={`https://wa.me/${config.contactPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
-                                                `Përshëndetje, jam i interesuar për makinën:\n\n${carTitle}\n💰 Çmimi: ${formatPrice(finalPrice)}\n🔗 Linku: ${window.location.href}`
+                                                `Përshëndetje, jam i interesuar për makinën:\n\n` +
+                                                `*${carTitle}*\n` +
+                                                `💰 Çmimi: ${formatPrice(finalPrice)}\n` +
+                                                `🔗 Linku: ${typeof window !== 'undefined' ? window.location.href : ''}`
                                             )}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
@@ -450,7 +567,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                             WhatsApp
                                         </a>
                                         <a
-                                            href={`mailto:${config.contactEmail}?subject=Interest in ${car.vin} - ${carTitle}`}
+                                            href={`mailto:${config.contactEmail}?subject=Interest in ${car.vin} - ${carTitle}&body=I'm interested in this car: ${carTitle}\nPrice: ${formatPrice(finalPrice)}\nLink: ${typeof window !== 'undefined' ? window.location.href : ''}`}
                                             className="btn-primary w-full"
                                         >
                                             Email
@@ -458,23 +575,28 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                     </div>
                                 </div>
 
+                                {/* Simplified Cost Estimate */}
                                 <div className="card p-6">
                                     <h3 className="font-semibold mb-3">Shpenzime të përafërta</h3>
+
                                     <div className="space-y-2 text-sm">
                                         <div className="flex justify-between">
                                             <span className="text-muted">Makina (përfshirë transportin detar):</span>
                                             <span className="font-medium text-primary">{formatPrice(priceWithDurresShipping)}</span>
                                         </div>
+
                                         {shouldShowMargin && (
                                             <div className="flex justify-between">
                                                 <span className="text-muted">Marzha jonë ({marginPercentage}%):</span>
                                                 <span className="font-medium text-primary">{formatPrice(marginAmount)}</span>
                                             </div>
                                         )}
+
                                         <div className="flex justify-between">
                                             <span className="text-muted">Transporti Prishtinë:</span>
-                                            <span className="font-medium text-primary">{formatPrice(config.shippingToPristina)}</span>
+                                            <span className="font-medium text-primary">{formatPrice(config.shippingToPristina || 350)}</span>
                                         </div>
+
                                         <div className="border-t border-light my-2 pt-2">
                                             <div className="flex justify-between font-semibold">
                                                 <span>Totali:</span>
@@ -486,7 +608,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
 
                                 <div className="card p-4 bg-surface-2/50">
                                     <div className="flex items-center gap-2 text-xs text-muted">
-                                        <CarIcon size={14} />
+                                        <CarIcon size={14} className="shrink-0" />
                                         <span className="truncate">VIN: {car.vin}</span>
                                     </div>
                                 </div>
@@ -495,7 +617,10 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                     </div>
 
                     <div className="mt-12 text-center">
-                        <Link href="/cars" className="inline-flex items-center gap-2 text-muted hover:text-orange-500 transition-colors">
+                        <Link
+                            href="/cars"
+                            className="inline-flex items-center gap-2 text-muted hover:text-orange-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-primary/20 rounded-lg px-4 py-2"
+                        >
                             <ArrowLeft size={16} />
                             Kthehu te të gjitha makinat
                         </Link>
