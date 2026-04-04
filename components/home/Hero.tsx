@@ -24,7 +24,7 @@ export default function Hero() {
             {/* Background Image with Overlay */}
             <div className="absolute inset-0">
                 <img
-                    src="https://satgurucargo.com/wp-content/uploads/2024/11/shutterstock_1228329946-scaled.jpg"
+                    src="https://tgal.us/wp-content/uploads/2020/05/what-is-roro-shipping-2.jpg"
                     alt="Import direkt nga Korea - transport detar"
                     className="absolute inset-0 w-full h-full object-cover brightness-50"
                 />
