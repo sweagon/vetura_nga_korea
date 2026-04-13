@@ -92,7 +92,7 @@ export default function Hero() {
                     >
                         {[
                             { icon: Shield, value: '98%', label: 'Klientë të kënaqur' },
-                            { icon: Truck, value: '35 ditë', label: 'Transport deri në Prishtinë' },
+                            { icon: Truck, value: '35 ditë', label: 'Transport deri në Skenderaj' },
                             { icon: Sparkles, value: '100%', label: 'Të inspektuara' },
                             { icon: FileCheck, value: 'Historia', label: 'Dokumentacion i plotë' }
                         ].map((stat, index) => (

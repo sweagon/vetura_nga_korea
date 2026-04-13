@@ -55,7 +55,7 @@ export default function LocationMap() {
 
                     <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
                         Na vizitoni në{' '}
-                        <span className="text-orange-500">Prishtinë</span>
+                        <span className="text-orange-500">Skenderaj</span>
                     </h2>
                 </motion.div>
 
@@ -99,7 +99,7 @@ export default function LocationMap() {
 
                             <div className="mt-6 pt-6 border-t border-white/10">
                                 <a
-                                    href="https://maps.google.com/?q=Prishtinë+Kosovë"
+                                    href="https://maps.app.goo.gl/TqoY7zJzmgvhkGvm7"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="bg-orange-500 text-white w-full py-3 px-4 rounded-lg hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
@@ -145,8 +145,7 @@ export default function LocationMap() {
                         className="lg:col-span-2"
                     >
                         <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-2 h-[400px] lg:h-[500px] overflow-hidden">
-                            <iframe
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2934.548144558233!2d21.165472315342!3d42.662422979167!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x13549ee8c3c5c1b7%3A0x8c9f1e1e1e1e1e1e!2sPrishtin%C3%AB!5e0!3m2!1sen!2s!4v1620000000000!5m2!1sen!2s"
+                            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2929.741135898436!2d20.787136399999998!3d42.7515288!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x13536bb48108d921%3A0x5296c228bb7ca0da!2sVetura_Korea_kosove!5e0!3m2!1sen!2s!4v1776104306640!5m2!1sen!2s"
                                 width="100%"
                                 height="100%"
                                 style={{ border: 0, borderRadius: '0.75rem' }}

@@ -14,8 +14,8 @@ export default function WhyChooseUs() {
         {
             icon: Truck,
             value: '35 ditë',
-            label: 'Transport deri në Prishtinë',
-            description: 'Transport i sigurt dhe i organizuar nga Korea deri në Prishtinë'
+            label: 'Transport deri në Skenderaj',
+            description: 'Transport i sigurt dhe i organizuar nga Korea deri në Skenderaj'
         },
         {
             icon: Shield,

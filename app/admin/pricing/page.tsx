@@ -255,14 +255,14 @@ export default function PricingPage() {
                         suffix="€"
                     />
                     <NumberInput
-                        label="Transporti Durrës → Prishtinë (€)"
+                        label="Transporti Durrës → Skenderaj (€)"
                         value={localConfig.shippingToPristina}
                         onChange={(v) => updateGlobal('shippingToPristina', v)}
                         suffix="€"
                     />
                 </div>
                 <p className="text-xs text-white/40 mt-2">
-                    🚢 Transporti detar nga Korea në Durrës | 🚛 Transporti tokësor nga Durrësi në Prishtinë
+                    🚢 Transporti detar nga Korea në Durrës | 🚛 Transporti tokësor nga Durrësi në Skenderaj
                 </p>
             </div>
 
@@ -383,7 +383,7 @@ export default function PricingPage() {
                                         <span className="text-white">+{margin}€</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-white/70">Transporti Prishtinë:</span>
+                                        <span className="text-white/70">Transporti Skenderaj:</span>
                                         <span className="text-white">+{localConfig.shippingToPristina}€</span>
                                     </div>
                                     <div className="flex justify-between font-bold pt-2 border-t border-white/10">
@@ -421,7 +421,7 @@ export default function PricingPage() {
                                         <span className="text-white">+{margin}€</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-white/70">Transporti Prishtinë:</span>
+                                        <span className="text-white/70">Transporti Skenderaj:</span>
                                         <span className="text-white">+{localConfig.shippingToPristina}€</span>
                                     </div>
                                     <div className="flex justify-between font-bold pt-2 border-t border-white/10">
@@ -436,7 +436,7 @@ export default function PricingPage() {
 
                 <div className="mt-4 p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg">
                     <p className="text-xs text-orange-500">
-                        📊 Formula: Çmimi bazë + Transporti + Marzha Globale + Transporti Prishtinë
+                        📊 Formula: Çmimi bazë + Transporti + Marzha Globale + Transporti Skenderaj
                     </p>
                 </div>
             </div>

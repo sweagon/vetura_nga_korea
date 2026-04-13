@@ -428,7 +428,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                                     </div>
                                                 )}
                                                 <div className="flex justify-between">
-                                                    <span className="text-white/60">Transporti tokësor (Durrës → Prishtinë):</span>
+                                                    <span className="text-white/60">Transporti tokësor (Durrës → Skenderaj):</span>
                                                     <span className="text-white">{formatPrice(config.shippingToPristina)}</span>
                                                 </div>
                                                 <div className="border-t border-white/10 my-2 pt-2">
@@ -473,7 +473,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                             </div>
                                         )}
                                         <div className="flex justify-between">
-                                            <span className="text-muted">Transporti Prishtinë:</span>
+                                            <span className="text-muted">Transporti Skenderaj:</span>
                                             <span className="font-medium text-primary">{formatPrice(config.shippingToPristina)}</span>
                                         </div>
                                         <div className="border-t border-light my-2 pt-2">
