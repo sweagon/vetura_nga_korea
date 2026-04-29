@@ -29,8 +29,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="sq" dir="ltr" className={inter.variable}>
-      <body className="min-h-screen bg-primary antialiased">
+    <html lang="sq" dir="ltr" className={inter.variable} suppressHydrationWarning>
+      <body className="min-h-screen bg-primary antialiased" suppressHydrationWarning>
         <ConfigProvider>
           <Header />
           <main className="pt-16 md:pt-20 min-h-[calc(100vh-64px)] md:min-h-[calc(100vh-80px)]">

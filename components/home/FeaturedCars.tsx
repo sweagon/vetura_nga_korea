@@ -39,7 +39,7 @@ export default function FeaturedCars({ limit = 2 }: FeaturedCarsProps) {
                         const timeoutId = setTimeout(() => controller.abort(), 8000);
 
                         const response = await fetch(
-                            `/api/proxy/cars?manufacturer_id=${manufacturer.id}&per_page=${limit}&buy_now_price_from=10000&buy_now_price_to=50000&year_from=2015&order_by=year_desc&vehicle_type=1`,
+                            `/api/proxy/cars?manufacturer_id=${manufacturer.id}&per_page=${limit}&buy_now_price_from=10000&buy_now_price_to=50000&year_from=2015&order_by=year_desc`,
                             { signal: controller.signal }
                         );
 

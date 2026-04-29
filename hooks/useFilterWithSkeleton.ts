@@ -76,7 +76,7 @@ export function useFilterWithSkeleton(
             const response = await fetchCars({
                 page,
                 per_page: PER_PAGE,
-                vehicle_type: '1',
+                // // vehicle_type: '1',
                 ...JSON.parse(serverFiltersStr)
             });
 
@@ -148,7 +148,7 @@ export function useFilterWithSkeleton(
             const firstResponse = await fetchCars({
                 page: 1,
                 per_page: API_PAGE_SIZE,
-                vehicle_type: '1',
+                // vehicle_type: '1',
                 ...JSON.parse(serverFiltersStr)
             });
 
@@ -177,7 +177,7 @@ export function useFilterWithSkeleton(
                 initialBatch.push(fetchCars({
                     page: i,
                     per_page: API_PAGE_SIZE,
-                    vehicle_type: '1',
+                    // vehicle_type: '1',
                     ...JSON.parse(serverFiltersStr)
                 }));
             }
@@ -233,7 +233,7 @@ export function useFilterWithSkeleton(
                         batch.push(fetchCars({
                             page: page + i,
                             per_page: API_PAGE_SIZE,
-                            vehicle_type: '1',
+                            // vehicle_type: '1',
                             ...JSON.parse(serverFiltersStr)
                         }));
                     }

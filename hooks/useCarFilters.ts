@@ -62,7 +62,7 @@ export function useCarFilters(
             const response = await fetchCars({
                 page,
                 per_page: PER_PAGE,
-                vehicle_type: '1',
+                // // vehicle_type: '1',
                 ...serverFilters
             });
 
@@ -144,7 +144,7 @@ export function useCarFilters(
             const firstResponse = await fetchCars({
                 page: 1,
                 per_page: API_PAGE_SIZE,
-                vehicle_type: '1',
+                // vehicle_type: '1',
                 ...serverFilters
             });
 
@@ -199,7 +199,7 @@ export function useCarFilters(
                     batch.push(fetchCars({
                         page: i,
                         per_page: API_PAGE_SIZE,
-                        vehicle_type: '1',
+                        // vehicle_type: '1',
                         ...serverFilters
                     }));
                 }

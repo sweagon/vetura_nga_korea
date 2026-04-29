@@ -462,7 +462,7 @@ export async function fetchCars(params: Record<string, any> = {}) {
     });
 
     if (!queryParams.per_page) queryParams.per_page = '12';
-    if (!queryParams.vehicle_type) queryParams.vehicle_type = '1';
+    // if (!queryParams.vehicle_type) queryParams.vehicle_type = '1';
 
     const queryString = new URLSearchParams(queryParams).toString();
     const path = `/api/proxy/cars${queryString ? `?${queryString}` : ''}`;

@@ -109,7 +109,7 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
 
         params.set('page', '1');
         params.set('per_page', '12');
-        params.set('vehicle_type', '1');
+        // params.set('vehicle_type', '1');
 
         router.push(`/cars?${params.toString()}`);
         onSearch?.();
