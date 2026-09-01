@@ -357,14 +357,14 @@ export default function PricingPage() {
                                         <div className="max-w-md">
                                             <NumberInput
                                                 label="Transporti për këtë lloj (€)"
-                                                value={typeConfig?.shippingCost ?? type.defaultShipping}
+                                                value={typeConfig?.enabled ? typeConfig.shippingCost : localConfig.shippingCost}
                                                 onChange={(v) => updateVehicleShipping(type.id, v)}
                                                 disabled={!isEnabled}
                                                 suffix="€"
                                             />
                                             <p className="text-xs text-white/40 mt-2">
                                                 {isEnabled
-                                                    ? `Ky lloj përdor transportin e personalizuar: ${typeConfig?.shippingCost ?? type.defaultShipping}€`
+                                                    ? `Ky lloj përdor transportin e personalizuar: ${typeConfig?.shippingCost ?? localConfig.shippingCost}€`
                                                     : `Ky lloj përdor transportin global: ${localConfig.shippingCost}€. Aktivizoni për të personalizuar.`}
                                             </p>
                                         </div>
