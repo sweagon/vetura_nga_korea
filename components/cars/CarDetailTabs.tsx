@@ -669,7 +669,7 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
                                 {insurance.accidents && insurance.accidents.length > 0 && (
                                     <div className="mt-4">
                                         <h4 className="text-sm font-medium text-primary mb-2">Aksidentet e Regjistruara</h4>
-                                        <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-1">
+                                        <div className="space-y-2">
                                             {insurance.accidents.map((accident: Accident, index: number) => (
                                                 <div key={index} className="bg-surface-3/30 rounded-lg p-3 text-sm">
                                                     <div className="flex items-center justify-between mb-1">

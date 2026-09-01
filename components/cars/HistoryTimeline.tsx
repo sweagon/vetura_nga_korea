@@ -72,7 +72,7 @@ export default function HistoryTimeline({ history, ownerCount }: HistoryTimeline
                 )}
             </div>
 
-            <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+            <div className="space-y-3">
                 {sortedHistory.slice(0, expanded ? undefined : 5).map((item, index) => (
                     <div key={index} className="relative pl-4 border-l-2 border-orange-500/30">
                         <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-orange-500/20 flex items-center justify-center">

@@ -167,14 +167,14 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
                 <div className={`
                     flex items-center gap-2 
                     ${isHero
-                        ? 'bg-orange-500 backdrop-blur-md border border-white/20'
-                        : 'bg-orange-500 border border-light/20'
+                        ? 'bg-white/10 backdrop-blur-xl border border-white/25 shadow-2xl shadow-black/30'
+                        : 'bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg'
                     } 
-                    rounded-xl p-1.5 shadow-lg
+                    rounded-2xl p-2
                 `}>
                     {/* Search Icon */}
-                    <div className="flex items-center justify-center w-9 h-9 shrink-0">
-                        <Search size={16} className={isHero ? 'text-white/70' : 'text-muted'} />
+                    <div className="flex items-center justify-center w-10 h-10 shrink-0">
+                        <Search size={16} className={isHero ? 'text-white/80' : 'text-muted'} />
                     </div>
 
                     {/* Filters */}
@@ -256,11 +256,11 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
                         <button
                             onClick={handleSearch}
                             className={`
-                                h-9 px-4 rounded-lg text-sm font-medium transition-all duration-200 
+                                h-10 px-4 rounded-lg text-sm font-medium transition-all duration-200 
                                 flex items-center gap-1.5 whitespace-nowrap
                                 ${isHero
-                                    ? 'bg-white text-orange-600 hover:bg-gray-100'
-                                    : 'bg-orange-600 text-white hover:bg-orange-700'
+                                    ? 'bg-orange-500 text-white hover:bg-orange-600 shadow-lg shadow-orange-500/25'
+                                    : 'bg-orange-500 text-white hover:bg-orange-600'
                                 }
                             `}
                             aria-label="Kërko"
@@ -270,7 +270,7 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
                             {activeFilterCount > 0 && (
                                 <span className={`
                                     ml-0.5 px-1.5 py-0.5 text-xs rounded-full font-medium
-                                    ${isHero ? 'bg-orange-100 text-orange-600' : 'bg-white/20 text-white'}
+                                    ${isHero ? 'bg-white/25 text-white' : 'bg-white/20 text-white'}
                                 `}>
                                     {activeFilterCount}
                                 </span>
@@ -283,10 +283,10 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
             {/* Mobile Version */}
             <div className="md:hidden w-full">
                 <div className={`
-                    rounded-xl p-3 shadow-lg space-y-3
+                    rounded-2xl p-3 shadow-lg space-y-3
                     ${isHero
-                        ? 'bg-orange-500/95 backdrop-blur-md border border-white/20'
-                        : 'bg-surface border border-light/20'
+                        ? 'bg-white/10 backdrop-blur-xl border border-white/25 shadow-black/30'
+                        : 'bg-white/5 backdrop-blur-xl border border-white/10'
                     }
                 `}>
                     {/* Filter Row */}
@@ -380,12 +380,10 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
                         <button
                             onClick={handleSearch}
                             className={`
-                                px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
-                                flex items-center justify-center gap-2 min-w-24 // Changed from min-w-[100px]
-                                ${isHero
-                                    ? 'bg-white text-orange-600 hover:bg-gray-100'
-                                    : 'bg-orange-600 text-white hover:bg-orange-700'
-                                }
+                                px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
+                                flex items-center justify-center gap-2 min-w-24
+                                bg-orange-500 text-white hover:bg-orange-600
+                                ${isHero ? 'shadow-lg shadow-orange-500/25' : ''}
                             `}
                         >
                             <Search size={16} />
@@ -393,7 +391,7 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
                             {activeFilterCount > 0 && (
                                 <span className={`
                                     px-1.5 py-0.5 text-xs rounded-full
-                                    ${isHero ? 'bg-orange-100 text-orange-600' : 'bg-white/20 text-white'}
+                                    bg-white/20 text-white
                                 `}>
                                     {activeFilterCount}
                                 </span>

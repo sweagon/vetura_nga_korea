@@ -223,7 +223,7 @@ export default function CarsContentWrapper() {
                 />
 
                 <div className="flex-1 min-w-0 space-y-8 pb-24 lg:pb-0" ref={contentRef}>
-                    <div className="bg-surface-2 border border-light/20 rounded-xl p-4 flex flex-col lg:flex-row gap-4 justify-between items-center">
+                    <div className="flex flex-col lg:flex-row gap-4 justify-between items-center">
                         <div className="w-full lg:w-auto">
                             <CompactSearch variant="header" />
                         </div>

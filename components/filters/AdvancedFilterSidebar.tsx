@@ -636,7 +636,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                 aria-label="Filtrat"
                 className="w-full lg:w-72 shrink-0"
             >
-                <div className="lg:sticky lg:top-24 lg:h-[calc(100vh-96px)] overflow-y-auto bg-surface border-l border-light/20">
+                <div className="lg:sticky lg:top-24 bg-surface border-l border-light/20">
                     {sidebar}
                 </div>
             </aside>
