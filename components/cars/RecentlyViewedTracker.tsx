@@ -16,7 +16,7 @@ export default function RecentlyViewedTracker({ car }: RecentlyViewedTrackerProp
         // Get the first lot for image and price
         const lot = car.lots?.[0];
         const image = lot?.images?.normal?.[0] || lot?.images?.downloaded?.[0] || '';
-        const price = lot?.price_with_margin_and_kosovo || lot?.step5 || lot?.buy_now || 0;
+        const price = lot?.buy_now || 0;
 
         // Create title
         const manufacturerName = car.manufacturer?.name || 'Makina';
@@ -25,7 +25,7 @@ export default function RecentlyViewedTracker({ car }: RecentlyViewedTrackerProp
 
         // Add to recently viewed using the existing function
         addToRecentlyViewed({
-            id: car.vin || car.id.toString(),
+            id: car.id.toString(),
             title: title,
             image: image,
             price: price

@@ -1,18 +1,10 @@
-// lib/ConfigContext.tsx
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { SiteConfig, defaultConfig, validateConfig } from './config';
+import { calculateClientFinalPrice, type PriceDetails } from './pricing';
 
-export interface PriceDetails {
-    basePrice: number;
-    shippingCost: number;
-    shippingToPristina: number;
-    marginAmount: number;
-    marginPercentage: number;
-    finalPrice: number;
-    vehicleTypeUsed: string;
-}
+export type { PriceDetails };
 
 interface ConfigContextType {
     config: SiteConfig;
@@ -40,23 +32,28 @@ const vehicleTypeLabels: Record<string, string> = {
     default: 'Tjetër'
 };
 
-export function ConfigProvider({ children }: { children: React.ReactNode }) {
-    const [config, setConfig] = useState<SiteConfig>(defaultConfig);
-    const [loading, setLoading] = useState(true);
+export function ConfigProvider({
+    children,
+    initialConfig
+}: {
+    children: React.ReactNode;
+    initialConfig?: SiteConfig;
+}) {
+    const [config, setConfig] = useState<SiteConfig>(initialConfig ?? defaultConfig);
+    const [loading, setLoading] = useState(!initialConfig);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        // When the real config is seeded from the server (root layout), there is
+        // nothing to fetch: prices render once with the correct values and never
+        // jump between a default and the DB config.
+        if (initialConfig) return;
+
         const fetchConfig = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('/api/config', {
-                    credentials: 'include'
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch configuration');
-                }
-
+                const response = await fetch('/api/config', { credentials: 'include' });
+                if (!response.ok) throw new Error('Failed to fetch configuration');
                 const data = await response.json();
                 setConfig(data);
                 setError(null);
@@ -69,7 +66,6 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
         };
 
         fetchConfig();
-
         const interval = setInterval(fetchConfig, 5 * 60 * 1000);
         return () => clearInterval(interval);
     }, []);
@@ -77,15 +73,11 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
     const updateConfig = async (newConfig: SiteConfig) => {
         try {
             const { valid, errors } = validateConfig(newConfig);
-            if (!valid) {
-                throw new Error(`Invalid config: ${errors.join(', ')}`);
-            }
+            if (!valid) throw new Error(`Invalid config: ${errors.join(', ')}`);
 
             const response = await fetch('/api/config', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
                 body: JSON.stringify(newConfig),
             });
@@ -97,7 +89,6 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
 
             setConfig(newConfig);
             window.dispatchEvent(new Event('configUpdated'));
-
         } catch (error) {
             console.error('Error updating config:', error);
             throw error;
@@ -105,35 +96,7 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
     };
 
     const calculateFinalPrice = useCallback((basePrice: number, vehicleType?: string): PriceDetails => {
-        const validBasePrice = typeof basePrice === 'number' && !isNaN(basePrice) ? Math.max(0, basePrice) : 0;
-
-        // Get vehicle-specific shipping cost
-        let vehicleShipping = config.shippingCost;
-        let usedType = 'default';
-
-        if (vehicleType && config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes]) {
-            const typeConfig = config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes];
-            if (typeConfig?.enabled && typeConfig.shippingCost) {
-                vehicleShipping = typeConfig.shippingCost;
-                usedType = vehicleType;
-            }
-        }
-
-        // Calculate margin using global settings
-        const calculatedMargin = Math.round(validBasePrice * (config.defaultMarginPercentage / 100));
-        const marginAmount = Math.max(calculatedMargin, config.defaultMinimumMargin);
-
-        const finalPrice = validBasePrice + vehicleShipping + marginAmount + config.shippingToPristina;
-
-        return {
-            basePrice: validBasePrice,
-            shippingCost: vehicleShipping,
-            shippingToPristina: config.shippingToPristina,
-            marginAmount: Math.round(marginAmount),
-            marginPercentage: config.defaultMarginPercentage,
-            finalPrice: Math.round(finalPrice),
-            vehicleTypeUsed: usedType
-        };
+        return calculateClientFinalPrice(basePrice, config, vehicleType);
     }, [config]);
 
     const formatPrice = useCallback((price: number): string => {
@@ -152,14 +115,8 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
 
     return (
         <ConfigContext.Provider value={{
-            config,
-            updateConfig,
-            calculateFinalPrice,
-            formatPrice,
-            validateConfig,
-            getVehicleTypeLabel,
-            loading,
-            error
+            config, updateConfig, calculateFinalPrice, formatPrice,
+            validateConfig, getVehicleTypeLabel, loading, error
         }}>
             {children}
         </ConfigContext.Provider>

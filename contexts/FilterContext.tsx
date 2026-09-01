@@ -1,4 +1,3 @@
-// contexts/FilterContext.tsx
 'use client';
 
 import { createContext, useContext, useState, ReactNode } from 'react';
@@ -23,7 +22,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
 export function useFilter() {
     const context = useContext(FilterContext);
     if (context === undefined) {
-        throw new Error('useFilter must be used within a FilterProvider');
+        return { isFilterOpen: false, setIsFilterOpen: () => {} };
     }
     return context;
 }

@@ -15,6 +15,7 @@ import {
     CheckCircle
 } from 'lucide-react';
 import { useConfig } from '@/lib/ConfigContext';
+import { getProviderProfit } from '@/lib/pricing';
 import Breadcrumb from '../components/Breadcrumb';
 
 // Simple Number Input
@@ -196,7 +197,7 @@ export default function PricingPage() {
                     <button
                         onClick={handleSave}
                         disabled={isSaving}
-                        className="px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition flex items-center gap-2 disabled:opacity-50 font-medium"
+                        className="px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-dark transition flex items-center gap-2 disabled:opacity-50 font-medium"
                     >
                         <Save size={20} />
                         {isSaving ? 'Duke ruajtur...' : 'Ruaj Ndryshimet'}
@@ -205,8 +206,8 @@ export default function PricingPage() {
 
                 {saveStatus.type && (
                     <div className={`mt-4 p-3 rounded-lg flex items-center gap-2 ${saveStatus.type === 'success'
-                        ? 'bg-green-500/10 text-green-500 border border-green-500/20'
-                        : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                        ? 'bg-success-bg text-success-text border border-success-border'
+                        : 'bg-error-bg text-error-text border border-error-border'
                         }`}>
                         {saveStatus.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
                         <span className="text-sm">{saveStatus.message}</span>
@@ -240,6 +241,29 @@ export default function PricingPage() {
                 </p>
             </div>
 
+            {/* KRW -> EUR Conversion */}
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6">
+                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <Percent className="text-orange-500" size={20} />
+                    <span>Konvertimi KRW → EUR</span>
+                </h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <NumberInput
+                        label="Kursi i këmbimit (1 KRW = ? EUR)"
+                        value={localConfig.krwToEurRate}
+                        onChange={(v) => updateGlobal('krwToEurRate', v)}
+                    />
+                    <div className="flex items-end pb-1">
+                        <p className="text-xs text-white/40">
+                            💡 Çmimi bazë i makinës = Çmimi në Kore (KRW) × kjo kursi.
+                            Plotësohet automatikisht nga tregu (BQE) te
+                            Cilësimet → Kurset e Këmbimit → "Përditëso Automatikisht".
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             {/* Transportation Costs */}
             <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6">
                 <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -249,20 +273,20 @@ export default function PricingPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <NumberInput
-                        label="Transporti Korea → Durrës (€)"
+                        label="Transporti Korea - Durrës (€)"
                         value={localConfig.shippingCost}
                         onChange={(v) => updateGlobal('shippingCost', v)}
                         suffix="€"
                     />
                     <NumberInput
-                        label="Transporti Durrës → Skenderaj (€)"
+                        label="Transporti Durrës - Prishtinë (€)"
                         value={localConfig.shippingToPristina}
                         onChange={(v) => updateGlobal('shippingToPristina', v)}
                         suffix="€"
                     />
                 </div>
                 <p className="text-xs text-white/40 mt-2">
-                    🚢 Transporti detar nga Korea në Durrës | 🚛 Transporti tokësor nga Durrësi në Skenderaj
+                    🚢 Transporti detar nga Korea në Durrës | 🚛 Transporti tokësor nga Durrësi në Prishtinë
                 </p>
             </div>
 
@@ -361,29 +385,35 @@ export default function PricingPage() {
                     <div className="bg-white/5 rounded-lg p-4">
                         <h3 className="text-sm font-medium text-white mb-3">Sedan (15,000€)</h3>
                         {(() => {
+                            const base = 15000;
                             const shipping = getVehicleShipping('sedan');
+                            const providerProfit = getProviderProfit(base);
                             const margin = Math.max(
-                                Math.round(15000 * localConfig.defaultMarginPercentage / 100),
+                                Math.round(base * localConfig.defaultMarginPercentage / 100),
                                 localConfig.defaultMinimumMargin
                             );
-                            const total = 15000 + shipping + margin + localConfig.shippingToPristina;
+                            const total = base + shipping + margin + localConfig.shippingToPristina;
 
                             return (
                                 <div className="space-y-2 text-sm">
                                     <div className="flex justify-between">
-                                        <span className="text-white/70">Çmimi bazë:</span>
+                                        <span className="text-white/70">Çmimi bazë (Korea):</span>
                                         <span className="text-white">15,000€</span>
+                                    </div>
+                                    <div className="flex justify-between text-white/40">
+                                        <span>− Marzha e providerit (e zbritur):</span>
+                                        <span>−{providerProfit}€</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-white/70">Transporti:</span>
                                         <span className="text-white">+{shipping}€</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-white/70">Marzha ({localConfig.defaultMarginPercentage}%):</span>
+                                        <span className="text-white/70">Marzha jonë ({localConfig.defaultMarginPercentage}%):</span>
                                         <span className="text-white">+{margin}€</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-white/70">Transporti Skenderaj:</span>
+                                        <span className="text-white/70">Transporti Prishtinë:</span>
                                         <span className="text-white">+{localConfig.shippingToPristina}€</span>
                                     </div>
                                     <div className="flex justify-between font-bold pt-2 border-t border-white/10">
@@ -399,29 +429,35 @@ export default function PricingPage() {
                     <div className="bg-white/5 rounded-lg p-4">
                         <h3 className="text-sm font-medium text-white mb-3">SUV (25,000€)</h3>
                         {(() => {
+                            const base = 25000;
                             const shipping = getVehicleShipping('suv');
+                            const providerProfit = getProviderProfit(base);
                             const margin = Math.max(
-                                Math.round(25000 * localConfig.defaultMarginPercentage / 100),
+                                Math.round(base * localConfig.defaultMarginPercentage / 100),
                                 localConfig.defaultMinimumMargin
                             );
-                            const total = 25000 + shipping + margin + localConfig.shippingToPristina;
+                            const total = base + shipping + margin + localConfig.shippingToPristina;
 
                             return (
                                 <div className="space-y-2 text-sm">
                                     <div className="flex justify-between">
-                                        <span className="text-white/70">Çmimi bazë:</span>
+                                        <span className="text-white/70">Çmimi bazë (Korea):</span>
                                         <span className="text-white">25,000€</span>
+                                    </div>
+                                    <div className="flex justify-between text-white/40">
+                                        <span>− Marzha e providerit (e zbritur):</span>
+                                        <span>−{providerProfit}€</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-white/70">Transporti:</span>
                                         <span className="text-white">+{shipping}€</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-white/70">Marzha ({localConfig.defaultMarginPercentage}%):</span>
+                                        <span className="text-white/70">Marzha jonë ({localConfig.defaultMarginPercentage}%):</span>
                                         <span className="text-white">+{margin}€</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-white/70">Transporti Skenderaj:</span>
+                                        <span className="text-white/70">Transporti Prishtinë:</span>
                                         <span className="text-white">+{localConfig.shippingToPristina}€</span>
                                     </div>
                                     <div className="flex justify-between font-bold pt-2 border-t border-white/10">
@@ -436,7 +472,7 @@ export default function PricingPage() {
 
                 <div className="mt-4 p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg">
                     <p className="text-xs text-orange-500">
-                        📊 Formula: Çmimi bazë + Transporti + Marzha Globale + Transporti Skenderaj
+                        📊 Formula: Çmimi bazë (KRW → EUR) + Transporti + Marzha jonë + Transporti Prishtinë. Marzha e providerit zbritet nga faturimi i ekspozuar.
                     </p>
                 </div>
             </div>

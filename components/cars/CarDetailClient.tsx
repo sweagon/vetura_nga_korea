@@ -1,72 +1,32 @@
-// components/cars/CarDetailClient.tsx - UPDATED with real auction pricing
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useConfig } from '@/lib/ConfigContext';
-import {
-    type Car,
-    formatMileage,
-    getRealAuctionPriceFromApi
-} from '@/lib/api';
+import { type Car, formatMileage, getVehicleTypeFromBodyName, getLotLocationName } from '@/lib/api';
+import { calculateFinalPriceWithConfig, type PriceDetails } from '@/lib/pricing';
 import { translateFuel, translateTransmission, translateColor } from '@/lib/translations';
 import {
-    Calendar,
-    Gauge,
-    Fuel,
-    Settings,
-    MapPin,
-    Phone,
-    Mail,
-    Building2,
-    Database,
-    Hash,
-    Tag,
-    AlertCircle,
-    ArrowLeft,
-    Car as CarIcon,
-    Eye,
-    EyeOff
+    Calendar, Gauge, Fuel, Settings, MapPin, Phone, Mail,
+    Building2, Database, Hash, Tag, ArrowLeft, Car as CarIcon,
+    Eye, EyeOff
 } from 'lucide-react';
 import Link from 'next/link';
 import RecentlyViewedTracker from '@/components/cars/RecentlyViewedTracker';
 import ImageGallery from './ImageGallery';
 import CarDetailTabs from './CarDetailTabs';
+import PriceBreakdown from './PriceBreakdown';
+import DownloadPdfButton, { type PdfCarData } from './DownloadPdfButton';
 import { VehicleTypeConfig } from '@/lib/config';
-import { getOriginalKoreanPriceFromApi } from '@/lib/api';
 
 interface CarDetailClientProps {
     car: Car;
+    photosLoading?: boolean;
 }
 
-// Helper function to map body types
-const getVehicleTypeId = (bodyTypeName: string, modelName: string): string => {
-    const normalized = bodyTypeName?.toLowerCase().trim() || '';
-    const model = modelName?.toLowerCase().trim() || '';
-
-    if (normalized.includes('suv')) return 'suv';
-    if (normalized.includes('sedan')) return 'sedan';
-    if (normalized.includes('hatchback') || normalized.includes('hatch') || normalized.includes('gti')) return 'hatchback';
-    if (normalized.includes('wagon') || normalized.includes('estate')) return 'wagon';
-    if (normalized.includes('coupe')) return 'coupe';
-    if (normalized.includes('van')) return 'van';
-    if (normalized.includes('pickup')) return 'pickup';
-
-    if (model.includes('golf') || model.includes('focus') || model.includes('a3') || model.includes('1 series')) {
-        return 'hatchback';
-    }
-
-    return 'default';
-};
-
-export function CarDetailClient({ car }: CarDetailClientProps) {
+export function CarDetailClient({ car, photosLoading }: CarDetailClientProps) {
     const { config, formatPrice } = useConfig();
     const [mounted, setMounted] = useState(false);
-    const [imageLoadError, setImageLoadError] = useState(false);
-    const [realPrice, setRealPrice] = useState(0);
-    const [loadingPrice, setLoadingPrice] = useState(true);
-    const [shippingCost, setShippingCost] = useState(0);
-    const [marginAmount, setMarginAmount] = useState(0);
-    const [marginPercentage, setMarginPercentage] = useState(0);
+    const [priceDetails, setPriceDetails] = useState<PriceDetails | null>(null);
     const [showTransportSeparately, setShowTransportSeparately] = useState(false);
 
     useEffect(() => {
@@ -78,66 +38,23 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
     }, []);
 
     const lot = car.lots?.[0];
-
-    // Vehicle type detection
     const rawBodyType = car.body_type?.name || '';
-    const modelName = car.model?.name || '';
-    const vehicleType = getVehicleTypeId(rawBodyType, modelName);
+    const vehicleType = getVehicleTypeFromBodyName(rawBodyType);
 
-    // Check if vehicle type is enabled for custom shipping
     const hasTypeConfig = vehicleType !== 'default' &&
         config.vehicleTypes &&
         Object.prototype.hasOwnProperty.call(config.vehicleTypes, vehicleType) &&
         (config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes] as VehicleTypeConfig | undefined)?.enabled === true;
 
-    // Get shipping cost
-    const getShippingCost = () => {
-        if (hasTypeConfig && config.vehicleTypes) {
-            const typeConfig = config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes] as VehicleTypeConfig | undefined;
-            if (typeConfig?.enabled && typeConfig.shippingCost) {
-                return typeConfig.shippingCost;
-            }
-        }
-        return config.shippingCost;
-    };
+    const isPriceLoading = !priceDetails && mounted && !!lot;
 
-    // Calculate prices using REAL auction price
     useEffect(() => {
         if (lot && config) {
-            setLoadingPrice(true);
-            try {
-                // Get original Korean price directly (no discount)
-                const originalPrice = getOriginalKoreanPriceFromApi(lot);
-                setRealPrice(originalPrice);
-
-                if (originalPrice > 0) {
-                    const shipping = getShippingCost();
-                    const marginPercent = config.defaultMarginPercentage;
-                    const minMargin = config.defaultMinimumMargin;
-
-                    const calculatedMargin = Math.round(originalPrice * (marginPercent / 100));
-                    const finalMarginAmount = Math.max(calculatedMargin, minMargin);
-
-                    setShippingCost(shipping);
-                    setMarginAmount(finalMarginAmount);
-                    setMarginPercentage(marginPercent);
-
-                    console.log('💰 Price Calculation (original Korean):', {
-                        originalPrice,
-                        shippingCost: shipping,
-                        marginPercentage: marginPercent,
-                        marginAmount: finalMarginAmount,
-                        pristina: config.shippingToPristina,
-                        finalPrice: originalPrice + shipping + finalMarginAmount + config.shippingToPristina
-                    });
-                }
-            } catch (error) {
-                console.error('Error calculating price:', error);
-            } finally {
-                setLoadingPrice(false);
-            }
+            const det = calculateFinalPriceWithConfig(lot, config, vehicleType);
+            setPriceDetails(det);
         }
-    }, [lot, config, vehicleType, hasTypeConfig]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [lot?.lot, config, vehicleType, hasTypeConfig]);
 
     const toggleTransportDisplay = () => {
         const newValue = !showTransportSeparately;
@@ -148,25 +65,67 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
     const mileage = lot?.odometer?.km || 0;
     const images = lot?.images?.big || lot?.images?.normal || [];
     const validImages = images.filter(img => img && typeof img === 'string');
-    const location = lot?.location?.city?.name || 'Korea';
+    const location = getLotLocationName(lot);
     const lotNumber = lot?.lot || null;
     const manufacturerName = car.manufacturer?.name || 'Makina';
+    const modelName = car.model?.name || '';
     const carTitle = car.title || `${manufacturerName} ${modelName}`.trim() || 'Makina pa emër';
 
-    // Calculate final price
+    // Provider-rich data surfaced on the page
+    const listing = car.listing;
+    const plate = listing?.plate || car.encar_details?.full?.plate || null;
+    const region = car.encar_details?.full?.region || car.encar_details?.full?.dealer_region || null;
+
+    const realPrice = priceDetails?.basePrice ?? 0;
+    const shippingCost = priceDetails?.shippingCost ?? 0;
+    const marginAmount = priceDetails?.marginAmount ?? 0;
+    const marginPercentage = priceDetails?.marginPercentage ?? 0;
+    const finalPrice = priceDetails?.finalPrice ?? 0;
     const priceWithDurresShipping = realPrice + shippingCost;
-    const finalPrice = priceWithDurresShipping + marginAmount + config.shippingToPristina;
 
     const displayBodyType = rawBodyType
         ? rawBodyType.charAt(0).toUpperCase() + rawBodyType.slice(1).toLowerCase()
         : null;
 
-    const shouldShowMargin = marginAmount > 0;
+    // PDF-friendly snapshot of everything we surface about the car.
+    const pdfData: PdfCarData = {
+        carId: String(car.id),
+        siteName: config.siteName,
+        contactPhone: config.contactPhone,
+        contactEmail: config.contactEmail,
+        carTitle,
+        year: car.year || null,
+        mileageKm: mileage,
+        location: location || '',
+        vin: car.vin || null,
+        lot: lotNumber || null,
+        description: (lot as any)?.details?.description_en || (lot as any)?.details?.description_ko || undefined,
+        specs: [
+            { label: 'Viti', value: car.year ? String(car.year) : 'N/A' },
+            { label: 'Kilometrazha', value: formatMileage(mileage) },
+            ...(car.fuel?.name ? [{ label: 'Karburanti', value: translateFuel(car.fuel.name) }] : []),
+            ...(car.transmission?.name ? [{ label: 'Transmisioni', value: translateTransmission(car.transmission.name) }] : []),
+            ...(car.engine?.name ? [{ label: 'Motori', value: car.engine.name }] : []),
+            ...(car.color?.name ? [{ label: 'Ngjyra', value: translateColor(car.color.name) }] : []),
+            ...(displayBodyType ? [{ label: 'Karroceria', value: displayBodyType }] : []),
+        ],
+        priceRows: priceDetails
+            ? [
+                  { label: 'Çmimi bazë (Korea):', value: formatPrice(priceDetails.basePrice) },
+                  { label: 'Transporti detar (Korea - Durrës):', value: formatPrice(priceDetails.shippingCost) },
+                  ...(priceDetails.marginAmount > 0
+                      ? [{ label: `Marzha jonë (${priceDetails.marginPercentage}%):`, value: formatPrice(priceDetails.marginAmount) }]
+                      : []),
+                  { label: 'Transporti tokësor (Durrës - Prishtinë):', value: formatPrice(priceDetails.shippingToPristina) },
+                  { label: 'Totali:', value: formatPrice(priceDetails.finalPrice), bold: true, accent: true },
+              ]
+            : [],
+        images: validImages,
+    };
 
-    // Loading state
-    if (!mounted || loadingPrice) {
+    if (!mounted || isPriceLoading) {
         return (
-            <main className="min-h-screen bg-primary">
+            <main className="min-h-screen bg-bg-primary">
                 <div className="container-swiss py-8 lg:py-12">
                     <div className="animate-pulse">
                         <div className="h-8 bg-surface-2 rounded w-3/4 mb-4"></div>
@@ -174,15 +133,9 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                         <div className="grid lg:grid-cols-3 gap-8">
                             <div className="lg:col-span-2">
                                 <div className="h-96 bg-surface-2 rounded-xl mb-8"></div>
-                                <div className="grid grid-cols-4 gap-4">
-                                    {[...Array(4)].map((_, i) => (
-                                        <div key={i} className="h-24 bg-surface-2 rounded-xl"></div>
-                                    ))}
-                                </div>
                             </div>
                             <div className="space-y-4">
                                 <div className="h-64 bg-surface-2 rounded-xl"></div>
-                                <div className="h-48 bg-surface-2 rounded-xl"></div>
                             </div>
                         </div>
                     </div>
@@ -193,11 +146,11 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
 
     if (!car || !car.manufacturer) {
         return (
-            <div className="min-h-screen bg-primary flex items-center justify-center">
+            <div className="min-h-screen bg-bg-primary flex items-center justify-center">
                 <div className="text-center">
                     <CarIcon className="w-16 h-16 text-orange-500 mx-auto mb-4" />
-                    <h2 className="text-2xl font-bold text-primary mb-2">Makina nuk u gjet</h2>
-                    <p className="text-secondary mb-6">Nuk mund të ngarkohen detajet e makinës.</p>
+                    <h2 className="text-2xl font-bold text-text-primary mb-2">Makina nuk u gjet</h2>
+                    <p className="text-text-secondary mb-6">Nuk mund të ngarkohen detajet e makinës.</p>
                     <Link href="/cars" className="btn-primary">Kthehu te Makinat</Link>
                 </div>
             </div>
@@ -207,9 +160,8 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
     return (
         <>
             <RecentlyViewedTracker car={car} />
-            <main className="min-h-screen bg-primary">
-                {/* Breadcrumb */}
-                <div className="border-b border-light bg-surface/80 sticky top-4 z-sticky backdrop-blur-sm z-10">
+            <main className="min-h-screen bg-bg-primary">
+                <div className="border-b border-border-light bg-surface/80 sticky top-4 backdrop-blur-sm z-10">
                     <div className="container-swiss py-3">
                         <nav className="flex items-center gap-2 text-sm flex-wrap">
                             <Link href="/" className="text-muted hover:text-orange-500 transition">
@@ -238,7 +190,6 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                 </div>
 
                 <div className="container-swiss py-8 lg:py-12">
-                    {/* Title Section */}
                     <div className="mb-8">
                         <h1 className="text-3xl lg:text-4xl font-bold mb-2">{carTitle}</h1>
                         <div className="flex items-center gap-4 text-sm text-muted flex-wrap">
@@ -246,6 +197,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                 <MapPin size={16} />
                                 {location}
                             </span>
+                            {region && <span className="text-xs text-muted">({region})</span>}
                             <span className="w-1 h-1 rounded-full bg-muted" />
                             <span className="badge badge-success">Në dispozicion</span>
                             {lotNumber && (
@@ -254,6 +206,14 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                     <span className="flex items-center gap-1">
                                         <Hash size={14} />
                                         Lot: {lotNumber}
+                                    </span>
+                                </>
+                            )}
+                            {plate && (
+                                <>
+                                    <span className="w-1 h-1 rounded-full bg-muted" />
+                                    <span className="flex items-center gap-1 font-mono text-xs">
+                                        Targa: {plate}
                                     </span>
                                 </>
                             )}
@@ -266,12 +226,14 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                 </>
                             )}
                         </div>
+
+                        {/* Condition summary badges */}
                     </div>
 
                     <div className="grid lg:grid-cols-3 gap-8">
                         <div className="lg:col-span-2 space-y-8">
                             <div className="card overflow-hidden">
-                                <ImageGallery images={images} carName={carTitle} />
+                                <ImageGallery images={images} carName={carTitle} carId={String(car.id)} loading={photosLoading} />
                             </div>
 
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -282,19 +244,19 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                     <div className="text-xs text-muted">Çmimi me transport deri në Durrës</div>
                                 </div>
                                 <div className="card p-4 text-center">
-                                    <div className="text-2xl font-semibold text-primary mb-1">
+                                    <div className="text-2xl font-semibold text-text-primary mb-1">
                                         {car.year || 'N/A'}
                                     </div>
                                     <div className="text-xs text-muted">Viti</div>
                                 </div>
                                 <div className="card p-4 text-center">
-                                    <div className="text-2xl font-semibold text-primary mb-1">
+                                    <div className="text-2xl font-semibold text-text-primary mb-1">
                                         {formatMileage(mileage)}
                                     </div>
                                     <div className="text-xs text-muted">Kilometrazha</div>
                                 </div>
                                 <div className="card p-4 text-center">
-                                    <div className="text-2xl font-semibold text-primary mb-1">
+                                    <div className="text-2xl font-semibold text-text-primary mb-1">
                                         {car.fuel?.name ? translateFuel(car.fuel.name) : 'N/A'}
                                     </div>
                                     <div className="text-xs text-muted">Karburanti</div>
@@ -309,7 +271,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                             <Calendar size={20} className="text-orange-500" />
                                             <div>
                                                 <p className="text-xs text-muted">Viti</p>
-                                                <p className="font-medium text-primary">{car.year}</p>
+                                                <p className="font-medium text-text-primary">{car.year}</p>
                                             </div>
                                         </div>
                                     )}
@@ -317,7 +279,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                         <Gauge size={20} className="text-orange-500" />
                                         <div>
                                             <p className="text-xs text-muted">Kilometrazha</p>
-                                            <p className="font-medium text-primary">{formatMileage(mileage)}</p>
+                                            <p className="font-medium text-text-primary">{formatMileage(mileage)}</p>
                                         </div>
                                     </div>
                                     {car.fuel?.name && (
@@ -325,7 +287,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                             <Fuel size={20} className="text-orange-500" />
                                             <div>
                                                 <p className="text-xs text-muted">Karburanti</p>
-                                                <p className="font-medium text-primary">{translateFuel(car.fuel.name)}</p>
+                                                <p className="font-medium text-text-primary">{translateFuel(car.fuel.name)}</p>
                                             </div>
                                         </div>
                                     )}
@@ -334,7 +296,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                             <Settings size={20} className="text-orange-500" />
                                             <div>
                                                 <p className="text-xs text-muted">Transmisioni</p>
-                                                <p className="font-medium text-primary">{translateTransmission(car.transmission.name)}</p>
+                                                <p className="font-medium text-text-primary">{translateTransmission(car.transmission.name)}</p>
                                             </div>
                                         </div>
                                     )}
@@ -343,7 +305,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                             <Database size={20} className="text-orange-500" />
                                             <div>
                                                 <p className="text-xs text-muted">Motori</p>
-                                                <p className="font-medium text-primary">{car.engine.name}</p>
+                                                <p className="font-medium text-text-primary">{car.engine.name}</p>
                                             </div>
                                         </div>
                                     )}
@@ -352,7 +314,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                             <Tag size={20} className="text-orange-500" />
                                             <div>
                                                 <p className="text-xs text-muted">Ngjyra</p>
-                                                <p className="font-medium text-primary">{translateColor(car.color.name)}</p>
+                                                <p className="font-medium text-text-primary">{translateColor(car.color.name)}</p>
                                             </div>
                                         </div>
                                     )}
@@ -371,7 +333,7 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                     </div>
 
                                     {displayBodyType && hasTypeConfig && (
-                                        <div className="mb-3 inline-flex items-center gap-1 px-2 py-1 bg-orange-5 text-orange-500 rounded-lg text-xs">
+                                        <div className="mb-3 inline-flex items-center gap-1 px-2 py-1 bg-orange-50 text-orange-500 rounded-lg text-xs">
                                             <CarIcon size={12} />
                                             <span>Transporti i personalizuar për {displayBodyType}</span>
                                         </div>
@@ -388,12 +350,12 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                                 Shitësi
                                             </h3>
                                             <div className="space-y-2 text-sm">
-                                                <p className="text-secondary">veturakoreakosove</p>
-                                                <p className="flex items-center gap-2 text-secondary hover:text-orange-500 transition-colors">
+                                                <p className="text-text-secondary">veturakoreakosove</p>
+                                                <p className="flex items-center gap-2 text-text-secondary hover:text-orange-500 transition-colors">
                                                     <Phone size={14} className="text-orange-500" />
                                                     <a href={`tel:${config.contactPhone}`}>{config.contactPhone}</a>
                                                 </p>
-                                                <p className="flex items-center gap-2 text-secondary hover:text-orange-500 transition-colors">
+                                                <p className="flex items-center gap-2 text-text-secondary hover:text-orange-500 transition-colors">
                                                     <Mail size={14} className="text-orange-500" />
                                                     <a href={`mailto:${config.contactEmail}`}>{config.contactEmail}</a>
                                                 </p>
@@ -413,36 +375,13 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                         {showTransportSeparately && (
                                             <div className="p-4 bg-white/5 rounded-lg space-y-2 text-sm">
                                                 <h4 className="font-medium text-white mb-2">Detajet e çmimit:</h4>
-                                                <div className="flex justify-between">
-                                                    <span className="text-white/60">Çmimi bazë (Korea):</span>
-                                                    <span className="text-white">{formatPrice(realPrice)}</span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span className="text-white/60">Transporti detar (Korea → Durrës):</span>
-                                                    <span className="text-white">{formatPrice(shippingCost)}</span>
-                                                </div>
-                                                {shouldShowMargin && (
-                                                    <div className="flex justify-between">
-                                                        <span className="text-white/60">Marzha jonë ({marginPercentage}%):</span>
-                                                        <span className="text-white">{formatPrice(marginAmount)}</span>
-                                                    </div>
-                                                )}
-                                                <div className="flex justify-between">
-                                                    <span className="text-white/60">Transporti tokësor (Durrës → Skenderaj):</span>
-                                                    <span className="text-white">{formatPrice(config.shippingToPristina)}</span>
-                                                </div>
-                                                <div className="border-t border-white/10 my-2 pt-2">
-                                                    <div className="flex justify-between font-bold">
-                                                        <span>Totali:</span>
-                                                        <span className="text-orange-500">{formatPrice(finalPrice)}</span>
-                                                    </div>
-                                                </div>
+                                                <PriceBreakdown priceDetails={priceDetails} formatPrice={formatPrice} variant="details" />
                                             </div>
                                         )}
 
                                         <a
                                             href={`https://wa.me/${config.contactPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
-                                                `Përshëndetje, jam i interesuar për makinën:\n\n${carTitle}\n💰 Çmimi: ${formatPrice(finalPrice)}\n🔗 Linku: ${window.location.href}`
+                                                `Përshëndetje, jam i interesuar për makinën:\n\n${carTitle}\n💰 Çmimi: ${formatPrice(finalPrice)}\n🔗 Linku: ${typeof window !== 'undefined' ? window.location.href : ''}`
                                             )}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
@@ -451,44 +390,27 @@ export function CarDetailClient({ car }: CarDetailClientProps) {
                                             WhatsApp
                                         </a>
                                         <a
-                                            href={`mailto:${config.contactEmail}?subject=Interest in ${car.vin} - ${carTitle}`}
+                                            href={`mailto:${config.contactEmail}?subject=Interest in ${car.vin || car.id} - ${carTitle}`}
                                             className="btn-primary w-full"
                                         >
                                             Email
                                         </a>
+                                        <DownloadPdfButton
+                                            data={pdfData}
+                                            className="btn-primary bg-blue-600 hover:bg-blue-500 w-full flex items-center justify-center gap-2"
+                                        />
                                     </div>
                                 </div>
 
                                 <div className="card p-6">
                                     <h3 className="font-semibold mb-3">Shpenzime të përafërta</h3>
-                                    <div className="space-y-2 text-sm">
-                                        <div className="flex justify-between">
-                                            <span className="text-muted">Makina (përfshirë transportin detar):</span>
-                                            <span className="font-medium text-primary">{formatPrice(priceWithDurresShipping)}</span>
-                                        </div>
-                                        {shouldShowMargin && (
-                                            <div className="flex justify-between">
-                                                <span className="text-muted">Marzha jonë ({marginPercentage}%):</span>
-                                                <span className="font-medium text-primary">{formatPrice(marginAmount)}</span>
-                                            </div>
-                                        )}
-                                        <div className="flex justify-between">
-                                            <span className="text-muted">Transporti Skenderaj:</span>
-                                            <span className="font-medium text-primary">{formatPrice(config.shippingToPristina)}</span>
-                                        </div>
-                                        <div className="border-t border-light my-2 pt-2">
-                                            <div className="flex justify-between font-semibold">
-                                                <span>Totali:</span>
-                                                <span className="text-orange-500">{formatPrice(finalPrice)}</span>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <PriceBreakdown priceDetails={priceDetails} formatPrice={formatPrice} variant="expenses" />
                                 </div>
 
                                 <div className="card p-4 bg-surface-2/50">
                                     <div className="flex items-center gap-2 text-xs text-muted">
                                         <CarIcon size={14} />
-                                        <span className="truncate">VIN: {car.vin}</span>
+                                        <span className="truncate">VIN: {car.vin || 'N/A'}</span>
                                     </div>
                                 </div>
                             </div>

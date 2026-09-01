@@ -1,55 +1,263 @@
 import { SiteConfig } from './config';
-import { STATIC_MANUFACTURERS } from './staticManufacturers';
+import { STATIC_MANUFACTURERS, KOSOVO_MANUFACTURER_ORDER } from './staticManufacturers';
 
 export interface Car {
-  id: number;
+  id: string;
   year: number;
   title: string;
-  vin: string;
+  vin: string | null;
+  reference?: string;
+  reference_type?: string;
+  source_id?: string;
   manufacturer: {
-    id: number;
+    id: string;
     name: string;
   };
   model: {
-    id: number;
+    id: string;
     name: string;
-    manufacturer_id: number;
+    manufacturer_id?: string;
   };
   generation?: {
-    id: number;
+    id: string;
     name: string;
   };
   body_type?: {
     name: string;
-    id: number;
+    id: string | null;
   };
   color: {
     name: string;
-    id: number;
+    id: string | null;
   };
   engine?: {
-    id: number;
+    id: string | null;
     name: string;
   };
   transmission: {
     name: string;
-    id: number;
+    id: string | null;
   };
   drive_wheel?: {
     name: string;
-    id: number;
+    id: string | null;
   };
   vehicle_type: {
     name: string;
-    id: number;
+    id: string | number | null;
   };
   fuel: {
     name: string;
-    id: number;
+    id: string | null;
   };
   cylinders: number | null;
   lots: Lot[];
   hp?: number;
+  price?: number;
+  prices?: Record<string, number>;
+  market?: MarketData;
+  condition?: ConditionData;
+  listing?: ListingData;
+  encar_details?: EncarDetails;
+}
+
+export interface MarketData {
+  vsComparablePct: number | null;
+  comparableMedian: number | null;
+  comparableCount: number | null;
+  priceWas: number | null;
+  priceChangePct: number | null;
+  priceChangedDaysAgo: number | null;
+  daysListed: number | null;
+}
+
+export interface ConditionData {
+  accident: boolean;
+  simpleRepair: boolean;
+  seriousHistory: boolean;
+  writeOff: boolean;
+  encumbered: boolean;
+  commercialUse: boolean;
+  owners: number | null;
+  insuranceClaims: number | null;
+  payoutKrw: number | null;
+  hasRecord: boolean;
+  hasInspection: boolean;
+  tier: string | null;
+}
+
+export interface ListingData {
+  status: string;
+  listedOn: string | null;
+  url: string | null;
+  vin: string | null;
+  plate: string | null;
+  alsoListedAs: string[];
+  listingCount: number | null;
+}
+
+export interface InsuranceClaim {
+  date: string;
+  kind: string;
+  label: string;
+  total_won?: number;
+  parts_won?: number;
+  labour_won?: number;
+  paint_won?: number;
+  total_eur?: number;
+}
+
+export interface InsuranceReport {
+  available: boolean;
+  claims: InsuranceClaim[];
+  counts?: { mine: number; other: number; total: number };
+  own_damage?: { won: number };
+  other_party_damage?: { won: number };
+  total_loss?: boolean;
+  flood?: boolean;
+  stolen?: boolean;
+  uninsured_gaps?: string[];
+}
+
+export interface EquipmentGroup {
+  code: string;
+  name: string;
+}
+
+export interface EquipmentData {
+  groups: {
+    standard: EquipmentGroup[];
+    etc: EquipmentGroup[];
+    choice: EquipmentGroup[];
+    tuning: EquipmentGroup[];
+  };
+  named: number;
+  total: number;
+}
+
+export interface InspectionReportData {
+  available: boolean;
+  certificate_no: string | null;
+  vin: string | null;
+  valid_from: string | null;
+  valid_to: string | null;
+  filed_on: string | null;
+  accident: boolean;
+  simple_repair: boolean;
+  panels: unknown[];
+  panels_structural: number;
+  mechanical: unknown[];
+  mechanical_checked: number;
+  mechanical_flagged: unknown[];
+  mechanical_all_clear: boolean;
+  photos: string[];
+}
+
+export interface AccidentHistoryData {
+  vehicle?: Record<string, unknown>;
+  condition?: { mileage: number | null; inspectionMileage: number | null; tuning: string | null };
+  accident?: {
+    hasAccident: boolean;
+    status: string;
+    hasSimpleRepair: boolean;
+    seriousHistory: boolean;
+  };
+  repairHistory?: {
+    simpleRepairs: unknown[];
+    structuralRepairs: unknown[];
+    panels: unknown[];
+  };
+  insuranceHistory?: {
+    totalDamageAmount: string;
+    totalIncidents: number;
+    ownDamageKrw: number;
+    otherPartyKrw: number;
+    ownIncidents: number;
+    otherIncidents: number;
+    claims: Array<{
+      date: string;
+      kind: string;
+      label: string;
+      total_krw: number;
+      parts_krw: number;
+      labour_krw: number;
+      paint_krw: number;
+      total_eur: number;
+    }>;
+    ownerChanges: string[];
+    uninsuredGaps: string[];
+    totalLoss: boolean;
+  };
+  flags?: {
+    writeOff: boolean;
+    flood: boolean;
+    stolen: boolean;
+    encumbered: boolean;
+    commercialUse: boolean;
+  };
+}
+
+export interface EncarFullDetails {
+  id: string;
+  brand: string;
+  model: string;
+  trim: string;
+  variant: string;
+  year: number;
+  mileage: number;
+  price: string;
+  fuel: string;
+  transmission: string;
+  color: string;
+  body: string;
+  seats: number;
+  displacement: number | null;
+  drivetrain: string;
+  region: string;
+  dealer_region: string;
+  plate: string;
+  listed_on: string;
+  views: number;
+  owners: number;
+  first_registered: string;
+  inspection_mileage: number | null;
+  inspection_date: string | null;
+  warranty: boolean;
+  extended_warranty: boolean;
+  recall_open: boolean;
+  tuned: boolean;
+  uninsured_gap: string | null;
+  status: string;
+  url: string;
+  photos: string[];
+  image: string;
+  title: string;
+  brand_logo: string;
+  currency: string;
+  vin: string | null;
+  requested_id: string;
+  listing_id: string;
+  german?: {
+    german_eur: number;
+    landed_eur: number;
+    gap_eur: number;
+    gap_pct: number;
+    basis: string;
+    ad_eur: number;
+    url: string | null;
+  };
+  inspection_report?: InspectionReportData;
+  insurance_report?: InsuranceReport;
+  equipment?: EquipmentData;
+  condition?: ConditionData;
+  listing?: ListingData;
+}
+
+export interface EncarDetails {
+  full?: EncarFullDetails;
+  accident_history?: AccidentHistoryData;
+  factory_options?: unknown[];
+  quote?: unknown[];
 }
 
 export interface Accident {
@@ -168,11 +376,11 @@ export interface Lot {
     downloaded?: string[];
   };
   location: {
-    country: {
+    country?: {
       iso: string;
       name: string;
     };
-    city?: {
+    city?: string | {
       id: number;
       name: string;
     };
@@ -186,101 +394,8 @@ export interface Lot {
   airbags?: boolean | null;
   price_with_margin_and_kosovo?: number;
   price_with_margin_no_discount?: number;
+  profit_amount_eur?: number;
   step5?: number;
-}
-
-export function getBestPrice(lot: Lot | undefined): { price: number; source: string } {
-  if (!lot) return { price: 0, source: 'none' };
-
-  if (lot.price_with_margin_and_kosovo) {
-    return { price: lot.price_with_margin_and_kosovo, source: 'api_euro' };
-  }
-  if (lot.step5) {
-    return { price: lot.step5, source: 'step5' };
-  }
-  if (lot.buy_now) {
-    return { price: lot.buy_now, source: 'buy_now_usd' };
-  }
-  return { price: 0, source: 'none' };
-}
-
-// ============ RAW KOREAN PRICING (NO MARGINS) ============
-
-const KRW_TO_EUR = 0.000645; // Exchange rate: 1 KRW = 0.000628 EUR
-const USD_TO_EUR = 0.93; // Approximate USD to EUR
-const COMPETITOR_SHIPPING = 3500; // Their estimated shipping cost to Durrës
-
-/**
- * Get the raw Korean price without any margins
- * This uses the original_price from the API (in KRW) and converts to EUR
- */
-export function getRawKoreanPrice(lot: Lot | undefined): number {
-  if (!lot) return 0;
-
-  // Priority 1: Use original_price in KRW as base (no margins)
-  if (lot.details?.original_price) {
-    const priceInEur = Math.round(lot.details.original_price * KRW_TO_EUR);
-    return priceInEur;
-  }
-
-  // Priority 2: Fallback to buy_now in USD if original_price not available
-  if (lot.buy_now) {
-    const priceInEur = Math.round(lot.buy_now * USD_TO_EUR);
-    return priceInEur;
-  }
-
-  return 0;
-}
-
-/**
- * Get the old site's price (includes their margins)
- */
-export function getOldSitePrice(lot: Lot | undefined): number {
-  if (!lot) return 0;
-  return lot.price_with_margin_and_kosovo || lot.step5 || 0;
-}
-
-/**
- * Calculate their actual margin (after subtracting estimated shipping)
- */
-export function calculateTheirMargin(lot: Lot | undefined): number {
-  if (!lot) return 0;
-
-  const rawPrice = getRawKoreanPrice(lot);
-  const theirPrice = getOldSitePrice(lot);
-
-  if (rawPrice > 0 && theirPrice > 0) {
-    // Their margin = their price - raw price - their shipping
-    return theirPrice - rawPrice - COMPETITOR_SHIPPING;
-  }
-
-  return 0;
-}
-
-/**
- * Get their margin percentage
- */
-export function getTheirMarginPercentage(lot: Lot | undefined): number {
-  if (!lot) return 0;
-
-  const rawPrice = getRawKoreanPrice(lot);
-  const theirMargin = calculateTheirMargin(lot);
-
-  if (rawPrice > 0) {
-    return Math.round((theirMargin / rawPrice) * 100 * 10) / 10; // Round to 1 decimal
-  }
-
-  return 0;
-}
-
-/**
- * Calculate what they paid for the car (raw price + their shipping)
- */
-export function getTheirCostPrice(lot: Lot | undefined): number {
-  if (!lot) return 0;
-
-  const rawPrice = getRawKoreanPrice(lot);
-  return rawPrice + COMPETITOR_SHIPPING;
 }
 
 export interface FetchCarsResponse {
@@ -302,7 +417,7 @@ export interface FetchCarsResponse {
 }
 
 export interface Manufacturer {
-  id: number;
+  id: string;
   name: string;
   cars_qty?: number;
   image?: string;
@@ -312,18 +427,18 @@ export interface Manufacturer {
 }
 
 export interface Model {
-  id: number;
+  id: string;
   name: string;
-  manufacturer_id: number;
+  manufacturer_id: string;
   cars_qty?: number;
   generations_qty?: number;
 }
 
 export interface Generation {
-  id: number;
+  id: string;
   name: string;
-  model_id: number;
-  manufacturer_id: number;
+  model_id: string;
+  manufacturer_id: string;
   cars_qty?: number;
 }
 
@@ -331,167 +446,59 @@ export interface FilterData {
   manufacturers: Manufacturer[];
   models: Model[];
   generations: Generation[];
-  fuelTypes: Array<{ id: number; name: string }>;
-  transmissions: Array<{ id: number; name: string }>;
+  fuelTypes: Array<{ id: string; name: string }>;
+  transmissions: Array<{ id: string; name: string }>;
   years: number[];
-  bodyTypes: Array<{ id: number; name: string }>;
-  colors: Array<{ id: number; name: string }>;
-  fuelStats?: Array<{ id: number; name: string; count: number }>;
-  transmissionStats?: Array<{ id: number; name: string; count: number }>;
+  bodyTypes: Array<{ id: string; name: string }>;
+  colors: Array<{ id: string; name: string }>;
 }
 
-// Kosovo market priority order for manufacturers
-const KOSOVO_MANUFACTURER_ORDER = [
-  'Volkswagen',
-  'Mercedes-Benz',
-  'BMW',
-  'Audi',
-  'Opel',
-  'Peugeot',
-  'Citroen',
-  'Renault',
-  'Renault Samsung',
-  'Dacia',
-  'Skoda',
-  'SEAT',
-  'Land Rover',
-  'Jaguar',
-  'Fiat',
-  'Alfa Romeo',
-  'Toyota',
-  'Honda',
-  'Nissan',
-  'Mazda',
-  'Mitsubishi',
-  'Suzuki',
-  'Subaru',
-  'Hyundai',
-  'Kia',
-  'SsangYong',
-  'Volvo',
-  'Ford',
-  'Jeep',
-  'Chevrolet',
-  'Porsche',
-  'Maserati',
-  'Lexus',
-  'Infiniti',
-  'Acura',
-  'Genesis',
-  'Bentley',
-  'Rolls-Royce',
-  'Lamborghini',
-  'Ferrari',
-  'Aston Martin',
-  'McLaren',
-  'Lotus',
-  'Cadillac',
-  'Lincoln',
-  'Mini',
-  'Smart'
-];
-
-// API Base URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-
-// Helper to construct full URLs for server-side requests
 const getFullUrl = (path: string): string => {
-  if (typeof window !== 'undefined') {
-    return path;
-  }
-
-  if (process.env.NODE_ENV === 'development') {
-    return `http://localhost:3000${path}`;
-  }
-
+  if (typeof window !== 'undefined') return path;
+  if (process.env.NODE_ENV === 'development') return `http://localhost:3002${path}`;
   const baseUrl = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
-    : process.env.NEXTAUTH_URL || 'https://vetura-korea-kosova.vercel.app';
-
+    : process.env.NEXTAUTH_URL || 'https://veturakoreakosove.com';
   return `${baseUrl}${path}`;
 };
 
-// Fetch with timeout
 const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout = 30000) => {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
-
   try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal
-    });
+    const response = await fetch(url, { ...options, signal: controller.signal });
     clearTimeout(id);
     return response;
   } catch (error) {
     clearTimeout(id);
-
-    if (error instanceof Error) {
-      if (error.name === 'AbortError') {
-        throw new Error(`Kërkesa zgjati shumë (${timeout / 1000} sekonda). Provo përsëri.`);
-      }
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error(`Kërkesa zgjati shumë (${timeout / 1000} sekonda). Provo përsëri.`);
     }
-
     throw error;
   }
 };
 
-// List of filters that the API actually supports
-const API_SUPPORTED_FILTERS = [
-  'manufacturer_id',
-  'model_id',
-  'from_year',
-  'to_year',
-  'buy_now_price_from',
-  'buy_now_price_to',
-  'odometer_from_km',
-  'odometer_to_km',
-  'page',
-  'per_page',
-  'vehicle_type'
-];
-
 export async function fetchCars(params: Record<string, any> = {}) {
   try {
     const queryParams: Record<string, string> = {};
-
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         queryParams[key] = value.toString();
       }
     });
-
     if (!queryParams.per_page) queryParams.per_page = '12';
-    // if (!queryParams.vehicle_type) queryParams.vehicle_type = '1';
 
     const queryString = new URLSearchParams(queryParams).toString();
     const path = `/api/proxy/cars${queryString ? `?${queryString}` : ''}`;
     const url = getFullUrl(path);
 
-    console.log('📡 Fetching cars with params:', queryParams);
-
-    const response = await fetchWithTimeout(url, {
-      ...(typeof window !== 'undefined'
-        ? { next: { revalidate: 60 } }
-        : { cache: 'no-store' })
-    }, 30000);
+    const response = await fetchWithTimeout(url, {}, 30000);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
-
-    if (data.meta && typeof data.meta.total === 'undefined') {
-      console.warn('⚠️ API response missing meta.total');
-    }
-
-    console.log('✅ API Response processed:', {
-      dataLength: data.data?.length,
-      total: data.meta?.total,
-      current_page: data.meta?.current_page
-    });
-
     return data;
   } catch (error) {
     console.error('Error fetching cars:', error);
@@ -506,62 +513,51 @@ export async function fetchCars(params: Record<string, any> = {}) {
   }
 }
 
-export async function fetchCarByVin(vin: string): Promise<Car | null> {
+export async function fetchCarById(id: string): Promise<Car | null> {
   try {
-    if (!vin || vin.length < 10) {
-      console.error('Invalid VIN provided:', vin);
-      return null;
-    }
+    if (!id) return null;
 
-    const path = `/api/proxy/vin/${encodeURIComponent(vin)}`;
+    const path = `/api/proxy/cars/${encodeURIComponent(id)}`;
     const url = getFullUrl(path);
 
-    console.log('📡 Fetching car by VIN from proxy:', url);
+    const response = await fetchWithTimeout(url, {}, 15000);
 
-    const response = await fetchWithTimeout(url, {
-      ...(typeof window !== 'undefined'
-        ? { next: { revalidate: 3600 } }
-        : { cache: 'no-store' })
-    }, 15000);
+    if (response.status !== 200) return null;
 
-    if (response.status === 200) {
-      const data = await response.json();
-
-      if (!data || !data.manufacturer) {
-        console.warn('⚠️ API returned incomplete car data:', data);
-        return null;
-      }
-
-      return data;
-    }
-
-    if (response.status === 404) {
-      console.log('❌ Car not found for VIN:', vin);
-      return null;
-    }
-
-    console.error(`❌ API returned status ${response.status} for VIN:`, vin);
-    const errorText = await response.text().catch(() => 'No error details');
-    console.error('Error details:', errorText);
-
-    return null;
+    const data = await response.json();
+    // The proxy returns { data: { ...car } } for the detail endpoint.
+    const car = data?.data || data;
+    if (!car || !car.manufacturer) return null;
+    return car as Car;
   } catch (error) {
-    console.error('Error fetching car by VIN:', error);
+    console.error('Error fetching car by id:', error);
     return null;
+  }
+}
+
+export async function fetchCarPhotos(id: string, thumb?: string): Promise<string[]> {
+  try {
+    if (!id) return [];
+
+    let path = `/api/cars/${encodeURIComponent(id)}/photos`;
+    if (thumb) path += `?thumb=${encodeURIComponent(thumb)}`;
+    const url = getFullUrl(path);
+
+    const response = await fetchWithTimeout(url, {}, 20000);
+
+    if (!response.ok) return [];
+
+    const data = await response.json();
+    return Array.isArray(data?.photos) ? data.photos : [];
+  } catch (error) {
+    console.error('Error fetching car photos:', error);
+    return [];
   }
 }
 
 export function extractVinFromParam(param: string): string {
   const vinRegex = /^[A-HJ-NPR-Z0-9]{17}$/i;
-
-  if (vinRegex.test(param)) {
-    return param;
-  }
-
-  if (/^\d+$/.test(param)) {
-    console.warn('⚠️ Using numeric ID - this will not work. VIN required.');
-  }
-
+  if (vinRegex.test(param)) return param;
   return param;
 }
 
@@ -569,84 +565,61 @@ export async function fetchManufacturers(type: string = 'cars'): Promise<Manufac
   try {
     const path = `/api/proxy/manufacturers/${type}`;
     const url = getFullUrl(path);
-
-    console.log('📡 Fetching manufacturers from proxy:', url);
-
-    const response = await fetchWithTimeout(url, {
-      ...(typeof window !== 'undefined'
-        ? { next: { revalidate: 3600 } }
-        : { cache: 'no-store' })
-    }, 10000);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
+    const response = await fetchWithTimeout(url, {}, 15000);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const data = await response.json();
-    const manufacturers = data.data || data || [];
+    const manufacturers: Manufacturer[] = data.data || data || [];
 
-    // Sort manufacturers by Kosovo market priority
-    return manufacturers.sort((a: Manufacturer, b: Manufacturer) => {
+    return manufacturers.sort((a, b) => {
       const indexA = KOSOVO_MANUFACTURER_ORDER.indexOf(a.name);
       const indexB = KOSOVO_MANUFACTURER_ORDER.indexOf(b.name);
-
-      if (indexA !== -1 && indexB !== -1) {
-        return indexA - indexB;
-      }
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
       if (indexA !== -1) return -1;
       if (indexB !== -1) return 1;
       return a.name.localeCompare(b.name);
     });
   } catch (error) {
     console.error('Error fetching manufacturers:', error);
-    return [];
+    return STATIC_MANUFACTURERS.map(m => ({ id: m.id, name: m.name, image: undefined }));
   }
 }
 
-export async function fetchModels(manufacturerId: number, type: string = 'cars'): Promise<Model[]> {
+export async function fetchModels(manufacturerId: string, type: string = 'cars'): Promise<Model[]> {
+  if (!manufacturerId) return [];
   try {
-    const path = `/api/proxy/models/${manufacturerId}/${type}`;
+    const path = `/api/proxy/models/${encodeURIComponent(manufacturerId)}/${type}`;
     const url = getFullUrl(path);
-
-    console.log('📡 Fetching models from proxy:', url);
-
-    const response = await fetchWithTimeout(url, {
-      ...(typeof window !== 'undefined'
-        ? { next: { revalidate: 3600 } }
-        : { cache: 'no-store' })
-    }, 10000);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
+    const response = await fetchWithTimeout(url, {}, 15000);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const data = await response.json();
-    return data.data || data || [];
+    return (data.data || data || []).map((m: any) => ({
+      id: m.id,
+      name: m.name,
+      manufacturer_id: manufacturerId,
+      cars_qty: m.cars_qty,
+      generations_qty: m.generations_qty,
+    }));
   } catch (error) {
     console.error('Error fetching models:', error);
     return [];
   }
 }
 
-export async function fetchGenerations(modelId: number, type: string = 'cars'): Promise<Generation[]> {
+export async function fetchGenerations(modelId: string, type: string = 'cars'): Promise<Generation[]> {
+  if (!modelId) return [];
   try {
-    const path = `/api/proxy/generations/${modelId}/${type}`;
+    const path = `/api/proxy/generations/${encodeURIComponent(modelId)}/${type}`;
     const url = getFullUrl(path);
-
-    console.log('📡 Fetching generations from proxy:', url);
-
-    const response = await fetchWithTimeout(url, {
-      ...(typeof window !== 'undefined'
-        ? { next: { revalidate: 3600 } }
-        : { cache: 'no-store' })
-    }, 10000);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
+    const response = await fetchWithTimeout(url, {}, 15000);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const data = await response.json();
-    return data.data || data || [];
+    return (data.data || data || []).map((g: any) => ({
+      id: g.id,
+      name: g.name,
+      model_id: modelId,
+      manufacturer_id: g.manufacturer_id ?? '',
+      cars_qty: g.cars_qty,
+    }));
   } catch (error) {
     console.error('Error fetching generations:', error);
     return [];
@@ -657,65 +630,68 @@ export async function fetchFilterData(): Promise<FilterData> {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 1989 }, (_, i) => currentYear - i);
 
-  const manufacturers: Manufacturer[] = STATIC_MANUFACTURERS.map(m => ({
-    id: m.id,
-    name: m.name,
-    cars_qty: undefined,
-    image: undefined,
-    models_qty: undefined
-  }));
-
-  // Sort static manufacturers by Kosovo priority
-  const sortedManufacturers = [...manufacturers].sort((a, b) => {
-    const indexA = KOSOVO_MANUFACTURER_ORDER.indexOf(a.name);
-    const indexB = KOSOVO_MANUFACTURER_ORDER.indexOf(b.name);
-
-    if (indexA !== -1 && indexB !== -1) {
-      return indexA - indexB;
-    }
-    if (indexA !== -1) return -1;
-    if (indexB !== -1) return 1;
-    return a.name.localeCompare(b.name);
-  });
+  const manufacturers = await fetchManufacturers('cars');
 
   return {
-    manufacturers: sortedManufacturers,
+    manufacturers,
     models: [],
     generations: [],
     fuelTypes: [
-      { id: 1, name: 'diesel' },
-      { id: 2, name: 'electric' },
-      { id: 3, name: 'hybrid' },
-      { id: 4, name: 'gasoline' }
+      { id: 'Diesel', name: 'Diesel' },
+      { id: 'Electric', name: 'Electric' },
+      { id: 'Gasoline', name: 'Gasoline' },
+      { id: 'Gasoline Hybrid', name: 'Gasoline Hybrid' },
     ],
     transmissions: [
-      { id: 1, name: 'automatic' },
-      { id: 2, name: 'manual' }
+      { id: 'Automatic', name: 'Automatic' },
+      { id: 'Manual', name: 'Manual' },
     ],
     years,
     bodyTypes: [
-      { id: 1, name: 'sedan' },
-      { id: 2, name: 'wagon' },
-      { id: 3, name: 'coupe' },
-      { id: 5, name: 'suv' },
-      { id: 7, name: 'van' },
-      { id: 11, name: 'hatchback' }
+      { id: 'SUV', name: 'SUV' },
+      { id: 'Small Sedan', name: 'Small Sedan' },
+      { id: 'Compact', name: 'Compact' },
+      { id: 'Mid-size', name: 'Mid-size' },
+      { id: 'Full-size', name: 'Full-size' },
+      { id: 'City Car', name: 'City Car' },
+      { id: 'Van', name: 'Van' },
+      { id: 'Sports Car', name: 'Sports Car' },
     ],
     colors: [
-      { id: 1, name: 'silver' },
-      { id: 2, name: 'purple' },
-      { id: 3, name: 'orange' },
-      { id: 4, name: 'green' },
-      { id: 5, name: 'red' },
-      { id: 6, name: 'gold' },
-      { id: 8, name: 'brown' },
-      { id: 9, name: 'grey' },
-      { id: 11, name: 'blue' },
-      { id: 13, name: 'white' },
-      { id: 15, name: 'black' },
-      { id: 16, name: 'yellow' }
-    ]
+      { id: 'Black', name: 'Black' },
+      { id: 'White', name: 'White' },
+      { id: 'Silver', name: 'Silver' },
+      { id: 'Grey', name: 'Grey' },
+      { id: 'Silver Grey', name: 'Silver Grey' },
+      { id: 'Blue', name: 'Blue' },
+      { id: 'Red', name: 'Red' },
+      { id: 'Green', name: 'Green' },
+      { id: 'Orange', name: 'Orange' },
+      { id: 'Pearl', name: 'Pearl' },
+    ],
   };
+}
+
+const VEHICLE_TYPE_FROM_BODY: Record<string, string> = {
+  'suv': 'suv',
+  'van': 'van',
+  'sports car': 'sport_car',
+  'city car': 'sedan',
+  'compact': 'sedan',
+  'mid-size': 'sedan',
+  'full-size': 'sedan',
+  'small sedan': 'sedan',
+};
+
+export function getVehicleTypeFromBodyName(bodyTypeName: string): string {
+  const key = bodyTypeName?.toLowerCase().trim() || '';
+  return VEHICLE_TYPE_FROM_BODY[key] || 'default';
+}
+
+export function getLotLocationName(lot: Lot | undefined): string {
+  const city = lot?.location?.city;
+  if (typeof city === 'string') return city || 'Korea';
+  return city?.name || 'Korea';
 }
 
 export function formatMileage(mileage: number): string {
@@ -746,180 +722,19 @@ export function getTransmissionAlbanian(transmission: string): string {
 
 export function getColorAlbanian(color: string): string {
   const colorMap: Record<string, string> = {
-    'black': 'Zi',
-    'white': 'Bardhë',
-    'silver': 'Argjend',
-    'grey': 'Gri',
-    'gray': 'Gri',
-    'blue': 'Kaltër',
-    'red': 'Kuq',
-    'green': 'Gjelbër',
-    'brown': 'Kafe',
-    'beige': 'Bezhë',
-    'yellow': 'Verdhë',
-    'orange': 'Portokalli',
-    'purple': 'Vjollcë',
-    'gold': 'Arë'
+    'black': 'Zi', 'white': 'Bardhë', 'silver': 'Argjend',
+    'grey': 'Gri', 'gray': 'Gri', 'blue': 'Kaltër', 'red': 'Kuq',
+    'green': 'Gjelbër', 'brown': 'Kafe', 'beige': 'Bezhë',
+    'yellow': 'Verdhë', 'orange': 'Portokalli', 'purple': 'Vjollcë', 'gold': 'Arë'
   };
   return colorMap[color.toLowerCase()] || color;
 }
 
 export function getBodyTypeAlbanian(bodyType: string): string {
   const bodyMap: Record<string, string> = {
-    'sedan': 'Sedan',
-    'suv': 'SUV',
-    'coupe': 'Kupe',
-    'hatchback': 'Hatchback',
-    'wagon': 'Kombi',
-    'van': 'Furgon',
-    'pickup': 'Pickup',
-    'cabrio': 'Kabriolet',
-    'sport_car': 'Makinë Sportive'
+    'sedan': 'Sedan', 'suv': 'SUV', 'coupe': 'Kupe',
+    'hatchback': 'Hatchback', 'wagon': 'Kombi', 'van': 'Furgon',
+    'pickup': 'Pickup', 'cabrio': 'Kabriolet', 'sport_car': 'Makinë Sportive'
   };
   return bodyMap[bodyType.toLowerCase()] || bodyType;
-}
-
-/**
- * Get the final display price for a car (what customers see)
- * This uses competitor price - their transport + our adjustments
- */
-export function getDisplayPrice(car: Car, ourShipping?: number, pristinaShipping?: number): number {
-  const lot = car.lots?.[0];
-  if (!lot) return 0;
-
-  // Get competitor's price (their price to Durrës)
-  const competitorPrice = getOldSitePrice(lot);
-  if (competitorPrice > 0) {
-    // Remove their transport (€3,850) to get true base price
-    const theirTransport = 0; // €3,500 + €350
-    const basePrice = competitorPrice - theirTransport;
-
-    // Add our shipping
-    return basePrice + (ourShipping || 3500) + (pristinaShipping || 350);
-  }
-
-  // Fallback to raw Korean price + our shipping
-  const rawPrice = getRawKoreanPrice(lot);
-  return rawPrice + (ourShipping || 3500) + (pristinaShipping || 350);
-}
-
-/**
- * Calculate the final price for a car using config values
- */
-export function calculateFinalPrice(
-  car: Car,
-  config: SiteConfig,
-  vehicleType?: string
-): number {
-  const lot = car.lots?.[0];
-  if (!lot) return 0;
-
-  // Get RAW Korean price (actual car cost, no margins)
-  const rawPrice = getRawKoreanPrice(lot);
-
-  if (rawPrice > 0) {
-    // Get shipping cost (global or vehicle-specific)
-    let shippingCost = config.shippingCost;
-
-    if (vehicleType && config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes]) {
-      const typeConfig = config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes];
-      if (typeConfig?.enabled && typeConfig.shippingCost) {
-        shippingCost = typeConfig.shippingCost;
-      }
-    }
-
-    // Calculate margin using global settings
-    const calculatedMargin = Math.round(rawPrice * (config.defaultMarginPercentage / 100));
-    const marginAmount = Math.max(calculatedMargin, config.defaultMinimumMargin);
-
-    // Final price: raw price + shipping + margin + Prishtina
-    return rawPrice + shippingCost + marginAmount + config.shippingToPristina;
-  }
-
-  // Fallback: if raw price not available, use competitor price (not ideal)
-  const competitorPrice = getOldSitePrice(lot);
-  if (competitorPrice > 0) {
-    console.warn('⚠️ Raw price not available, using competitor price as estimate');
-    return competitorPrice;
-  }
-
-  return 0;
-}
-// ============ REAL AUCTION PRICE (70% of MSRP) ============
-
-const REAL_AUCTION_DISCOUNT = 0.7;
-const REAL_KRW_TO_EUR = 0.000645;
-
-/**
- * Get the real auction price (70% of MSRP)
- * This is what dealers actually pay at Korean auctions
- */
-export function getRealAuctionPriceFromApi(lot: Lot | undefined): number {
-  if (!lot) return 0;
-
-  // Use original_price directly - NO DISCOUNT
-  if (lot.details?.original_price) {
-    const EXCHANGE_RATE = 0.000573;
-    return Math.round(lot.details.original_price * EXCHANGE_RATE);
-  }
-
-  // Fallback
-  if (lot.buy_now) {
-    return Math.round(lot.buy_now * 0.93);
-  }
-
-  return 0;
-}
-
-/**
- * Get the original Korean price directly from API (no discount)
- * This is the actual retail price listed on Encar
- */
-export function getOriginalKoreanPriceFromApi(lot: Lot | undefined): number {
-  if (!lot) return 0;
-
-  // Use original_price directly
-  if (lot.details?.original_price) {
-    const EXCHANGE_RATE = 0.000573; // Should come from admin
-    return Math.round(lot.details.original_price * EXCHANGE_RATE);
-  }
-
-  // Fallback to buy_now in USD
-  if (lot.buy_now) {
-    return Math.round(lot.buy_now * 0.93);
-  }
-
-  return 0;
-}
-
-// lib/api.ts - Add this function
-export async function getRealAuctionPriceWithRate(lot: Lot | undefined): Promise<number> {
-  if (!lot) return 0;
-
-  // Get exchange rate from database (or use default)
-  const { sql } = require('@vercel/postgres');
-  let krwToEur = 0.000645; // Default
-
-  try {
-    const { rows } = await sql`SELECT rates FROM exchange_rates WHERE id = 1`;
-    if (rows.length > 0 && rows[0].rates) {
-      const krwRate = rows[0].rates.find((r: any) => r.from === 'KRW');
-      if (krwRate) {
-        krwToEur = krwRate.rate;
-      }
-    }
-  } catch (error) {
-    console.error('Error fetching exchange rate:', error);
-  }
-
-  if (lot.details?.original_price) {
-    const auctionPriceKRW = Math.round(lot.details.original_price * 0.7);
-    return Math.round(auctionPriceKRW * krwToEur);
-  }
-
-  if (lot.buy_now) {
-    return Math.round(lot.buy_now * 0.93);
-  }
-
-  return 0;
 }

@@ -9,11 +9,12 @@ import { fetchCars } from '@/lib/api';
 import { type Car } from '@/lib/api';
 
 // Define the manufacturers we want to show (limited to reduce API calls)
+// IDs are the string brand names used by the live API for filtering.
 const FEATURED_MANUFACTURERS = [
-    { id: 147, name: 'Volkswagen' },
-    { id: 9, name: 'Audi' },
-    { id: 16, name: 'BMW' },
-    { id: 140, name: 'Mercedes-Benz' },
+    { id: 'Volkswagen', name: 'Volkswagen' },
+    { id: 'Audi', name: 'Audi' },
+    { id: 'BMW', name: 'BMW' },
+    { id: 'Mercedes-Benz', name: 'Mercedes-Benz' },
 ];
 
 interface FeaturedCarsProps {
@@ -95,7 +96,7 @@ export default function FeaturedCars({ limit = 2 }: FeaturedCarsProps) {
                 <p className="text-secondary">{error}</p>
                 <button
                     onClick={() => window.location.reload()}
-                    className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+                    className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-dark"
                 >
                     Provo përsëri
                 </button>

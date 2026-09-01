@@ -148,7 +148,7 @@ export default function Sidebar({ isOpen, onClose, onLogout }: SidebarProps) {
                         <div className="p-3 border-t border-white/10">
                             <button
                                 onClick={onLogout}
-                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/60 hover:bg-red-500/10 hover:text-red-500"
+                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/60 hover:bg-error-bg hover:text-error-text"
                             >
                                 <LogOut size={18} />
                                 <span className="font-medium text-sm">Shkyçu</span>
@@ -237,7 +237,7 @@ export default function Sidebar({ isOpen, onClose, onLogout }: SidebarProps) {
                         onClick={onLogout}
                         className={`
                             w-full flex items-center gap-3 px-3 py-2.5 rounded-xl
-                            text-white/60 hover:bg-red-500/10 hover:text-red-500
+                            text-white/60 hover:bg-error-bg hover:text-error-text
                             transition-all duration-200 group relative
                             ${isCollapsed ? 'justify-center px-2' : ''}
                         `}

@@ -5,7 +5,7 @@ import { Car } from 'lucide-react';
 // This is a server component - NO client hooks!
 export default function NotFound() {
     return (
-        <div className="min-h-[80vh] flex items-center justify-center bg-primary">
+        <div className="min-h-[80vh] flex items-center justify-center bg-bg-primary">
             <div className="container-swiss max-w-2xl text-center">
                 <Car className="w-24 h-24 text-orange-500 mx-auto mb-6" />
                 <h1 className="text-4xl md:text-5xl font-bold text-primary mb-4">

@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS site_config (
     shipping_to_pristina INTEGER NOT NULL DEFAULT 350,
     default_margin_percentage INTEGER NOT NULL DEFAULT 15,
     default_minimum_margin INTEGER NOT NULL DEFAULT 1000,
+    krw_to_eur_rate NUMERIC NOT NULL DEFAULT 0.000628,
     contact_email VARCHAR(255) NOT NULL DEFAULT 'blerart@outlook.com',
     contact_phone VARCHAR(50) NOT NULL DEFAULT '+383 49 195 414',
     site_name VARCHAR(100) NOT NULL DEFAULT 'Vetura Korea Kosova',

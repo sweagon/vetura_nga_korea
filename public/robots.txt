@@ -1,17 +1,9 @@
 # https://www.robotstxt.org/robotstxt.html
-`# public/robots.txt
 User-agent: *
 Allow: /
 Allow: /cars/
-Allow: /brands/
-Allow: /offers/
-Allow: /how-it-works/
 Disallow: /api/
 Disallow: /admin/
-Disallow: /account/
-Disallow: /saved/
-Disallow: /compare
-Disallow: /*?*
 
 # Crawl delay for polite crawling
 Crawl-delay: 5
@@ -39,4 +31,4 @@ Allow: /cars/*
 
 User-agent: FacebookExternalHit
 Allow: /
-Allow: /cars/*`
+Allow: /cars/*

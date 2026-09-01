@@ -32,13 +32,13 @@ export default function HistoryTimeline({ history, ownerCount }: HistoryTimeline
     const getIcon = (flag: string) => {
         switch (flag) {
             case 'DEALER':
-                return <User size={16} className="text-blue-500" />;
+                return <User size={16} className="text-info-text" />;
             case 'CORPORATION':
-                return <Car size={16} className="text-purple-500" />;
+                return <Car size={16} className="text-accent-text" />;
             case 'Recall required':
-                return <AlertCircle size={16} className="text-red-500" />;
+                return <AlertCircle size={16} className="text-error-text" />;
             case 'Recall completed':
-                return <Check size={16} className="text-green-500" />;
+                return <Check size={16} className="text-success-text" />;
             default:
                 return <FileText size={16} className="text-orange-500" />;
         }
@@ -84,7 +84,7 @@ export default function HistoryTimeline({ history, ownerCount }: HistoryTimeline
                         </div>
 
                         <div className="space-y-2">
-                            {item.content.map((content, idx) => (
+                            {(item.content || []).map((content, idx) => (
                                 <div key={idx} className="bg-surface-2/50 rounded-lg p-3">
                                     <div className="flex items-start gap-2">
                                         {content.flag && (
@@ -124,7 +124,7 @@ export default function HistoryTimeline({ history, ownerCount }: HistoryTimeline
             {history.length > 5 && (
                 <button
                     onClick={() => setExpanded(!expanded)}
-                    className="w-full text-center text-sm text-orange-500 hover:text-orange-600 py-2"
+                    className="w-full text-center text-sm text-orange-500 hover:text-orange-400 py-2"
                 >
                     {expanded ? 'Shfaq më pak' : `Shfaq të gjitha (${history.length})`}
                 </button>

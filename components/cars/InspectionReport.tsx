@@ -15,7 +15,7 @@ export default function InspectionReport({ inspections }: InspectionReportProps)
     if (!inspections || inspections.length === 0) {
         return (
             <div className="bg-surface-2 rounded-lg p-4 text-center">
-                <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                <CheckCircle className="w-8 h-8 text-success-text mx-auto mb-2" />
                 <p className="text-secondary">Nuk ka dëmtime të raportuara nga inspektimi i jashtëm</p>
             </div>
         );
@@ -42,33 +42,35 @@ export default function InspectionReport({ inspections }: InspectionReportProps)
                     <div key={index} className="bg-surface-3/30 rounded-lg p-3 border border-light/10">
                         <div className="flex items-start justify-between">
                             <div>
-                                <p className="text-sm font-medium text-primary">{item.type.title}</p>
-                                <div className="flex items-center gap-2 mt-1">
-                                    {item.attributes.map((attr, idx) => (
+                                <p className="text-sm font-medium text-primary">{item.type?.title || 'Dëmtim i panjohur'}</p>
+                                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                    {(item.attributes || []).map((attr, idx) => (
                                         <span
                                             key={idx}
                                             className="text-xs px-2 py-0.5 bg-orange-500/10 text-orange-500 rounded-full"
                                         >
-                                            {attr.replace('_', ' ')}
+                                            {(attr || '').replaceAll('_', ' ')}
                                         </span>
                                     ))}
                                 </div>
                             </div>
-                            <div className="text-right">
-                                {item.statusTypes.map((status, idx) => (
-                                    <span
-                                        key={idx}
-                                        className={`text-xs px-2 py-0.5 rounded-full ${status.title.includes('replacement')
-                                                ? 'bg-orange-500/10 text-orange-500'
-                                                : status.title.includes('repair')
-                                                    ? 'bg-blue-500/10 text-blue-500'
-                                                    : 'bg-gray-500/10 text-gray-500'
-                                            }`}
-                                    >
-                                        {status.title}
-                                    </span>
-                                ))}
-                            </div>
+                            {item.statusTypes && item.statusTypes.length > 0 && (
+                                <div className="text-right">
+                                    {item.statusTypes.map((status, idx) => (
+                                        <span
+                                            key={idx}
+                                            className={`text-xs px-2 py-0.5 rounded-full ${status.title.includes('replacement')
+                                                    ? 'bg-orange-500/10 text-orange-500'
+                                                    : status.title.includes('repair')
+                                                        ? 'bg-info-bg text-info-text'
+                                                        : 'bg-muted/10 text-muted'
+                                                }`}
+                                        >
+                                            {status.title}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 ))}

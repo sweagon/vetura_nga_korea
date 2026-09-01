@@ -1,7 +1,25 @@
 // app/api/admin/verify/route.ts
 import { NextResponse } from 'next/server';
-import { validateAdmin, createAdminSession, deleteSession } from '@/lib/db';
+import {
+    validateAdmin, createAdminSession, deleteSession,
+    getLoginAttemptStatus, registerLoginFailure, clearLoginFailures,
+} from '@/lib/db';
 import { cookies } from 'next/headers';
+import { rateLimit } from '@/lib/rateLimit';
+
+const MAX_ATTEMPTS = 5;
+const limiter = rateLimit({ interval: 60 * 1000, max: 30 });
+
+function getClientKey(request: Request): string {
+    const fwd = request.headers.get('x-forwarded-for');
+    if (fwd) {
+        const ip = fwd.split(',')[0].trim();
+        if (ip) return `ip:${ip}`;
+    }
+    const real = request.headers.get('x-real-ip');
+    if (real) return `ip:${real}`;
+    return `ip:unknown`;
+}
 
 export async function GET() {
     return NextResponse.json({
@@ -13,9 +31,17 @@ export async function GET() {
 
 export async function POST(request: Request) {
     try {
-        const { password } = await request.json();
+        const key = getClientKey(request);
 
-        console.log('🔐 Login attempt received');
+        const check = await limiter.check(`admin:verify:${key}`);
+        if (!check.success) {
+            return NextResponse.json(
+                { success: false, message: 'Shumë kërkesa. Provo përsëri më vonë.', locked: true },
+                { status: 429 }
+            );
+        }
+
+        const { password } = await request.json();
 
         if (!password) {
             return NextResponse.json(
@@ -24,9 +50,21 @@ export async function POST(request: Request) {
             );
         }
 
+        const status = await getLoginAttemptStatus(key);
+
+        // Enforce lockout server-side (not just client-side)
+        if (status.locked) {
+            const minutesLeft = status.minutesLeft ?? 15;
+            return NextResponse.json(
+                { success: false, message: `Shumë përpjekje. Provo përsëri pas ${minutesLeft} minutash.`, locked: true },
+                { status: 429 }
+            );
+        }
+
         const isValid = await validateAdmin(password);
 
         if (isValid) {
+            await clearLoginFailures(key);
             // Create session in database
             const token = await createAdminSession(1);
 
@@ -34,22 +72,30 @@ export async function POST(request: Request) {
             const cookieStore = await cookies();
             cookieStore.set('admin_token', token, {
                 httpOnly: true,
-                secure: true,
+                secure: process.env.NODE_ENV === 'production',
                 sameSite: 'lax',
                 maxAge: 2 * 60 * 60, // 2 hours
                 path: '/',
             });
 
-            console.log('✅ Login successful, session created');
             return NextResponse.json({
                 success: true,
                 message: 'Login successful'
             });
         }
 
-        console.log('❌ Invalid password');
+        const after = await registerLoginFailure(key);
+        const remaining = after.remainingAttempts;
+        if (after.locked || remaining <= 0) {
+            const minutesLeft = after.minutesLeft ?? 15;
+            return NextResponse.json(
+                { success: false, message: `Shumë përpjekje të dështuara. Llogaria është bllokuar për ${minutesLeft} minuta.`, locked: true },
+                { status: 429 }
+            );
+        }
+
         return NextResponse.json(
-            { success: false, message: 'Fjalëkalimi i gabuar' },
+            { success: false, message: `Fjalëkalimi i gabuar. ${remaining} përpjekje të mbetura.` },
             { status: 401 }
         );
 
@@ -70,7 +116,6 @@ export async function DELETE(request: Request) {
         if (token) {
             await deleteSession(token);
             cookieStore.delete('admin_token');
-            console.log('✅ Logout successful');
         }
 
         return NextResponse.json({ success: true });

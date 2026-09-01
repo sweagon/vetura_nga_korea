@@ -16,7 +16,7 @@ export default function RecallAlert({ recalls }: RecallAlertProps) {
 
     // Filter only open recalls (not completed)
     const openRecalls = recalls.filter(recall =>
-        recall.content.some(c => c.flag === 'Recall required' || c.title?.includes('Recall required'))
+        (recall.content || []).some(c => c.flag === 'Recall required' || c.title?.includes('Recall required'))
     );
 
     if (openRecalls.length === 0) return null;
@@ -43,7 +43,7 @@ export default function RecallAlert({ recalls }: RecallAlertProps) {
                         <div className="mt-3 space-y-3">
                             {openRecalls.map((recall, index) => (
                                 <div key={index} className="bg-error-bg/50 p-3 rounded-lg border border-error-border">
-                                    {recall.content.map((content, idx) => (
+                                    {(recall.content || []).map((content, idx) => (
                                         <div key={idx}>
                                             <p className="font-medium text-error-text">{content.title}</p>
                                             {content.Defect_details && (

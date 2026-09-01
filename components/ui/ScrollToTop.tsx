@@ -33,7 +33,7 @@ export default function ScrollToTop() {
                     exit={{ opacity: 0, scale: 0.8 }}
                     transition={{ duration: 0.2 }}
                     onClick={scrollToTop}
-                    className="fixed bottom-6 right-6 z-fixed p-3 bg-surface border border-light rounded-lg shadow-lg hover:border-orange-primary hover:bg-orange-5 transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-orange-primary/50"
+                    className="fixed bottom-6 right-6 z-50 p-3 bg-surface border border-light rounded-lg shadow-lg hover:border-orange-primary hover:bg-orange-5 transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-orange-primary/50"
                     aria-label="Kthehu në fillim"
                 >
                     <ArrowUp size={20} className="text-secondary group-hover:text-orange-500 transition-colors" />

@@ -25,8 +25,8 @@ export default function EmptyState({ type, message }: EmptyStateProps) {
 
     return (
         <div className="text-center py-16 bg-secondary rounded-lg">
-            <div className="w-20 h-20 bg-ferrari-red/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Icon className="text-ferrari-red" size={32} />
+            <div className="w-20 h-20 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Icon className="text-orange-500" size={32} />
             </div>
             <h3 className="text-xl font-semibold mb-2">{titles[type]}</h3>
             <p className="text-secondary mb-6">

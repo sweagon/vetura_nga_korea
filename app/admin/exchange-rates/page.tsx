@@ -27,12 +27,45 @@ export default function ExchangeRatesPage() {
         { from: 'USD', to: 'EUR', rate: 0.93, lastUpdated: new Date().toISOString(), trend: 'stable' },
         { from: 'JPY', to: 'EUR', rate: 0.0059, lastUpdated: new Date().toISOString(), trend: 'stable' }
     ]);
+    const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [saveStatus, setSaveStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({
         type: null,
         message: ''
     });
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const loadRates = async () => {
+            try {
+                const response = await fetch('/api/admin/exchange-rates', { credentials: 'include' });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (!cancelled && data.rates && Array.isArray(data.rates) && data.rates.length > 0) {
+                        setRates(data.rates.map((r: { from: string; to: string; rate: number; lastUpdated: string }) => ({
+                            from: r.from,
+                            to: r.to,
+                            rate: r.rate,
+                            lastUpdated: r.lastUpdated || new Date().toISOString(),
+                            trend: 'stable'
+                        })));
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load exchange rates from server:', error);
+            } finally {
+                if (!cancelled) setIsLoading(false);
+            }
+        };
+
+        loadRates();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     const handleRateChange = (index: number, newRate: number) => {
         const updated = [...rates];
@@ -111,7 +144,9 @@ export default function ExchangeRatesPage() {
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-white">Kurset e Këmbimit</h1>
-                        <p className="text-white/60 mt-1">Menaxho kurset e këmbimit për llogaritjen e çmimeve</p>
+                        <p className="text-white/60 mt-1">
+                            {isLoading ? 'Duke ngarkuar kurset aktuale...' : 'Menaxho kurset e këmbimit për llogaritjen e çmimeve'}
+                        </p>
                     </div>
                     <div className="flex gap-3">
                         <button
@@ -125,7 +160,7 @@ export default function ExchangeRatesPage() {
                         <button
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="px-6 py-2 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition flex items-center gap-2 disabled:opacity-50 font-medium"
+                            className="px-6 py-2 bg-orange-500 text-white rounded-xl hover:bg-orange-dark transition flex items-center gap-2 disabled:opacity-50 font-medium"
                         >
                             <Save size={18} />
                             {isSaving ? 'Duke ruajtur...' : 'Ruaj Ndryshimet'}
@@ -136,8 +171,8 @@ export default function ExchangeRatesPage() {
                 {/* Status Message */}
                 {saveStatus.type && (
                     <div className={`mt-4 p-3 rounded-lg flex items-center gap-2 ${saveStatus.type === 'success'
-                        ? 'bg-green-500/10 text-green-500 border border-green-500/20'
-                        : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                        ? 'bg-success-bg text-success-text border border-success-border'
+                        : 'bg-error-bg text-error-text border border-error-border'
                         }`}>
                         {saveStatus.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
                         <span className="text-sm">{saveStatus.message}</span>
@@ -166,8 +201,8 @@ export default function ExchangeRatesPage() {
                                     </p>
                                 </div>
                             </div>
-                            {rate.trend === 'up' && <TrendingUp className="w-5 h-5 text-green-500" />}
-                            {rate.trend === 'down' && <TrendingDown className="w-5 h-5 text-red-500" />}
+                            {rate.trend === 'up' && <TrendingUp className="w-5 h-5 text-success-text" />}
+                            {rate.trend === 'down' && <TrendingDown className="w-5 h-5 text-error-text" />}
                         </div>
 
                         <div className="space-y-3">

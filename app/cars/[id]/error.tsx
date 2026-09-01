@@ -16,7 +16,7 @@ export default function CarDetailError({
     }, [error]);
 
     return (
-        <div className="min-h-[70vh] flex items-center justify-center bg-primary">
+        <div className="min-h-[70vh] flex items-center justify-center bg-bg-primary">
             <div className="container-swiss py-12">
                 <div className="max-w-2xl mx-auto text-center">
                     {/* Error Icon */}

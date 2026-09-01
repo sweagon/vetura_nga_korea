@@ -1,12 +1,26 @@
-// app/api/proxy/[...path]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import { getNavigationCache, setNavigationCache } from '@/lib/dbNavigation';
 
 const API_BASE_URL = process.env.API_BASE_URL || 'https://api.bestautomarket.com/api';
-const TIMEOUT = 8000; // 8 seconds (within Vercel's 10s limit)
-const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes cache
+const TIMEOUT = 8000;
+const CACHE_DURATION = 10 * 60 * 1000;
 
-// Simple in-memory cache
 const cache = new Map<string, { data: any; timestamp: number }>();
+
+const MAX_CACHE_ENTRIES = 200;
+
+function setCache(key: string, value: { data: any; timestamp: number }) {
+    if (cache.size >= MAX_CACHE_ENTRIES) {
+        const now = Date.now();
+        for (const [k, v] of cache) {
+            if (now - v.timestamp > CACHE_DURATION) cache.delete(k);
+        }
+        if (cache.size >= MAX_CACHE_ENTRIES) cache.clear();
+    }
+    cache.set(key, value);
+}
+
+const NAV_CACHE_PATHS = ['manufacturers', 'models', 'generations'];
 
 export async function GET(
     request: NextRequest,
@@ -14,13 +28,17 @@ export async function GET(
 ) {
     try {
         const { path } = await params;
+
+        if (!path || path.length === 0) {
+            return NextResponse.json({ error: 'No path provided' }, { status: 404 });
+        }
+
         const searchParams = request.nextUrl.searchParams;
         const cacheKey = `${path.join('/')}?${searchParams.toString()}`;
+        const isNavPath = NAV_CACHE_PATHS.includes(path[0].toLowerCase());
 
-        // Check cache first - return immediately if fresh
         const cached = cache.get(cacheKey);
         if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-            console.log('📦 Cache HIT:', cacheKey);
             return NextResponse.json(cached.data, {
                 headers: {
                     'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200',
@@ -29,16 +47,23 @@ export async function GET(
             });
         }
 
-        if (!path || path.length === 0) {
-            return NextResponse.json({ error: 'No path provided' }, { status: 404 });
+        // For navigation data (manufacturers/models/generations), fall back to DB cache
+        if (isNavPath) {
+            const dbCached = await getNavigationCache<any>(cacheKey);
+            if (dbCached) {
+                setCache(cacheKey, { data: dbCached, timestamp: Date.now() });
+                return NextResponse.json(dbCached, {
+                    headers: {
+                        'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200',
+                        'X-Cache': 'HIT-DB'
+                    }
+                });
+            }
         }
 
         const pathString = path.join('/');
         const url = `${API_BASE_URL}/${pathString}${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
 
-        console.log('🔁 Proxying to:', url);
-
-        // Use AbortController with timeout
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), TIMEOUT);
 
@@ -53,37 +78,31 @@ export async function GET(
 
         const text = await response.text();
 
-        // Check if response is HTML (error page)
         if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
-            console.error(`⚠️ API returned HTML for ${url}`);
             return NextResponse.json(
                 { error: 'API returned HTML instead of JSON', data: [], cars: [] },
                 { status: 404 }
             );
         }
 
-        // Parse JSON
         let data;
         try {
             data = JSON.parse(text);
-        } catch (e) {
-            console.error('❌ Failed to parse JSON:', text.substring(0, 200));
+        } catch {
             return NextResponse.json(
                 { error: 'Invalid JSON response from API', data: [], cars: [] },
                 { status: 500 }
             );
         }
 
-        // Ensure data has expected structure
         if (!data.data && !data.cars) {
             data = { data: data.data || data.cars || [], ...data };
         }
 
-        // Store in cache
-        cache.set(cacheKey, {
-            data,
-            timestamp: Date.now()
-        });
+        setCache(cacheKey, { data, timestamp: Date.now() });
+        if (isNavPath) {
+            await setNavigationCache(cacheKey, data);
+        }
 
         return NextResponse.json(data, {
             status: response.status,
@@ -94,8 +113,6 @@ export async function GET(
         });
 
     } catch (error: any) {
-        console.error('Proxy error:', error);
-
         if (error.name === 'AbortError') {
             return NextResponse.json(
                 { error: 'Request timeout. Please try again.', data: [], cars: [] },
@@ -103,21 +120,9 @@ export async function GET(
             );
         }
 
-        // Return empty data structure to prevent frontend errors
         return NextResponse.json(
             { error: 'Failed to fetch data', data: [], cars: [] },
             { status: 500 }
         );
     }
-}
-
-export async function OPTIONS() {
-    return new NextResponse(null, {
-        status: 204,
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type',
-        },
-    });
 }

@@ -38,7 +38,7 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
     });
     const [filterData, setFilterData] = useState({
         manufacturers: [] as Option[], // Use Option type from CustomSelect
-        models: [] as Array<{ id: number; name: string; manufacturer_id: number }>,
+        models: [] as Array<{ id: string; name: string; manufacturer_id: string }>,
         years: [] as number[]
     });
 
@@ -80,7 +80,7 @@ function CompactSearchContent({ searchParams, variant, onSearch }: any) {
 
             try {
                 setLoading(prev => ({ ...prev, models: true }));
-                const models = await fetchModels(parseInt(filters.manufacturerId), 'cars');
+                const models = await fetchModels(filters.manufacturerId, 'cars');
                 setFilterData(prev => ({ ...prev, models }));
             } catch (error) {
                 console.error('Error loading models:', error);

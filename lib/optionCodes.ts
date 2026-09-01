@@ -268,9 +268,11 @@ export function getOptionName(code: string): string {
     return optionCodeMap[code] || `Opsion ${code}`;
 }
 
+export type OptionDescriptor = { code: string; name: string };
+
 // Function to categorize options
-export function categorizeOptions(options: string[]) {
-    const categories: Record<string, { code: string; name: string }[]> = {
+export function categorizeOptions(options: (string | OptionDescriptor)[]) {
+    const categories: Record<string, OptionDescriptor[]> = {
         safety: [],
         comfort: [],
         technology: [],
@@ -280,39 +282,46 @@ export function categorizeOptions(options: string[]) {
         other: []
     };
 
-    // Keywords for categorization in Albanian
+    // Keywords for categorization (Albanian + English source names)
     const safetyKeywords = [
         'abs', 'esp', 'asr', 'airbag', 'isofix', 'alarm', 'imobilizator', 'presionit',
-        'asistencë', 'korsie', 'frenim', 'monitorim', 'njohja', 'tempomat', 'limit'
+        'asistencë', 'korsie', 'frenim', 'monitorim', 'njohja', 'tempomat', 'limit',
+        'stability', 'traction', 'brake', 'seat belt', 'lane', 'collision', 'blind spot'
     ];
 
     const comfortKeywords = [
         'klima', 'ngrohje', 'sedilje', 'timon', 'çati', 'diellore', 'panoramik',
-        'elektrike', 'keyless', 'start/stop', 'xham', 'pasqyra', 'memorie', 'lëkure'
+        'elektrike', 'keyless', 'start/stop', 'xham', 'pasqyra', 'memorie', 'lëkure',
+        'climate', 'seat', 'steering', 'heating', 'ventilat', 'memory', 'leather'
     ];
 
     const technologyKeywords = [
         'fener', 'led', 'xenon', 'navigacion', 'bluetooth', 'carplay', 'android',
-        'usb', 'head-up', 'panel', 'cockpit', 'ekran', 'radio', 'wifi', 'modem'
+        'usb', 'head-up', 'panel', 'cockpit', 'ekran', 'radio', 'wifi', 'modem',
+        'navigation', 'display', 'infotainment', 'camera', 'sensor', 'cruise'
     ];
 
     const exteriorKeywords = [
         'rrota', 'alumini', 'spoiler', 'roof', 'hitch', 'paketë', 'mbrojtëse',
-        'kapuç', 'grilë', 'dritat', 'fenerët'
+        'kapuç', 'grilë', 'dritat', 'fenerët',
+        'wheels', 'alloy', 'mirror', 'headlight', 'roof rail', 'spoiler', 'sunroof', 'panoramic'
     ];
 
     const interiorKeywords = [
         'tapiceri', 'qilime', 'bagazh', 'tavani', 'shtylla', 'konsola',
-        'pasqyrë', 'mbulesë'
+        'pasqyrë', 'mbulesë',
+        'upholstery', 'carpet', 'console', 'glovebox', 'armrest', 'seats'
     ];
 
     const audioKeywords = [
         'audio', 'burmester', 'harman', 'bang', 'olufsen', 'bose', 'jbl',
-        'bowers', 'wilkins', 'levinson', 'subwoofer', 'amplifikator'
+        'bowers', 'wilkins', 'levinson', 'subwoofer', 'amplifikator',
+        'sound', 'speaker', 'stereo', 'cd player', 'radio'
     ];
 
-    options.forEach(code => {
-        const name = getOptionName(code);
+    options.forEach(item => {
+        const code = typeof item === 'string' ? item : item.code;
+        const name = typeof item === 'string' ? getOptionName(code) : (item.name || `Opsion ${code}`);
         const nameLower = name.toLowerCase();
 
         if (safetyKeywords.some(keyword => nameLower.includes(keyword))) {

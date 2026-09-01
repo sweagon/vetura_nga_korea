@@ -33,8 +33,8 @@ export default function HowItWorks() {
         <section className="py-20 bg-gradient-to-br from-navy via-dark-blue to-dark-blue relative overflow-hidden">
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_50%,rgba(255,107,0,0.1)_0%,transparent_50%)]" />
-                <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_80%,rgba(255,107,0,0.1)_0%,transparent_50%)]" />
+                <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_50%,var(--color-orange-100)_0%,transparent_50%)]" />
+                <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_80%,var(--color-orange-100)_0%,transparent_50%)]" />
             </div>
 
             <div className="container-swiss relative">

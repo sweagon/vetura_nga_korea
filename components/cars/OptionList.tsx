@@ -3,10 +3,10 @@
 
 import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { categorizeOptions } from '@/lib/optionCodes';
+import { categorizeOptions, type OptionDescriptor } from '@/lib/optionCodes';
 
 interface OptionListProps {
-    options?: string[];
+    options?: (string | OptionDescriptor)[];
     title: string;
 }
 

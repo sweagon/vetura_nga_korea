@@ -6,7 +6,7 @@ import { Car, Search, Home, ArrowLeft } from 'lucide-react';
 // NO useState, useEffect, useSearchParams, etc.
 export default function CarNotFound() {
     return (
-        <div className="min-h-[80vh] flex items-center justify-center bg-primary">
+        <div className="min-h-[80vh] flex items-center justify-center bg-bg-primary">
             <div className="container-swiss max-w-2xl">
                 <div className="bg-surface rounded-2xl p-8 md:p-12 shadow-xl border border-medium">
                     {/* Icon */}

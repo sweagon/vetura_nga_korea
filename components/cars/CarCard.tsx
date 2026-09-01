@@ -1,20 +1,12 @@
-// components/cars/CarCard.tsx - UPDATED with real auction pricing
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Fuel, Gauge, Calendar, Settings } from 'lucide-react';
-import {
-    type Car,
-    formatMileage,
-    getFuelTypeAlbanian,
-    getTransmissionAlbanian,
-    getRealAuctionPriceFromApi
-} from '@/lib/api';
+import { Fuel, Gauge, Calendar, Settings, Car as CarIcon } from 'lucide-react';
+import { type Car, formatMileage, getFuelTypeAlbanian, getTransmissionAlbanian, getVehicleTypeFromBodyName } from '@/lib/api';
 import { addToRecentlyViewed } from '@/lib/recentlyViewed';
 import { useConfig } from '@/lib/ConfigContext';
-import { VehicleTypeConfig } from '@/lib/config';
-import { getOriginalKoreanPriceFromApi } from '@/lib/api';
+import { getDisplayPrice } from '@/lib/pricing';
 
 interface CarCardProps {
     car: Car;
@@ -31,58 +23,14 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
     }, []);
 
     const lot = car.lots?.[0];
+    const vehicleType = getVehicleTypeFromBodyName(car.body_type?.name || '');
 
-    // Get vehicle type from car data
-    const rawBodyType = car.body_type?.name || '';
-    const vehicleType = rawBodyType.toLowerCase();
-
-    // Check if vehicle type exists in config and is enabled
-    const hasTypeConfig = vehicleType &&
-        config.vehicleTypes &&
-        Object.prototype.hasOwnProperty.call(config.vehicleTypes, vehicleType) &&
-        (config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes] as VehicleTypeConfig | undefined)?.enabled === true;
-
-    // Get shipping cost (vehicle-specific or global)
-    const getShippingCost = () => {
-        if (hasTypeConfig && config.vehicleTypes) {
-            const typeConfig = config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes] as VehicleTypeConfig | undefined;
-            if (typeConfig?.enabled && typeConfig.shippingCost) {
-                return typeConfig.shippingCost;
-            }
-        }
-        return config.shippingCost;
-    };
-
-    // Calculate display price using REAL auction price
     useEffect(() => {
         if (lot && config) {
-            // Get original Korean price directly (no discount)
-            const originalPrice = getOriginalKoreanPriceFromApi(lot);
-
-            if (originalPrice > 0) {
-                const shippingCost = getShippingCost();
-                const marginPercentage = config.defaultMarginPercentage;
-                const minimumMargin = config.defaultMinimumMargin;
-
-                // Calculate margin based on original price
-                const calculatedMargin = Math.round(originalPrice * (marginPercentage / 100));
-                const marginAmount = Math.max(calculatedMargin, minimumMargin);
-
-                // Final price: Original price + Shipping + Margin + Pristina shipping
-                const finalPrice = originalPrice + shippingCost + marginAmount + config.shippingToPristina;
-                setDisplayPrice(finalPrice);
-
-                console.log('💰 CarCard price (original Korean):', {
-                    originalPrice,
-                    shippingCost,
-                    marginPercentage,
-                    marginAmount,
-                    pristina: config.shippingToPristina,
-                    finalPrice
-                });
-            }
+            const price = getDisplayPrice(lot, config, vehicleType);
+            setDisplayPrice(price);
         }
-    }, [lot, config, vehicleType, hasTypeConfig]);
+    }, [lot, config, vehicleType]);
 
     const mileage = lot?.odometer?.km || 0;
     const image = lot?.images?.normal?.[0] || lot?.images?.downloaded?.[0] || '';
@@ -94,7 +42,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
 
     const handleClick = () => {
         addToRecentlyViewed({
-            id: car.vin || car.id.toString(),
+            id: car.id.toString(),
             title: car.title || `${manufacturerName} ${modelName}`,
             image: image,
             price: displayPrice
@@ -102,7 +50,7 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
     };
 
     const carTitle = car.title || `${manufacturerName} ${modelName}`;
-    const detailUrl = car.vin ? `/cars/${car.vin}` : `/cars/${car.id}`;
+    const detailUrl = `/cars/${car.id}`;
 
     return (
         <Link
@@ -112,7 +60,6 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
             aria-label={`Shiko detajet për ${carTitle}`}
         >
             <article className="card h-full flex flex-col">
-                {/* Image Container */}
                 <div className="relative aspect-[4/3] overflow-hidden bg-surface-2">
                     {image ? (
                         <img
@@ -123,52 +70,46 @@ export default function CarCard({ car, priority = false }: CarCardProps) {
                             onError={(e) => {
                                 (e.target as HTMLImageElement).style.display = 'none';
                                 const fallback = e.currentTarget.parentElement?.querySelector('.fallback');
-                                if (fallback) {
-                                    (fallback as HTMLElement).style.display = 'flex';
-                                }
+                                if (fallback) (fallback as HTMLElement).style.display = 'flex';
                             }}
                         />
                     ) : null}
-
-                    {/* Fallback when no image */}
                     <div
-                        className="fallback absolute inset-0 flex items-center justify-center text-muted text-sm bg-surface-2"
+                        className="fallback absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted bg-surface-2"
                         style={{ display: image ? 'none' : 'flex' }}
                     >
-                        No image
+                        <CarIcon size={32} strokeWidth={1.5} />
+                        <span className="text-xs">Pa fotografi</span>
                     </div>
                 </div>
 
-                {/* Content */}
                 <div className="p-5 flex-1 flex flex-col">
-                    <h3 className="text-base font-medium text-primary mb-3 line-clamp-1 group-hover:text-orange-500 transition-colors">
+                    <h3 className="text-base font-medium text-text-primary mb-3 line-clamp-1 group-hover:text-orange-500 transition-colors">
                         {carTitle}
                     </h3>
 
-                    {/* Specs Grid */}
                     <div className="grid grid-cols-2 gap-y-2 gap-x-3 mb-4">
                         <div className="flex items-center gap-2">
                             <Calendar size={14} className="text-muted shrink-0" />
-                            <span className="text-sm text-secondary truncate">{car.year || 'N/A'}</span>
+                            <span className="text-sm text-text-secondary truncate">{car.year || 'N/A'}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <Gauge size={14} className="text-muted shrink-0" />
-                            <span className="text-sm text-secondary truncate">
+                            <span className="text-sm text-text-secondary truncate">
                                 {mounted ? formatMileage(mileage) : '...'}
                             </span>
                         </div>
                         <div className="flex items-center gap-2">
                             <Fuel size={14} className="text-muted shrink-0" />
-                            <span className="text-sm text-secondary truncate">{getFuelTypeAlbanian(fuelName)}</span>
+                            <span className="text-sm text-text-secondary truncate">{getFuelTypeAlbanian(fuelName)}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <Settings size={14} className="text-muted shrink-0" />
-                            <span className="text-sm text-secondary truncate">{getTransmissionAlbanian(transmissionName)}</span>
+                            <span className="text-sm text-text-secondary truncate">{getTransmissionAlbanian(transmissionName)}</span>
                         </div>
                     </div>
 
-                    {/* Price */}
-                    <div className="mt-auto pt-3 border-t border-light">
+                    <div className="mt-auto pt-3 border-t border-border-light">
                         <div className="flex items-baseline justify-between">
                             <div>
                                 <span className="text-xl font-semibold text-orange-500">

@@ -10,7 +10,7 @@ export const metadata = {
 // Loading skeleton
 function RecentlyViewedSkeleton() {
     return (
-        <div className="min-h-screen bg-primary py-12">
+        <div className="min-h-screen bg-bg-primary py-12">
             <div className="max-w-7xl mx-auto px-4">
                 <div className="flex items-center gap-4 mb-8">
                     <div className="w-10 h-10 bg-surface-2 rounded-lg animate-pulse" />

@@ -31,7 +31,7 @@ export default function LoadMoreButton({
                 disabled={loading}
                 className={`
           px-6 py-3 bg-orange-500 text-white rounded-lg font-medium
-          hover:bg-orange-600 transition-colors disabled:opacity-50
+          hover:bg-orange-dark transition-colors disabled:opacity-50
           disabled:cursor-not-allowed flex items-center gap-2 min-w-[200px] justify-center
         `}
             >

@@ -1,20 +1,21 @@
-// app/cars/CarsContentWrapper.tsx
 'use client';
 
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import CarCard from '@/components/cars/CarCard';
 import { CarCardSkeleton } from '@/components/ui/LoadingSkeleton';
-import { AlertCircle, ArrowUpDown, Loader2, Search, Filter, X } from 'lucide-react';
+import { AlertCircle, ArrowUpDown, Loader2, Search } from 'lucide-react';
 import CustomSelect from '@/components/ui/CustomSelect';
 import CompactSearch from '@/components/ui/CompactSearch';
 import AdvancedFilterSidebar from '@/components/filters/AdvancedFilterSidebar';
 import Pagination from '@/components/ui/Pagination';
+import MobileFilterBar from '@/components/cars/MobileFilterBar';
+import MobileSortSheet from '@/components/cars/MobileSortSheet';
 import { useCarFilters } from '@/hooks/useCarFilters';
 import { useFilter } from '@/contexts/FilterContext';
-import { type Car, getRealAuctionPriceFromApi } from '@/lib/api';
+import { type Car, getVehicleTypeFromBodyName } from '@/lib/api';
 import { useConfig } from '@/lib/ConfigContext';
-import { getOriginalKoreanPriceFromApi } from '@/lib/api';
+import { getDisplayPrice } from '@/lib/pricing';
 
 interface SortOption {
     value: string;
@@ -22,26 +23,27 @@ interface SortOption {
     sortFn: (a: Car, b: Car) => number;
 }
 
-// Simple in-memory cache for price calculations
-const priceCache = new Map<number, number>();
+const priceCache = new Map<string, number>();
+const PRICE_CACHE_MAX = 400;
 
 export default function CarsContentWrapper() {
     const { isFilterOpen, setIsFilterOpen } = useFilter();
     const { config } = useConfig();
     const [currentSort, setCurrentSort] = useState('recommended');
+    const [sortOpen, setSortOpen] = useState(false);
     const contentRef = useRef<HTMLDivElement>(null);
     const [isClient, setIsClient] = useState(false);
 
     const searchParams = useSearchParams();
 
-    // Fix hydration issues
     useEffect(() => {
         setIsClient(true);
     }, []);
 
-    // Lock body scroll when filter is open on mobile
+    const sheetOpen = isFilterOpen || sortOpen;
+
     useEffect(() => {
-        if (isFilterOpen) {
+        if (sheetOpen) {
             const scrollY = window.scrollY;
             document.body.style.position = 'fixed';
             document.body.style.top = `-${scrollY}px`;
@@ -53,19 +55,29 @@ export default function CarsContentWrapper() {
             document.body.style.top = '';
             document.body.style.width = '';
             document.body.style.overflow = '';
-
             if (scrollY) {
                 window.scrollTo(0, parseInt(scrollY || '0') * -1);
             }
         }
-
         return () => {
             document.body.style.position = '';
             document.body.style.top = '';
             document.body.style.width = '';
             document.body.style.overflow = '';
         };
-    }, [isFilterOpen]);
+    }, [sheetOpen]);
+
+    // Close sheets with the Escape key
+    useEffect(() => {
+        const handleKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setIsFilterOpen(false);
+                setSortOpen(false);
+            }
+        };
+        window.addEventListener('keydown', handleKey);
+        return () => window.removeEventListener('keydown', handleKey);
+    }, [setIsFilterOpen]);
 
     const serverFilters = useMemo(() => ({
         manufacturer_id: searchParams.get('manufacturer_id') || undefined,
@@ -90,110 +102,43 @@ export default function CarsContentWrapper() {
     }), [searchParams]);
 
     const {
-        cars,
-        loading,
-        loadingMore,
-        currentPage,
-        totalPages,
-        totalMatches,
-        searchProgress,
-        currentSearchPage,
-        totalSearchPages,
-        hasClientFilters,
-        error,
-        isSearching,
-        goToPage
+        cars, loading, loadingMore, currentPage, totalPages, totalMatches,
+        searchProgress, currentSearchPage, totalSearchPages, hasClientFilters,
+        error, isSearching, goToPage
     } = useCarFilters(serverFilters, clientFilters);
 
-    // Helper function to get the display price using real auction price (with caching)
     const getCarDisplayPrice = useCallback((car: Car): number => {
-        // Check cache first
-        if (priceCache.has(car.id)) {
-            return priceCache.get(car.id) || 0;
-        }
+        if (priceCache.has(car.id)) return priceCache.get(car.id) || 0;
 
         const lot = car.lots?.[0];
         if (!lot || !config) return 0;
 
         try {
-            // Use original Korean price directly (no discount)
-            const originalPrice = getOriginalKoreanPriceFromApi(lot);
-
-            if (originalPrice > 0) {
-                // Get vehicle type
-                const rawBodyType = car.body_type?.name || '';
-                const vehicleType = rawBodyType.toLowerCase();
-
-                // Get shipping cost
-                let shippingCost = config.shippingCost;
-                if (vehicleType && config.vehicleTypes) {
-                    const typeConfig = config.vehicleTypes[vehicleType as keyof typeof config.vehicleTypes];
-                    if (typeConfig?.enabled && typeConfig.shippingCost) {
-                        shippingCost = typeConfig.shippingCost;
-                    }
-                }
-
-                // Calculate margin
-                const marginPercentage = config.defaultMarginPercentage || 15;
-                const minimumMargin = config.defaultMinimumMargin || 1000;
-                const calculatedMargin = Math.round(originalPrice * (marginPercentage / 100));
-                const marginAmount = Math.max(calculatedMargin, minimumMargin);
-
-                const finalPrice = originalPrice + shippingCost + marginAmount + (config.shippingToPristina || 350);
-
-                // Cache the result
+            const vehicleType = getVehicleTypeFromBodyName(car.body_type?.name || '');
+            const finalPrice = getDisplayPrice(lot, config, vehicleType);
+            if (finalPrice > 0) {
+                if (priceCache.size >= PRICE_CACHE_MAX) priceCache.clear();
                 priceCache.set(car.id, finalPrice);
-
                 return finalPrice;
             }
         } catch (err) {
             console.error('Error calculating price for car:', car.id, err);
         }
-
         return 0;
     }, [config]);
 
-    // Helper function to get mileage
     const getCarMileage = useCallback((car: Car): number => {
         return car.lots?.[0]?.odometer?.km || 0;
     }, []);
 
     const sortOptionsList = useMemo<SortOption[]>(() => [
-        {
-            value: 'recommended',
-            label: 'Të rekomanduara',
-            sortFn: () => 0 // Keep original order
-        },
-        {
-            value: 'price_asc',
-            label: 'Çmimi: Nga më i ulëti',
-            sortFn: (a, b) => getCarDisplayPrice(a) - getCarDisplayPrice(b)
-        },
-        {
-            value: 'price_desc',
-            label: 'Çmimi: Nga më i larti',
-            sortFn: (a, b) => getCarDisplayPrice(b) - getCarDisplayPrice(a)
-        },
-        {
-            value: 'year_desc',
-            label: 'Viti: Më të rijtë',
-            sortFn: (a, b) => b.year - a.year
-        },
-        {
-            value: 'year_asc',
-            label: 'Viti: Më të vjetrit',
-            sortFn: (a, b) => a.year - b.year
-        },
-        {
-            value: 'mileage_asc',
-            label: 'Kilometrazha: Më e ulët',
-            sortFn: (a, b) => getCarMileage(a) - getCarMileage(b)
-        },
-        {
-            value: 'mileage_desc',
-            label: 'Kilometrazha: Më e lartë',
-            sortFn: (a, b) => getCarMileage(b) - getCarMileage(a)
-        },
+        { value: 'recommended', label: 'Të rekomanduara', sortFn: () => 0 },
+        { value: 'price_asc', label: 'Çmimi: Nga më i ulëti', sortFn: (a, b) => getCarDisplayPrice(a) - getCarDisplayPrice(b) },
+        { value: 'price_desc', label: 'Çmimi: Nga më i larti', sortFn: (a, b) => getCarDisplayPrice(b) - getCarDisplayPrice(a) },
+        { value: 'year_desc', label: 'Viti: Më të rijtë', sortFn: (a, b) => b.year - a.year },
+        { value: 'year_asc', label: 'Viti: Më të vjetrit', sortFn: (a, b) => a.year - b.year },
+        { value: 'mileage_asc', label: 'Kilometrazha: Më e ulët', sortFn: (a, b) => getCarMileage(a) - getCarMileage(b) },
+        { value: 'mileage_desc', label: 'Kilometrazha: Më e lartë', sortFn: (a, b) => getCarMileage(b) - getCarMileage(a) },
     ], [getCarDisplayPrice, getCarMileage]);
 
     const sortSelectOptions = useMemo(() =>
@@ -228,13 +173,11 @@ export default function CarsContentWrapper() {
         window.location.href = `/cars?${params.toString()}`;
     }, [searchParams]);
 
-    // Determine UI states
     const isInitialLoad = loading && cars.length === 0;
     const isSearchingWithNoResults = isSearching && cars.length === 0;
     const hasResults = cars.length > 0;
     const isDoneSearching = !isSearching && !loading;
 
-    // Don't render on server to avoid hydration mismatch
     if (!isClient) {
         return (
             <div className="flex flex-col lg:flex-row gap-8">
@@ -250,7 +193,6 @@ export default function CarsContentWrapper() {
         );
     }
 
-    // Show error state
     if (error) {
         return (
             <div className="flex flex-col lg:flex-row gap-8">
@@ -262,7 +204,7 @@ export default function CarsContentWrapper() {
                     <p className="text-secondary mb-2">{error}</p>
                     <button
                         onClick={() => window.location.reload()}
-                        className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
+                        className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-dark transition-colors text-sm font-medium"
                     >
                         Provo përsëri
                     </button>
@@ -273,69 +215,19 @@ export default function CarsContentWrapper() {
 
     return (
         <>
-            {/* Mobile Filter Overlay - Dark background */}
-            {isFilterOpen && (
-                <div
-                    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
-                    onClick={() => setIsFilterOpen(false)}
-                    aria-hidden="true"
-                />
-            )}
-
             <div className="flex flex-col lg:flex-row gap-8 relative">
-                {/* Sidebar - Desktop */}
-                <div className="hidden lg:block lg:w-72 lg:shrink-0 md:mr-8">
-                    <AdvancedFilterSidebar isOpen={false} onClose={() => { }} />
-                </div>
+                {/* Sidebar: sticky column on desktop, fixed bottom sheet on mobile */}
+                <AdvancedFilterSidebar
+                    isOpen={isFilterOpen}
+                    onClose={() => setIsFilterOpen(false)}
+                />
 
-                {/* Sidebar - Mobile (slide-out with dark background) */}
-                <div className={`
-                    fixed top-0 left-0 h-full w-[85%] max-w-80 bg-surface z-50 
-                    transform transition-transform duration-300 ease-in-out lg:hidden
-                    shadow-2xl overflow-y-auto
-                    ${isFilterOpen ? 'translate-x-0' : '-translate-x-full'}
-                `}>
-                    {/* Mobile header with close button */}
-                    <div className="sticky top-0 bg-surface border-b border-light/20 p-4 flex items-center justify-between z-10">
-                        <h2 className="font-semibold text-primary">Filtrat</h2>
-                        <button
-                            onClick={() => setIsFilterOpen(false)}
-                            className="p-2 hover:bg-surface-2 rounded-lg transition-colors"
-                            aria-label="Mbyll filtrat"
-                        >
-                            <X size={20} />
-                        </button>
-                    </div>
-
-                    <AdvancedFilterSidebar
-                        isOpen={isFilterOpen}
-                        onClose={() => setIsFilterOpen(false)}
-                    />
-                </div>
-
-                {/* Main Content */}
-                <div className="flex-1 min-w-0 space-y-8" ref={contentRef}>
-                    {/* Sort Bar */}
+                <div className="flex-1 min-w-0 space-y-8 pb-24 lg:pb-0" ref={contentRef}>
                     <div className="bg-surface-2 border border-light/20 rounded-xl p-4 flex flex-col lg:flex-row gap-4 justify-between items-center">
                         <div className="w-full lg:w-auto">
                             <CompactSearch variant="header" />
                         </div>
-                        <div className="flex items-center gap-3 w-full lg:w-auto">
-                            {/* Mobile Filter Button */}
-                            <button
-                                onClick={() => setIsFilterOpen(true)}
-                                className="lg:hidden flex items-center gap-2 px-4 py-2.5 bg-surface-3 border border-light/20 rounded-lg text-sm text-primary hover:border-orange-500/40 hover:text-orange-500 transition-all duration-200"
-                                aria-label="Hap filtrat"
-                            >
-                                <Filter size={18} />
-                                <span>Filtrat</span>
-                                {activeFilterCount > 0 && (
-                                    <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500 text-white rounded-full">
-                                        {activeFilterCount}
-                                    </span>
-                                )}
-                            </button>
-
+                        <div className="hidden lg:flex items-center gap-3 w-full lg:w-auto">
                             <span className="text-sm text-muted whitespace-nowrap">
                                 <ArrowUpDown size={14} className="inline mr-1" />
                                 Rendit:
@@ -351,7 +243,6 @@ export default function CarsContentWrapper() {
                         </div>
                     </div>
 
-                    {/* Progress Bar */}
                     {isSearching && searchProgress > 0 && searchProgress < 100 && (
                         <div className="space-y-2 bg-surface-2/50 backdrop-blur-sm rounded-xl p-4 border border-light/20">
                             <div className="flex justify-between items-center">
@@ -380,7 +271,6 @@ export default function CarsContentWrapper() {
                         </div>
                     )}
 
-                    {/* Results count */}
                     {hasResults && (
                         <div className="flex justify-between items-center px-2">
                             <p className="text-sm text-muted">
@@ -397,7 +287,6 @@ export default function CarsContentWrapper() {
                         </div>
                     )}
 
-                    {/* Content Grid */}
                     {isInitialLoad || isSearchingWithNoResults ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                             {[...Array(12)].map((_, i) => (
@@ -422,7 +311,7 @@ export default function CarsContentWrapper() {
                             {hasClientFilters && (
                                 <button
                                     onClick={handleClearFilters}
-                                    className="bg-orange-500 text-white px-6 py-2.5 rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
+                                    className="bg-orange-500 text-white px-6 py-2.5 rounded-lg hover:bg-orange-dark transition-colors text-sm font-medium"
                                 >
                                     Pastro filtrat
                                 </button>
@@ -430,7 +319,6 @@ export default function CarsContentWrapper() {
                         </div>
                     ) : null}
 
-                    {/* Loading More Skeletons */}
                     {loadingMore && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mt-4">
                             {[...Array(6)].map((_, i) => (
@@ -439,7 +327,6 @@ export default function CarsContentWrapper() {
                         </div>
                     )}
 
-                    {/* Pagination */}
                     {!isSearching && !loading && totalPages > 1 && (
                         <Pagination
                             currentPage={currentPage}
@@ -452,6 +339,23 @@ export default function CarsContentWrapper() {
                     )}
                 </div>
             </div>
+
+            <MobileFilterBar
+                onOpenFilters={() => setIsFilterOpen(true)}
+                onOpenSort={() => setSortOpen(true)}
+                activeCount={activeFilterCount}
+            />
+
+            <MobileSortSheet
+                open={sortOpen}
+                onClose={() => setSortOpen(false)}
+                options={sortSelectOptions}
+                current={currentSort}
+                onSelect={(value) => {
+                    setCurrentSort(value);
+                    setSortOpen(false);
+                }}
+            />
         </>
     );
 }

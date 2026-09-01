@@ -54,15 +54,13 @@ export function useCarFilters(
     const abortControllerRef = useRef<AbortController | null>(null);
     const hasMorePagesRef = useRef<boolean>(true);
     const currentApiPageRef = useRef<number>(1);
-    const filterVersionRef = useRef<number>(0); // Add version tracking
+    const filterVersionRef = useRef<number>(0);
 
-    // Server-only pagination
     const fetchServerPage = useCallback(async (page: number) => {
         try {
             const response = await fetchCars({
                 page,
                 per_page: PER_PAGE,
-                // // vehicle_type: '1',
                 ...serverFilters
             });
 
@@ -98,12 +96,13 @@ export function useCarFilters(
         }
     }, [serverFilters]);
 
-    // Filter function
     const matchesFilters = useCallback((car: Car): boolean => {
-        if (clientFilters.fuel_id && car.fuel?.id.toString() !== clientFilters.fuel_id) return false;
-        if (clientFilters.transmission_id && car.transmission?.id.toString() !== clientFilters.transmission_id) return false;
-        if (clientFilters.color_id && car.color?.id.toString() !== clientFilters.color_id) return false;
-        if (clientFilters.body_type_id && car.body_type?.id.toString() !== clientFilters.body_type_id) return false;
+        const normalize = (s: string | undefined | null) => (s || '').trim().toLowerCase();
+
+        if (clientFilters.fuel_id && normalize(car.fuel?.name) !== clientFilters.fuel_id) return false;
+        if (clientFilters.transmission_id && normalize(car.transmission?.name) !== clientFilters.transmission_id) return false;
+        if (clientFilters.color_id && normalize(car.color?.name) !== clientFilters.color_id) return false;
+        if (clientFilters.body_type_id && normalize(car.body_type?.name) !== clientFilters.body_type_id) return false;
         if (clientFilters.yearFrom) {
             const yearFrom = parseInt(clientFilters.yearFrom);
             if (!isNaN(yearFrom) && car.year < yearFrom) return false;
@@ -113,9 +112,8 @@ export function useCarFilters(
             if (!isNaN(yearTo) && car.year > yearTo) return false;
         }
 
-        // Use base price for filtering (without shipping)
         const lot = car.lots?.[0];
-        const basePrice = lot?.price_with_margin_and_kosovo || lot?.step5 || lot?.buy_now || 0;
+        const basePrice = lot?.buy_now || 0;
 
         if (clientFilters.priceFrom) {
             const priceFrom = parseInt(clientFilters.priceFrom);
@@ -128,34 +126,28 @@ export function useCarFilters(
         return true;
     }, [clientFilters]);
 
-    // Client-side filtering
     const searchWithClientFilters = useCallback(async (version: number) => {
         try {
-            // Reset all refs
             hasMorePagesRef.current = true;
             currentApiPageRef.current = 1;
-            allMatchesRef.current = []; // Clear cache immediately
+            allMatchesRef.current = [];
 
             let allMatches: Car[] = [];
             let pagesFetched = 0;
             let totalApiPages = 100;
 
-            // First, get total pages from first response
             const firstResponse = await fetchCars({
                 page: 1,
                 per_page: API_PAGE_SIZE,
-                // vehicle_type: '1',
                 ...serverFilters
             });
 
-            // Check if this search is still valid (not aborted and version matches)
             if (abortControllerRef.current?.signal.aborted || version !== filterVersionRef.current) return;
 
             if (firstResponse.meta?.total) {
                 totalApiPages = Math.ceil(firstResponse.meta.total / API_PAGE_SIZE);
             }
 
-            // Update state - clear cars and show skeletons
             setState(prev => ({
                 ...prev,
                 isSearching: true,
@@ -163,18 +155,16 @@ export function useCarFilters(
                 searchProgress: 0,
                 currentSearchPage: 0,
                 totalSearchPages: totalApiPages,
-                cars: [], // Clear cars to show skeletons
+                cars: [],
                 totalMatches: 0,
                 totalPages: 0
             }));
 
-            // Process first page
             const firstPageMatches = (firstResponse.data || []).filter(matchesFilters);
             if (firstPageMatches.length > 0) {
                 allMatches = firstPageMatches;
                 allMatchesRef.current = allMatches;
 
-                // Show first results immediately
                 setState(prev => ({
                     ...prev,
                     cars: allMatches.slice(0, PER_PAGE),
@@ -187,9 +177,7 @@ export function useCarFilters(
 
             pagesFetched = 1;
 
-            // Continue fetching remaining pages in batches
             for (let page = 2; page <= totalApiPages && hasMorePagesRef.current; page += BATCH_SIZE) {
-                // Check if aborted or version changed
                 if (abortControllerRef.current?.signal.aborted || version !== filterVersionRef.current) break;
 
                 const batch = [];
@@ -199,17 +187,14 @@ export function useCarFilters(
                     batch.push(fetchCars({
                         page: i,
                         per_page: API_PAGE_SIZE,
-                        // vehicle_type: '1',
                         ...serverFilters
                     }));
                 }
 
                 const batchResults = await Promise.all(batch);
 
-                // Check again after batch
                 if (abortControllerRef.current?.signal.aborted || version !== filterVersionRef.current) break;
 
-                // Process each page in batch
                 for (let i = 0; i < batchResults.length; i++) {
                     const response = batchResults[i];
                     const currentPageNum = page + i;
@@ -224,7 +209,6 @@ export function useCarFilters(
                         allMatches = [...allMatches, ...matches];
                         allMatchesRef.current = allMatches;
 
-                        // Always update the displayed cars for page 1
                         setState(prev => ({
                             ...prev,
                             totalMatches: allMatches.length,
@@ -236,7 +220,6 @@ export function useCarFilters(
                     }
 
                     pagesFetched++;
-
                     const progress = Math.min(100, Math.round((pagesFetched / totalApiPages) * 100));
 
                     setState(prev => ({
@@ -247,7 +230,6 @@ export function useCarFilters(
                 }
             }
 
-            // Final check before completing
             if (version === filterVersionRef.current) {
                 setState(prev => ({
                     ...prev,
@@ -262,7 +244,6 @@ export function useCarFilters(
         } catch (error) {
             if (error instanceof Error && error.name === 'AbortError') return;
             console.error('Error in client search:', error);
-            // Only update if this version is still current
             if (version === filterVersionRef.current) {
                 setState(prev => ({
                     ...prev,
@@ -274,10 +255,8 @@ export function useCarFilters(
         }
     }, [serverFilters, matchesFilters]);
 
-    // Debounced filter change handler
     const debouncedFilterChange = useCallback(
         debounce(() => {
-            // Increment version to invalidate previous searches
             filterVersionRef.current++;
             const currentVersion = filterVersionRef.current;
 
@@ -286,7 +265,6 @@ export function useCarFilters(
             }
             abortControllerRef.current = new AbortController();
 
-            // Clear cache immediately
             allMatchesRef.current = [];
 
             setState(prev => ({
@@ -295,7 +273,7 @@ export function useCarFilters(
                 isSearching: true,
                 currentPage: hasClientFilters ? 1 : urlPage,
                 searchProgress: 0,
-                cars: [], // Clear cars immediately
+                cars: [],
                 totalMatches: 0,
                 totalPages: 0,
                 error: null
@@ -310,10 +288,8 @@ export function useCarFilters(
         [hasClientFilters, urlPage, fetchServerPage, searchWithClientFilters]
     );
 
-    // Trigger search when filters change
     useEffect(() => {
         debouncedFilterChange();
-
         return () => {
             debouncedFilterChange.cancel();
             if (abortControllerRef.current) {

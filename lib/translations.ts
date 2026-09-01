@@ -50,6 +50,18 @@ export const manufacturerTranslations: Record<string, string> = {
     'Cadillac': 'Cadillac',
     'Lincoln': 'Lincoln',
     'Suzuki': 'Suzuki',
+    'Citroën': 'Citroën',
+    'Maybach': 'Maybach',
+    'Tesla': 'Tesla',
+    'BYD': 'BYD',
+    'Polestar': 'Polestar',
+    // API names
+    'Citroen DS': 'Citroën',
+    'Renault Korea (Samsung)': 'Renault Samsung',
+    'KG Mobility (SsangYong)': 'SsangYong',
+    'Chevrolet (GM Daewoo)': 'Chevrolet (GM Daewoo)',
+    'MINI': 'Mini',
+    'smart': 'Smart',
     // Removed duplicate SsangYong entry
 };
 
@@ -114,7 +126,7 @@ export function getStaticManufacturers() {
 }
 
 // Helper to get sorted and translated manufacturers from API data
-export function getTranslatedManufacturers(manufacturers: Array<{ id: number; name: string }>): Array<{ id: number; original: string; translated: string }> {
+export function getTranslatedManufacturers(manufacturers: Array<{ id: string; name: string }>): Array<{ id: string; original: string; translated: string }> {
     return manufacturers
         .map(m => ({
             id: m.id,

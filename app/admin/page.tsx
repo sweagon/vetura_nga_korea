@@ -98,7 +98,7 @@ export default function AdminPage() {
                     <div className="w-20 h-20 bg-orange-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 relative">
                         <Lock className="w-10 h-10 text-orange-500" />
                         {loginAttempts > 0 && (
-                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs">
+                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-error-text rounded-full flex items-center justify-center text-white text-xs">
                                 {loginAttempts}
                             </div>
                         )}
@@ -120,13 +120,13 @@ export default function AdminPage() {
                         />
                         {lockoutUntil && Date.now() < lockoutUntil && (
                             <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                <AlertCircle className="w-5 h-5 text-red-500" />
+                                <AlertCircle className="w-5 h-5 text-error-text" />
                             </div>
                         )}
                     </div>
 
                     {error && (
-                        <div className="mb-4 p-3 rounded-lg text-sm text-center bg-red-500/10 text-red-500 border border-red-500/20">
+                        <div className="mb-4 p-3 rounded-lg text-sm text-center bg-error-bg text-error-text border border-error-border">
                             {error}
                         </div>
                     )}
@@ -134,7 +134,7 @@ export default function AdminPage() {
                     <button
                         type="submit"
                         disabled={isLoading || (lockoutUntil !== null && Date.now() < lockoutUntil)}
-                        className="w-full py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-dark transition-colors text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isLoading ? (
                             <span className="flex items-center justify-center gap-2">

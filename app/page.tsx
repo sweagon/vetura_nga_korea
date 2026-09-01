@@ -1,7 +1,6 @@
 // app/page.tsx
 import { Suspense } from 'react';
 import Hero from '@/components/home/Hero';
-import AboutSection from '@/components/home/AboutSection';
 import HowItWorks from '@/components/home/HowItWorks';
 import WhyChooseUs from '@/components/home/WhyChooseUs';
 import LocationMap from '@/components/home/LocationMap';
@@ -12,9 +11,6 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       <Hero />
-
-      {/* About Section */}
-      <AboutSection />
 
       {/* How It Works */}
       <HowItWorks />

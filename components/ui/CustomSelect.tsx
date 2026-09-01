@@ -130,7 +130,7 @@ export default function CustomSelect({
                     }}
                     onClick={(e) => e.stopPropagation()}
                 >
-                    <div className="bg-primary border border-light/20 rounded-lg shadow-xl overflow-hidden">
+                    <div className="bg-bg-primary border border-light/20 rounded-lg shadow-xl overflow-hidden">
                         <div className="overflow-y-auto max-h-[300px]">
                             {options.length > 0 ? (
                                 options.map((option, idx) => (

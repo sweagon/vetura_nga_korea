@@ -111,6 +111,15 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
     const lot = car.lots?.[0] as ExtendedLot | undefined;
     const details = lot?.details;
 
+    // Rich data from the provider's encar_details payload
+    const encarFull = car.encar_details?.full;
+    const accidentHistory = car.encar_details?.accident_history;
+    const insuranceHistory = accidentHistory?.insuranceHistory;
+    const inspectionReport = encarFull?.inspection_report;
+    const equipment = encarFull?.equipment;
+    const condition = car.condition || encarFull?.condition;
+    const listing = car.listing || encarFull?.listing;
+
     // Extract recalls from history - now using imported types
     const recalls = (details?.history?.filter((item: HistoryItem) =>
         item.content?.some((content: HistoryContent) =>
@@ -123,7 +132,21 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
         recall.content?.some((c: HistoryContent) => c.flag === 'Recall required' || c.title?.includes('Recall required'))
     );
 
-    const ownerCount = details?.insurance_v2?.ownerChangeCnt || 0;
+    const ownerCount = insuranceHistory?.ownerChanges?.length ?? details?.insurance_v2?.ownerChangeCnt ?? condition?.owners ?? 0;
+
+    // Equipment/options: prefer rich {code,name} pairs from encar_details.full.equipment
+    const optionGroups: {
+        standard: (string | { code: string; name: string })[];
+        choice: (string | { code: string; name: string })[];
+        tuning: (string | { code: string; name: string })[];
+        etc: (string | { code: string; name: string })[];
+    } = {
+        standard: equipment?.groups?.standard ?? details?.options?.standard ?? [],
+        choice: equipment?.groups?.choice ?? details?.options?.choice ?? [],
+        tuning: equipment?.groups?.tuning ?? details?.options?.tuning ?? [],
+        etc: equipment?.groups?.etc ?? details?.options?.etc ?? [],
+    };
+    const totalOptions = optionGroups.standard.length + optionGroups.choice.length + optionGroups.tuning.length + optionGroups.etc.length;
 
     // Convert KRW to EUR
     const convertKRWtoEUR = (krwAmount: number): number => {
@@ -161,6 +184,9 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
         const title = car.title;
         const color = car.color?.name;
         const firstReg = details?.first_registration;
+        const firstRegStr = encarFull?.first_registered
+            ? new Date(encarFull.first_registered).toISOString().slice(0, 10)
+            : null;
 
         return {
             fullName: title || 'N/A',
@@ -172,13 +198,43 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
             year: year || 'N/A',
             color: color ? translateColor(color) : 'N/A',
             vin: car.vin || 'N/A',
-            firstRegDate: firstReg ? `${firstReg.year}-${firstReg.month}-${firstReg.day}` : null
+            firstRegDate: firstReg ? `${firstReg.year}-${firstReg.month}-${firstReg.day}` : firstRegStr
         };
     };
 
     // Get insurance details with converted amounts
     const getInsuranceDetails = () => {
         const insurance = details?.insurance_v2;
+
+        // Prefer the rich accident_history.insuranceHistory payload
+        if (accidentHistory?.insuranceHistory) {
+            const ih = accidentHistory.insuranceHistory;
+            const hasData = ih.totalIncidents || ih.ownIncidents || ih.otherIncidents || ih.claims?.length;
+
+            const accidents = (ih.claims || []).map(claim => ({
+                date: claim.date || 'N/A',
+                insuranceBenefit: Math.round(claim.total_eur || 0),
+                partCost: Math.round((claim.parts_krw || 0) / KRW_TO_EUR),
+                laborCost: Math.round((claim.labour_krw || 0) / KRW_TO_EUR),
+                paintingCost: Math.round((claim.paint_krw || 0) / KRW_TO_EUR),
+                type: claim.kind === 'mine' ? '1' : claim.kind === 'other' ? '3' : '4'
+            }));
+
+            return {
+                hasData: !!hasData,
+                accidentCount: ih.totalIncidents || 0,
+                myAccidentCount: ih.ownIncidents || 0,
+                myAccidentCost: Math.round((ih.ownDamageKrw || 0) / KRW_TO_EUR),
+                otherAccidentCount: ih.otherIncidents || 0,
+                otherAccidentCost: Math.round((ih.otherPartyKrw || 0) / KRW_TO_EUR),
+                totalLossCount: ih.totalLoss ? 1 : 0,
+                floodTotalLossCount: 0,
+                robberCount: 0,
+                ownerChangeCount: ih.ownerChanges?.length || 0,
+                accidents,
+                flags: accidentHistory.flags
+            };
+        }
 
         if (!insurance) {
             return {
@@ -192,7 +248,8 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
                 floodTotalLossCount: 0,
                 robberCount: 0,
                 ownerChangeCount: 0,
-                accidents: []
+                accidents: [],
+                flags: accidentHistory?.flags
             };
         }
 
@@ -213,7 +270,8 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
                 partCost: convertKRWtoEUR(acc.partCost || 0),
                 laborCost: convertKRWtoEUR(acc.laborCost || 0),
                 paintingCost: convertKRWtoEUR(acc.paintingCost || 0)
-            }))
+            })),
+            flags: accidentHistory?.flags
         };
     };
 
@@ -222,11 +280,11 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
         return {
             // Basic Info
             year: car.year,
-            vin: car.vin,
+            vin: car.vin || 'N/A',
             mileage: lot?.odometer?.km ? `${lot.odometer.km.toLocaleString()} km` : 'N/A',
 
             // Engine & Performance
-            engineVolume: details?.engine_volume ? `${details.engine_volume} cc` : 'N/A',
+            engineVolume: details?.engine_volume ? `${details.engine_volume} cc` : (encarFull?.displacement ? `${encarFull.displacement} cc` : 'N/A'),
             horsepower: car.hp ? `${car.hp} HP` : 'N/A',
             engineCode: car.engine?.name || 'N/A',
             fuel: car.fuel?.name ? translateFuel(car.fuel.name) : 'N/A',
@@ -234,7 +292,7 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
             cylinders: car.cylinders ? `${car.cylinders} cilindra` : 'N/A',
 
             // Dimensions & Capacity
-            seats: details?.seats_count ? `${details.seats_count} ulëse` : 'N/A',
+            seats: details?.seats_count ? `${details.seats_count} ulëse` : (encarFull?.seats ? `${encarFull.seats} ulëse` : 'N/A'),
 
             // Exterior
             color: car.color?.name ? translateColor(car.color.name) : 'N/A',
@@ -351,7 +409,13 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
                     <div className="flex items-center justify-center gap-2">
                         <ClipboardCheck size={16} />
                         <span>Inspektimi</span>
-                        {details?.inspect_outer && details.inspect_outer.length > 0 && (
+                        {inspectionReport ? (
+                            (inspectionReport.panels?.length ?? 0) + (inspectionReport.mechanical_flagged?.length ?? 0) > 0 && (
+                            <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-surface-3 text-muted">
+                                {(inspectionReport.panels?.length ?? 0) + (inspectionReport.mechanical_flagged?.length ?? 0)}
+                            </span>
+                            )
+                        ) : details?.inspect_outer && details.inspect_outer.length > 0 && (
                             <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-orange-500/20 text-orange-500">
                                 {details.inspect_outer.length}
                             </span>
@@ -372,9 +436,9 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
                     <div className="flex items-center justify-center gap-2">
                         <Settings size={16} />
                         <span>Opsionet</span>
-                        {details?.options?.standard && (
+                        {totalOptions > 0 && (
                             <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-surface-3 text-muted">
-                                {details.options.standard.length}
+                                {totalOptions}
                             </span>
                         )}
                     </div>
@@ -576,7 +640,15 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
                                 )}
 
                                 {/* Warning Indicators */}
-                                {(insurance.totalLossCount > 0 || insurance.floodTotalLossCount > 0 || insurance.robberCount > 0) && (
+                                {(
+                                    insurance.totalLossCount > 0 ||
+                                    insurance.floodTotalLossCount > 0 ||
+                                    insurance.robberCount > 0 ||
+                                    insurance.flags?.writeOff ||
+                                    insurance.flags?.flood ||
+                                    insurance.flags?.stolen ||
+                                    insurance.flags?.encumbered
+                                ) && (
                                     <div className="bg-error-bg border border-error-border rounded-lg p-3">
                                         <div className="flex items-start gap-2">
                                             <AlertCircle className="w-4 h-4 text-error-text shrink-0 mt-0.5" />
@@ -584,6 +656,10 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
                                                 {insurance.totalLossCount > 0 && <div>• Total Loss: {insurance.totalLossCount}</div>}
                                                 {insurance.floodTotalLossCount > 0 && <div>• Dëmtime nga Përmbytja: {insurance.floodTotalLossCount}</div>}
                                                 {insurance.robberCount > 0 && <div>• Vjedhje: {insurance.robberCount}</div>}
+                                                {insurance.flags?.writeOff && <div>• E shkruar si humbje totale (write-off)</div>}
+                                                {insurance.flags?.flood && <div>• Dëmtim nga përmbytja (flood)</div>}
+                                                {insurance.flags?.stolen && <div>• E vjedhur më parë</div>}
+                                                {insurance.flags?.encumbered && <div>• E lënë si peng / e ngarkuar</div>}
                                             </div>
                                         </div>
                                     </div>
@@ -649,7 +725,85 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
                             <ClipboardCheck className="text-orange-500" size={20} />
                             Raporti i Inspektimit
                         </h3>
-                        <InspectionReport inspections={details?.inspect_outer} />
+
+                        {inspectionReport && inspectionReport.available && (
+                            <>
+                                {/* Inspection summary */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <SpecItem
+                                        icon={inspectionReport.accident ? <XCircle size={16} /> : <CheckCircle size={16} />}
+                                        label="Dëmtime nga aksidenti"
+                                        value={inspectionReport.accident ? 'Po' : 'Jo'}
+                                        highlight={inspectionReport.accident}
+                                    />
+                                    <SpecItem
+                                        icon={inspectionReport.simple_repair ? <XCircle size={16} /> : <CheckCircle size={16} />}
+                                        label="Riparime të thjeshta"
+                                        value={inspectionReport.simple_repair ? 'Po' : 'Jo'}
+                                        highlight={inspectionReport.simple_repair}
+                                    />
+                                    <SpecItem
+                                        icon={<AlertCircle size={16} />}
+                                        label="Pllaka të dëmtuara"
+                                        value={String(inspectionReport.panels?.length || 0)}
+                                        highlight={(inspectionReport.panels?.length || 0) > 0}
+                                    />
+                                    <SpecItem
+                                        icon={<AlertCircle size={16} />}
+                                        label="Pllaka strukturore"
+                                        value={String(inspectionReport.panels_structural || 0)}
+                                        highlight={(inspectionReport.panels_structural || 0) > 0}
+                                    />
+                                </div>
+
+                                {/* mechanical check */}
+                                {inspectionReport.mechanical_checked > 0 && (
+                                    <div className={`
+                                        rounded-lg p-3 text-sm
+                                        ${inspectionReport.mechanical_all_clear
+                                            ? 'bg-success-bg border border-success-border text-success-text'
+                                            : 'bg-warning-bg border border-warning-border text-warning-text'
+                                        }
+                                    `}>
+                                        <div className="flex items-center gap-2">
+                                            {inspectionReport.mechanical_all_clear
+                                                ? <CheckCircle size={16} />
+                                                : <AlertCircle size={16} />}
+                                            <span className="font-medium">
+                                                Pjesa mekanike: {inspectionReport.mechanical_all_clear ? 'e pastër' : 'ka devijime'}
+                                            </span>
+                                            <span className="ml-auto text-xs">
+                                                {inspectionReport.mechanical_checked} kontrollime
+                                            </span>
+                                        </div>
+                                        {inspectionReport.mechanical_flagged?.length > 0 && (
+                                            <ul className="mt-2 space-y-1 list-disc pl-5 text-xs">
+                                                {inspectionReport.mechanical_flagged.map((flag: any, i: number) => (
+                                                    <li key={i}>{typeof flag === 'string' ? flag : JSON.stringify(flag)}</li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+                                )}
+
+                                {inspectionReport.filed_on && (
+                                    <p className="text-xs text-muted">
+                                        Inspektimi i kryer më: {inspectionReport.filed_on}
+                                    </p>
+                                )}
+                            </>
+                        )}
+
+                        {(!inspectionReport || !inspectionReport.available) && details?.inspect_outer && (
+                            <InspectionReport inspections={details.inspect_outer} />
+                        )}
+
+                        {(!inspectionReport || !inspectionReport.available) && (!details?.inspect_outer || details.inspect_outer.length === 0) && (
+                            <div className="text-center py-6 bg-surface-3/30 rounded-lg">
+                                <CheckCircle className="w-8 h-8 text-success-text mx-auto mb-2" />
+                                <p className="text-muted text-sm">Nuk ka dëmtime të raportuara nga inspektimi</p>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -662,44 +816,40 @@ export default function CarDetailTabs({ car }: CarDetailTabsProps) {
                         </h3>
 
                         <div className="space-y-3">
-                            {details?.options?.standard && (
+                            {optionGroups.standard.length > 0 && (
                                 <OptionList
-                                    options={details.options.standard}
+                                    options={optionGroups.standard}
                                     title="Pajisjet Standarde"
                                 />
                             )}
 
-                            {details?.options?.choice && details.options.choice.length > 0 && (
+                            {optionGroups.choice.length > 0 && (
                                 <OptionList
-                                    options={details.options.choice}
+                                    options={optionGroups.choice}
                                     title="Opsionet e Zgjedhura"
                                 />
                             )}
 
-                            {details?.options?.tuning && details.options.tuning.length > 0 && (
+                            {optionGroups.tuning.length > 0 && (
                                 <OptionList
-                                    options={details.options.tuning}
+                                    options={optionGroups.tuning}
                                     title="Tuning / Modifikime"
                                 />
                             )}
 
-                            {details?.options?.etc && details.options.etc.length > 0 && (
+                            {optionGroups.etc.length > 0 && (
                                 <OptionList
-                                    options={details.options.etc}
+                                    options={optionGroups.etc}
                                     title="Të Tjera"
                                 />
                             )}
 
-                            {(!details?.options ||
-                                (!details.options.standard?.length &&
-                                    !details.options.choice?.length &&
-                                    !details.options.tuning?.length &&
-                                    !details.options.etc?.length)) && (
-                                    <div className="text-center py-6 bg-surface-3/30 rounded-lg">
-                                        <Settings className="w-8 h-8 text-muted mx-auto mb-2" />
-                                        <p className="text-muted text-sm">Nuk ka të dhëna për opsionet</p>
-                                    </div>
-                                )}
+                            {totalOptions === 0 && (
+                                <div className="text-center py-6 bg-surface-3/30 rounded-lg">
+                                    <Settings className="w-8 h-8 text-muted mx-auto mb-2" />
+                                    <p className="text-muted text-sm">Nuk ka të dhëna për opsionet</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

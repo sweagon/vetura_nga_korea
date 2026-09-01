@@ -4,11 +4,14 @@ export interface VehicleTypeConfig {
     enabled: boolean;
 }
 
+export const DEFAULT_KRW_TO_EUR_RATE = 0.000628;
+
 export interface SiteConfig {
     shippingCost: number;
     shippingToPristina: number;
     defaultMarginPercentage: number;
     defaultMinimumMargin: number;
+    krwToEurRate: number;
     contactEmail: string;
     contactPhone: string;
     siteName: string;
@@ -30,6 +33,7 @@ export const defaultConfig: SiteConfig = {
     shippingToPristina: 350,
     defaultMarginPercentage: 15,
     defaultMinimumMargin: 1000,
+    krwToEurRate: DEFAULT_KRW_TO_EUR_RATE,
     contactEmail: 'blerart@outlook.com',
     contactPhone: '+383 49 195 414',
     siteName: 'Vetura Korea Kosova',
@@ -67,6 +71,11 @@ export function validateConfig(config: Partial<SiteConfig>): { valid: boolean; e
     if (config.defaultMinimumMargin !== undefined) {
         if (config.defaultMinimumMargin < 0) errors.push('Minimum margin cannot be negative');
         if (config.defaultMinimumMargin > 50000) errors.push('Minimum margin too high (max €50,000)');
+    }
+
+    if (config.krwToEurRate !== undefined) {
+        if (config.krwToEurRate <= 0) errors.push('KRW to EUR rate must be positive');
+        if (config.krwToEurRate > 0.01) errors.push('KRW to EUR rate too high (max €0.01 per KRW)');
     }
 
     if (config.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(config.contactEmail)) {

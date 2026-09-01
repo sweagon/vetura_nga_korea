@@ -18,8 +18,8 @@ export default function GlobalError({
     return (
         <html>
             <body>
-                <div className="min-h-screen flex items-center justify-center bg-secondary">
-                    <div className="container-custom py-12">
+                <div className="min-h-screen flex items-center justify-center bg-bg-primary">
+                    <div className="container-swiss py-12">
                         <div className="max-w-2xl mx-auto text-center">
                             {/* Error Icon */}
                             <div className="mb-6">

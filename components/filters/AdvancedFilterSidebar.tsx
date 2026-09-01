@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     Fuel,
     Settings,
@@ -44,6 +45,17 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
         year: false,
         price: false
     });
+
+    // Detect desktop vs mobile so the closed sheet can be fully unmounted
+    // (avoids offscreen fixed elements expanding the scroll area on mobile)
+    const [isDesktop, setIsDesktop] = useState(false);
+    useEffect(() => {
+        const mq = window.matchMedia('(min-width: 1024px)');
+        const update = () => setIsDesktop(mq.matches);
+        update();
+        mq.addEventListener('change', update);
+        return () => mq.removeEventListener('change', update);
+    }, []);
 
     // Temporary filters state
     const [tempFilters, setTempFilters] = useState<TempFilters>({
@@ -100,42 +112,36 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
         searchParams.get('buy_now_price_to')
     );
 
-    // Pre-defined options
+    // Pre-defined options (values are lowercase names matching the live API)
     const fuelOptions = [
-        { id: '1', name: 'diesel', label: 'Naftë' },
-        { id: '2', name: 'electric', label: 'Elektrik' },
-        { id: '3', name: 'hybrid', label: 'Hibrid' },
-        { id: '4', name: 'gasoline', label: 'Benzinë' },
+        { id: 'diesel', name: 'Diesel', label: 'Naftë' },
+        { id: 'electric', name: 'Electric', label: 'Elektrik' },
+        { id: 'gasoline', name: 'Gasoline', label: 'Benzinë' },
+        { id: 'gasoline hybrid', name: 'Gasoline Hybrid', label: 'Hibrid Benzinë' },
     ];
 
-    // const transmissionOptions = [
-    //     { id: '1', name: 'automatic', label: 'Automatik' },
-    //     { id: '2', name: 'manual', label: 'Manuel' },
-    // ];
-
     const colorOptions = [
-        { id: '1', name: 'silver', label: 'Argjend' },
-        { id: '2', name: 'purple', label: 'Vjollcë' },
-        { id: '3', name: 'orange', label: 'Portokalli' },
-        { id: '4', name: 'green', label: 'Gjelbër' },
-        { id: '5', name: 'red', label: 'Kuq' },
-        { id: '6', name: 'gold', label: 'Arë' },
-        { id: '8', name: 'brown', label: 'Kafe' },
-        { id: '9', name: 'grey', label: 'Gri' },
-        { id: '11', name: 'blue', label: 'Kaltër' },
-        { id: '13', name: 'white', label: 'Bardhë' },
-        { id: '15', name: 'black', label: 'Zi' },
-        { id: '16', name: 'yellow', label: 'Verdhë' },
+        { id: 'black', name: 'Black', label: 'Zi' },
+        { id: 'white', name: 'White', label: 'Bardhë' },
+        { id: 'silver', name: 'Silver', label: 'Argjend' },
+        { id: 'grey', name: 'Grey', label: 'Gri' },
+        { id: 'silver grey', name: 'Silver Grey', label: 'Argjend-Gri' },
+        { id: 'blue', name: 'Blue', label: 'Kaltër' },
+        { id: 'red', name: 'Red', label: 'Kuq' },
+        { id: 'green', name: 'Green', label: 'Gjelbër' },
+        { id: 'orange', name: 'Orange', label: 'Portokalli' },
+        { id: 'pearl', name: 'Pearl', label: 'Perlë' },
     ];
 
     const bodyTypeOptions = [
-        { id: '1', name: 'sedan', label: 'Sedan' },
-        { id: '2', name: 'wagon', label: 'Kombi' },
-        { id: '3', name: 'coupe', label: 'Kupe' },
-        { id: '5', name: 'suv', label: 'SUV' },
-        { id: '7', name: 'van', label: 'Furgon' },
-        { id: '11', name: 'hatchback', label: 'Hatchback' },
-        { id: '27', name: 'sport_car', label: 'Makinë Sportive' },
+        { id: 'suv', name: 'SUV', label: 'SUV' },
+        { id: 'small sedan', name: 'Small Sedan', label: 'Sedan i Vogël' },
+        { id: 'compact', name: 'Compact', label: 'Kompakt' },
+        { id: 'mid-size', name: 'Mid-size', label: 'I Mesëm' },
+        { id: 'full-size', name: 'Full-size', label: 'I Madh' },
+        { id: 'city car', name: 'City Car', label: 'Makinë Qyteti' },
+        { id: 'van', name: 'Van', label: 'Furgon' },
+        { id: 'sports car', name: 'Sports Car', label: 'Makinë Sportive' },
     ];
 
     // Generate year options (last 30 years)
@@ -196,33 +202,19 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
     };
 
     // For desktop, always show the sidebar content
-    // For mobile, only show when isOpen is true
-    const showSidebar = typeof window !== 'undefined' && window.innerWidth >= 1024 ? true : isOpen;
-
-    if (!showSidebar) return null;
-
+    // For mobile, only show when isOpen is true (bottom sheet, handled via transforms)
     const isFilterSelected = (filterType: keyof TempFilters, value: string) => {
         return tempFilters[filterType] === value;
     };
 
-    return (
+    const sidebar = (
         <>
-            {/* Mobile Overlay - only show on mobile when open */}
-            {isOpen && (
-                <div
-                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 lg:hidden"
-                    onClick={onClose}
-                />
-            )}
+            {/* Grab handle (mobile) */}
+            <div className="lg:hidden pt-2.5 pb-1 flex justify-center">
+                <div className="h-1 w-10 rounded-full bg-white/20" />
+            </div>
 
-            {/* Sidebar */}
-            <div className={`
-                fixed top-0 bottom-0 left-0 w-full sm:w-80 bg-surface border-r border-light/20 
-                overflow-y-auto z-50 transition-transform duration-300 shadow-2xl
-                lg:translate-x-0 lg:sticky lg:top-24 lg:h-[calc(100vh-96px)] lg:z-10
-                ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-            `}>
-                {/* Header */}
+            {/* Header */}
                 <div className="bg-[#0A1929]/10 bg-clip-padding backdrop-filter backdrop-blur-sm rounded sticky top-0 bg-surface border-b border-light/20 p-4 flex items-center justify-between z-10">
                     <div className="flex items-center gap-2">
                         <Filter size={18} className="text-orange-500" />
@@ -237,7 +229,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                         {tempActiveCount > 0 && (
                             <button
                                 onClick={clearFilters}
-                                className="text-xs text-orange-500 hover:text-orange-600 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-surface-2"
+                                className="text-xs text-orange-500 hover:text-orange-400 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-surface-2"
                             >
                                 <X size={14} />
                                 <span>Pastro</span>
@@ -603,7 +595,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                 </div>
 
                 {/* Footer with Apply Button */}
-                <div className="sticky bottom-0 bg-surface border-t border-light/20 p-4">
+                <div className="sticky bottom-0 bg-surface border-t border-light/20 p-4 pb-[max(env(safe-area-inset-bottom),16px)]">
                     <div className="flex gap-2">
                         {tempActiveCount > 0 && (
                             <button
@@ -618,7 +610,7 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                             disabled={!hasBasicFilters && tempActiveCount > 0}
                             className={`
                                 flex-1 px-4 py-2.5 bg-orange-500 text-white rounded-lg 
-                                hover:bg-orange-600 transition-colors text-sm font-medium
+                                hover:bg-orange-dark transition-colors text-sm font-medium
                                 flex items-center justify-center gap-2
                                 ${(!hasBasicFilters && tempActiveCount > 0) ? 'opacity-50 cursor-not-allowed' : ''}
                             `}
@@ -633,7 +625,54 @@ export default function AdvancedFilterSidebar({ isOpen, onClose }: AdvancedFilte
                         </button>
                     </div>
                 </div>
-            </div>
         </>
+    );
+
+    if (isDesktop) {
+        return (
+            <aside
+                role="dialog"
+                aria-modal="true"
+                aria-label="Filtrat"
+                className="w-full lg:w-72 shrink-0"
+            >
+                <div className="lg:sticky lg:top-24 lg:h-[calc(100vh-96px)] overflow-y-auto bg-surface border-l border-light/20">
+                    {sidebar}
+                </div>
+            </aside>
+        );
+    }
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <motion.div
+                    key="filter-sheet"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Filtrat"
+                    className="fixed inset-0 z-[60] lg:hidden"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                >
+                    <div
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        onClick={onClose}
+                        aria-hidden="true"
+                    />
+                    <motion.div
+                        initial={{ y: '100%' }}
+                        animate={{ y: 0 }}
+                        exit={{ y: '100%' }}
+                        transition={{ type: 'spring', stiffness: 380, damping: 40 }}
+                        className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-2xl bg-surface border-t border-light/20 shadow-2xl"
+                    >
+                        {sidebar}
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
     );
 }

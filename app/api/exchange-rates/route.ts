@@ -1,4 +1,3 @@
-// app/api/exchange-rates/route.ts
 import { NextResponse } from 'next/server';
 import { getExchangeRatesFromDb } from '@/lib/db';
 
@@ -22,6 +21,6 @@ export async function GET() {
             ],
             timestamp: new Date().toISOString(),
             error: 'Using fallback rates'
-        });
+        }, { status: 200 });
     }
 }

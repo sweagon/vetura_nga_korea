@@ -54,3 +54,5 @@ coverage/
 *.pid.lockdata/
 
 scripts
+# Build info
+*.tsbuildinfo
