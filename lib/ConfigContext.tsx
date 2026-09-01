@@ -44,11 +44,10 @@ export function ConfigProvider({
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        // When the real config is seeded from the server (root layout), there is
-        // nothing to fetch: prices render once with the correct values and never
-        // jump between a default and the DB config.
-        if (initialConfig) return;
-
+        // Always re-fetch fresh config on the client. The server-seeded `initialConfig`
+        // avoids the initial price-glitch flicker, but a hard refresh / deploy can leave
+        // the seed stale (e.g. a fallback defaultConfig). Fetching once after mount keeps
+        // the admin panel and car prices in sync with whatever is actually in the DB.
         const fetchConfig = async () => {
             try {
                 setLoading(true);

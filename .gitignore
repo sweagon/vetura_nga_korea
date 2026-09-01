@@ -54,3 +54,4 @@ coverage/
 *.pid.lockdata/
 # Build info
 *.tsbuildinfo
+.env.vercel
