@@ -9,10 +9,7 @@ Disallow: /admin/
 Crawl-delay: 5
 
 # Sitemap
-Sitemap: https://vetura-korea-kosova.vercel.app/sitemap.xml
-
-# Host
-Host: https://vetura-korea-kosova.vercel.app
+Sitemap: https://veturakoreakosove.com/sitemap.xml
 
 # Google-specific
 User-agent: Googlebot
