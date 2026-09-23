@@ -237,6 +237,7 @@ export interface EncarFullDetails {
   vin: string | null;
   requested_id: string;
   listing_id: string;
+  also_listed_as?: string[] | null;
   german?: {
     german_eur: number;
     landed_eur: number;
@@ -535,12 +536,16 @@ export async function fetchCarById(id: string): Promise<Car | null> {
   }
 }
 
-export async function fetchCarPhotos(id: string, thumb?: string): Promise<string[]> {
+export async function fetchCarPhotos(id: string, thumb?: string, extraIds?: string[]): Promise<string[]> {
   try {
     if (!id) return [];
 
+    const params = new URLSearchParams();
+    if (thumb) params.set('thumb', thumb);
+    if (extraIds?.length) params.set('extraIds', extraIds.join(','));
+    const qs = params.toString();
     let path = `/api/cars/${encodeURIComponent(id)}/photos`;
-    if (thumb) path += `?thumb=${encodeURIComponent(thumb)}`;
+    if (qs) path += `?${qs}`;
     const url = getFullUrl(path);
 
     const response = await fetchWithTimeout(url, {}, 20000);

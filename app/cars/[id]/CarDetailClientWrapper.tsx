@@ -44,10 +44,26 @@ export default function CarDetailClientWrapper({ id }: { id: string }) {
                     lot?.images?.normal?.[0] ||
                     lot?.images?.downloaded?.[0] ||
                     '';
-                try {
-                    const photos = await fetchCarPhotos(id, thumb).catch(() => [] as string[]);
 
-                    if (photos.length && lot && lot.images) {
+                // The provider may expose the full image set AND/OR the real CDN
+                // id via alsoListedAs (= Encar's vehicleId, which for re-listed
+                // cars differs from the page id). The CDN hi-res set wins when it
+                // resolves; never replace the provider set with a worse probe.
+                const alsoListed = [...new Set([
+                    ...(data.listing?.alsoListedAs || []),
+                    ...(data.encar_details?.full?.also_listed_as || []),
+                ])].filter(String);
+                try {
+                    const photos = await fetchCarPhotos(id, thumb, alsoListed).catch(() => [] as string[]);
+
+                    // Prefer the CDN hi-res set when the probe actually resolved
+                    // one (>=2 real CDN URLs). Otherwise keep the provider set
+                    // (which for re-listed cars already carries all photos) — a
+                    // broken/raw-thumbnail probe must never wipe it out.
+                    const isRealCdnSet =
+                        photos.length >= 2 &&
+                        photos.every(p => p.startsWith('https://ci.encar.com/'));
+                    if (isRealCdnSet && lot && lot.images) {
                         lot.images = {
                             ...lot.images,
                             normal: photos,

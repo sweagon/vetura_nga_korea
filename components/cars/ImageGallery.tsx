@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import PhotoSwipeLightbox from 'photoswipe/lightbox';
+import { CameraOff } from 'lucide-react';
 import 'photoswipe/style.css';
 
 interface ImageGalleryProps {
@@ -128,7 +129,8 @@ export default function ImageGallery({ images, carName, carId, loading }: ImageG
     // skeleton instead of flashing it as the main image.
     const onlyThumb = merged.length > 0 && merged.every(url => !url.includes('impolicy=heightRate'));
     const waitingForHires = onlyThumb && (loading || discovering);
-    const displayImages = waitingForHires ? [] : merged.length > 0 ? merged : ['/placeholder-car.jpg'];
+    const hasNoPhotos = merged.length === 0;
+    const displayImages = waitingForHires ? [] : merged.length > 0 ? merged : [];
 
     useEffect(() => {
         if (!carId || discoveryDone || images.length > 3) return;
@@ -209,6 +211,7 @@ export default function ImageGallery({ images, carName, carId, loading }: ImageG
     // - with only the provider thumbnail, render skeleton secondary slots.
     const pendingMore = (loading || discovering) && displayImages.length <= 1;
     const noMainYet = displayImages.length === 0;
+    const noPhotosAtAll = !loading && !discovering && hasNoPhotos && displayImages.length === 0;
 
     // Encar/CDN photos are rendered at ~4:3 (1597x1200). Declare the true
     // ratio so the lightbox does not stretch the image.
@@ -260,7 +263,14 @@ export default function ImageGallery({ images, carName, carId, loading }: ImageG
     return (
         <div ref={galleryRef} className="grid grid-cols-4 gap-0.5 rounded-xl overflow-hidden">
             {/* Main large image - spans 2x2 */}
-            {noMainYet ? (
+            {noPhotosAtAll ? (
+                <div className="col-span-2 row-span-2 relative bg-surface-2 aspect-[4/3]">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted">
+                        <CameraOff size={40} strokeWidth={1.5} />
+                        <span className="text-sm">Pa fotografi për këtë makinë</span>
+                    </div>
+                </div>
+            ) : noMainYet ? (
                 <div className="col-span-2 row-span-2 relative bg-surface-2 animate-pulse aspect-[4/3]" aria-hidden="true">
                     <span className="absolute bottom-2 left-2 px-3 py-1.5 bg-black/70 text-white text-sm rounded-lg backdrop-blur-sm">
                         📸 Po ngarkohen…

@@ -1,7 +1,6 @@
 // lib/encarPhotos.ts
 // The provider API only exposes the first photo (_001.jpg) per listing.
-// Encar's CDN serves the remaining photos at a predictable sequential pattern:
-//   https://ci.encar.com/carpicture04/pic4264/{id}_{NNN}.jpg
+// Encar's CDN serves the remaining photos at a predictable sequential pattern.
 // This module probes which of those exist at request time (HEAD checks, no
 // HTML scraping, no persistence) and returns the existing photo URLs sorted
 // by index. Results are cached in-memory for a short window.
@@ -22,6 +21,11 @@
 //   https://ci.encar.com/carpicture/carpicture0X/pic{first4}/{id}_{NNN}.jpg
 // where X = the 4th digit of the id, and {first4} = the id's first four digits.
 // Examples: 42513666 -> carpicture01/pic4251, 42789404 -> carpicture08/pic4278.
+//
+// Re-listed cars confuse the derivation: the page id differs from the CDN
+// photo-set id (Encar's `vehicleId`). The provider exposes the real CDN id via
+// `alsoListedAs` / `also_listed_as`, which callers pass in as `extraIds`; the
+// probe tries every candidate base and keeps whichever actually resolves.
 const THUMB_BASE_RE = /^(https?:\/\/[^/]+\/carpicture\d+\/pic\d+\/\d+)_\d+\.jpg/;
 
 function cdnBaseFromId(id: string): string | null {
@@ -29,7 +33,18 @@ function cdnBaseFromId(id: string): string | null {
   return `https://ci.encar.com/carpicture/carpicture0${id[3]}/pic${id.slice(0, 4)}/${id}`;
 }
 
-const CDN_BASE = (id: string) => cdnBaseFromId(id);
+function uniqueBases(...ids: (string | null | undefined)[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const id of ids) {
+    if (!id) continue;
+    const base = id.match(/^https/)? id : cdnBaseFromId(id);
+    if (!base || seen.has(base)) continue;
+    seen.add(base);
+    out.push(base);
+  }
+  return out;
+}
 
 // High-quality render query (keeps original aspect ratio, no watermark).
 const RESIZE_QUERY = 'impolicy=heightRate&rh=1200&cw=1600&ch=1200&cg=Center';
@@ -92,7 +107,7 @@ async function checkBatch(urls: string[]): Promise<ProbeResult[]> {
 
 export async function probeCarPhotos(
   id: string,
-  opts: { force?: boolean; includeThumb?: string } = {}
+  opts: { force?: boolean; includeThumb?: string; extraIds?: string[] } = {}
 ): Promise<string[]> {
   if (!id || !/^\d+$/.test(id)) return [];
 
@@ -102,60 +117,63 @@ export async function probeCarPhotos(
     return cached.photos;
   }
 
-  // Prefer the CDN base derived from the provider thumbnail over the page id
-  // (folder + photo-set id differ per car). When the thumbnail is a proxy URL
-  // that hides the CDN layout, derive the base from the id (see cdnBaseFromId).
+  // Candidate CDN bases, in priority order: the provider thumbnail when it IS a
+  // CDN URL, then the page id, then any re-listing/vehicle ids (alsoListedAs).
+  // For re-listed cars the photo-set id differs from the page id, so trying the
+  // extra ids is what unlocks the real gallery.
   const thumbBase = opts.includeThumb?.match(THUMB_BASE_RE)?.[1] || null;
-  const baseUrl = thumbBase || CDN_BASE(id);
-  const bareUrl = (n: number) =>
-    `${baseUrl}_${String(n).padStart(3, '0')}.jpg`;
+  const candidateBases = [
+    ...(thumbBase ? [thumbBase] : []),
+    ...uniqueBases(id, ...(opts.extraIds ?? [])),
+  ];
 
-  // _001 is guaranteed to exist and is already added verbatim below; start
-  // scanning at _002 to avoid a wasted HEAD + a duplicate entry.
-  const startN = 2;
+  // Scan each candidate's indices. To avoid probing dozens of indices before
+  // learning the base is wrong, first check _001 for every candidate (cheap),
+  // then only scan the full range on the first candidate whose _001 resolves.
+  let photos: string[] = [];
 
-  // Probe the whole scan range in parallel: CDN replies have unpredictable hot
-  // requests (seconds), so sequential batches pay batch-count × slowest-latency.
-  // A single parallel pass costs one max latency regardless of set size.
-  const indices = Array.from({ length: MAX_PHOTOS - startN + 1 }, (_, i) => startN + i);
-  const results = await checkBatch(indices.map(bareUrl));
+  for (const base of candidateBases) {
+    const probe001 = await exists(`${base}_001.jpg`);
+    if (probe001 !== 'ok') continue;
 
-  const found: string[] = [];
-  let transientFailures = 0;
-  let consecutiveMisses = 0;
+    // Scan the whole range in parallel: CDN replies have unpredictable hot
+    // requests (seconds), so a single parallel pass costs one max latency.
+    const indices = Array.from({ length: MAX_PHOTOS }, (_, i) => i + 2);
+    const results = await checkBatch(indices.map(n => `${base}_${String(n).padStart(3, '0')}.jpg`));
 
-  indices.forEach((n, i) => {
-    const r = results[i];
-    if (r === 'ok') {
-      found.push(withResizeQuery(bareUrl(n)));
-      consecutiveMisses = 0;
-    } else if (r === 'missing') {
-      consecutiveMisses += 1;
-    } else {
-      transientFailures += 1;
+    let transientFailures = 0;
+    const found: string[] = [withResizeQuery(`${base}_001.jpg`)];
+
+    indices.forEach((n, i) => {
+      const r = results[i];
+      if (r === 'ok') {
+        found.push(withResizeQuery(`${base}_${String(n).padStart(3, '0')}.jpg`));
+      } else if (r !== 'missing') {
+        transientFailures += 1;
+      }
+    });
+
+    // Only a trustworthy (no transient errors) result is used to build the set;
+    // otherwise bail so the raw thumbnail fallback below is used.
+    const cdObtainable = transientFailures < 8;
+    if (cdObtainable) {
+      photos = found;
+      // _001 resolving but nothing else means 1-photo listing; keep it.
     }
-  });
-
-  // Only persist a trustworthy (non-empty, no transient errors) result for the
-  // long TTL. Flaky/empty probes get re-run shortly after instead of poisoning
-  // the gallery for 10 minutes.
-  const cdObtainable = transientFailures < 8;
-  const trustworthy = cdObtainable && consecutiveMisses < indices.length;
-  const photos = [...found];
-  // The provider's raw thumbnail is low-resolution; on the detail page we only
-  // ever want the CDN's resized render. The CDN base is always resolvable (from
-  // a real CDN thumbnail or derived from the id), so _001 exists: lead with its
-  // resized version. The raw thumbnail is used only as a last resort.
-  if (baseUrl) {
-    photos.unshift(withResizeQuery(`${baseUrl}_001.jpg`));
-  } else if (opts.includeThumb) {
-    photos.unshift(opts.includeThumb);
+    break;
   }
 
+  // No CDN base resolved: fall back to the provider's raw thumbnail. Also happen
+  // when a base resolved but all probes were transient failures.
+  if (!photos.length && opts.includeThumb) {
+    photos = [opts.includeThumb];
+  }
+
+  const flaky = !photos.length || (photos.length === 1 && photos[0].startsWith('https://encarapi'));
   cache.set(cacheKey, {
     photos,
     ts: Date.now(),
-    ttl: trustworthy ? CACHE_TTL : FLAKY_TTL,
+    ttl: flaky ? FLAKY_TTL : CACHE_TTL,
   });
   return photos;
 }

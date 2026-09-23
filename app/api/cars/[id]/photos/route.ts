@@ -16,8 +16,12 @@ export async function GET(
 
         const thumb = request.nextUrl.searchParams.get('thumb') || undefined;
         const force = request.nextUrl.searchParams.get('force') === '1';
+        const extraIds = (request.nextUrl.searchParams.get('extraIds') || '')
+            .split(',')
+            .map(s => s.trim())
+            .filter(s => /^\d+$/.test(s));
 
-        const photos = await probeCarPhotos(id, { force, includeThumb: thumb || undefined });
+        const photos = await probeCarPhotos(id, { force, includeThumb: thumb || undefined, extraIds });
 
         return NextResponse.json(
             { id, photos, count: photos.length },
