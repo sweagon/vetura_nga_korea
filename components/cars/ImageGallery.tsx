@@ -23,7 +23,15 @@ const DISCOVER_STREAK = 8;
 const DISCOVER_TIMEOUT = 4000;
 // The CDN folder + photo-set id are per car and differ from the page id, so we
 // derive the base path from the provider's thumbnail (which is always present).
+// When the thumbnail is a plain proxy URL (e.g. encarapi.oprimus.com/photo/{id})
+// that hides the CDN layout, fall back to deriving the base from the car id:
+//   ci.encar.com/carpicture/carpicture0X/pic{first4}/{id}_NNN.jpg
 const THUMB_BASE_RE = /^(https?:\/\/[^/]+\/carpicture\d+\/pic\d+\/\d+)_\d+\.jpg/;
+
+function cdnBaseFromId(id: string): string | null {
+    if (!/^\d{8,}$/.test(id)) return null;
+    return `https://ci.encar.com/carpicture/carpicture0${id[3]}/pic${id.slice(0, 4)}/${id}`;
+}
 
 function probeCDNPhoto(base: string, n: number): Promise<{ n: number; url: string } | null> {
     return new Promise(resolve => {
@@ -125,7 +133,8 @@ export default function ImageGallery({ images, carName, carId, loading }: ImageG
     useEffect(() => {
         if (!carId || discoveryDone || images.length > 3) return;
 
-        const base = images[0]?.match(THUMB_BASE_RE)?.[1];
+        const thumbBase = images[0]?.match(THUMB_BASE_RE)?.[1];
+        const base = thumbBase || cdnBaseFromId(carId) || undefined;
         if (!base) return;
 
         const run = async () => {

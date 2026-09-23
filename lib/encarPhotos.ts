@@ -14,10 +14,22 @@
 // and the numeric photo-set id can differ from the app's car id. The only
 // reliable source for the base URL is the thumbnail the provider API returns
 // (e.g. https://ci.encar.com/carpicture08/pic4238/42386096_001.jpg).
-const CDN_PATH = (id: string, n: number) =>
-  `https://ci.encar.com/carpicture04/pic4264/${id}_${String(n).padStart(3, '0')}.jpg`;
-
+//
+// When the provider returns a thumbnail, it may live on a proxy domain
+// (e.g. https://encarapi.oprimus.com/photo/42789404) that only exposes one
+// low-res image and does NOT reveal the CDN layout for the remaining photos.
+// Empirically the Encar CDN layout is derivable from the car id itself:
+//   https://ci.encar.com/carpicture/carpicture0X/pic{first4}/{id}_{NNN}.jpg
+// where X = the 4th digit of the id, and {first4} = the id's first four digits.
+// Examples: 42513666 -> carpicture01/pic4251, 42789404 -> carpicture08/pic4278.
 const THUMB_BASE_RE = /^(https?:\/\/[^/]+\/carpicture\d+\/pic\d+\/\d+)_\d+\.jpg/;
+
+function cdnBaseFromId(id: string): string | null {
+  if (!/^\d{8,}$/.test(id)) return null;
+  return `https://ci.encar.com/carpicture/carpicture0${id[3]}/pic${id.slice(0, 4)}/${id}`;
+}
+
+const CDN_BASE = (id: string) => cdnBaseFromId(id);
 
 // High-quality render query (keeps original aspect ratio, no watermark).
 const RESIZE_QUERY = 'impolicy=heightRate&rh=1200&cw=1600&ch=1200&cg=Center';
@@ -91,15 +103,16 @@ export async function probeCarPhotos(
   }
 
   // Prefer the CDN base derived from the provider thumbnail over the page id
-  // (folder + photo-set id differ per car).
-  const baseUrl = opts.includeThumb?.match(THUMB_BASE_RE)?.[1] || null;
+  // (folder + photo-set id differ per car). When the thumbnail is a proxy URL
+  // that hides the CDN layout, derive the base from the id (see cdnBaseFromId).
+  const thumbBase = opts.includeThumb?.match(THUMB_BASE_RE)?.[1] || null;
+  const baseUrl = thumbBase || CDN_BASE(id);
   const bareUrl = (n: number) =>
-    `${baseUrl ? `${baseUrl}_${String(n).padStart(3, '0')}.jpg` : CDN_PATH(id, n)}`;
+    `${baseUrl}_${String(n).padStart(3, '0')}.jpg`;
 
-  // When the thumb gives us the exact base, _001 is guaranteed to exist and is
-  // already included verbatim below; start scanning at _002 to avoid a wasted
-  // HEAD + a duplicate entry. Otherwise scan from _001 as before.
-  const startN = baseUrl ? 2 : 1;
+  // _001 is guaranteed to exist and is already added verbatim below; start
+  // scanning at _002 to avoid a wasted HEAD + a duplicate entry.
+  const startN = 2;
 
   // Probe the whole scan range in parallel: CDN replies have unpredictable hot
   // requests (seconds), so sequential batches pay batch-count × slowest-latency.
@@ -130,9 +143,9 @@ export async function probeCarPhotos(
   const trustworthy = cdObtainable && consecutiveMisses < indices.length;
   const photos = [...found];
   // The provider's raw thumbnail is low-resolution; on the detail page we only
-  // ever want the CDN's resized render. When the thumb revealed the exact CDN
-  // base, _001 is guaranteed to exist, so lead with its resized version. The raw
-  // thumbnail is kept only as a last resort when we cannot derive the base.
+  // ever want the CDN's resized render. The CDN base is always resolvable (from
+  // a real CDN thumbnail or derived from the id), so _001 exists: lead with its
+  // resized version. The raw thumbnail is used only as a last resort.
   if (baseUrl) {
     photos.unshift(withResizeQuery(`${baseUrl}_001.jpg`));
   } else if (opts.includeThumb) {
